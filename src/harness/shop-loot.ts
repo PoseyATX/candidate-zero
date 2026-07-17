@@ -71,4 +71,4 @@ console.log('=== CANDIDATE ZERO — Shop + Failure Loot ===\n');
   });
 }
 
-console.log('\nShop + loot harness complete.\n');
+console.log('\nShop + loot harness complete.');

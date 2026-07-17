@@ -223,10 +223,11 @@ export function advanceInterimMonth(state: GameState): boolean {
     return false;
   }
   const total = state.interimWeeksTotal ?? INTERIM_WEEKS;
-  if ((state.interimWeek ?? 1) >= total) {
+  const cur = state.interimWeek ?? 1;
+  if (cur >= total) {
     return true;
   }
-  state.interimWeek = (state.interimWeek ?? 1) + 1;
+  state.interimWeek = cur + 1;
   state.week += 1;
   state.ap = state.apMax;
   state.momentum = Math.max(0, state.momentum - 1);

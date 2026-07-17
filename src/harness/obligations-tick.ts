@@ -61,4 +61,4 @@ console.log('=== CANDIDATE ZERO — Obligations Tick ===\n');
   console.log('PASSED: registry size', Object.keys(OBLS).length);
 }
 
-console.log('\nObligations harness complete.\n');
+console.log('\nObligations harness complete.');
