@@ -27,6 +27,7 @@ import {
   type StageTransition
 } from './calendar.js';
 import { markWeekStart, buildWeekSummary, type WeekSummary } from './feedback.js';
+import { repCheck } from './reputation.js';
 import {
   applySetup,
   HARNESS_DEFAULT_SETUP,
@@ -312,7 +313,12 @@ export function playFromHand(
 
 export function endWeekInPlace(campaign: Campaign): StageTransition {
   discardHand(campaign.deck);
-  return advanceCampaignWeek(campaign.state);
+  const transition = advanceCampaignWeek(campaign.state);
+  // Catches week-gated reputation thresholds (e.g. R02) even on a week
+  // with no plays; play-triggered thresholds are already checked in
+  // executePlay. See src/engine/reputation.ts.
+  repCheck(campaign.state);
+  return transition;
 }
 
 /** Close the week feedback summary (call before calendar advance). */

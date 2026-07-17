@@ -314,3 +314,72 @@ to stop making.
 ### Harness
 All of `npm run harness` (12 harnesses) plus `npm run build` and `npm run
 typecheck` pass clean after this pass.
+
+## 2026-07-17 — Design-source recovery: shadow consequences, reputation, UI polish
+
+The user shared the original design conversation. It turned out to contain
+the actual archive prototype this engine was extracted from
+(`archive/prototype-single-file.html`) — see `docs/SRD-NOTES.md` for full
+detail and provenance. Three changes from this:
+
+### UI: persona immutability guard
+Engine-level check confirmed `applySetup()` only ever runs once (inside
+`createCampaign`) — no engine bug. The gap was UX: the "New run" button had
+no confirmation before abandoning an in-progress campaign, which is the
+only way persona could appear to "change." Added a `window.confirm` guard
+in `src/ui/main.ts`. This is covenant 7 ("Choices bind") not being fully
+enforced at the UX layer, now fixed.
+
+### UI: card redesign
+User: cards should be 2:3 aspect ratio with more detail, shadowing,
+aesthetics, polish. Restructured `.play-card` markup (`src/ui/main.ts`) and
+CSS (`src/ui/styles.css`): cost badge, `card.tag` flavor line (existed on
+every card, was never rendered), scrollable description, risk-class color
+coding (SAFE/STD/VOL/CHOICE), camp/trap corner ribbons, layered box-shadow,
+inner frame ornament, watermark, hover lift. `.card-grid` changed from a
+vertical list to a responsive grid capped at ~172px columns. Verified via
+headless Playwright screenshots at 1200px and 390px (mobile) — base cards,
+a TRAP ribbon, and a CAMP ribbon all confirmed rendering correctly with
+zero console errors.
+
+### Mechanics: ported shadowCheck() and repCheck() from the archive
+`archive/prototype-single-file.html` has complete, working `shadowCheck()`
+(Faces thresholds → real consequences) and `repCheck()` (reputation
+grants) functions. Every field `shadowCheck()` touches — `pieMalus`,
+`exposure`, `b05Malus`, `allyMalus`, `favWitness`, `hitPieces`, `volPool`,
+`rapStall`, `obls`, `groundsArr`, `shFired` — already existed in modular
+`GameState`, unused, clearly scaffolded for exactly this. This was a port,
+not new design.
+
+New `src/engine/reputation.ts`: `hasRep`, `warm`, `addRep`, `addAlly`
+(shared helpers — consolidated three private duplicate copies of
+`hasRep`/`warm` out of `resolve.ts`, `plays.ts`, and `deck.ts`), full
+`shadowCheck()`, and the subset of `repCheck()` reachable with fields that
+already exist (R01 walkCount≥12, R02/R04 shadowPlays, R07 hitPieces≥3,
+R10/R11 disasterLog). Wired into `executePlay` (after every play) and
+`endWeekInPlace` (catches week-gated thresholds like R02 on a week with
+zero plays, matching the archive's own redundant double-call).
+
+This makes several previously-dead references live: `resolve()`'s
+`hasRep(state,'R10')` disaster-band reduction, `rapGain()`'s
+`state.rapStall` check (settable via the F1 shadow threshold now). Also
+fixed one concrete bug found via diff: `PL13_FishFry`'s BREAKTHROUGH text
+says "the small-dollar list starts here" but never pushed `B05` into
+`state.backers` — the archive's equivalent card does
+(`archive/prototype-single-file.html:612`). Fixed to match.
+
+**Verified:** targeted script confirmed `walkCount>=12` grants R01 and a
+Faces-P threshold correctly fires a SHADOW log line + sets `pieMalus`. Full
+harness suite (12/12), typecheck, and build all pass unchanged.
+
+**Not ported this pass — rescoped in `docs/ROADMAP.md` Phase 2, not
+abandoned:** the rest of `repCheck()` (R05/R06/R08/R09/R12) and most of the
+allies/assets system depend on content that doesn't exist yet — two
+specific cards (`PL21B`, `PL39`, both grant `AL09`), a purchasable-assets
+shop, 12 more allies, and a structured obligations registry with weekly
+drag effects (vs. modular's current free-text `state.obls`). All precisely
+scoped with archive line references in `docs/SRD-NOTES.md` rather than
+left as an open design question.
+
+### Harness
+`npm run harness` (12/12), `npm run typecheck`, `npm run build` all pass.

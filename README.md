@@ -43,6 +43,14 @@ src/
 
 - **SRD v1** is the authoritative mechanical contract.
 - Design Document remains the high-level vision document.
+- `docs/SRD-NOTES.md` — recovered design source (pillars, RNG philosophy,
+  the node-analysis methodology, the Candidate-Zero node writeup, the
+  branching state machine, cross-referenced against current code). The
+  closest thing to a written SRD/Design Doc that exists in this repo;
+  explicitly a partial capture, not the complete original.
+- `archive/prototype-single-file.html` — the original single-file
+  prototype this engine was extracted from (56 cards, 21 personas,
+  allies/reps/obligations systems). Reference only; see `archive/README.md`.
 - `docs/ROADMAP.md` — prioritized forward plan, grounded in what's already
   built vs. scaffolded-but-inert in this repo.
 - `docs/BALANCE-NOTES.md` — dated log of every balance/mechanics change and

@@ -7,6 +7,7 @@
 import type { DeckState, GameState, PlayCard } from './types.js';
 import { PLAYS } from '../data/plays.js';
 import { random } from './rng.js';
+import { warm } from './reputation.js';
 
 // Starter deck (early accessibility + dual ballot paths)
 export const STARTER_DECK_IDS: string[] = [
@@ -119,8 +120,8 @@ export function enforceWeeklyDraw(state: GameState): string[] {
 }
 
 function warmAllyBonus(state: GameState): boolean {
-  // Simple example: AL11 (Kitchen Cabinet) gives extra draw
-  return (state.allies || []).some(a => a.id === 'AL11' && a.warm > 0);
+  // AL11 (Kitchen Cabinet) gives an extra draw
+  return warm(state, 'AL11');
 }
 
 // === PHASE EVOLUTION (draft offer) ===

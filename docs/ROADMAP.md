@@ -37,6 +37,27 @@ Full detail: `docs/BALANCE-NOTES.md` (two 2026-07-17 entries), `docs/TICKET-v0.1
 | Moderate/high esbuild CVE (dev-server only) via Vite 5 | Upgraded Vite 5.4→8.1, zero vulnerabilities |
 | No CI gate — the index.html regression could reach the branch undetected | Added `.github/workflows/ci.yml` (typecheck + harness + build on every push/PR) |
 
+### Phase 0b — Design-source recovery pass (done, 2026-07-17, same day)
+
+The user shared the original design conversation, which turned out to
+contain the actual archive prototype (`archive/prototype-single-file.html`,
+1973 lines, 56 cards) this engine was extracted from — previously only
+reachable via `git show 0d532fa:index.html`, now archived properly with
+`archive/README.md` explaining its status. Full detail:
+`docs/SRD-NOTES.md` (new — the closest thing to "SRD v1" that exists in
+this repo, since no such document existed before despite `AGENTS.md`
+calling it law).
+
+| Done | Evidence |
+|---|---|
+| Persona could be silently abandoned mid-run via "New run" with no confirmation | Engine-level check confirmed `applySetup` only ever runs once (no mutation bug); added a confirm guard in the UI — covenant 7 ("Choices bind") wasn't fully enforced at the UX layer |
+| Cards read as a plain list, not cards | Redesigned to 2:3 aspect ratio tiles: cost badge, tagline (surfaces the `card.tag` flavor field that existed on every card but was never rendered), risk-class color coding, camp/trap corner ribbons, layered shadows, hover lift — verified via headless screenshots at desktop and mobile widths |
+| "Shadow consequences on Faces" (TICKET's stated next step) was undesigned | Turned out to be fully designed *and implemented* in the archive (`shadowCheck()`) — ported in full to `src/engine/reputation.ts`, wired into `executePlay` |
+| Reputation grants (R01–R12) never fire — `resolve()` reads `hasRep(state,'R10')` etc. but nothing ever grants them | Ported the archive's `repCheck()` subset reachable with existing state (R01/R02/R04/R07/R10/R11) |
+| `PL13_FishFry`'s text promises "the small-dollar list starts here" but never granted `B05` | Fixed — one missing line, found via diffing against the archive's equivalent card |
+| Three files had private, duplicate `hasRep`/`warm` helpers | Consolidated into `src/engine/reputation.ts`, imported everywhere |
+| Roadmap Phase 2 ("design an allies/reps system") was open-ended | Rescoped with an exact source to port from and precise remaining items — see Phase 2 below |
+
 ---
 
 ## Phase 1 — Close the gaps this pass exposed but didn't fix (near-term, low risk)
@@ -88,52 +109,69 @@ not new design.
    truth), but it's the one remaining unchecked box on AC1, which gates the
    v0.1 label (Phase 7).
 
-## Phase 2 — Allies / Assets / Reps acquisition system
+## Phase 2 — Allies / Assets / Reps acquisition system (rescoped 2026-07-17 — this is a port, not a design task)
 
-**Why this is next:** it's the single largest block of already-written,
-currently-inert game logic in the codebase. Kitchen-Table Meeting's entire
-"chairs" bonus, Earned Media's press-relationship bonuses, Straw Poll
-Push's alternate unlock condition (`warm(s,'AL03')`), Debate Prep's Kitchen
-Cabinet bonus, and `resolve()`'s own R01/R10/AL11 band adjustments all
-reference ids that nothing in the current build ever grants. This isn't
-flavor-text debt — `PL11_StrawPoll`'s `req` gate
-(`s.backers.includes('B06') || warm(s, 'AL03')`) has a real, reachable half
-(`B06`, granted by Club Speech) and a permanently-dead half (`AL03`), so the
-card technically works but through only one of its two designed doors.
+**Update:** the source design conversation shared 2026-07-17 turned out to
+contain the actual archive prototype this engine was extracted from
+(`archive/prototype-single-file.html`), which has a complete, working
+version of most of this. **The "open question" below has been answered:**
+this phase is now a porting task with an exact source to port from, not a
+from-scratch design task. Full detail: `docs/SRD-NOTES.md` ("Shadow
+consequences + reputation grants" section).
 
-**Scope:** design (or recover from prior design notes, if they exist outside
-this repo — see "Open question" below) how a player actually earns an ally
-warming up, a rep being granted, or an asset being acquired. Candidates
-already implied by the data shapes: rapport/endorsePts thresholds at
-specific grounds, new event/encounter cards, or side-effects on existing
-Wave 1–3 card outcomes that currently do nothing beyond stat deltas (e.g. a
-BREAKTHROUGH-tier Kitchen-Table Meeting could plausibly warm `AL01`).
+**Already done (2026-07-17):** `src/engine/reputation.ts` ports
+`shadowCheck()` in full (Faces thresholds → real consequences — this was
+also TICKET's "Next: Shadow consequences on Faces", now satisfied) and the
+subset of `repCheck()` reachable with existing state (R01, R02, R04, R07,
+R10, R11). Also fixed one concrete bug found via the diff: `PL13_FishFry`'s
+text promised "the small-dollar list starts here" but never actually
+granted `B05` — now it does.
 
-**Open question for the project owner:** is there prior design material
-(outside this repo) describing what `AL01`–`AL11`, `R01`–`R10`, `A01`/`A09`,
-and `B05` are actually supposed to represent and how they're earned? If so,
-that should be the spec for this phase rather than reverse-engineering
-intent from odds-function comments.
+**Still open, now precisely scoped instead of open-ended:**
 
-## Phase 3 — Shadow consequences (debt and obligations bite back)
+1. **Two dedicated cards, straightforward to port:** `PL21B` "Promote a
+   Canvass Captain" (`{a:1, vp:3}`, SAFE, grants `AL09`) and `PL39` "Hire a
+   Field Director" (`{a:1, $:2200}`, STD, alt. paid path to `AL09`). Porting
+   just these two makes every existing `warm(s,'AL09')` bonus already
+   written into `PL01`/`PL02`/`PL04`/`PL19` reachable, for free.
+2. **A purchasable assets shop:** the archive buys `A01`/`A09`/etc. with
+   real costs/requirements (`archive/prototype-single-file.html:820+`);
+   modular `state.assets` currently only ever receives setup-time tags.
+   Needs a UI surface (a "shop" panel) as well as engine support — bigger
+   than item 1.
+3. **6–21 more personas** (archive has 21 attribute-linked personas vs.
+   modular's 4; several grant allies on selection). Bigger scope decision:
+   is the goal eventually all 21, or a curated subset? Worth a deliberate
+   call rather than porting all of them reflexively — see Phase 5's
+   `smallbiz`-persona note for why "more starting power" isn't free of
+   balance risk.
+4. **Obligations registry restructure:** the archive's `OBLS` are
+   structured `{n, drag}` records with an ongoing *weekly* effect (e.g. a
+   PAC obligation taxes `faces.L` and `exposure` every week it's held) —
+   not modular's free-text `state.obls: string[]`. This changes what
+   `state.obls` *is*, not just what's in it, and needs a weekly-tick call
+   site. This is the mechanical "bite" for `PL20_PacCheck`'s obligation
+   that Phase 3 (below) originally called for — same fix, correctly
+   relocated here since it's part of the same registry-porting work as
+   allies/reps, not a standalone design problem.
+5. **12 more allies** (`AL02`–`AL08`, `AL10`, `AL12`–`AL16`) with no
+   confirmed grant path even in the archive for several of them — would
+   need either finding their grant sites (search wasn't exhaustive) or
+   deliberately deferring them.
 
-**Why this is next:** it's the project's own stated next step (TICKET
-"Next: Shadow consequences on Faces"), and it's the same *shape* of bug
-Phase 0 fixed for the district trap — a card labeled `trap: true` whose
-downside currently does nothing:
+## Phase 3 — Debt has no consequence (small; rescoped 2026-07-17)
 
-- `PL21_SelfFundCredit` records `state.debt` — never read anywhere.
-- `PL20_PacCheck` pushes into `state.obls` (obligations) — never read
-  anywhere.
-
-Both cards are "honestly labeled" traps per Covenant #6 ("Power is never
-clean") in flavor text only; mechanically they're currently just efficient
-resource cards with a narrative footnote. Design a real consequence path —
-debt could tax `generalWinProbability` or force a repayment card/event
-before the general; an unpaid obligation could trigger a forced-choice
-event (honor it — cost integrity/Faces; refuse it — cost the relationship
-and maybe `exposure`). This plausibly connects naturally to Phase 4 (the
-obligation gets called in during Session).
+**Rescoped, smaller than originally estimated.** `state.debt`
+(`PL21_SelfFundCredit`) is still recorded but never read by any mechanic.
+Checking the archive for how debt "bites back" there: it doesn't tax any
+win probability or trigger a repayment mechanic — its only visible
+consequence is narrative, surfaced on the loss/terminal screen ("The bank
+still wants its money. Losing does not cancel the note.",
+`archive/prototype-single-file.html:1746`). So the honest, low-risk fix
+here is much smaller than a new mechanic: surface `state.debt` (and held
+obligations) in the terminal outcome text when a run ends, the way the
+archive does, rather than building a debt-collection system that the
+source material doesn't actually call for.
 
 ## Phase 4 — Build the Session stage
 

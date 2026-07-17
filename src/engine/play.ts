@@ -7,6 +7,7 @@
 import { resolve, STAMPS } from './resolve.js';
 import { getPhase } from './state.js';
 import { buildPlayFeedback } from './feedback.js';
+import { repCheck, shadowCheck } from './reputation.js';
 import type { AttrId, GameState, Ground, PlayCard, PlayOutcome, RollResult } from './types.js';
 
 export function canAfford(state: GameState, card: PlayCard): boolean {
@@ -134,6 +135,11 @@ export function executePlay(
     tier: roll.tier,
     beat: feedback.beat
   });
+
+  // Threshold checks against this play's yields: reputation grants and
+  // Shadow consequences on Faces (see src/engine/reputation.ts).
+  shadowCheck(state);
+  repCheck(state);
 
   return {
     ok: true,

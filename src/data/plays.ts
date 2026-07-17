@@ -11,14 +11,11 @@
 
 import type { GameState, Ground, RollResult, PlayCard } from '../engine/types.js';
 import { random } from '../engine/rng.js';
+import { warm } from '../engine/reputation.js';
 import { WAVE4_PLAYS } from './plays-wave4.js';
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
-}
-function warm(state: GameState, id: string): boolean {
-  const a = state.allies.find(x => x.id === id);
-  return !!(a && a.warm > 0);
 }
 function rapGain(g: Ground, amt: number, state: GameState) {
   if (state.rapStall) amt = Math.ceil(amt / 2);
@@ -151,7 +148,7 @@ export const PL13_FishFry: PlayCard = {
   run: (s, o, g) => {
     if (!g) return 'No ground selected.';
     const mult = (g.id==='GR07'?3:1) * (s.backers.includes('B05')?1.4:1) * (s.regionHook==='permian'?1.25:1) * (s.moneyClash?0.8:1);
-    if (o.tier === 0) { const m = Math.round((650+random()*350)*mult); s.money+=m; rapGain(g,4,s); s.volPool+=2; return `+$${m} and the small-dollar list starts here at ${g.n}. +2 volunteers.`; }
+    if (o.tier === 0) { const m = Math.round((650+random()*350)*mult); s.money+=m; rapGain(g,4,s); s.volPool+=2; if (!s.backers.includes('B05')) s.backers.push('B05'); return `+$${m} and the small-dollar list starts here at ${g.n}. +2 volunteers.`; }
     if (o.tier === 1) { const m = Math.round((380+random()*200)*mult); s.money+=m; rapGain(g,2,s); s.volPool+=1; return `+$${m}, faces and names. +1 volunteer.`; }
     const m = Math.round(200*mult); s.money+=m; return `Even a rainy fish fry clears its cost. +$${m}.`;
   }

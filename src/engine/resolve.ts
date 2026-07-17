@@ -5,19 +5,11 @@
  */
 
 import { random } from './rng.js';
+import { hasRep, warm } from './reputation.js';
 import type { GameState, RollResult, RiskClass } from './types.js';
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
-}
-
-function hasRep(state: GameState, id: string): boolean {
-  return state.reps.includes(id);
-}
-
-function warm(state: GameState, id: string): boolean {
-  const a = state.allies.find(x => x.id === id);
-  return !!(a && a.warm > 0);
 }
 
 export function resolve(

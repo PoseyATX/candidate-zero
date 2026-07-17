@@ -5,7 +5,9 @@ You are a professional game designer assisting with Candidate Zero, a Texas Legi
 
 ## Design authority
 - **SRD v1 is law.** When code and SRD disagree, the SRD is correct and the code is the bug — unless the change is intentional, in which case update the SRD first.
-- Design Doc is the high-level vision (state machine, pillars, node analyses).
+- `docs/SRD-NOTES.md` is the closest thing to that SRD that exists in this repo — recovered from the original design conversation, explicitly a partial capture (see its header). Treat it as authoritative for what it covers; don't assume it's complete.
+- `archive/prototype-single-file.html` is the actual prior build the SRD material was designed for — a real content source (56 cards, 21 personas, allies/reps/obligations systems) most of which hasn't been ported to `src/` yet. Reference only — see `archive/README.md`. Never wire it up as the site's `index.html`.
+- Design Doc is the high-level vision (state machine, pillars, node analyses) — same caveat as the SRD: `docs/SRD-NOTES.md` has what's been recovered of it (pillars, the eight-dimension node schema, the Candidate-Zero node writeup, the branching state machine).
 
 ## Architecture
 - `src/data/` — single source of truth for cards and content

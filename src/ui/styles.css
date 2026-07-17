@@ -146,39 +146,198 @@ h1 {
 }
 
 .card-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 172px));
+  gap: 0.9rem;
+  align-items: start;
+}
+
+/* The draft/playables hint paragraph is a sibling inside a now-grid
+   container — let it span the full row instead of squeezing into a cell. */
+.card-grid > .hint {
+  grid-column: 1 / -1;
+  margin: 0 0 0.15rem;
 }
 
 .play-card {
+  position: relative;
+  aspect-ratio: 2 / 3;
   text-align: left;
   font: inherit;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
   border: 1px solid var(--line);
-  background: #fff;
-  padding: 0.65rem 0.75rem;
-  display: grid;
-  gap: 0.2rem;
+  border-radius: 5px;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(184, 134, 11, 0.07), transparent 60%),
+    #fffdf8;
+  padding: 0.5rem 0.55rem 0.45rem;
+  box-shadow:
+    0 1px 2px rgba(26, 20, 16, 0.16),
+    0 6px 14px rgba(26, 20, 16, 0.12);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  overflow: hidden;
+}
+
+/* Inner Art Deco-ish frame line — a nod to the double-rule bordering in the
+   game's masthead treatment, scaled down to card size. */
+.play-card::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(184, 134, 11, 0.3);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+/* Faint watermark to give the card body some presence without art assets. */
+.play-card::after {
+  content: '\2726';
+  position: absolute;
+  right: -0.1rem;
+  bottom: 1.9rem;
+  font-size: 2.6rem;
+  line-height: 1;
+  color: rgba(26, 20, 16, 0.05);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.play-card.trap::after { color: rgba(92, 26, 26, 0.08); }
+.play-card.camp::after { color: rgba(184, 134, 11, 0.1); }
+
+.play-card .name,
+.play-card .tagline,
+.play-card .desc,
+.play-card .card-footer,
+.play-card .attrs {
+  position: relative;
+  z-index: 1;
 }
 
 .play-card:hover {
   border-color: var(--ink);
-  background: #fffaf0;
+  transform: translateY(-3px);
+  box-shadow:
+    0 2px 5px rgba(26, 20, 16, 0.22),
+    0 14px 24px rgba(26, 20, 16, 0.2);
 }
 
-.play-card.camp { border-left: 4px solid var(--gold); }
-.play-card.trap { border-left: 4px solid var(--blood); background: #fff5f5; }
+.play-card:active { transform: translateY(-1px); }
 
-.play-card .name { font-weight: 600; }
-.play-card .meta { font-size: 0.8rem; color: var(--muted); }
-.play-card .desc { font-size: 0.88rem; color: #3a3028; }
+.play-card:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* Risk-class color coding — a quick-read signal before reading any text. */
+.play-card.risk-safe { border-left: 3px solid #2e6b30; }
+.play-card.risk-std { border-left: 3px solid var(--gold); }
+.play-card.risk-vol { border-left: 3px solid #a1541c; }
+.play-card.risk-choice { border-left: 3px solid #3f5f8a; }
+
+.play-card.camp {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(184, 134, 11, 0.12), transparent 60%),
+    #fffaf0;
+  border-color: var(--gold);
+}
+
+.play-card.trap {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(92, 26, 26, 0.1), transparent 60%),
+    #fff5f5;
+  border-color: var(--trap);
+}
+
+.play-card .cost-badge {
+  align-self: flex-end;
+  font-family: Cinzel, serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  background: rgba(184, 134, 11, 0.18);
+  border: 1px solid rgba(184, 134, 11, 0.42);
+  border-radius: 3px;
+  padding: 0.1rem 0.32rem;
+  z-index: 1;
+  white-space: nowrap;
+}
+
+.play-card .name {
+  font-family: Cinzel, serif;
+  font-weight: 700;
+  font-size: 0.84rem;
+  line-height: 1.16;
+  margin: 0.3rem 0 0.05rem;
+  z-index: 1;
+}
+
+.play-card .tagline {
+  font-style: italic;
+  font-size: 0.68rem;
+  color: var(--muted);
+  margin-bottom: 0.3rem;
+}
+
+.play-card .desc {
+  flex: 1 1 auto;
+  font-size: 0.74rem;
+  line-height: 1.32;
+  color: #3a3028;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.play-card .card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 0.3rem;
+  padding-top: 0.28rem;
+  border-top: 1px solid rgba(201, 185, 154, 0.6);
+  font-size: 0.68rem;
+}
+
+.play-card .risk-tag {
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.play-card .odds {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
 .play-card .attrs {
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
   color: var(--gold);
   text-transform: uppercase;
+  margin-top: 0.2rem;
 }
+
+.play-card .ribbon {
+  position: absolute;
+  top: 0.4rem;
+  left: -1.6rem;
+  width: 6rem;
+  text-align: center;
+  transform: rotate(-40deg);
+  font-family: Cinzel, serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.08rem 0;
+  z-index: 2;
+  pointer-events: none;
+  color: #fffdf8;
+}
+
+.play-card .ribbon-camp { background: var(--gold); }
+.play-card .ribbon-trap { background: var(--trap); }
 
 .row-actions { margin-top: 0.85rem; }
 
@@ -239,10 +398,8 @@ h1 {
   color: var(--ink);
 }
 
-.draft-card {
-  border-left: 4px solid var(--gold);
-  background: #fffaf0;
-}
+/* .draft-card gets its card-shell styling from .play-card + a risk-* class
+   (assigned in main.ts renderDraft) — no separate rule needed here. */
 
 /* Dopamine / feedback */
 .juice-banner {
