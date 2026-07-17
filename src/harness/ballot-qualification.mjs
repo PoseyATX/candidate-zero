@@ -24,11 +24,12 @@ function resolve(p, risk, stateTier = 0) {
   return 2;
 }
 
+// Keep yields in sync with src/data/plays.ts PL04_PetitionDrive.run().
 function petitionOnce(volPool) {
   const p = clamp(0.60 + volPool * 0.035, 0, 0.95);
   const t = resolve(p, 'STD');
-  if (t === 0) return { sigs: 70 + Math.floor(Math.random() * 35), tier: 0 };
-  if (t === 1) return { sigs: 40 + Math.floor(Math.random() * 25), tier: 1 };
+  if (t === 0) return { sigs: 95 + Math.floor(Math.random() * 40), tier: 0 };
+  if (t === 1) return { sigs: 55 + Math.floor(Math.random() * 30), tier: 1 };
   if (t === 2) return { sigs: 15, tier: 2 };
   return { sigs: -(50 + Math.floor(Math.random() * 45)), tier: 3 };
 }

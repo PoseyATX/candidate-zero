@@ -139,6 +139,14 @@ assert(
   labor.generalWinGivenReach >= minWinGiven && labor.generalWinGivenReach <= 90,
   'general win given reach should reward skill without free win'
 );
+// 2026-07-17 re-tune: labor vs money is meant to be a texture choice
+// (free-but-slow vs paid-but-fast), not a strict dominance relationship.
+// Money may still win more (it buys certainty), but not by a landslide.
+const maxMoneyOverLabor = TRIALS < 80 ? 3.5 : 2.3;
+assert(
+  money.overallGeneralWin <= labor.overallGeneralWin * maxMoneyOverLabor,
+  `money overall win (${money.overallGeneralWin}) should not dominate labor (${labor.overallGeneralWin}) by more than ${maxMoneyOverLabor}x`
+);
 
 console.log('\nDesign read:');
 console.log('- Deck growth injects into the physical draw pile (ownership-only bug fixed).');

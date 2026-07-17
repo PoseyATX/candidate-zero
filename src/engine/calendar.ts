@@ -71,6 +71,9 @@ export function primaryWinProbability(state: GameState): number {
   const field =
     typeof state.district?.field === 'number' ? state.district.field : 2;
   const fieldPressure = 0.035 * field;
+  // An entrenched incumbent (war chest, name recognition, twelve years of
+  // relationships) is harder to unseat than raw rival count implies.
+  const incumbentPressure = state.district?.incumbent ? 0.12 : 0;
   // Balloted skilled runs should reach general often enough to teach the loop;
   // unbuilt name/chairs still lose most primaries (souls-like, not free).
   const p =
@@ -82,8 +85,22 @@ export function primaryWinProbability(state: GameState): number {
     state.momentum * 0.018 -
     state.hitPieces * 0.055 -
     (state.exposure || 0) * 0.04 -
-    fieldPressure;
+    fieldPressure -
+    incumbentPressure;
   return clamp(p, 0.1, 0.9);
+}
+
+/**
+ * Baseline general-election opponent strength from district partisan lean.
+ * `field` (primary rival count) governs the primary only — align governs
+ * November. A TRAP district (e.g. wrong-party) can have an empty, easy
+ * primary and still be nearly unwinnable in the general.
+ */
+function genBaseForDistrict(district: GameState['district']): number {
+  const align = district?.align as 'safe' | 'competitive' | 'wrong' | undefined;
+  const base = align === 'safe' ? 0.28 : align === 'wrong' ? 0.72 : 0.45;
+  const trapTax = district?.trap ? 0.08 : 0;
+  return base + trapTax;
 }
 
 /**
@@ -143,10 +160,12 @@ export function resolvePrimaryConclusion(state: GameState): StageTransition {
     state.momentum = Math.max(0, state.momentum - 1);
     state.townHallThisWeek = false;
     state.outcome = 'ongoing';
-    // Opponent strength from district field / residual primary heat
-    const field =
-      typeof state.district?.field === 'number' ? state.district.field : 2;
-    state.genBase = clamp(0.35 + field * 0.06 + state.hitPieces * 0.03, 0.25, 0.75);
+    // Opponent strength from district partisan lean (align/trap) + residual primary heat
+    state.genBase = clamp(
+      genBaseForDistrict(state.district) + state.hitPieces * 0.03,
+      0.2,
+      0.9
+    );
     state.genOpp = {
       n: 'General election opponent',
       strength: state.genBase

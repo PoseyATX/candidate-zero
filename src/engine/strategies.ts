@@ -38,7 +38,7 @@ export const moneyBallotStrategy: Chooser = (playable, state) => {
     ]);
   }
   if (!state.ballot) {
-    if (state.money >= 750) {
+    if (state.money >= 1250) {
       return pickByPriority(playable, ['PL05', 'PL13', 'PL01', 'PL10']);
     }
     return pickByPriority(playable, ['PL13', 'PL01', 'PL02', 'PL10', 'PL03']);
@@ -61,12 +61,21 @@ export const hybridStrategy: Chooser = (playable, state) => {
     ]);
   }
   if (!state.ballot) {
-    const petition = playable.find(p => p.card.id === 'PL04');
-    if (petition) return petition.index;
-    if (state.money >= 750) {
+    // Genuine hybrid: race both ballot doors instead of defaulting to
+    // labor-only (petition was always legal as a camp action, so a naive
+    // "try petition first" check never fell through to the fee branch).
+    // Alternate weeks between the two paths so both accrue.
+    if (state.money >= 1250) {
       const fee = playable.find(p => p.card.id === 'PL05');
       if (fee) return fee.index;
     }
+    const wantFish = state.week % 2 === 0;
+    if (wantFish) {
+      const fish = playable.find(p => p.card.id === 'PL13');
+      if (fish) return fish.index;
+    }
+    const petition = playable.find(p => p.card.id === 'PL04');
+    if (petition) return petition.index;
     return pickByPriority(playable, ['PL13', 'PL01', 'PL02', 'PL06', 'PL10']);
   }
   return pickByPriority(playable, ['PL01', 'PL06', 'PL08', 'PL13', 'PL16', 'PL10']);

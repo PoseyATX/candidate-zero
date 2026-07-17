@@ -64,7 +64,12 @@ export const PL04_PetitionDrive: PlayCard = {
   odds: (s) => clamp(0.60 + s.volPool*0.035 + (warm(s,'AL09')?0.08:0), 0, 0.95),
   run: (s, o) => {
     if (o.tier <= 1) {
-      const g = o.tier === 0 ? 70 + Math.floor(random()*35) : 40 + Math.floor(random()*25);
+      // 2026-07-17 re-tune: labor path was costing ~5.5-6 of 8 primary weeks
+      // (nearly all AP) to clear sigNeed, starving nameID/contacts/endorsePts
+      // versus the money path's ~1.5-2 week fee grind. Raised yields (not
+      // odds) so labor stays the zero-dollar door without eating the primary.
+      // Keep in sync with src/harness/ballot-qualification.mjs petitionOnce().
+      const g = o.tier === 0 ? 95 + Math.floor(random()*40) : 55 + Math.floor(random()*30);
       s.signatures += g;
       if (s.signatures >= s.sigNeed && !s.ballot) { s.ballot = true; return `+${g} signatures — threshold cleared. On the ballot, free but not cheap.`; }
       return `+${g} valid signatures (${s.signatures}/${s.sigNeed}).`;
@@ -75,9 +80,9 @@ export const PL04_PetitionDrive: PlayCard = {
 };
 
 export const PL05_PayFilingFee: PlayCard = {
-  id: 'PL05', n: 'Pay the Filing Fee', cost: { $:750 }, risk: 'SAFE', ph: [1], tag: 'the money door',
+  id: 'PL05', n: 'Pay the Filing Fee', cost: { $:1250 }, risk: 'SAFE', ph: [1], tag: 'the money door',
   attrs: ['CLO'],
-  d: '$750 and it\'s done. Shame-free, story-free.', show: (s) => !s.ballot, odds: () => 0.99,
+  d: '$1,250 and it\'s done. Shame-free, story-free.', show: (s) => !s.ballot, odds: () => 0.99,
   run: (s) => { s.ballot = true; return 'Receipt in hand. You are on the ballot the expensive way.'; }
 };
 export const PL06_TownHall: PlayCard = {

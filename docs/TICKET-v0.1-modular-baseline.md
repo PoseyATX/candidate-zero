@@ -74,6 +74,15 @@ Pure feedback layer — **does not alter rolls, bands, or yields**:
 - CLI + UI surface juice banners and week close lines
 - Harness: `npm run harness:dopamine`
 
+## Increment: Cleanup / mechanics audit — UI regression, district mechanics, labor-vs-money rebalance (2026-07-17)
+
+- **Bugfix:** `index.html` had been overwritten with the old archive prototype (no `<script type="module">`, missing every DOM id `src/ui/main.ts` needs). `npm run build`/`dev`/GitHub Pages deploy were shipping a disconnected legacy app instead of the modular engine's UI. Restored from commit `44dda09`; verified via build + headless click-through.
+- **Bugfix:** `district.align`/`.trap`/`.incumbent` were computed in `src/data/setup.ts` but never read in `src/engine/calendar.ts` — the "wrong-party TRAP district" was mechanically the *easiest* district (lowest primary pressure and lowest general opponent strength) instead of the hardest. `generalWinProbability`'s `genBase` now derives from `align` (+ trap tax); `primaryWinProbability` now penalizes `incumbent` districts.
+- **Balance:** money strategy was winning the general ~2.5x more often than labor (documented as an open issue in the previous increment). Root cause: Petition Drive consumed ~5.5–6 of 8 primary weeks (all AP) while Filing Fee cleared in ~1.5–2 weeks, leaving money ~4 extra weeks of AP to build primary-win stats. Retuned Petition Drive yields up and Filing Fee cost $750→$1,250 so both ballot-access doors cost comparable AP; fixed `hybridStrategy`'s dead-code money branch. Money/labor overall-win ratio now ~1.68x (was ~2.5x); `harness:full` now asserts this can't regress past 2.3x.
+- Full detail + measured before/after tables: `docs/BALANCE-NOTES.md` (2026-07-17 — Cleanup / mechanics audit pass).
+- Harnesses: all pass under `npm run harness`.
+
 ## Next
 1. Shadow consequences on Faces
-2. UI polish (audio optional later); only then consider v0.1 label with evidence bundle
+2. Build out the allies/assets/reps acquisition system several Wave 1–3 cards already reference (`AL01`, `AL03`, `AL04`, `AL05`, `AL09`, `AL11`, `R01`, `R05`, `R06`, `R07`, `R10`, `A01`, `A09`, `B05`) — currently these ids are never granted anywhere, so the synergy bonuses that reference them can never trigger
+3. UI polish (audio optional later); only then consider v0.1 label with evidence bundle

@@ -57,8 +57,8 @@ function playBlockWalk(state) {
 }
 
 function playFilingFee(state) {
-  if (state.money < 750 || state.ballot) return 'Cannot play Filing Fee';
-  state.money -= 750; state.ballot = true;
+  if (state.money < 1250 || state.ballot) return 'Cannot play Filing Fee';
+  state.money -= 1250; state.ballot = true;
   return 'SAFE — Receipt in hand. On the ballot the expensive way.';
 }
 
@@ -75,7 +75,7 @@ console.log('2.', playBlockWalk(S));
 console.log('   AP left:', S.ap);
 console.log(endWeek(S));
 console.log('3.', playBlockWalk(S));
-S.money = 900;
+S.money = 1400;
 console.log('4.', playFilingFee(S));
 console.log(endWeek(S));
 console.log('\n=== Final Ledger ===');

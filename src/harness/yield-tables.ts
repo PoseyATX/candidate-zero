@@ -172,7 +172,8 @@ for (const vol of [0, 2, 4, 6]) {
 console.log('\nDesign notes:');
 console.log('- Block Walk SAFE envelope is the grind floor (never disaster).');
 console.log('- Fish Fry funds the money ballot path; mean net should stay > 0.');
-console.log('- Petition tuned 2026-07-16; positive tails no longer auto-clear 450 by W2.');
+console.log('- Petition tuned 2026-07-16 then 2026-07-17; positive tails no longer auto-clear 450 by W2,');
+console.log('  and labor no longer needs ~6 of 8 primary weeks to reach ballot (see BALANCE-NOTES.md).');
 console.log('- Full archive ACTION table compare remains open for walk/fund/chairs narrative text.');
 
 console.log('\nHarness complete.');
