@@ -270,11 +270,19 @@ function renderLog(): void {
   box.scrollTop = box.scrollHeight;
 }
 
+function renderEndOfRun(): void {
+  if (!campaign) return;
+  const over = campaign.state.over;
+  $('btn-end').classList.toggle('hidden', over);
+  $('btn-restart').classList.toggle('hidden', !over);
+}
+
 function paint(): void {
   renderLedger();
   renderDraft();
   renderPlayables();
   renderLog();
+  renderEndOfRun();
 }
 
 function showGame(): void {
@@ -360,6 +368,7 @@ function boot(): void {
   $('btn-start').addEventListener('click', () => startRun());
   $('btn-new').addEventListener('click', () => requestNewRun());
   $('btn-end').addEventListener('click', () => endWeek());
+  $('btn-restart').addEventListener('click', () => requestNewRun());
   showSetup();
 }
 
