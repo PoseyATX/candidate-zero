@@ -13,10 +13,13 @@ This repository contains the modular TypeScript baseline for the durable, testab
 - **22 Play cards** in pure, explicit-state form (waves 1–4), root-attr tagged
 - Petition Drive balance-tuned; multi-strategy loop harness green
 - Minimal hand + draw + play + week loop live (seeded end-to-end)
-- Attribute synergy (`cardAttrMod`) active
+- Attribute synergy (`cardAttrMod`) active; personas/regions tilt attrs
+- Primary **8 weeks** + General **6 weeks** with filing + elections
+- Setup binds (persona / issue / district / region) in CLI + UI
+- Phase-turn 3-card drafts on ballot and general entry
 - Thin Vite UI shell + CLI play shell
-- Harnesses: resolve, smoke, ballot, loop, strategies, ac1, ac1-parity, audit
-- **Open for honest v0.1:** yield-table archive compare, setup/persona in UI, UI polish
+- Harnesses: resolve, smoke, ballot, loop, strategies, ac1, ac1-parity, audit, calendar, setup
+- **Open for honest v0.1:** yield-table archive compare, GOTV balance, UI polish
 
 ## Architecture
 
