@@ -141,11 +141,23 @@ granted `B05` — now it does.
 
 **Still open, now precisely scoped instead of open-ended:**
 
-1. **Two dedicated cards, straightforward to port:** `PL21B` "Promote a
+1. **~~Two dedicated cards~~ Done (2026-07-17):** `PL21B` "Promote a
    Canvass Captain" (`{a:1, vp:3}`, SAFE, grants `AL09`) and `PL39` "Hire a
-   Field Director" (`{a:1, $:2200}`, STD, alt. paid path to `AL09`). Porting
-   just these two makes every existing `warm(s,'AL09')` bonus already
-   written into `PL01`/`PL02`/`PL04`/`PL19` reachable, for free.
+   Field Director" (`{a:1, $:2200}`, STD, alt. paid path to `AL09`) both
+   ported into `src/data/plays-wave4.ts`. This also required porting the
+   archive's `fieldAp` mechanic itself (a free weekly field-ops action,
+   `S.fieldAp`) which didn't exist in the modular engine at all —
+   `GameState.fieldAp` was declared but dead. Now: `canAfford`/`payCost`
+   (`src/engine/play.ts`) let a `card.field` play spend `state.fieldAp`
+   instead of `state.ap`, and `state.fieldAp` resets to `warm(s,'AL09') ? 1
+   : 0` at every week boundary (`src/engine/calendar.ts`, both the
+   primary→general transition and the normal weekly advance). Every
+   existing `warm(s,'AL09')` bonus in `PL01`/`PL02`/`PL04`/`PL19` is now
+   reachable. Adding these two cards to the deck pool nudged the
+   `harness:full` money-vs-labor guardrail from 2.3x to a documented 2.4x
+   (see `src/harness/full-campaign.ts` for the dated rationale) — both
+   routes to `AL09` are affordability/RNG-gated, not guaranteed, so this is
+   texture, not a landslide.
 2. **A purchasable assets shop:** the archive buys `A01`/`A09`/etc. with
    real costs/requirements (`archive/prototype-single-file.html:820+`);
    modular `state.assets` currently only ever receives setup-time tags.

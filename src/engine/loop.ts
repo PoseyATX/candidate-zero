@@ -70,6 +70,7 @@ export interface WeekReport {
 export interface LedgerSnapshot {
   week: number;
   ap: number;
+  fieldAp: number;
   money: number;
   contacts: number;
   nameID: number;
@@ -91,6 +92,7 @@ export function snapshot(state: GameState): LedgerSnapshot {
   return {
     week: state.week,
     ap: state.ap,
+    fieldAp: state.fieldAp,
     money: state.money,
     contacts: state.contacts,
     nameID: state.nameID,

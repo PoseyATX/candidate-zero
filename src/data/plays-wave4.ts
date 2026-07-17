@@ -5,6 +5,7 @@
  */
 
 import { random } from '../engine/rng.js';
+import { addAlly, findAlly, warm } from '../engine/reputation.js';
 import type { PlayCard } from '../engine/types.js';
 
 function clamp(v: number, lo: number, hi: number): number {
@@ -118,10 +119,41 @@ export const PL22_ContrastMail: PlayCard = {
   }
 };
 
+export const PL21B_PromoteCanvassCaptain: PlayCard = {
+  id: 'PL21B', n: 'Promote a Canvass Captain', cost: { a: 1, vp: 3 }, risk: 'SAFE', ph: [1, 2, 3], field: true, tag: 'the field gets a spine',
+  attrs: ['DIP'],
+  d: 'One volunteer stops showing up as a volunteer and starts showing up as staff.',
+  show: (s) => !findAlly(s, 'AL09'),
+  odds: () => 0.95,
+  run: (s) => {
+    addAlly(s, 'AL09', 3);
+    s.fieldAp = 1;
+    return 'She has a route book, a phone tree, and opinions about your map. The field has a spine now.';
+  }
+};
+
+export const PL39_HireFieldDirector: PlayCard = {
+  id: 'PL39', n: 'Hire a Field Director', cost: { a: 1, $: 2200 }, risk: 'STD', ph: [1, 2], field: true, tag: 'professionalize',
+  attrs: ['DIP'], w: 1,
+  d: "A professional who has run four of these before. Money buys what volunteers can't always deliver on schedule.",
+  req: (s) => !warm(s, 'AL09'),
+  odds: () => 0.8,
+  run: (s, o) => {
+    if (o.tier <= 1) {
+      addAlly(s, 'AL09', 3);
+      s.fieldAp = 1;
+      return 'She has run four of these and lost only one. The field has a professional now.';
+    }
+    return 'The good ones are all hired. You get a resume stack and a headache.';
+  }
+};
+
 export const WAVE4_PLAYS: PlayCard[] = [
   PL16_RecruitVolunteers,
   PL18_SharpenMessage,
   PL20_PacCheck,
   PL21_SelfFundCredit,
-  PL22_ContrastMail
+  PL22_ContrastMail,
+  PL21B_PromoteCanvassCaptain,
+  PL39_HireFieldDirector
 ];

@@ -103,7 +103,7 @@ function renderLedger(): void {
     <div class="ledger-grid">
       <div><span class="k">Stage</span> ${stageLabel(s)} · Phase ${getPhase(s)}</div>
       <div><span class="k">Week</span> ${stageWeek(s)} (cal ${snap.week}/${s.weeksTotal})</div>
-      <div><span class="k">AP</span> ${snap.ap}/${s.apMax}</div>
+      <div><span class="k">AP</span> ${snap.ap}/${s.apMax}${snap.fieldAp ? ` +${snap.fieldAp} field` : ''}</div>
       <div><span class="k">Money</span> $${snap.money}</div>
       <div><span class="k">Contacts</span> ${snap.contacts}</div>
       <div><span class="k">Name ID</span> ${snap.nameID}</div>

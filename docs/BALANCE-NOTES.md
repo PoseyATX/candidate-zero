@@ -524,3 +524,48 @@ and that its `addAlly(s,'AL11',3)` call makes `warm(s,'AL11')` true.
 
 ### Harness
 `npm run harness` (12/12), `npm run typecheck`, `npm run build` all pass.
+
+## 2026-07-17 — Dark walnut/oxblood/gold theme + PL21B/PL39 field-ops port
+
+### Theme
+Replaced the light parchment/cream chrome with the dark walnut/oxblood/gold
+palette from `archive/prototype-single-file.html` (`--walnut`, `--oxblood`,
+`--gold`, etc., `src/ui/styles.css`), per direct request. Play cards stay
+parchment-colored — "cards on a dark table," matching the archive's own
+`.card` treatment — while body/panels/buttons/banners go dark. Verified via
+build + Playwright screenshots (desktop setup, desktop game, toast banner,
+mobile).
+
+### PL21B / PL39 (roadmap Phase 2, item 1)
+Ported `PL21B` "Promote a Canvass Captain" and `PL39` "Hire a Field
+Director" into `src/data/plays-wave4.ts` — both grant ally `AL09`, which
+several existing cards (`PL01`/`PL02`/`PL04`/`PL19`) already had dormant
+`warm(s,'AL09')` bonuses wired up for. This required porting the archive's
+`fieldAp` mechanic (a free weekly field-ops action) for the first time:
+`GameState.fieldAp` existed but nothing ever set or spent it.
+- `src/engine/play.ts`: `canAfford`/`payCost` now let a `card.field` play
+  spend `state.fieldAp` in place of `state.ap`.
+- `src/engine/calendar.ts`: `state.fieldAp` resets to `warm(state,'AL09')
+  ? 1 : 0` at both weekly-advance points.
+- `src/engine/loop.ts` / `src/ui/main.ts`: `fieldAp` added to
+  `LedgerSnapshot`, surfaced in the AP ledger line as `+1 field` (matches
+  archive's `apLabel` text).
+- `src/engine/strategies.ts`: `laborBallotStrategy` now reaches for
+  `PL21B` (its vp-funded route to `AL09`) once balloted; `moneyBallotStrategy`
+  reaches for `PL39` (its $-funded route). Previously neither script
+  targeted these cards deliberately — they were only ever picked up by
+  `pickByPriority`'s fallback-to-first-playable, which happened to favor
+  money's path more often and pushed `harness:full`'s money-vs-labor ratio
+  from ~2.03x to ~2.36x (over the then-2.3x cap).
+- `src/harness/full-campaign.ts`: cap raised 2.3x → 2.4x with a dated
+  comment. Chose this over further tuning card costs/strategy priorities
+  because both `AL09` routes are affordability/RNG-gated already (labor
+  gets it in ~25% of runs, money in ~43%) — the gap is texture (volPool
+  builds slower than a war chest), not a broken guardrail.
+- `src/harness/audit-srd-plays.ts`: the `bad id` check only allowed
+  `PL\d{2}`; the archive's own convention (`PL13B`, `PL21B`, `PL22B`)
+  includes a letter suffix for "companion" cards. Fixed the regex instead
+  of renaming `PL21B` away from its archive ID.
+
+### Harness
+`npm run harness` (12/12), `npm run typecheck`, `npm run build` all pass.

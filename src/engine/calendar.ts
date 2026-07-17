@@ -6,6 +6,7 @@
  */
 
 import { random } from './rng.js';
+import { warm } from './reputation.js';
 import type { CampaignOutcome, GameState } from './types.js';
 
 /** Primary campaign length (includes filing window). */
@@ -157,6 +158,7 @@ export function resolvePrimaryConclusion(state: GameState): StageTransition {
     state.stage = 'general';
     state.week = PRIMARY_WEEKS + 1;
     state.ap = state.apMax;
+    state.fieldAp = warm(state, 'AL09') ? 1 : 0;
     state.momentum = Math.max(0, state.momentum - 1);
     state.townHallThisWeek = false;
     state.outcome = 'ongoing';
@@ -236,6 +238,7 @@ export function advanceCampaignWeek(state: GameState): StageTransition {
 
   state.week += 1;
   state.ap = state.apMax;
+  state.fieldAp = warm(state, 'AL09') ? 1 : 0;
   state.momentum = Math.max(0, state.momentum - 1);
   state.townHallThisWeek = false;
   state.log.push({
