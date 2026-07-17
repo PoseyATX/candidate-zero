@@ -109,20 +109,12 @@ function renderLedger(): void {
         snap.ballot ? 'ON' : `${snap.signatures}/${s.sigNeed} sigs`
       }</div>
       <div><span class="k">Identity</span> ${s.persona ?? '—'} · ${s.issue ?? '—'}</div>
-      <div><span class="k">District</span> ${s.district?.name ?? '—'}${s.district?.trap ? ' (TRAP)' : ''}</div>
       <div><span class="k">Attrs</span> ${attrs}</div>
       ${s.over && s.outcome ? `<div><span class="k">Outcome</span> ${s.outcome}</div>` : ''}
     </div>
   `;
   if (s.over) {
-    const labels: Record<string, string> = {
-      missed_filing: 'Missed the filing deadline. Not on the ballot.',
-      lost_primary: 'Lost the primary. Nomination goes elsewhere.',
-      won_general: 'Won the general. The district is yours.',
-      lost_general: 'Lost the general. Primary glory, November heartbreak.'
-    };
-    $('week-hint').textContent =
-      labels[s.outcome ?? ''] ?? `Campaign over: ${s.outcome ?? 'ended'}.`;
+    $('week-hint').textContent = `Campaign over: ${s.outcome ?? 'ended'}.`;
   } else if (s.stage === 'general') {
     $('week-hint').textContent = 'General election — GOTV and contrast. Six weeks to November.';
   } else if (s.ballot) {
