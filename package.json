@@ -1,0 +1,29 @@
+{
+  "name": "candidate-zero",
+  "version": "0.0.1",
+  "description": "CANDIDATE ZERO — A Hot Texas Primary (modular TypeScript baseline for eventual Swift/iOS)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview",
+    "harness:resolve": "node src/harness/test-resolve.mjs",
+    "harness:smoke": "node src/harness/smoke-play.mjs",
+    "harness:ballot": "node src/harness/ballot-qualification.mjs",
+    "harness:loop": "npx tsx src/harness/play-loop-demo.ts",
+    "harness:strategies": "npx tsx src/harness/multi-strategy.ts",
+    "harness:ac1": "npx tsx src/harness/ac1-determinism.ts",
+    "harness:ac1-parity": "npx tsx src/harness/ac1-prototype-parity.ts",
+    "harness:audit": "npx tsx src/harness/audit-srd-plays.ts",
+    "play": "npx tsx src/cli/play.ts",
+    "play:auto": "npx tsx src/cli/play.ts --auto labor --weeks 8",
+    "harness": "npm run harness:resolve && npm run harness:smoke && npm run harness:ballot && npm run harness:strategies && npm run harness:ac1 && npm run harness:ac1-parity && npm run harness:audit"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "tsx": "^4.16.0",
+    "typescript": "^5.5.0",
+    "vite": "^5.4.0"
+  }
+}

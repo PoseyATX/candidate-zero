@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Candidate Zero — Primary</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="top">
+        <div>
+          <p class="eyebrow">A Hot Texas Primary</p>
+          <h1>Candidate Zero</h1>
+        </div>
+        <div class="top-actions">
+          <label class="seed-label">Seed <input id="seed-input" type="number" min="0" step="1" /></label>
+          <button type="button" id="btn-new" class="btn">New run</button>
+        </div>
+      </header>
+      <section id="ledger" class="ledger" aria-live="polite"></section>
+      <section class="panels">
+        <div class="panel">
+          <h2>Actions</h2>
+          <p id="week-hint" class="hint"></p>
+          <div id="playables" class="card-grid"></div>
+          <div class="row-actions">
+            <button type="button" id="btn-end" class="btn btn-gold">End week</button>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Log</h2>
+          <div id="log" class="log" role="log"></div>
+        </div>
+      </section>
+      <footer class="foot">
+        <span>Pure engine shell · not v0.1</span>
+        <span>SAFE never disasters · ballot by week 8</span>
+      </footer>
+    </div>
+    <script type="module" src="/src/ui/main.ts"></script>
+  </body>
+</html>
