@@ -383,3 +383,42 @@ left as an open design question.
 
 ### Harness
 `npm run harness` (12/12), `npm run typecheck`, `npm run build` all pass.
+
+## 2026-07-17 — Mobile card-grid bug (one-handed play is a core product thesis, not a nice-to-have)
+
+The project's stated design goal is Dwarf-Fortress-level systemic
+complexity in a form factor playable one-handed on mobile with minimal
+scrolling/navigation — the card/deckbuilder structure exists specifically
+because of this constraint. Worth stating plainly in the notes: this
+isn't a cosmetic preference, it's load-bearing for the product, so a
+mobile-scroll regression is a real bug, not polish.
+
+### Bug
+`.card-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 172px)); }`
+(added earlier today in the card-redesign pass) rendered as a **single
+column on phone-width screens** instead of the two that should fit.
+Root cause: CSS Grid's `auto-fill` repetition count is computed from
+`minmax()`'s **max** bound when it's a definite length (172px here), not
+the min (140px) — a real spec detail, not a typo. Measured at a 390px
+viewport: content width 308px, two 140px columns + gap only need 294px,
+but the browser used 172px+gap per column for its fit calculation
+(`floor((308+14.4)/(172+14.4)) = 1`), producing one oversized column and
+~2382px of vertical scroll for a 5-card hand.
+
+### Fix
+`grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));` — `1fr` is
+indefinite, so the browser correctly uses the 140px min for the fit
+calculation instead. Individual card growth is now capped separately via
+`max-width: 172px` on `.play-card` itself (not the track), so wide desktop
+rows still don't stretch cards, and narrow mobile rows get the correct
+column count.
+
+### Measured
+390×844 viewport, 5-card hand: scroll height 2382px → **1490px** (~37%
+reduction). Grid now correctly computes 2 columns (`146.8px 146.8px`
+measured). Desktop (1200px, 5-card hand, 3 columns) re-verified unchanged
+— no regression. Both confirmed via headless Playwright screenshots.
+
+### Harness
+CSS-only change; `npm run harness` (12/12), `npm run typecheck`, `npm run
+build` all pass.

@@ -147,7 +147,14 @@ h1 {
 
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 172px));
+  /* auto-fill's column *count* is computed from minmax()'s max when it's a
+     definite length, not the min — a 140/172 fixed-max pair silently
+     collapsed to one column on phone-width screens (measured: 308px
+     content width, 2 columns needed only 294px, still rendered as one).
+     1fr makes the max indefinite so the count uses the 140px min instead;
+     the per-card max-width below (not the track) caps individual card
+     growth on wide rows. */
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 0.9rem;
   align-items: start;
 }
@@ -162,6 +169,8 @@ h1 {
 .play-card {
   position: relative;
   aspect-ratio: 2 / 3;
+  width: 100%;
+  max-width: 172px;
   text-align: left;
   font: inherit;
   cursor: pointer;

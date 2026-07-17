@@ -215,10 +215,24 @@ degenerate (near-0% or near-100%).
 
 ## Phase 6 — UI/UX polish
 
-TICKET already names this as the last gate before considering v0.1
-("UI polish; only then consider v0.1 label with evidence bundle"). Beyond
-Phase 1's ground-selection gap, concretely still missing (verified by
-reading `src/ui/main.ts`/`src/ui/styles.css`, not assumed):
+**Product thesis, stated explicitly by the project owner (2026-07-17):**
+the goal is Dwarf-Fortress-level systemic complexity in a form factor
+playable **one-handed on mobile with minimal navigation/scrolling** — the
+card/deckbuilder structure was chosen specifically because of this
+constraint, not as a genre default. This means mobile-viewport scroll
+distance and tap-target ergonomics are load-bearing product requirements
+here, not standard "responsive polish" — treat regressions in either as
+bugs, the way `docs/BALANCE-NOTES.md`'s 2026-07-17 "Mobile card-grid bug"
+entry does (a `minmax()` CSS Grid spec detail silently collapsed the
+mobile card grid to one column instead of two, costing ~37% extra scroll;
+fixed same day). Any future UI work should screenshot-verify at a phone
+width (this session used 390×844) before considering it done, the same
+way balance changes get harness-verified before considering them done.
+
+TICKET already names general UI polish as the last gate before considering
+v0.1 ("UI polish; only then consider v0.1 label with evidence bundle").
+Beyond Phase 1's ground-selection gap, concretely still missing (verified
+by reading `src/ui/main.ts`/`src/ui/styles.css`, not assumed):
 
 - No visual distinction between SAFE / STD / VOL risk classes beyond the
   text label (a trap-card border color exists; a risk-class color coding
