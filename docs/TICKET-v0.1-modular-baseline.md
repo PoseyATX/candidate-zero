@@ -36,9 +36,17 @@ Unity deferred as presentation-only; TS engine remains rules authority.
 - Terminal outcomes wired through `endWeekInPlace` / `runFullCampaign`
 - Harness: `npm run harness:calendar`
 
+## Increment: Setup binds + phase drafts (2026-07-17)
+
+- Personas apply root **attrs** (cardAttrMod) + faces/resources
+- `createCampaign({ setup })` applies persona/issue/district/region (default teacher/east)
+- CLI: `--persona --issue --district --region`
+- UI: identity setup screen before play; stage/attrs on ledger
+- Phase-turn **3-card draft** on ballot (phase 2) and enter-general (phase 3); auto in harnesses
+- Harness: `npm run harness:setup`
+
 ## Next
-1. Persona/setup wiring into UI + CLI (choices bind)
-2. Yield-table archive compare for walk/fund/chairs (AC1 open note)
-3. Phase-turn deck evolution choices (not just auto extra draw)
-4. General-election card weight / GOTV balance pass
-5. Polish UI; only then consider v0.1 label with evidence bundle
+1. Yield-table archive compare for walk/fund/chairs (AC1 open note)
+2. General-election card weight / GOTV balance pass
+3. Shadow consequences on Faces
+4. Polish UI; only then consider v0.1 label with evidence bundle

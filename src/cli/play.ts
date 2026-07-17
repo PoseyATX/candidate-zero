@@ -12,6 +12,8 @@ import {
   snapshot,
   startWeek,
   endWeekInPlace,
+  pickPhaseDraft,
+  maybeOfferPhaseDraft,
   type Campaign,
   CAMP_FILING_FEE,
   CAMP_PETITION
@@ -20,10 +22,27 @@ import { getPhase, stageLabel, stageWeek, CAMPAIGN_WEEKS_TOTAL } from "../engine
 import { STAMPS } from "../engine/resolve.js";
 import { STRATEGIES } from "../engine/strategies.js";
 import { pickDefaultGround } from "../engine/play.js";
+import {
+  PERSONAS,
+  ISSUES,
+  DISTRICTS,
+  REGIONS,
+  setupFromPartial,
+  type SetupSelection
+} from "../data/setup.js";
 import type { PlayCard } from "../engine/types.js";
 
 function parseArgs(argv: string[]) {
-  const out: { seed?: number; auto?: string; weeks: number; help?: boolean } = { weeks: 8 };
+  const out: {
+    seed?: number;
+    auto?: string;
+    weeks: number;
+    help?: boolean;
+    persona?: string;
+    issue?: string;
+    district?: string;
+    region?: string;
+  } = { weeks: 8 };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]!;
     if (a === "--help" || a === "-h") out.help = true;
@@ -33,8 +52,25 @@ function parseArgs(argv: string[]) {
     else if (a.startsWith("--auto=")) out.auto = a.slice(7);
     else if (a === "--weeks" || a === "-w") out.weeks = Number(argv[++i]);
     else if (a.startsWith("--weeks=")) out.weeks = Number(a.slice(8));
+    else if (a === "--persona") out.persona = argv[++i];
+    else if (a.startsWith("--persona=")) out.persona = a.slice(10);
+    else if (a === "--issue") out.issue = argv[++i];
+    else if (a.startsWith("--issue=")) out.issue = a.slice(8);
+    else if (a === "--district") out.district = argv[++i];
+    else if (a.startsWith("--district=")) out.district = a.slice(11);
+    else if (a === "--region") out.region = argv[++i];
+    else if (a.startsWith("--region=")) out.region = a.slice(9);
   }
   return out;
+}
+
+function setupFromArgs(args: ReturnType<typeof parseArgs>): SetupSelection {
+  return setupFromPartial({
+    personaId: args.persona,
+    issueId: args.issue,
+    districtId: args.district,
+    regionId: args.region
+  });
 }
 
 function costLabel(card: PlayCard): string {
@@ -60,7 +96,30 @@ function printLedger(campaign: Campaign): void {
       (s.over && s.outcome ? `  [${s.outcome}]` : "")
   );
   console.log(`$${s.money}  contacts ${s.contacts}  nameID ${s.nameID}  vol ${s.volPool}  mom ${s.momentum}`);
+  if (s.persona) {
+    const attrs = Object.entries(s.attrs)
+      .map(([k, v]) => `${k}:${v}`)
+      .join(" ");
+    console.log(`Identity: ${s.persona} · ${s.issue} · ${s.district?.name ?? "?"} · attrs ${attrs}`);
+  }
   console.log("-".repeat(52));
+}
+
+async function maybeInteractiveDraft(campaign: Campaign, rl: readline.Interface): Promise<void> {
+  const draft = campaign.state.pendingDraft;
+  if (!draft?.options.length) return;
+  console.log(`\nPhase ${draft.phase} draft — add one card to your pool:`);
+  draft.options.forEach((id, i) => {
+    const card = campaign.catalog.get(id);
+    console.log(`  d${i + 1}. ${id} ${card ? `— ${card.n}` : ""}`);
+  });
+  const answer = (await rl.question("Draft pick (d1-d3, default d1)> ")).trim().toLowerCase();
+  let idx = 0;
+  if (answer.startsWith("d")) idx = Math.max(0, Number(answer.slice(1)) - 1);
+  else if (answer) idx = Math.max(0, Number(answer) - 1);
+  if (Number.isNaN(idx) || idx < 0 || idx >= draft.options.length) idx = 0;
+  const r = pickPhaseDraft(campaign, idx);
+  console.log(r.ok ? `  Drafted ${r.cardId}` : `  Draft failed: ${r.reason}`);
 }
 
 interface MenuEntry {
@@ -95,27 +154,52 @@ function printMenu(entries: MenuEntry[], campaign: Campaign): void {
 
 async function interactiveWeek(campaign: Campaign, rl: readline.Interface): Promise<"ok" | "quit"> {
   startWeek(campaign);
-  console.log(`\n=== Week ${campaign.state.week} (phase ${getPhase(campaign.state)}) ===`);
+  console.log(
+    `\n=== ${stageLabel(campaign.state)} week ${stageWeek(campaign.state)} (cal ${campaign.state.week}, phase ${getPhase(campaign.state)}) ===`
+  );
   printLedger(campaign);
-  while (campaign.state.ap > 0) {
+  await maybeInteractiveDraft(campaign, rl);
+  while (campaign.state.ap > 0 && !campaign.state.over) {
+    await maybeInteractiveDraft(campaign, rl);
     const entries = buildMenu(campaign);
     printMenu(entries, campaign);
     if (!entries.length) break;
     const answer = (await rl.question("> ")).trim().toLowerCase();
     if (answer === "q") return "quit";
     if (answer === "h" || answer === "?") {
-      console.log("Numbers play cards. Camp = always-on ballot path. e ends week.");
+      console.log("Numbers play cards. Camp = always-on ballot path. e ends week. d1-d3 draft.");
       continue;
     }
-    if (answer === "l") { printLedger(campaign); continue; }
+    if (answer === "l") {
+      printLedger(campaign);
+      continue;
+    }
     if (answer === "e") break;
     const entry = entries.find(en => en.key === answer);
-    if (!entry) { console.log("Unknown."); continue; }
+    if (!entry) {
+      console.log("Unknown.");
+      continue;
+    }
+    const wasBallot = campaign.state.ballot;
     const outcome = playFromHand(campaign, entry.handIndex);
-    if (!outcome.ok) { console.log(outcome.reason); continue; }
+    if (!outcome.ok) {
+      console.log(outcome.reason);
+      continue;
+    }
     console.log(`  [${outcome.stamp ?? STAMPS[outcome.tier ?? 2]}] ${outcome.cardName}: ${outcome.text}`);
+    if (!wasBallot && campaign.state.ballot) {
+      maybeOfferPhaseDraft(campaign, false);
+      await maybeInteractiveDraft(campaign, rl);
+    }
   }
-  endWeekInPlace(campaign);
+  const transition = endWeekInPlace(campaign);
+  if (transition.kind === "enter_general") {
+    maybeOfferPhaseDraft(campaign, false);
+    await maybeInteractiveDraft(campaign, rl);
+  }
+  if (transition.kind !== "none" && transition.text) {
+    console.log(`  >> ${transition.text}`);
+  }
   return "ok";
 }
 
@@ -149,12 +233,20 @@ async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
   if (args.help) {
     console.log("npm run play [--seed N] [--auto labor|money|hybrid|grind] [--weeks N]");
+    console.log("  [--persona id] [--issue id] [--district id] [--region id]");
+    console.log("Personas:", PERSONAS.map(p => p.id).join(", "));
+    console.log("Issues:", ISSUES.map(i => i.id).join(", "));
+    console.log("Districts:", DISTRICTS.map(d => d.id).join(", "));
+    console.log("Regions:", REGIONS.map(r => r.id).join(", "));
     return;
   }
   printBanner();
   const seed = args.seed ?? (Date.now() % 1_000_000);
-  const campaign = createCampaign({ seed });
+  const setup = setupFromArgs(args);
+  const campaign = createCampaign({ seed, setup });
   console.log("Seed:", seed);
+  console.log("Setup:", setup);
+  printLedger(campaign);
   if (args.auto) {
     autoPlay(campaign, args.auto, args.weeks);
     return;
@@ -164,10 +256,11 @@ async function main(): Promise<void> {
     while (campaign.state.week <= CAMPAIGN_WEEKS_TOTAL && !campaign.state.over) {
       if ((await interactiveWeek(campaign, rl)) === "quit") break;
       printLedger(campaign);
+      if (campaign.state.over) break;
       const cont = (await rl.question("Enter next week, q quit> ")).trim().toLowerCase();
       if (cont === "q") break;
     }
-    console.log("\nEnded:", snapshot(campaign.state));
+    console.log("\nEnded:", snapshot(campaign.state), campaign.state.outcome ?? "");
   } finally {
     rl.close();
   }

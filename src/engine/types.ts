@@ -159,6 +159,10 @@ export interface GameState {
   strawBonus?: number;
   deck?: string[];
   handBonus?: number;
+  /** Last phase used for draft-evolution detection. */
+  lastPhase?: 1 | 2 | 3;
+  /** Pending phase-turn draft (3 card options). */
+  pendingDraft?: { phase: number; options: string[] };
 }
 
 export type CampaignOutcome =

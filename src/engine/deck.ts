@@ -123,14 +123,69 @@ function warmAllyBonus(state: GameState): boolean {
   return (state.allies || []).some(a => a.id === 'AL11' && a.warm > 0);
 }
 
-// === PHASE EVOLUTION HOOKS ===
+// === PHASE EVOLUTION (draft offer) ===
+
+/**
+ * Build a 3-card draft from the unowned pool for a phase turn.
+ * Does not mutate ownership until resolvePhaseDraft.
+ */
+export function buildPhaseDraft(state: GameState, count = 3): { phase: number; options: string[] } {
+  const pool = getAvailableNewCards(state);
+  const options: string[] = [];
+  const working = [...pool];
+  while (options.length < count && working.length > 0) {
+    const idx = Math.floor(random() * working.length);
+    const [id] = working.splice(idx, 1);
+    if (id) options.push(id);
+  }
+  return { phase: 0, options };
+}
+
+/** Commit a draft pick into owned deck (pool for future weekly growth). */
+export function resolvePhaseDraft(
+  state: GameState,
+  pickIndex: number
+): { ok: boolean; cardId?: string; reason?: string } {
+  const draft = state.pendingDraft;
+  if (!draft || !draft.options.length) {
+    return { ok: false, reason: 'No pending draft' };
+  }
+  const cardId = draft.options[pickIndex];
+  if (!cardId) return { ok: false, reason: 'Invalid draft index' };
+  if (!state.deck) state.deck = [];
+  if (!state.deck.includes(cardId)) state.deck.push(cardId);
+  state.log.push({
+    week: state.week,
+    kind: 'note',
+    text: `Phase ${draft.phase} draft: added ${cardId} to the campaign pool. (Options were ${draft.options.join(', ')})`
+  });
+  state.pendingDraft = undefined;
+  return { ok: true, cardId };
+}
+
+/** Seeded auto-pick (first option) for harnesses / strategies. */
+export function autoResolvePhaseDraft(state: GameState): string | null {
+  if (!state.pendingDraft?.options.length) return null;
+  const r = resolvePhaseDraft(state, 0);
+  return r.cardId ?? null;
+}
+
+/**
+ * Legacy hook: extra weekly draw + open a draft offer.
+ * Prefer loop.maybeOfferPhaseDraft for phase-change detection.
+ */
 export function phaseTurnDeckEvolution(state: GameState, newPhase: number): void {
-  // Called at phase turns (e.g. week 5 and 9)
-  // Future: present 3 cards to add, or offer to sharpen existing, or cut
-  // For now: guarantee one extra draw + log opportunity
   const extra = enforceWeeklyDraw(state);
   if (extra.length > 0) {
-    console.log(`[Deck] Phase ${newPhase} evolution: extra card(s) added — ${extra.join(', ')}`);
+    state.log.push({
+      week: state.week,
+      kind: 'draw',
+      text: `Phase ${newPhase} evolution: extra card(s) — ${extra.join(', ')}`
+    });
   }
-  // TODO: add real drafting UI / choice when we have presentation layer
+  const draft = buildPhaseDraft(state, 3);
+  draft.phase = newPhase;
+  if (draft.options.length) {
+    state.pendingDraft = draft;
+  }
 }

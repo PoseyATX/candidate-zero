@@ -20,24 +20,46 @@
           <button type="button" id="btn-new" class="btn">New run</button>
         </div>
       </header>
-      <section id="ledger" class="ledger" aria-live="polite"></section>
-      <section class="panels">
-        <div class="panel">
-          <h2>Actions</h2>
-          <p id="week-hint" class="hint"></p>
-          <div id="playables" class="card-grid"></div>
-          <div class="row-actions">
-            <button type="button" id="btn-end" class="btn btn-gold">End week</button>
+      <section id="setup" class="setup panel">
+        <h2>Identity — choices bind</h2>
+        <div class="setup-grid">
+          <label>Persona
+            <select id="sel-persona"></select>
+          </label>
+          <label>Issue
+            <select id="sel-issue"></select>
+          </label>
+          <label>District
+            <select id="sel-district"></select>
+          </label>
+          <label>Region
+            <select id="sel-region"></select>
+          </label>
+        </div>
+        <p id="setup-blurb" class="hint"></p>
+        <button type="button" id="btn-start" class="btn btn-gold">Begin primary</button>
+      </section>
+      <section id="game" class="game hidden">
+        <section id="ledger" class="ledger" aria-live="polite"></section>
+        <section class="panels">
+          <div class="panel">
+            <h2>Actions</h2>
+            <p id="week-hint" class="hint"></p>
+            <div id="draft" class="card-grid"></div>
+            <div id="playables" class="card-grid"></div>
+            <div class="row-actions">
+              <button type="button" id="btn-end" class="btn btn-gold">End week</button>
+            </div>
           </div>
-        </div>
-        <div class="panel">
-          <h2>Log</h2>
-          <div id="log" class="log" role="log"></div>
-        </div>
+          <div class="panel">
+            <h2>Log</h2>
+            <div id="log" class="log" role="log"></div>
+          </div>
+        </section>
       </section>
       <footer class="foot">
         <span>Pure engine shell · not v0.1</span>
-        <span>SAFE never disasters · ballot by week 8</span>
+        <span>Primary 8w · General 6w · SAFE never disasters</span>
       </footer>
     </div>
     <script type="module" src="/src/ui/main.ts"></script>

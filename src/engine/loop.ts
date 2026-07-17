@@ -12,7 +12,10 @@ import {
   drawCards,
   DEFAULT_HAND_SIZE,
   takeFromHand,
-  enforceWeeklyDraw
+  enforceWeeklyDraw,
+  buildPhaseDraft,
+  autoResolvePhaseDraft,
+  resolvePhaseDraft
 } from './deck.js';
 import { executePlay, isPlayable } from './play.js';
 import { createNewState, getPhase } from './state.js';
@@ -21,6 +24,11 @@ import {
   advanceCampaignWeek,
   type StageTransition
 } from './calendar.js';
+import {
+  applySetup,
+  HARNESS_DEFAULT_SETUP,
+  type SetupSelection
+} from '../data/setup.js';
 import type {
   DeckState,
   GameState,
@@ -35,6 +43,13 @@ export interface Campaign {
   catalog: Map<string, PlayCard>;
   handSize: number;
   filingDeadline: number;
+  setup: SetupSelection;
+}
+
+export interface CreateCampaignOptions extends Partial<GameState> {
+  setup?: SetupSelection | Partial<SetupSelection>;
+  /** When true (default for harnesses), auto-resolve phase drafts. */
+  autoDraft?: boolean;
 }
 
 export interface WeekReport {
@@ -88,13 +103,21 @@ export function buildCatalog(plays: PlayCard[] = ALL_PLAYS): Map<string, PlayCar
   return new Map(plays.map(p => [p.id, p]));
 }
 
-export function createCampaign(overrides: Partial<GameState> = {}): Campaign {
+export function createCampaign(overrides: CreateCampaignOptions = {}): Campaign {
+  const { setup: setupIn, autoDraft: _autoDraft, ...stateOverrides } = overrides;
   // Seed first so deck shuffle and weekly draws share the stream.
   const state = createNewState({
     money: 200,
     volPool: 1,
-    ...overrides
+    ...stateOverrides
   });
+  const setup: SetupSelection = {
+    ...HARNESS_DEFAULT_SETUP,
+    ...(setupIn ?? {})
+  };
+  applySetup(state, setup);
+  state.lastPhase = getPhase(state);
+
   // Seed starter deck inventory so weekly growth skips already-owned starters.
   const starter = [
     'PL01', 'PL01', 'PL01', 'PL02', 'PL03',
@@ -107,8 +130,40 @@ export function createCampaign(overrides: Partial<GameState> = {}): Campaign {
     deck: createDeckState(),
     catalog: buildCatalog(),
     handSize: DEFAULT_HAND_SIZE,
-    filingDeadline: PRIMARY_WEEKS
+    filingDeadline: PRIMARY_WEEKS,
+    setup
   };
+}
+
+/**
+ * If phase increased (ballot → 2, general → 3), open a 3-card draft.
+ * Strategies/harnesses pass auto=true to pick option 0 immediately.
+ */
+export function maybeOfferPhaseDraft(campaign: Campaign, auto = true): string | null {
+  const phase = getPhase(campaign.state);
+  const prev = campaign.state.lastPhase ?? phase;
+  if (phase <= prev) {
+    campaign.state.lastPhase = phase;
+    return null;
+  }
+  const draft = buildPhaseDraft(campaign.state, 3);
+  draft.phase = phase;
+  campaign.state.lastPhase = phase;
+  if (!draft.options.length) return null;
+  campaign.state.pendingDraft = draft;
+  campaign.state.log.push({
+    week: campaign.state.week,
+    kind: 'note',
+    text: `Phase ${phase} turn — draft ${draft.options.join(' / ')} (pick one for the pool).`
+  });
+  if (auto) {
+    return autoResolvePhaseDraft(campaign.state);
+  }
+  return null;
+}
+
+export function pickPhaseDraft(campaign: Campaign, index: number): ReturnType<typeof resolvePhaseDraft> {
+  return resolvePhaseDraft(campaign.state, index);
 }
 
 export const CAMP_PETITION = -101;
@@ -228,15 +283,26 @@ export function runWeek(campaign: Campaign, choose: Chooser): WeekReport {
   const plays: PlayOutcome[] = [];
   let guard = campaign.state.apMax * 4 + 4;
   while (campaign.state.ap > 0 && !campaign.state.over && guard-- > 0) {
+    // Resolve any pending draft before plays (auto for harness path)
+    if (campaign.state.pendingDraft) {
+      autoResolvePhaseDraft(campaign.state);
+    }
     const playable = listPlayableHand(campaign);
     if (playable.length === 0) break;
     const handIndex = choose(playable, campaign.state);
     if (handIndex === null || handIndex === undefined) break;
+    const wasBallot = campaign.state.ballot;
     const outcome = playFromHand(campaign, handIndex);
     plays.push(outcome);
+    if (!wasBallot && campaign.state.ballot) {
+      maybeOfferPhaseDraft(campaign, true);
+    }
     if (!outcome.ok) break;
   }
   const transition = endWeekInPlace(campaign);
+  if (transition.kind === 'enter_general') {
+    maybeOfferPhaseDraft(campaign, true);
+  }
   return {
     week: weekAtStart,
     phase: phaseAtStart,

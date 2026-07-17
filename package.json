@@ -17,9 +17,10 @@
     "harness:ac1-parity": "npx tsx src/harness/ac1-prototype-parity.ts",
     "harness:audit": "npx tsx src/harness/audit-srd-plays.ts",
     "harness:calendar": "npx tsx src/harness/primary-general.ts",
+    "harness:setup": "npx tsx src/harness/setup-bind.ts",
     "play": "npx tsx src/cli/play.ts",
     "play:auto": "npx tsx src/cli/play.ts --auto labor --weeks 8",
-    "harness": "npm run harness:resolve && npm run harness:smoke && npm run harness:ballot && npm run harness:strategies && npm run harness:ac1 && npm run harness:ac1-parity && npm run harness:audit && npm run harness:calendar"
+    "harness": "npm run harness:resolve && npm run harness:smoke && npm run harness:ballot && npm run harness:strategies && npm run harness:ac1 && npm run harness:ac1-parity && npm run harness:audit && npm run harness:calendar && npm run harness:setup"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",
