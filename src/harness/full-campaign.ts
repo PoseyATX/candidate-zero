@@ -56,7 +56,7 @@ function runStrategy(name: string): Row {
     setDefaultSeed(seed);
     const c = createCampaign({ seed });
     runFullCampaign(c, choose);
-    const o = (c.state.outcome ?? 'ongoing') as CampaignOutcome;
+    const o = (c.state.lastCycleOutcome ?? c.state.outcome ?? 'ongoing') as CampaignOutcome;
 
     if (o === 'missed_filing') missedFiling++;
     else if (o === 'lost_primary') lostPrimary++;
