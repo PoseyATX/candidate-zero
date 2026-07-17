@@ -2,7 +2,11 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ Fable-build ]
+    # GitHub branch matching is case-sensitive; the actual branch is
+    # "fable-build" (lowercase, confirmed via `git ls-remote`). The
+    # capitalized form here meant this trigger never matched a real push --
+    # deploy.yml has only ever run once, manually, since it was added.
+    branches: [ fable-build ]
   workflow_dispatch:
 
 permissions:
