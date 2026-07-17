@@ -33,6 +33,12 @@ import {
   HARNESS_DEFAULT_SETUP,
   type SetupSelection
 } from '../data/setup.js';
+import { pickInterimMenu, runInterimPlay } from '../data/interim-plays.js';
+import { pickSessionMenu, runSessionPlay } from '../data/session-plays.js';
+import { autoResolveThematic } from './identity-shift.js';
+import { tickObligations } from './obligations.js';
+import { flushCycleLootToDeck } from './failure-loot.js';
+import { tickAssetPassives } from '../data/assets.js';
 import type {
   DeckState,
   GameState,
@@ -58,7 +64,7 @@ export interface CreateCampaignOptions extends Partial<GameState> {
 
 export interface WeekReport {
   week: number;
-  phase: 1 | 2 | 3;
+  phase: 0 | 1 | 2 | 3 | 4;
   stage: GameState['stage'];
   drawn: string[];
   plays: PlayOutcome[];
@@ -249,6 +255,37 @@ export function ensureBallotAccessInHand(campaign: Campaign): string | null {
 }
 
 export function startWeek(campaign: Campaign): string[] {
+  // Flush failure/win card loot into the physical deck
+  const flushed = flushCycleLootToDeck(campaign.state, campaign.deck);
+  if (flushed.length) {
+    campaign.state.log.push({
+      week: campaign.state.week,
+      kind: 'draw',
+      text: `Loot cards enter the deck: ${flushed.join(', ')}`
+    });
+  }
+  for (const note of tickAssetPassives(campaign.state)) {
+    campaign.state.log.push({ week: campaign.state.week, kind: 'note', text: `KIT — ${note}` });
+  }
+
+  // Off-season / session use separate menus — no campaign deck draw spam
+  if (campaign.state.stage === 'interim') {
+    markWeekStart(campaign.state);
+    campaign.state.ap = campaign.state.apMax;
+    if (campaign.state.pendingThematic) {
+      campaign.state.log.push({
+        week: campaign.state.week,
+        kind: 'note',
+        text: `Thematic fork open: ${campaign.state.pendingThematic.title}`
+      });
+    }
+    return flushed;
+  }
+  if (campaign.state.stage === 'session') {
+    markWeekStart(campaign.state);
+    campaign.state.ap = campaign.state.apMax;
+    return flushed;
+  }
   if (campaign.state.stage === 'general') {
     ensureGeneralTools(campaign);
   }
@@ -313,13 +350,26 @@ export function playFromHand(
   return outcome;
 }
 
-export function endWeekInPlace(campaign: Campaign): StageTransition {
-  discardHand(campaign.deck);
+export function endWeekInPlace(
+  campaign: Campaign,
+  opts: { autoThematic?: boolean } = {}
+): StageTransition {
+  const autoThematic = opts.autoThematic !== false; // default true for harnesses
+  if (campaign.state.stage === 'primary' || campaign.state.stage === 'general') {
+    discardHand(campaign.deck);
+  }
+  if (autoThematic && campaign.state.pendingThematic) {
+    autoResolveThematic(campaign.state);
+  }
+  // Obligations drag every week/month before calendar advances
+  tickObligations(campaign.state);
   const transition = advanceCampaignWeek(campaign.state);
-  // Catches week-gated reputation thresholds (e.g. R02) even on a week
-  // with no plays; play-triggered thresholds are already checked in
-  // executePlay. See src/engine/reputation.ts.
-  repCheck(campaign.state);
+  if (campaign.state.stage === 'primary' || campaign.state.stage === 'general') {
+    repCheck(campaign.state);
+  }
+  if (transition.kind === 'enter_next_primary') {
+    discardHand(campaign.deck);
+  }
   return transition;
 }
 
@@ -343,29 +393,69 @@ export function runWeek(campaign: Campaign, choose: Chooser): WeekReport {
   const stageAtStart = campaign.state.stage;
   const drawn = startWeek(campaign);
   const plays: PlayOutcome[] = [];
-  let guard = campaign.state.apMax * 4 + 4;
-  while (campaign.state.ap > 0 && !campaign.state.over && guard-- > 0) {
-    // Resolve any pending draft before plays (auto for harness path)
-    if (campaign.state.pendingDraft) {
-      autoResolvePhaseDraft(campaign.state, campaign.deck);
+
+  if (campaign.state.stage === 'interim') {
+    if (campaign.state.pendingThematic) autoResolveThematic(campaign.state);
+    let guard = campaign.state.apMax * 3 + 2;
+    while (campaign.state.ap > 0 && guard-- > 0) {
+      const menu = pickInterimMenu(campaign.state, 4);
+      if (!menu.length) break;
+      const pick = menu[0]!;
+      const r = runInterimPlay(campaign.state, pick.id);
+      plays.push({
+        ok: r.ok,
+        text: r.text,
+        cardId: pick.id,
+        cardName: pick.n,
+        stamp: 'GAIN',
+        tier: 1
+      });
+      if (!r.ok) break;
     }
-    const playable = listPlayableHand(campaign);
-    if (playable.length === 0) break;
-    const handIndex = choose(playable, campaign.state);
-    if (handIndex === null || handIndex === undefined) break;
-    const wasBallot = campaign.state.ballot;
-    const outcome = playFromHand(campaign, handIndex);
-    plays.push(outcome);
-    if (!wasBallot && campaign.state.ballot) {
-      maybeOfferPhaseDraft(campaign, true);
+  } else if (campaign.state.stage === 'session') {
+    let guard = campaign.state.apMax * 3 + 2;
+    while (campaign.state.ap > 0 && guard-- > 0) {
+      const menu = pickSessionMenu(campaign.state, 4);
+      if (!menu.length) break;
+      const pick = menu[0]!;
+      const r = runSessionPlay(campaign.state, pick.id);
+      plays.push({
+        ok: r.ok,
+        text: r.text,
+        cardId: pick.id,
+        cardName: pick.n,
+        stamp: 'GAIN',
+        tier: 1
+      });
+      if (!r.ok) break;
     }
-    if (!outcome.ok) break;
+  } else {
+    let guard = campaign.state.apMax * 4 + 4;
+    while (campaign.state.ap > 0 && !campaign.state.over && guard-- > 0) {
+      if (campaign.state.pendingDraft) {
+        autoResolvePhaseDraft(campaign.state, campaign.deck);
+      }
+      const playable = listPlayableHand(campaign);
+      if (playable.length === 0) break;
+      const handIndex = choose(playable, campaign.state);
+      if (handIndex === null || handIndex === undefined) break;
+      const wasBallot = campaign.state.ballot;
+      const outcome = playFromHand(campaign, handIndex);
+      plays.push(outcome);
+      if (!wasBallot && campaign.state.ballot) {
+        maybeOfferPhaseDraft(campaign, true);
+      }
+      if (!outcome.ok) break;
+    }
   }
   const summary = summarizeWeek(campaign, plays);
   const transition = endWeekInPlace(campaign);
   if (transition.kind === 'enter_general') {
     ensureGeneralTools(campaign);
     maybeOfferPhaseDraft(campaign, true);
+  }
+  if (transition.kind === 'enter_next_primary') {
+    startWeek(campaign);
   }
   return {
     week: weekAtStart,
@@ -385,17 +475,51 @@ export function runWeeks(
   choose: Chooser
 ): WeekReport[] {
   const reports: WeekReport[] = [];
-  while (campaign.state.week <= throughWeek && !campaign.state.over) {
+  while (campaign.state.week <= throughWeek && !campaign.state.over && campaign.state.stage !== 'interim') {
+    reports.push(runWeek(campaign, choose));
+  }
+  // Allow the week that transitions into interim to complete
+  if (campaign.state.stage === 'primary' || campaign.state.stage === 'general') {
+    // already stopped without interim
+  }
+  return reports;
+}
+
+/**
+ * Run one election cycle until post-election parking:
+ * - losses → interim
+ * - general win → session (not yet interim)
+ * Harnesses read lastCycleOutcome; career never ends.
+ */
+export function runFullCampaign(campaign: Campaign, choose: Chooser): WeekReport[] {
+  const reports: WeekReport[] = [];
+  let guard = 40;
+  while (
+    !campaign.state.over &&
+    campaign.state.stage !== 'interim' &&
+    campaign.state.stage !== 'session' &&
+    guard-- > 0
+  ) {
     reports.push(runWeek(campaign, choose));
   }
   return reports;
 }
 
-/** Run primary + general until the campaign ends or calendar exhausts. */
-export function runFullCampaign(campaign: Campaign, choose: Chooser): WeekReport[] {
+/** Auto-play through session weeks into interim. */
+export function runThroughSession(campaign: Campaign, choose: Chooser): WeekReport[] {
   const reports: WeekReport[] = [];
-  let guard = 40;
-  while (!campaign.state.over && guard-- > 0) {
+  let guard = 12;
+  while (campaign.state.stage === 'session' && !campaign.state.over && guard-- > 0) {
+    reports.push(runWeek(campaign, choose));
+  }
+  return reports;
+}
+
+/** Keep auto-playing through interim months into the next primary (multi-cycle). */
+export function runThroughInterim(campaign: Campaign, choose: Chooser): WeekReport[] {
+  const reports: WeekReport[] = [];
+  let guard = 20;
+  while (campaign.state.stage === 'interim' && !campaign.state.over && guard-- > 0) {
     reports.push(runWeek(campaign, choose));
   }
   return reports;

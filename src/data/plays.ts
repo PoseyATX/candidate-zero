@@ -11,7 +11,7 @@
 
 import type { GameState, Ground, RollResult, PlayCard } from '../engine/types.js';
 import { random } from '../engine/rng.js';
-import { warm } from '../engine/reputation.js';
+import { addAlly, warm } from '../engine/reputation.js';
 import { WAVE4_PLAYS } from './plays-wave4.js';
 
 function clamp(v: number, lo: number, hi: number): number {
@@ -31,9 +31,16 @@ export const PL01_BlockWalk: PlayCard = {
   run: (s, o, g) => {
     if (!g) return 'No ground selected.'; s.walkCount++;
     const mult = (s.assets.includes('A01')?1.5:1) * (warm(s,'AL09')?1.2:1);
-    if (o.tier === 0) { const c = Math.min(g.pool, Math.round((55+random()*30)*mult)); g.pool-=c; s.contacts+=c; rapGain(g,6,s); s.volPool+=1; s.nameID+=2; return `A church picnic adopts you whole. +${c} contacts, a volunteer, and rapport at ${g.n}.`; }
-    if (o.tier === 1) { const c = Math.min(g.pool, Math.round((22+random()*16)*mult)); g.pool-=c; s.contacts+=c; s.volPool+=1; rapGain(g,3,s); return `Doors open. +${c} contacts, +1 volunteer at ${g.n}`; }
-    const c = Math.min(g.pool,6); g.pool-=c; s.contacts+=c; return 'Heat, dogs, closed blinds. +'+c+' contacts and one ruined pair of boots.';
+    let extra = '';
+    // Worn shoes / annotated map — after enough walks
+    if (s.walkCount >= 6 && !s.assets.includes('A01')) {
+      s.assets.push('A01');
+      extra = ' (Asset A01: Walk Kit — future walks hit harder.)';
+    }
+    if (s.assets.includes('A11')) s.nameID += 1; // Push Cards
+    if (o.tier === 0) { const c = Math.min(g.pool, Math.round((55+random()*30)*mult)); g.pool-=c; s.contacts+=c; rapGain(g,6,s); s.volPool+=1; s.nameID+=2; return `A church picnic adopts you whole. +${c} contacts, a volunteer, and rapport at ${g.n}.${extra}`; }
+    if (o.tier === 1) { const c = Math.min(g.pool, Math.round((22+random()*16)*mult)); g.pool-=c; s.contacts+=c; s.volPool+=1; rapGain(g,3,s); return `Doors open. +${c} contacts, +1 volunteer at ${g.n}${extra}`; }
+    const c = Math.min(g.pool,6); g.pool-=c; s.contacts+=c; return 'Heat, dogs, closed blinds. +'+c+' contacts and one ruined pair of boots.'+extra;
   }
 };
 
@@ -42,15 +49,36 @@ export const PL02_PhoneBank: PlayCard = {
   attrs: ['CHA'],
   d: 'Half the yield, none of the weather. Grandma\'s kitchen table is HQ.',
   odds: (s) => clamp(0.6 + (s.assets.includes('A09')?0.15:0), 0, 0.95),
-  run: (s, o, g) => { if (!g) return 'No ground.'; const mult = s.assets.includes('A09')?2:1; const c = Math.min(g.pool, Math.round((o.tier<=1?14:5)*mult)); g.pool-=c; s.contacts+=c; rapGain(g, o.tier<=1?2:1, s); return `+${c} contacts by wire at ${g.n}.`; }
+  run: (s, o, g) => {
+    if (!g) return 'No ground.';
+    const mult = s.assets.includes('A09') ? 2 : 1;
+    const c = Math.min(g.pool, Math.round((o.tier <= 1 ? 14 : 5) * mult));
+    g.pool -= c;
+    s.contacts += c;
+    rapGain(g, o.tier <= 1 ? 2 : 1, s);
+    let extra = '';
+    // Phone kit after repeated phone banks (contacts from wire)
+    if (s.contacts >= 80 && !s.assets.includes('A09') && o.tier <= 1) {
+      s.assets.push('A09');
+      extra = ' (Asset A09: Phone Kit — dialer speed.)';
+    }
+    return `+${c} contacts by wire at ${g.n}.${extra}`;
+  }
 };
 
 export const PL03_YardSignBlitz: PlayCard = {
   id: 'PL03', n: 'Yard Sign Blitz', cost: { a:1, $:150 }, risk: 'SAFE', ph: [1,2], field: true, tag: 'visibility',
   attrs: ['CLO'],
-  d: 'A district that sees your name starts believing it belongs there.',
+  d: 'A district that sees your name starts believing it belongs there. Own Yard Sign Cache (A08) → $0.',
   odds: () => 0.8,
-  run: (s, _o, g) => { if (!g) return 'No ground.'; s.nameID+=2; rapGain(g,1,s); return `Signs up along ${g.n}. The name is out in the weather now.`; }
+  run: (s, _o, g) => {
+    if (!g) return 'No ground.';
+    // Refund $ if cache owned (stock on hand)
+    if (s.assets.includes('A08') && s.money < 150) { /* already paid 0 via special path */ }
+    s.nameID += s.assets.includes('A11') ? 3 : 2;
+    rapGain(g, 1, s);
+    return `Signs up along ${g.n}. The name is out in the weather now.`;
+  }
 };
 
 export const PL04_PetitionDrive: PlayCard = {
@@ -112,7 +140,12 @@ export const PL08_KitchenTable: PlayCard = {
   d: "A chair's kitchen, her rules. Bring pie; leave with a precinct or nothing.",
   odds: (s) => { const chairs = s.allies.filter(a => a.id==='AL01' && a.warm>0).length; return clamp(0.4 + chairs*0.03 + s.faces.O*0.003 + s.faces.G*0.003 - (s.allyMalus||0) - (s.estabPenalty?0.08:0), 0, 0.9); },
   run: (s, o) => {
-    if (o.tier === 0) { s.endorsePts+=1; return 'She comes over — and brings her club president\'s number.'; }
+    if (o.tier === 0) {
+      s.endorsePts += 1;
+      // Club president path → AL03 Club Chair (enables straw polls without B06 alone)
+      addAlly(s, 'AL03', 2);
+      return 'She comes over — and brings her club president\'s number. (Ally: Club Chair AL03.)';
+    }
     if (o.tier === 1) { s.endorsePts+=1; return 'A handshake on the porch. One chair, quietly banked.'; }
     if (o.tier === 2) return 'Polite pie, no promises. "Come back after the forum."';
     s.faces.O -= 3; return 'You push. Word of the pushing beats you back to your truck.';
@@ -126,8 +159,22 @@ export const PL09_EarnedMedia: PlayCard = {
   odds: (s) => clamp(0.3 + s.momentum*0.02 + s.faces.F*0.004 + (s.mediaBonus||0) + (warm(s,'AL05')?0.1:0) + (s.regionHook==='metro'?0.1:0), 0, 0.9),
   run: (s, o) => {
     let t = o.tier; if (warm(s,'AL04') && t===1) t=0;
-    if (t === 0) { s.nameID+=12; s.momentum+=2; s.faces.F+=4; return 'Above the fold. Feed-store gospel by Friday.'; }
-    if (t === 1) { s.nameID+=5; return 'Page six. Page six is still the paper.'; }
+    if (t === 0) {
+      s.nameID += 12;
+      s.momentum += 2;
+      s.faces.F += 4;
+      // Stringer who will take your call — AL05 Earned Media Contact
+      addAlly(s, 'AL05', 2);
+      return 'Above the fold. Feed-store gospel by Friday. (Ally: Media Contact AL05.)';
+    }
+    if (t === 1) {
+      s.nameID += 5;
+      // Fixer who knows which reporter is hungry — AL04
+      if (s.faces.O >= 5 && addAlly(s, 'AL04', 1)) {
+        return 'Page six — and a fixer who knows the gallery. (Ally: Fixer AL04.)';
+      }
+      return 'Page six. Page six is still the paper.';
+    }
     if (t === 2) return 'The editor is "holding it for a news peg." There is never a news peg.';
     s.hitPieces++; s.nameID+=3; return 'The reporter finds the 2014 tax lien instead.';
   }
@@ -147,7 +194,7 @@ export const PL13_FishFry: PlayCard = {
   odds: (s) => clamp(0.75 + s.nameID*0.004, 0, 0.95),
   run: (s, o, g) => {
     if (!g) return 'No ground selected.';
-    const mult = (g.id==='GR07'?3:1) * (s.backers.includes('B05')?1.4:1) * (s.regionHook==='permian'?1.25:1) * (s.moneyClash?0.8:1);
+    const mult = (g.id==='GR07'?3:1) * (s.backers.includes('B05')?1.4:1) * (s.assets.includes('A04')?1.2:1) * (s.regionHook==='permian'?1.25:1) * (s.moneyClash?0.8:1);
     if (o.tier === 0) { const m = Math.round((650+random()*350)*mult); s.money+=m; rapGain(g,4,s); s.volPool+=2; if (!s.backers.includes('B05')) s.backers.push('B05'); return `+$${m} and the small-dollar list starts here at ${g.n}. +2 volunteers.`; }
     if (o.tier === 1) { const m = Math.round((380+random()*200)*mult); s.money+=m; rapGain(g,2,s); s.volPool+=1; return `+$${m}, faces and names. +1 volunteer.`; }
     const m = Math.round(200*mult); s.money+=m; return `Even a rainy fish fry clears its cost. +$${m}.`;
@@ -187,7 +234,8 @@ export const PL12_ClubSpeech: PlayCard = {
   d: 'Rubber chicken, real gatekeepers. Read the room or the room reads you.',
   odds: (s) => clamp(0.5 + s.faces.T*0.003 + (s.messageSharp?0.06:0), 0, 0.9),
   run: (s, o) => {
-    if (o.tier <= 1) { if (!s.backers.includes('B06')) s.backers.push('B06'); s.endorsePts += o.tier===0?1:0; s.contacts+=10; s.volPool+=1; return 'The roster opens to you. Names, numbers, casseroles — and a retiree. +1 volunteer.'; }
+    // Grants B06 — unlock path for PL11 Straw Poll
+    if (o.tier <= 1) { if (!s.backers.includes('B06')) s.backers.push('B06'); s.endorsePts += o.tier===0?1:0; s.contacts+=10; s.volPool+=1; return 'The roster opens to you. Names, numbers, casseroles — and a retiree. +1 volunteer. (Club list B06 — enables Straw Poll.)'; }
     if (o.tier === 2) return 'Polite applause, cold coffee.';
     s.faces.T -= 2; return 'You purity-test the room. The room notices.';
   }
