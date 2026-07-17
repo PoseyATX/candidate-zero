@@ -459,3 +459,34 @@ h1 {
 
 .play-card.flash-spark { box-shadow: 0 0 0 2px var(--gold); }
 .play-card.flash-crash { box-shadow: 0 0 0 2px var(--oxblood-bright); }
+
+/* Chronicle — the run history shown on the setup screen (src/engine/legacy.ts). */
+.chronicle {
+  border: 1px dashed var(--gold-dim);
+  padding: 0.7rem 0.85rem;
+  margin-top: 1rem;
+  font-size: 0.92rem;
+  color: var(--parchment-dim);
+}
+.chronicle .ct {
+  font-family: Cinzel, serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+.chronicle p { margin: 0 0 0.4rem; }
+.chronicle p b { color: var(--parchment); }
+.chronicle .burn-row { margin-top: 0.6rem; }
+
+/* Terminal — the "run over" screen replaced by the Chronicle flow: epithet,
+   growth summary, then interim path / trait / reelection cards. Reuses
+   .play-card so these read as the same kind of object as in-game choices —
+   options to play, not a dead end. */
+#terminal-head h2 { margin-top: 0; }
+#terminal-head p { margin: 0 0 0.5rem; }
+#terminal-head .epithet { font-style: italic; color: var(--parchment); }
+#terminal-head .growth { color: var(--sage); }
+#terminal-head .debt-note { color: var(--oxblood-bright); }

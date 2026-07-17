@@ -38,6 +38,7 @@
         </div>
         <p id="setup-blurb" class="hint"></p>
         <button type="button" id="btn-start" class="btn btn-gold">Begin primary</button>
+        <div id="chronicle" class="chronicle hidden"></div>
       </section>
       <section id="game" class="game hidden">
         <section id="ledger" class="ledger" aria-live="polite"></section>
@@ -50,7 +51,6 @@
             <div id="playables" class="card-grid"></div>
             <div class="row-actions">
               <button type="button" id="btn-end" class="btn btn-gold">End week</button>
-              <button type="button" id="btn-restart" class="btn btn-gold hidden">Start a new run</button>
             </div>
           </div>
           <div class="panel">
@@ -58,6 +58,10 @@
             <div id="log" class="log" role="log"></div>
           </div>
         </section>
+      </section>
+      <section id="terminal" class="game hidden">
+        <div id="terminal-head" class="panel"></div>
+        <div id="terminal-choices" class="card-grid"></div>
       </section>
       <footer class="foot">
         <span>Pure engine shell · not v0.1</span>

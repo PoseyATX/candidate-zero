@@ -118,6 +118,21 @@ export function executePlay(
   p = Math.max(0.02, Math.min(0.95, p + attrMod));
 
   const roll: RollResult = resolve(p, card.risk, state);
+
+  // The Parliamentarian's save (PA_INK persona, T_NERD legacy trait): once
+  // per campaign, a procedural DISASTER on the petition reads down to a
+  // SETBACK instead. Archive-scoped to PL04 (the only procedural play
+  // ported so far this applies to).
+  if (roll.tier === 3 && state.parlSave && !state.parlUsed && card.id === 'PL04') {
+    roll.tier = 2;
+    state.parlUsed = true;
+    state.log.push({
+      week: state.week,
+      kind: 'note',
+      text: "The Parliamentarian's save: DISASTER read down to SETBACK on procedure."
+    });
+  }
+
   const text = card.run ? card.run(state, roll, g) : `${card.n} resolves.`;
 
   if (roll.tier === 3) {

@@ -5,6 +5,7 @@
 
 import {
   createCampaign,
+  createIncumbentCampaign,
   listPlayableHand,
   playFromHand,
   startWeek,
@@ -28,12 +29,30 @@ import {
   REGIONS,
   type SetupSelection
 } from '../data/setup.js';
-import type { PlayCard, PlayOutcome } from '../engine/types.js';
+import {
+  loadLegacy,
+  saveLegacy,
+  applyLegacy,
+  buildPaths,
+  buildEpithet,
+  buildGrowthLine,
+  computeShare,
+  recordRun,
+  setInterim,
+  addTrait,
+  romanRun,
+  TRAITS,
+  type InterimPath
+} from '../engine/legacy.js';
+import type { CampaignOutcome, LegacyState, PlayCard, PlayOutcome, TraitId } from '../engine/types.js';
 import './styles.css';
 
 let campaign: Campaign | null = null;
 let weekPlays: PlayOutcome[] = [];
 let juiceTimer: ReturnType<typeof setTimeout> | null = null;
+let legacy: LegacyState = loadLegacy();
+let terminalKind: CampaignOutcome | null = null;
+let terminalShare = 0;
 
 function $(id: string): HTMLElement {
   const el = document.getElementById(id);
@@ -270,29 +289,31 @@ function renderLog(): void {
   box.scrollTop = box.scrollHeight;
 }
 
-function renderEndOfRun(): void {
-  if (!campaign) return;
-  const over = campaign.state.over;
-  $('btn-end').classList.toggle('hidden', over);
-  $('btn-restart').classList.toggle('hidden', !over);
-}
-
 function paint(): void {
   renderLedger();
   renderDraft();
   renderPlayables();
   renderLog();
-  renderEndOfRun();
 }
 
 function showGame(): void {
   $('setup').classList.add('hidden');
   $('game').classList.remove('hidden');
+  $('terminal').classList.add('hidden');
 }
 
 function showSetup(): void {
   $('setup').classList.remove('hidden');
   $('game').classList.add('hidden');
+  $('terminal').classList.add('hidden');
+  renderChronicle();
+}
+
+function showTerminal(): void {
+  $('setup').classList.add('hidden');
+  $('game').classList.add('hidden');
+  $('terminal').classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 /**
@@ -321,10 +342,181 @@ function startRun(): void {
   const input = document.getElementById('seed-input') as HTMLInputElement | null;
   if (input) input.value = String(seed);
   campaign = createCampaign({ seed, setup: currentSetup() });
+  applyLegacy(campaign.state, legacy);
   weekPlays = [];
   startWeek(campaign);
   showGame();
   paint();
+}
+
+/**
+ * The Chronicle — ported from the archive's LEGACY/terminal system. A run
+ * ending is not a reset: record the epithet, show what this run grew even
+ * on a loss, then offer a real next move (an interim path + trait on a
+ * loss, or a direct "Stand for Reelection" continuation on a win) instead
+ * of a dead-end screen.
+ */
+function enterTerminal(c: Campaign): void {
+  const kind = (c.state.outcome ?? 'ongoing') as CampaignOutcome;
+  terminalKind = kind;
+  terminalShare = computeShare(c.state, kind);
+  recordRun(legacy, c.state, kind, terminalShare);
+  saveLegacy(legacy);
+  renderTerminalOutcome();
+  showTerminal();
+}
+
+function renderTerminalOutcome(): void {
+  if (!campaign || terminalKind === null) return;
+  const state = campaign.state;
+  const titles: Record<CampaignOutcome, string> = {
+    ongoing: '',
+    missed_filing: 'Never Made the Ballot',
+    lost_primary: 'Primary Lost',
+    won_general: 'The Seat Is Won',
+    lost_general: 'The General’s Wall'
+  };
+  const epithet = buildEpithet(state, terminalKind, terminalShare);
+  const growth = buildGrowthLine(state);
+  const debtNote =
+    terminalKind !== 'won_general' && (state.debt || state.obls.length)
+      ? '<p class="debt-note">The bank still wants its money. Losing does not cancel the note.</p>'
+      : '';
+  const nextHint =
+    terminalKind === 'won_general'
+      ? 'Ahead: the swearing-in and the next filing period. Stand again, or rest on the win.'
+      : 'Two years until the next filing deadline. How do you spend them?';
+
+  $('terminal-head').innerHTML = `
+    <h2>${titles[terminalKind]}</h2>
+    <p class="epithet">${epithet}</p>
+    ${debtNote}
+    ${growth ? `<p class="growth">${growth}</p>` : ''}
+    <p class="hint">${nextHint}</p>
+  `;
+
+  if (terminalKind === 'won_general') {
+    renderTerminalWinChoices();
+  } else {
+    renderTerminalPaths();
+  }
+}
+
+function renderTerminalWinChoices(): void {
+  const grid = $('terminal-choices');
+  grid.innerHTML = `
+    <button type="button" class="play-card" data-choice="reelect">
+      <span class="name">Stand for Reelection</span>
+      <span class="desc">The wheel turns. File again for the same seat — this time you're the incumbent.</span>
+    </button>
+    <button type="button" class="play-card" data-choice="rest">
+      <span class="name">Rest on the Win</span>
+      <span class="desc">Start a new run, a new ballad entry. The Chronicle keeps this one.</span>
+    </button>
+  `;
+  grid.querySelector('[data-choice="reelect"]')?.addEventListener('click', () => {
+    if (!campaign) return;
+    campaign = createIncumbentCampaign(campaign, legacy);
+    weekPlays = [];
+    startWeek(campaign);
+    showGame();
+    paint();
+  });
+  grid.querySelector('[data-choice="rest"]')?.addEventListener('click', () => {
+    showSetup();
+  });
+}
+
+function renderTerminalPaths(): void {
+  if (!campaign) return;
+  const paths = buildPaths(campaign.state, terminalShare);
+  const grid = $('terminal-choices');
+  grid.innerHTML = paths
+    .map(
+      p => `
+    <button type="button" class="play-card" data-path="${p.id}">
+      <span class="name">${p.n}</span>
+      <span class="desc">${p.d}</span>
+    </button>
+  `
+    )
+    .join('');
+  grid.querySelectorAll<HTMLButtonElement>('[data-path]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const path = paths.find(p => p.id === btn.dataset.path);
+      if (path) renderTerminalTraits(path);
+    });
+  });
+}
+
+function renderTerminalTraits(path: InterimPath): void {
+  const grid = $('terminal-choices');
+  grid.innerHTML =
+    `<p class="hint" style="grid-column:1/-1">The two years pass. What did they leave you? ` +
+    `(Choose one — it persists across every run to come.)</p>` +
+    path.traits
+      .map(
+        t => `
+    <button type="button" class="play-card" data-trait="${t}">
+      <span class="name">${TRAITS[t].n}</span>
+      <span class="desc">${TRAITS[t].d}</span>
+    </button>
+  `
+      )
+      .join('');
+  grid.querySelectorAll<HTMLButtonElement>('[data-trait]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const traitId = btn.dataset.trait as TraitId;
+      addTrait(legacy, traitId);
+      setInterim(legacy, path.interim);
+      saveLegacy(legacy);
+      showSetup();
+    });
+  });
+}
+
+function renderChronicle(): void {
+  const el = $('chronicle');
+  if (!legacy.runs.length) {
+    el.classList.add('hidden');
+    el.innerHTML = '';
+    return;
+  }
+  el.classList.remove('hidden');
+  el.innerHTML = `
+    <span class="ct">Your ballad so far</span>
+    ${legacy.runs
+      .map(
+        (r, i) =>
+          `<p><b>Run ${romanRun(i)}.</b> ${r.epithet} ${r.interim ? `<i>${r.interim}</i>` : ''}</p>`
+      )
+      .join('')}
+    ${
+      legacy.traits.length
+        ? `<p><b>What the years taught:</b> ${legacy.traits.map(t => TRAITS[t].n).join(' · ')}</p>`
+        : ''
+    }
+    <p class="burn-row"><button type="button" class="btn" id="btn-burn-chronicle">Burn the ballad (start anew)</button></p>
+  `;
+  const burnBtn = document.getElementById('btn-burn-chronicle') as HTMLButtonElement | null;
+  if (burnBtn) {
+    burnBtn.addEventListener('click', () => {
+      if (burnBtn.dataset.armed) {
+        legacy = { runs: [], traits: [], carry: {} };
+        saveLegacy(legacy);
+        renderChronicle();
+        return;
+      }
+      burnBtn.dataset.armed = '1';
+      burnBtn.textContent = 'Tap again to burn it all — every run, every trait';
+      setTimeout(() => {
+        if (burnBtn.dataset) {
+          delete burnBtn.dataset.armed;
+          burnBtn.textContent = 'Burn the ballad (start anew)';
+        }
+      }, 4000);
+    });
+  }
 }
 
 function endWeek(): void {
@@ -354,7 +546,11 @@ function endWeek(): void {
   if (transition.kind === 'enter_general') {
     maybeOfferPhaseDraft(campaign, false);
   }
-  if (!campaign.state.over && !campaign.state.pendingDraft) {
+  if (campaign.state.over) {
+    enterTerminal(campaign);
+    return;
+  }
+  if (!campaign.state.pendingDraft) {
     startWeek(campaign);
   }
   paint();
@@ -368,7 +564,6 @@ function boot(): void {
   $('btn-start').addEventListener('click', () => startRun());
   $('btn-new').addEventListener('click', () => requestNewRun());
   $('btn-end').addEventListener('click', () => endWeek());
-  $('btn-restart').addEventListener('click', () => requestNewRun());
   showSetup();
 }
 

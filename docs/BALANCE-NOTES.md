@@ -569,3 +569,67 @@ several existing cards (`PL01`/`PL02`/`PL04`/`PL19`) already had dormant
 
 ### Harness
 `npm run harness` (12/12), `npm run typecheck`, `npm run build` all pass.
+
+## 2026-07-17 — The Chronicle (cross-run meta-progression)
+
+User feedback, verbatim: "A 'New run' in a roguelike is not a complete
+restart... The player keeps moving through failure. There should be cards
+and options to play during this time. They should keep moving and growing
+until the next election cycle." A hard "Campaign over" screen with a reset
+button was never the intended design — the archive already had a complete
+system for this (`LEGACY`, `TRAITS`, interim paths, `startIncumbentRun`)
+that was simply never ported. `GameState`'s `LegacyState` field existed,
+typed loosely with `any`, referenced nowhere — the same shape of gap as
+`fieldAp` earlier this session.
+
+New `src/engine/legacy.ts`: `TRAITS` (10 archive traits, full effect
+table), `buildPaths` (4 interim paths, 2 gated by run performance),
+`buildEpithet`/`buildGrowthLine` (the "not empty-handed" narrative even on
+a loss), `applyLegacy`, `loadLegacy`/`saveLegacy` (localStorage,
+guarded — CLI/harnesses never touch it), `recordRun`/`addTrait`.
+
+`src/engine/loop.ts`'s new `createIncumbentCampaign`: the win-side
+continuation ("Stand for Reelection"). Reuses `createCampaign({ setup:
+old.setup })` for a correctly-initialized fresh state, then overwrites the
+carry-forward fields with the archive's exact formulas (contacts ×0.6
+floor 400, nameID ×0.8+30 floor 45, money ×0.4+2500 floor 4000, etc.),
+sets `ballot: true` (incumbents skip the petition), unions deck ownership,
+and calls `applyLegacy`. One deliberate deviation from the archive:
+`district.incumbent` stays `false` on the reelection district rather than
+mirroring the archive's flag — in this engine's `primaryWinProbability`/
+`generalWinProbability` formulas that flag specifically models an
+*opposing* entrenched incumbent (a penalty on the challenger), so setting
+it `true` for the player's own continued seat would incorrectly stack a
+penalty on top of favorable `align: 'safe'`.
+
+`src/ui/main.ts`: replaced the previous commit's dead-end "Start a new
+run" button entirely with a real `#terminal` screen — epithet, growth
+line, then path/trait cards (loss) or reelect/rest cards (win) styled as
+`.play-card`s, matching the user's framing of these as options to play,
+not a game-over modal. A `#chronicle` panel on the setup screen shows the
+run history and a "burn the ballad" reset (double-tap confirm, matching
+the archive).
+
+Also fixed a second dead scaffold surfaced by porting `T_NERD`:
+`state.parlSave`/`parlUsed` existed (one persona already granted
+`parlSave`) but nothing ever read them. Archive gates a procedural-
+DISASTER-downgrade on `PL04`/`PL24`; wired into `executePlay` for `PL04`
+(`PL24` not yet ported).
+
+### Verification
+Pure-engine script: `createIncumbentCampaign`'s carry-forward math checked
+against the archive's formulas by hand (contacts 300→400, nameID 40→62,
+money 5000→4500, volPool 12→7, termNumber 1→2, ballot forced true);
+`applyLegacy`'s `T_KNOWN`/`T_LIST` effects verified on a fresh state;
+trait cap-at-3 verified; `buildPaths` gating verified (staffer path only
+appears once `endorsePts` clears the threshold). Playwright: played a
+seeded run to `missed_filing`, confirmed the terminal screen (not the old
+dead-end) renders epithet/growth/debt-note text and three path cards,
+picked a path, confirmed two trait cards render, picked a trait, confirmed
+return to setup with the Chronicle populated — then reloaded the page and
+confirmed the Chronicle survives (localStorage), then started a fresh run
+and confirmed the picked trait (`T_LIST`) actually banked 25 contacts at
+week 1 — consistent with 30% of the prior run's banked contacts total.
+
+### Harness
+`npm run harness` (12/12), `npm run typecheck`, `npm run build` all pass.

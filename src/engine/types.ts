@@ -163,6 +163,10 @@ export interface GameState {
   lastPhase?: 1 | 2 | 3;
   /** Pending phase-turn draft (3 card options). */
   pendingDraft?: { phase: number; options: string[] };
+  /** Set on a "Stand for Reelection" continuation (src/engine/legacy.ts). */
+  incumbentRun?: boolean;
+  /** 1 on a first run; increments each successful reelection continuation. */
+  termNumber?: number;
   /** Dopamine / feedback loop state (presentation of truth; never alters RNG). */
   feedback?: import('./feedback.js').FeedbackState;
 }
@@ -190,10 +194,44 @@ export type CampaignOutcome =
   | 'won_general'
   | 'lost_general';
 
+/** One archive-authored trait — see src/engine/legacy.ts TRAITS for effects. */
+export type TraitId =
+  | 'T_AUTHOR'
+  | 'T_LEVERS'
+  | 'T_LIST'
+  | 'T_KNOWN'
+  | 'T_CRED'
+  | 'T_NORTH'
+  | 'T_NERD'
+  | 'T_WHIP'
+  | 'T_REST'
+  | 'T_PERSP';
+
+/** A finished run, recorded in the Chronicle. */
+export interface LegacyRun {
+  /** One-line narrative summary of how the run ended (src/engine/legacy.ts buildEpithet). */
+  epithet: string;
+  kind: CampaignOutcome;
+  /** Flavor text for the interim path chosen after this run ended. */
+  interim?: string;
+}
+
+/** What a finished run banks forward into the next one (before traits modify it further). */
+export interface LegacyCarry {
+  contacts?: number;
+  nameID?: number;
+}
+
+/**
+ * Cross-run meta-progression — "the Chronicle." Persisted to localStorage
+ * (browser only; harnesses/CLI never touch this). A run ending is not a
+ * reset: the player picks an interim path and a permanent trait, then the
+ * next run starts already carrying real progress forward.
+ */
 export interface LegacyState {
-  runs: any[];
-  traits: string[];
-  carry: any;
+  runs: LegacyRun[];
+  traits: TraitId[];
+  carry: LegacyCarry;
   name?: string;
 }
 

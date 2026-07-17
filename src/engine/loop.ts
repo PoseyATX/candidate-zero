@@ -28,6 +28,7 @@ import {
 } from './calendar.js';
 import { markWeekStart, buildWeekSummary, type WeekSummary } from './feedback.js';
 import { repCheck } from './reputation.js';
+import { applyLegacy } from './legacy.js';
 import {
   applySetup,
   HARNESS_DEFAULT_SETUP,
@@ -37,6 +38,7 @@ import type {
   DeckState,
   GameState,
   Ground,
+  LegacyState,
   PlayCard,
   PlayOutcome
 } from './types.js';
@@ -136,6 +138,65 @@ export function createCampaign(overrides: CreateCampaignOptions = {}): Campaign 
     filingDeadline: PRIMARY_WEEKS,
     setup
   };
+}
+
+/**
+ * "Stand for Reelection" — ported from the archive's startIncumbentRun().
+ * A won_general terminal doesn't have to end the ballad: the wheel turns
+ * straight into the next filing period with the same persona/issue/region,
+ * carrying a discounted share of what the last term built (archive's
+ * exact carry-forward formulas below) rather than resetting to zero.
+ *
+ * Reputations/obligations aren't carried 1:1 the way the archive does it
+ * (it filters to a specific archive-only id set, most of which this engine
+ * hasn't ported — see reputation.ts's documented gaps): reps carry forward
+ * as-is (this engine's rep set is already the "durable" curated subset),
+ * obligations reset (modular obls are free-text, not the archive's
+ * structured {n,drag} registry yet — Phase 2 item 4 — so there's no way to
+ * tell which ones "follow you" without that restructure).
+ */
+export function createIncumbentCampaign(old: Campaign, legacy: LegacyState): Campaign {
+  const next = createCampaign({ setup: old.setup });
+  const s = next.state;
+  const o = old.state;
+
+  s.contacts = Math.max(400, Math.round((o.contacts || 0) * 0.6));
+  s.nameID = Math.max(45, Math.round((o.nameID || 0) * 0.8) + 30);
+  s.money = Math.max(4000, 2500 + Math.round(Math.max(0, o.money) * 0.4));
+  s.endorsePts = Math.max(4, o.endorsePts || 0);
+  s.ballot = true; // incumbents don't petition
+  s.volPool = Math.max(4, Math.round((o.volPool || 0) * 0.6));
+  s.termNumber = (o.termNumber || 1) + 1;
+  s.reps = [...o.reps];
+  s.incumbentRun = true;
+  s.tier = 1;
+
+  // Incumbency reads as a favorable seat (few serious primary challengers,
+  // a friendlier general) rather than modular's `district.incumbent` flag,
+  // which models the OPPOSING side being the entrenched one — setting it
+  // true here would incorrectly double-penalize the player's own race.
+  if (s.district) {
+    s.district = { ...s.district, align: 'safe', incumbent: false, field: 1 };
+    s.rivals = [{ id: 'RIV1', n: 'Rival 1' }];
+  }
+
+  // Ownership carries forward (ground game already built); physical draw
+  // pile rebuilt to include it.
+  s.deck = [...new Set([...(o.deck || []), ...(s.deck || [])])];
+  next.deck = createDeckState(s.deck);
+
+  applyLegacy(s, legacy);
+
+  s.log.push({
+    week: s.week,
+    kind: 'note',
+    text:
+      'THE WHEEL TURNS — filing opens again, and this time the name on the ' +
+      'incumbent line is yours. You skip the petition table and begin KNOWN: ' +
+      'name recognition, a donor list, a record. That record is also a target.'
+  });
+  next.state.lastPhase = getPhase(next.state);
+  return next;
 }
 
 /**

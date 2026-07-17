@@ -72,6 +72,48 @@ calling it law).
 
 ---
 
+## ✅ The Chronicle — cross-run meta-progression (done, 2026-07-17)
+
+Direct user request: a roguelike shouldn't have a hard restart on a loss —
+"the player keeps moving through failure... they should keep moving and
+growing until the next election cycle." Turned out this was already fully
+designed and built in the archive (`LEGACY`/`TRAITS`/interim-path/
+`startIncumbentRun` system) but never ported — `types.ts` even had a
+`LegacyState` interface sitting there typed with `any`, unused anywhere,
+same shape as `fieldAp` before this session's Phase 2 item 1 fix.
+
+Ported to `src/engine/legacy.ts` + `src/engine/loop.ts`'s
+`createIncumbentCampaign`:
+- A run ending (win or loss) records an epithet + growth summary to a
+  persistent "Chronicle" (`localStorage`, shown on the setup screen).
+- On a loss, the player picks an interim path (Perennial Candidate /
+  Advocate / Staffer / Go Home a While — gated by how the run went) and
+  then a permanent trait from that path (10 archive traits ported in
+  full, capped at 3 held at once) that measurably buffs every future run
+  — no dead "New run" button, an actual card-pick screen.
+- On a `won_general`, "Stand for Reelection" skips setup entirely and
+  continues straight into the next filing period as the incumbent,
+  carrying forward a discounted share of contacts/nameID/money/
+  endorsePts/volPool/reps/deck (archive's exact carry-forward formulas).
+- `T_NERD` trait revealed a second dead scaffold: `parlSave`/`parlUsed`
+  fields existed on `GameState` (one persona already granted `parlSave`)
+  but nothing ever read them — wired into `executePlay` for `PL04`
+  (archive also gates `PL24`, not yet ported).
+- Not ported: obligations don't carry forward on reelection (modular
+  `obls` is still free-text, not the archive's structured registry —
+  Phase 2 item 4), and `district.incumbent` is deliberately left `false`
+  on a reelection continuation rather than mirroring the archive's flag
+  literally — that flag models an *opposing* entrenched incumbent in this
+  engine's probability formulas, so setting it `true` for the player's
+  own seat would double-penalize them.
+
+Verified: pure-engine checks (carry-forward math, trait cap, path
+gating) plus a full Playwright pass — played a seeded run to
+`missed_filing`, picked a path and trait, confirmed the Chronicle
+renders and survives a page reload, then started a fresh run and
+confirmed the banked-contacts trait actually applied (25 contacts at
+week 1, exactly 30% of the prior run's total).
+
 ## Phase 1 — Close the gaps this pass exposed but didn't fix (near-term, low risk)
 
 These are direct follow-ups to Phase 0 findings — verification and tooling,
