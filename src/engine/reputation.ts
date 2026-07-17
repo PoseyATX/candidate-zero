@@ -115,7 +115,7 @@ export function shadowCheck(state: GameState): void {
   }
   if (T.G <= -25) {
     fire('G2', 'Boss crisis: kin scandal catches up with you.', () => {
-      state.obls.push('A relative’s trouble is now your problem.');
+      if (!state.obls.includes('OB8')) state.obls.push('OB8');
       const g = state.groundsArr.find(x => x.id === 'GR02');
       if (g) g.rapport = Math.max(0, g.rapport - 15);
     });

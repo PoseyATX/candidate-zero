@@ -160,7 +160,7 @@ function printMenu(entries: MenuEntry[], campaign: Campaign): void {
     const attrs = e.card.attrs?.length ? ` [${e.card.attrs.join("/")}]` : "";
     console.log(
       `  ${e.key}. ${e.card.n} (${e.card.risk}, ${costLabel(e.card)})${odds}${attrs}` +
-        `${e.camp ? " [CAMP]" : ""}${e.card.trap ? " TRAP" : ""}`
+        `${e.camp ? " [CAMP]" : ""}${e.card.trap ? " RISK" : ""}`
     );
   }
   console.log("  e. End week   l. Ledger   h. Help   q. Quit");

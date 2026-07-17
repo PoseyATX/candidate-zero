@@ -278,6 +278,74 @@ h1 {
   border-color: var(--oxblood);
 }
 
+/* Kit / flags / trophies — tangible after failure and purchases */
+.kit-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem 0.75rem;
+  min-height: 2rem;
+}
+.kit-chip {
+  display: inline-flex;
+  flex-direction: column;
+  max-width: 11rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 4px;
+  border: 1px solid var(--gold-dim);
+  background: rgba(30, 22, 14, 0.85);
+  font-size: 0.72rem;
+  line-height: 1.25;
+  color: var(--parchment);
+}
+.kit-chip .cn { font-weight: 600; color: var(--gold); letter-spacing: 0.02em; }
+.kit-chip .cs { opacity: 0.8; font-size: 0.68rem; }
+.kit-chip.scar { border-color: var(--oxblood); }
+.kit-chip.scar .cn { color: #e8a090; }
+.kit-chip.flag { border-color: #6a7a4a; }
+.kit-chip.loot { border-color: var(--gold); }
+.kit-chip.asset { border-color: #5a7a9a; }
+.kit-chip.boon { border-color: #4a8a5a; }
+.kit-chip.hindrance { border-color: var(--oxblood); }
+.kit-empty { opacity: 0.5; font-size: 0.8rem; font-style: italic; color: var(--mute, #8a7a68); }
+
+.subhead {
+  margin: 1rem 0 0.25rem;
+  font-family: Cinzel, serif;
+  font-size: 0.95rem;
+  color: var(--gold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.shop-hint { margin-bottom: 0.35rem; }
+.shop-grid .play-card { min-height: 7.5rem; }
+.play-card.shop-card {
+  background: linear-gradient(175deg, #2a2218, #1a1510);
+  border-color: var(--gold-dim);
+  color: var(--parchment);
+}
+.play-card.shop-card .name { color: var(--gold); }
+.play-card.shop-card:disabled {
+  opacity: 0.4;
+  transform: none;
+}
+
+/* Thematic identity forks — rare, costly, never free re-picks */
+.thematic-fork {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--oxblood);
+  border-radius: 6px;
+  background: rgba(80, 20, 16, 0.35);
+}
+.thematic-fork .hint {
+  color: var(--parchment);
+  margin: 0.25rem 0;
+}
+.thematic-fork .card-grid {
+  margin-top: 0.5rem;
+}
+
 .play-card .cost-badge {
   align-self: flex-end;
   font-family: Cinzel, serif;

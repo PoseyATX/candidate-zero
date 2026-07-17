@@ -41,7 +41,10 @@ function audit(card: PlayCard): Row {
   if (!card.run) issues.push('missing run');
   // SAFE cards with show/req still need odds or implicit
   if (card.risk !== 'SAFE' && !card.odds) issues.push('missing odds');
-  if (card.trap && card.tag && !/trap/i.test(card.tag)) issues.push('trap flag without trap tag');
+  // Surface language is RISK (not "TRAP") — tag may say risk or imply cost
+  if (card.trap && card.tag && !/trap|risk/i.test(card.tag)) {
+    issues.push('trap flag without risk/trap tag');
+  }
 
   return {
     id: card.id,

@@ -79,16 +79,22 @@ console.log('=== CANDIDATE ZERO — Dopamine / Feedback Harness ===\n');
   });
 }
 
-// Full campaign still terminates with feedback milestones possible
+// Full cycle opens interim; feedback milestones still possible
 {
   useRng(createRng(7));
   setDefaultSeed(7);
   const c = createCampaign({ seed: 7 });
   runFullCampaign(c, laborBallotStrategy);
-  assert(c.state.over, 'campaign ends');
+  assert(c.state.over === false, 'career persists');
+  const o = c.state.lastCycleOutcome ?? c.state.outcome;
+  assert(
+    c.state.stage === 'interim' || c.state.stage === 'session',
+    'cycle parks in interim or session'
+  );
   assert(c.state.feedback !== undefined, 'feedback state exists');
-  console.log('PASSED: full campaign with feedback', {
-    outcome: c.state.outcome,
+  console.log('PASSED: full cycle with feedback', {
+    outcome: o,
+    stage: c.state.stage,
     milestones: c.state.feedback?.milestonesSeen?.length ?? 0,
     lastJuice: c.state.feedback?.lastPlay?.juice?.slice(0, 60)
   });

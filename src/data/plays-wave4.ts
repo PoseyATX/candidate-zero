@@ -57,7 +57,7 @@ export const PL18_SharpenMessage: PlayCard = {
 };
 
 export const PL20_PacCheck: PlayCard = {
-  id: 'PL20', n: 'Take the PAC Check', cost: { a: 1 }, risk: 'STD', ph: [1, 2, 3], tag: 'TRAP — honestly labeled',
+  id: 'PL20', n: 'Take the PAC Check', cost: { a: 1 }, risk: 'STD', ph: [1, 2, 3], tag: 'RISK — the string is real',
   attrs: ['CRA', 'DIP'],
   trap: true,
   d: 'A man in a good suit admires your race. The check is real. So is the string tied to it.',
@@ -72,13 +72,13 @@ export const PL20_PacCheck: PlayCard = {
     s.money += m;
     s.faces.L -= 12;
     const topic = pick(['tort matters', 'land use', 'rate regulation', 'licensing']);
-    s.obls.push(`An association expects a friendly ear on ${topic}.`);
-    return `+$${m}. The Third House has opened an account in your name. (Obligation recorded. Shadow: Lobbyist → Bagman.)`;
+    if (!s.obls.includes('OB1')) s.obls.push('OB1');
+    return `+$${m}. The Third House has opened an account in your name. (PAC String OB1 — weekly drag. Topic: ${topic}.)`;
   }
 };
 
 export const PL21_SelfFundCredit: PlayCard = {
-  id: 'PL21', n: 'Self-Fund on Credit', cost: { a: 1 }, risk: 'SAFE', ph: [1, 2], tag: 'TRAP — honestly labeled',
+  id: 'PL21', n: 'Self-Fund on Credit', cost: { a: 1 }, risk: 'SAFE', ph: [1, 2], tag: 'RISK — the note remembers',
   attrs: ['CRA'],
   trap: true,
   d: "The bank will lend against the homestead. Campaigns have eaten better men's farms.",
@@ -88,7 +88,8 @@ export const PL21_SelfFundCredit: PlayCard = {
     s.money += m;
     s.debt += Math.floor(m * 1.4);
     s.faces.G -= 8;
-    return `+$${m} now; $${Math.floor(m * 1.4)} owed later, win or lose. (Debt recorded. Shadow: Good Ol' Boy → Boss — the homestead is leverage now.)`;
+    if (!s.obls.includes('OB2')) s.obls.push('OB2');
+    return `+$${m} now; $${Math.floor(m * 1.4)} owed later, win or lose. (Bank Note OB2 — weekly drag. Homestead is leverage.)`;
   }
 };
 
