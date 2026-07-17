@@ -3,10 +3,16 @@
  * Foundation for the playable loop and balance harness.
  */
 
-import type { GameState, Ground, Faces } from './types.js';
+import type { GameState, Ground, Faces, Attrs } from './types.js';
+import { setDefaultSeed, random } from './rng.js';
 
 export function createInitialFaces(): Faces {
   return { P: 0, O: 0, L: 0, G: 0, T: 0, F: 0 };
+}
+
+/** Baseline 10 on every root attribute (cardAttrMod neutral). */
+export function createDefaultAttrs(): Attrs {
+  return { CLO: 10, CON: 10, CRA: 10, INK: 10, DIP: 10, CHA: 10 };
 }
 
 export function createDefaultGrounds(): Ground[] {
@@ -24,6 +30,9 @@ export function createDefaultGrounds(): Ground[] {
 
 /** Create a fresh primary-campaign state suitable for testing and harness work. */
 export function createNewState(overrides: Partial<GameState> = {}): GameState {
+  if (overrides.seed !== undefined) {
+    setDefaultSeed(overrides.seed);
+  }
   const base: GameState = {
     week: 1, weeksTotal: 24, ap: 2, apMax: 2, fieldAp: 0,
     money: 0, debt: 0, contacts: 0, nameID: 2, volPool: 0, momentum: 0, favors: 0,
@@ -35,10 +44,12 @@ export function createNewState(overrides: Partial<GameState> = {}): GameState {
     tier: 0, persona: null, issue: null, district: null, eventsFired: {},
     stage: 'primary', genOpp: null, genBase: 0, over: false, log: [],
     capital: 0, favor: 50, districtStanding: 60, bill: null, committee: null, sessionFlags: {},
-    wave: (Math.random() - 0.5) * 16, skippedTownHall: false, townHallThisWeek: false,
-    debatePrepped: false, oppoFile: false, favWitness: 0, globalBand: 0
+    wave: (random() - 0.5) * 16, skippedTownHall: false, townHallThisWeek: false,
+    debatePrepped: false, oppoFile: false, favWitness: 0, globalBand: 0,
+    attrs: createDefaultAttrs(),
+    deck: []
   };
-  return { ...base, ...overrides };
+  return { ...base, ...overrides, attrs: { ...createDefaultAttrs(), ...overrides.attrs } };
 }
 
 export function getPhase(state: GameState): 1 | 2 | 3 {

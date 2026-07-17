@@ -10,6 +10,8 @@
  */
 
 import type { GameState, Ground, RollResult, PlayCard } from '../engine/types.js';
+import { random } from '../engine/rng.js';
+import { WAVE4_PLAYS } from './plays-wave4.js';
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
@@ -32,8 +34,8 @@ export const PL01_BlockWalk: PlayCard = {
   run: (s, o, g) => {
     if (!g) return 'No ground selected.'; s.walkCount++;
     const mult = (s.assets.includes('A01')?1.5:1) * (warm(s,'AL09')?1.2:1);
-    if (o.tier === 0) { const c = Math.min(g.pool, Math.round((55+Math.random()*30)*mult)); g.pool-=c; s.contacts+=c; rapGain(g,6,s); s.volPool+=1; s.nameID+=2; return `A church picnic adopts you whole. +${c} contacts, a volunteer, and rapport at ${g.n}.`; }
-    if (o.tier === 1) { const c = Math.min(g.pool, Math.round((22+Math.random()*16)*mult)); g.pool-=c; s.contacts+=c; s.volPool+=1; rapGain(g,3,s); return `Doors open. +${c} contacts, +1 volunteer at ${g.n}`; }
+    if (o.tier === 0) { const c = Math.min(g.pool, Math.round((55+random()*30)*mult)); g.pool-=c; s.contacts+=c; rapGain(g,6,s); s.volPool+=1; s.nameID+=2; return `A church picnic adopts you whole. +${c} contacts, a volunteer, and rapport at ${g.n}.`; }
+    if (o.tier === 1) { const c = Math.min(g.pool, Math.round((22+random()*16)*mult)); g.pool-=c; s.contacts+=c; s.volPool+=1; rapGain(g,3,s); return `Doors open. +${c} contacts, +1 volunteer at ${g.n}`; }
     const c = Math.min(g.pool,6); g.pool-=c; s.contacts+=c; return 'Heat, dogs, closed blinds. +'+c+' contacts and one ruined pair of boots.';
   }
 };
@@ -62,13 +64,13 @@ export const PL04_PetitionDrive: PlayCard = {
   odds: (s) => clamp(0.60 + s.volPool*0.035 + (warm(s,'AL09')?0.08:0), 0, 0.95),
   run: (s, o) => {
     if (o.tier <= 1) {
-      const g = o.tier === 0 ? 70 + Math.floor(Math.random()*35) : 40 + Math.floor(Math.random()*25);
+      const g = o.tier === 0 ? 70 + Math.floor(random()*35) : 40 + Math.floor(random()*25);
       s.signatures += g;
       if (s.signatures >= s.sigNeed && !s.ballot) { s.ballot = true; return `+${g} signatures — threshold cleared. On the ballot, free but not cheap.`; }
       return `+${g} valid signatures (${s.signatures}/${s.sigNeed}).`;
     }
     if (o.tier === 2) { s.signatures += 15; return 'Rainy Saturday. +15, half smudged.'; }
-    const l = 50 + Math.floor(Math.random()*45); s.signatures = Math.max(0, s.signatures-l); return `The county chair challenges your sheets — ${l} struck.`;
+    const l = 50 + Math.floor(random()*45); s.signatures = Math.max(0, s.signatures-l); return `The county chair challenges your sheets — ${l} struck.`;
   }
 };
 
@@ -143,8 +145,8 @@ export const PL13_FishFry: PlayCard = {
   run: (s, o, g) => {
     if (!g) return 'No ground selected.';
     const mult = (g.id==='GR07'?3:1) * (s.backers.includes('B05')?1.4:1) * (s.regionHook==='permian'?1.25:1) * (s.moneyClash?0.8:1);
-    if (o.tier === 0) { const m = Math.round((650+Math.random()*350)*mult); s.money+=m; rapGain(g,4,s); s.volPool+=2; return `+$${m} and the small-dollar list starts here at ${g.n}. +2 volunteers.`; }
-    if (o.tier === 1) { const m = Math.round((380+Math.random()*200)*mult); s.money+=m; rapGain(g,2,s); s.volPool+=1; return `+$${m}, faces and names. +1 volunteer.`; }
+    if (o.tier === 0) { const m = Math.round((650+random()*350)*mult); s.money+=m; rapGain(g,4,s); s.volPool+=2; return `+$${m} and the small-dollar list starts here at ${g.n}. +2 volunteers.`; }
+    if (o.tier === 1) { const m = Math.round((380+random()*200)*mult); s.money+=m; rapGain(g,2,s); s.volPool+=1; return `+$${m}, faces and names. +1 volunteer.`; }
     const m = Math.round(200*mult); s.money+=m; return `Even a rainy fish fry clears its cost. +$${m}.`;
   }
 };
@@ -222,10 +224,17 @@ export const PL19_GOTVWeekend: PlayCard = {
   }
 };
 
-export const ALL_PLAYS: PlayCard[] = [
+/** Wave 1–3 core plays (attr-tagged). */
+export const CORE_PLAYS: PlayCard[] = [
   PL01_BlockWalk, PL02_PhoneBank, PL03_YardSignBlitz, PL04_PetitionDrive, PL05_PayFilingFee, PL06_TownHall,
   PL07_CandidateForum, PL08_KitchenTable, PL09_EarnedMedia, PL10_PressRelease, PL13_FishFry, PL14_CourtTheChairs,
   PL11_StrawPoll, PL12_ClubSpeech, PL15_OppoResearch, PL17_DebatePrep, PL19_GOTVWeekend
 ];
+
+/** Full catalog: core + wave 4 force multipliers / traps. */
+export const ALL_PLAYS: PlayCard[] = [...CORE_PLAYS, ...WAVE4_PLAYS];
+
+/** Alias used by weekly-draw pool filters. */
+export const PLAYS = ALL_PLAYS;
 
 export const PLAY_COUNT = ALL_PLAYS.length;

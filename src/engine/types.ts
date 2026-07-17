@@ -44,6 +44,11 @@ export interface CardCost {
 
 export type RiskClass = 'SAFE' | 'STD' | 'VOL' | 'CHOICE';
 
+/** Root character attributes that modify play odds via cardAttrMod. */
+export type AttrId = 'CLO' | 'CON' | 'CRA' | 'INK' | 'DIP' | 'CHA';
+
+export type Attrs = Record<AttrId, number>;
+
 export interface PlayCard {
   id: string;
   n: string;
@@ -53,7 +58,8 @@ export interface PlayCard {
   field?: boolean;
   tag: string;
   d: string;
-  attrs?: string[]; // Root attributes: CLO, CON, CRA, INK, DIP, CHA
+  attrs?: AttrId[]; // Root attributes: CLO, CON, CRA, INK, DIP, CHA
+  trap?: boolean; // Honestly labeled trap plays (PAC check, self-fund, etc.)
   odds?: (state: GameState, ground?: Ground) => number;
   run?: (state: GameState, result: RollResult, ground?: Ground) => string;
   show?: (state: GameState) => boolean;
@@ -127,6 +133,10 @@ export interface GameState {
   debatePrepped: boolean;
   oppoFile: boolean;
   favWitness: number;
+  /** Root attributes (baseline 10). cardAttrMod uses (score-10)/40 per linked attr. */
+  attrs: Attrs;
+  /** Campaign seed when set — for replay harnesses and CLI. */
+  seed?: number;
   regionHook?: string;
   slowDecay?: boolean;
   globalBand?: number;

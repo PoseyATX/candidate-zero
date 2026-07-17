@@ -82,11 +82,19 @@ export function buildCatalog(plays: PlayCard[] = ALL_PLAYS): Map<string, PlayCar
 }
 
 export function createCampaign(overrides: Partial<GameState> = {}): Campaign {
+  // Seed first so deck shuffle and weekly draws share the stream.
   const state = createNewState({
     money: 200,
     volPool: 1,
     ...overrides
   });
+  // Seed starter deck inventory so weekly growth skips already-owned starters.
+  const starter = [
+    'PL01', 'PL01', 'PL01', 'PL02', 'PL03',
+    'PL04', 'PL04', 'PL04', 'PL04', 'PL04',
+    'PL05', 'PL05', 'PL06', 'PL10', 'PL13', 'PL13', 'PL13', 'PL08'
+  ];
+  state.deck = [...new Set(starter)];
   return {
     state,
     deck: createDeckState(),

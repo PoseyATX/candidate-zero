@@ -6,7 +6,7 @@
 
 import { resolve, STAMPS } from './resolve.js';
 import { getPhase } from './state.js';
-import type { GameState, Ground, PlayCard, PlayOutcome, RollResult } from './types.js';
+import type { AttrId, GameState, Ground, PlayCard, PlayOutcome, RollResult } from './types.js';
 
 export function canAfford(state: GameState, card: PlayCard): boolean {
   const c = card.cost;
@@ -48,8 +48,8 @@ export function pickDefaultGround(state: GameState): Ground | undefined {
 }
 
 // === cardAttrMod: Root attributes now affect card power ===
-function amod(state: GameState, id: string): number {
-  const val = (state.attrs && state.attrs[id] != null) ? state.attrs[id] : 8;
+function amod(state: GameState, id: AttrId): number {
+  const val = state.attrs?.[id] ?? 10;
   return (val - 10) / 40;
 }
 

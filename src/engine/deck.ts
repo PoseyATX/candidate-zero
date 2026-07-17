@@ -4,8 +4,9 @@
  * Phase turns provide evolution opportunities (add/sharpen/cut).
  */
 
-import type { DeckState, GameState } from './types.js';
+import type { DeckState, GameState, PlayCard } from './types.js';
 import { PLAYS } from '../data/plays.js';
+import { random } from './rng.js';
 
 // Starter deck (early accessibility + dual ballot paths)
 export const STARTER_DECK_IDS: string[] = [
@@ -28,10 +29,11 @@ export function createDeckState(cardIds: string[] = STARTER_DECK_IDS): DeckState
   };
 }
 
+/** Fisher–Yates using the shared seeded RNG stream. */
 export function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(random() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
@@ -79,13 +81,13 @@ function getAvailableNewCards(state: GameState): string[] {
   const owned = new Set(state.deck || []);
   const fixedEarly = new Set(['PL01', 'PL04', 'PL05']);
   return PLAYS
-    .filter(p => 
-      !owned.has(p.id) && 
+    .filter((p: PlayCard) =>
+      !owned.has(p.id) &&
       !fixedEarly.has(p.id) &&
       (!p.show || p.show(state)) &&
       (!p.req || p.req(state))
     )
-    .map(p => p.id);
+    .map((p: PlayCard) => p.id);
 }
 
 /**
@@ -95,11 +97,11 @@ function getAvailableNewCards(state: GameState): string[] {
  */
 export function enforceWeeklyDraw(state: GameState): string[] {
   const drawn: string[] = [];
+  if (!state.deck) state.deck = [];
   const pool = getAvailableNewCards(state);
   if (pool.length > 0) {
-    const idx = Math.floor(Math.random() * pool.length);
-    const newId = pool[idx];
-    if (!state.deck) state.deck = [];
+    const idx = Math.floor(random() * pool.length);
+    const newId = pool[idx]!;
     state.deck.push(newId);
     drawn.push(newId);
   }
@@ -108,8 +110,8 @@ export function enforceWeeklyDraw(state: GameState): string[] {
   for (let i = 0; i < bonus; i++) {
     const extraPool = getAvailableNewCards(state);
     if (extraPool.length === 0) break;
-    const extraIdx = Math.floor(Math.random() * extraPool.length);
-    const extraId = extraPool[extraIdx];
+    const extraIdx = Math.floor(random() * extraPool.length);
+    const extraId = extraPool[extraIdx]!;
     state.deck.push(extraId);
     drawn.push(extraId);
   }

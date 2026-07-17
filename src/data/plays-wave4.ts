@@ -19,6 +19,7 @@ function pick<T>(arr: T[]): T {
 
 export const PL16_RecruitVolunteers: PlayCard = {
   id: 'PL16', n: 'Recruit Volunteers', cost: { a: 1 }, risk: 'STD', ph: [1, 2, 3], tag: 'force multiplier',
+  attrs: ['CLO', 'CHA'],
   d: 'An army marches on casseroles. Every volunteer makes every other card better.',
   odds: (s) => clamp(0.5 + s.faces.T * 0.004 + s.nameID * 0.003, 0, 0.95),
   run: (s, o) => {
@@ -38,6 +39,7 @@ export const PL16_RecruitVolunteers: PlayCard = {
 
 export const PL18_SharpenMessage: PlayCard = {
   id: 'PL18', n: 'Sharpen the Message', cost: { a: 1 }, risk: 'STD', ph: [1, 2], tag: 'one issue, said right',
+  attrs: ['CON'],
   d: 'You are not running on nine things. You are running on one thing, said so it stays said.',
   show: (s) => !s.messageSharp,
   odds: (s) => clamp(0.6 + s.faces.T * 0.003, 0, 0.95),
@@ -55,6 +57,7 @@ export const PL18_SharpenMessage: PlayCard = {
 
 export const PL20_PacCheck: PlayCard = {
   id: 'PL20', n: 'Take the PAC Check', cost: { a: 1 }, risk: 'STD', ph: [1, 2, 3], tag: 'TRAP — honestly labeled',
+  attrs: ['CRA', 'DIP'],
   trap: true,
   d: 'A man in a good suit admires your race. The check is real. So is the string tied to it.',
   show: (s) => s.tier >= 1,
@@ -75,6 +78,7 @@ export const PL20_PacCheck: PlayCard = {
 
 export const PL21_SelfFundCredit: PlayCard = {
   id: 'PL21', n: 'Self-Fund on Credit', cost: { a: 1 }, risk: 'SAFE', ph: [1, 2], tag: 'TRAP — honestly labeled',
+  attrs: ['CRA'],
   trap: true,
   d: "The bank will lend against the homestead. Campaigns have eaten better men's farms.",
   odds: () => 0.95,
@@ -89,6 +93,7 @@ export const PL21_SelfFundCredit: PlayCard = {
 
 export const PL22_ContrastMail: PlayCard = {
   id: 'PL22', n: 'Contrast Mail', cost: { a: 1, $: 800 }, risk: 'VOL', ph: [2, 3], tag: 'the folder spent',
+  attrs: ['CRA', 'INK'],
   d: 'What the quiet man found, printed on cheap stock and mailed to every primary voter who votes.',
   req: (s) => s.oppoFile,
   odds: (s) => clamp(0.48 + s.faces.O * 0.003 - s.exposure * 0.04, 0, 0.9),

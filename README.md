@@ -10,10 +10,13 @@ This repository contains the modular TypeScript baseline for the durable, testab
 
 - Pure resolution engine (four-tier brutal RNG) extracted and verified
 - SAFE cards provably cannot produce DISASTER
-- 17 Play cards in pure, explicit-state form
+- **22 Play cards** in pure, explicit-state form (waves 1–4), root-attr tagged
 - Petition Drive balance-tuned; multi-strategy loop harness green
-- Minimal hand + draw + play + week loop live
-- **Open for honest v0.1:** full card audit evidence, side-by-side vs original prototype, clean UI layer
+- Minimal hand + draw + play + week loop live (seeded end-to-end)
+- Attribute synergy (`cardAttrMod`) active
+- Thin Vite UI shell + CLI play shell
+- Harnesses: resolve, smoke, ballot, loop, strategies, ac1, ac1-parity, audit
+- **Open for honest v0.1:** yield-table archive compare, setup/persona in UI, UI polish
 
 ## Architecture
 
@@ -21,7 +24,8 @@ This repository contains the modular TypeScript baseline for the durable, testab
 src/
   data/       # Cards, personas, regions, issues (single source of truth)
   engine/     # Pure functions only — resolution, state transitions, play loop
-  ui/         # Presentation layer (to be extracted)
+  ui/         # Thin Vite presentation shell (no rules)
+  cli/        # Interactive + auto play shells
   harness/    # Balance and regression tests
 ```
 
@@ -33,12 +37,11 @@ src/
 ## Run harnesses
 
 ```bash
-npm run harness:resolve
-npm run harness:smoke
-npm run harness:ballot
-npm run harness:loop
-npm run harness:strategies
-npm run harness
+npm install
+npm run harness          # full suite
+npm run play             # interactive CLI
+npm run play:auto        # labor auto through week 8
+npm run dev              # Vite UI shell
 ```
 
 ## Source of truth

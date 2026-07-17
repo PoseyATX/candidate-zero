@@ -20,3 +20,9 @@
 ## Open
 
 Action yield-table full compare for archive ACTIONS (walk/fund/chairs) — modular is source of truth where tuned.
+
+## 2026-07-17 resume notes
+
+- Catalog now exports WAVE4 via `ALL_PLAYS` / `PLAYS` (fixes missing `PLAYS` export that broke weekly draw).
+- Deck shuffle + weekly growth consume the seeded RNG stream (campaign ledger replay is honest end-to-end).
+- Root `attrs` on GameState default to 10; `cardAttrMod` active.
