@@ -24,7 +24,12 @@
     "harness:yields": "npx tsx src/harness/yield-tables.ts",
     "harness:full": "npx tsx src/harness/full-campaign.ts",
     "harness:dopamine": "npx tsx src/harness/dopamine.ts",
-    "harness": "npm run harness:resolve && npm run harness:smoke && npm run harness:ballot && npm run harness:strategies && npm run harness:ac1 && npm run harness:ac1-parity && npm run harness:audit && npm run harness:calendar && npm run harness:setup && npm run harness:yields && npm run harness:full && npm run harness:dopamine"
+    "harness:career": "npx tsx src/harness/career-persist.ts",
+    "harness:dead-refs": "npx tsx src/harness/dead-refs.ts",
+    "harness:obligations": "npx tsx src/harness/obligations-tick.ts",
+    "harness:shop": "npx tsx src/harness/shop-loot.ts",
+    "export:cards": "npx tsx scripts/export-cards-csv.ts",
+    "harness": "npm run harness:resolve && npm run harness:smoke && npm run harness:ballot && npm run harness:strategies && npm run harness:ac1 && npm run harness:ac1-parity && npm run harness:audit && npm run harness:calendar && npm run harness:setup && npm run harness:yields && npm run harness:full && npm run harness:dopamine && npm run harness:career && npm run harness:dead-refs && npm run harness:obligations && npm run harness:shop"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",

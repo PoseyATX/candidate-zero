@@ -12,18 +12,19 @@
     <div id="app">
       <header class="top">
         <div>
-          <p class="eyebrow">A Hot Texas Primary</p>
+          <p class="eyebrow">A Hot Texas Career</p>
           <h1>Candidate Zero</h1>
         </div>
         <div class="top-actions">
           <label class="seed-label">Seed <input id="seed-input" type="number" min="0" step="1" /></label>
-          <button type="button" id="btn-new" class="btn">New run</button>
+          <button type="button" id="btn-new" class="btn">Abandon career</button>
         </div>
       </header>
       <section id="setup" class="setup panel">
-        <h2>Identity — choices bind</h2>
+        <h2>Filing — identity locks here</h2>
+        <p class="hint">Persona is permanent. The career does not end when a ballot does. Off-seasons mint residue for the next cycle.</p>
         <div class="setup-grid">
-          <label>Persona
+          <label>Persona (forever)
             <select id="sel-persona"></select>
           </label>
           <label>Issue
@@ -37,10 +38,11 @@
           </label>
         </div>
         <p id="setup-blurb" class="hint"></p>
-        <button type="button" id="btn-start" class="btn btn-gold">Begin primary</button>
+        <button type="button" id="btn-start" class="btn btn-gold">Begin career</button>
       </section>
       <section id="game" class="game hidden">
         <section id="ledger" class="ledger" aria-live="polite"></section>
+        <section id="kit-strip" class="kit-strip" aria-label="Kit and flags"></section>
         <section class="panels">
           <div class="panel">
             <h2>Actions</h2>
@@ -48,9 +50,12 @@
             <div id="juice" class="juice-banner hidden" aria-live="assertive"></div>
             <div id="draft" class="card-grid"></div>
             <div id="playables" class="card-grid"></div>
+            <h3 class="subhead">Shop — spend the money</h3>
+            <p class="hint shop-hint">Billboards, websites, staff, lists. Money without kit is just a number.</p>
+            <div id="shop" class="card-grid shop-grid"></div>
             <div class="row-actions">
               <button type="button" id="btn-end" class="btn btn-gold">End week</button>
-              <button type="button" id="btn-restart" class="btn btn-gold hidden">Start a new run</button>
+              <button type="button" id="btn-restart" class="btn hidden">Abandon career</button>
             </div>
           </div>
           <div class="panel">
@@ -60,8 +65,8 @@
         </section>
       </section>
       <footer class="foot">
-        <span>Pure engine shell · not v0.1</span>
-        <span>Primary 8w · General 6w · SAFE never disasters</span>
+        <span>Persistent career · not v0.1</span>
+        <span>Primary → General → Session? → Off-season → next cycle</span>
       </footer>
     </div>
     <script type="module" src="/src/ui/main.ts"></script>
