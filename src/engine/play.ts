@@ -15,7 +15,9 @@ export function canAfford(state: GameState, card: PlayCard): boolean {
   const apCost = c.a ?? 0;
   const apCovered = apCost <= state.ap || (apCost > 0 && !!card.field && state.fieldAp > 0);
   if (!apCovered) return false;
-  if ((c.$ ?? 0) > state.money) return false;
+  // Yard Sign Cache (A08) covers the $ cost of blitzes
+  const dollar = card.id === 'PL03' && state.assets.includes('A08') ? 0 : (c.$ ?? 0);
+  if (dollar > state.money) return false;
   if ((c.vp ?? 0) > state.volPool) return false;
   if ((c.m ?? 0) > state.momentum) return false;
   if ((c.fav ?? 0) > state.favors) return false;
@@ -47,14 +49,57 @@ export function payCost(state: GameState, card: PlayCard): void {
       state.ap -= c.a;
     }
   }
-  if (c.$) state.money -= c.$;
+  const dollar = card.id === 'PL03' && state.assets.includes('A08') ? 0 : (c.$ ?? 0);
+  if (dollar) state.money -= dollar;
   if (c.vp) state.volPool -= c.vp;
   if (c.m) state.momentum -= c.m;
   if (c.fav) state.favors -= c.fav;
 }
 
+/**
+ * Prefer open grounds whose affinity tags match the player's strongest faces.
+ * Gated grounds (e.g. Church Corridor) require True Believer face or preacher bio.
+ */
 export function pickDefaultGround(state: GameState): Ground | undefined {
-  return state.groundsArr.find(g => g.pool > 0) ?? state.groundsArr[0];
+  const open = state.groundsArr.filter(g => {
+    if (g.pool <= 0) return false;
+    if (g.gated) {
+      // Un-gate when zeal or pulpit persona is real
+      if ((state.faces.T ?? 0) >= 12) return true;
+      if (state.personaId === 'preacher' || state.assets.some(a => a.includes('PREACHER') || a.includes('BIO_PREACHER')))
+        return true;
+      return false;
+    }
+    return true;
+  });
+  if (!open.length) return state.groundsArr.find(g => g.pool > 0) ?? state.groundsArr[0];
+
+  const faceScore = (aff: string): number => {
+    let score = 0;
+    for (const part of aff.split(',')) {
+      const f = part.trim() as keyof typeof state.faces;
+      if (f && typeof state.faces[f] === 'number') score += Math.max(0, state.faces[f]);
+    }
+    return score + (open.find(g => g.aff === aff)?.rapport ?? 0) * 0.5;
+  };
+
+  open.sort((a, b) => {
+    const sa = faceScore(a.aff) + a.rapport * 0.3;
+    const sb = faceScore(b.aff) + b.rapport * 0.3;
+    return sb - sa;
+  });
+  return open[0];
+}
+
+/** Small odds tilt when ground affinity matches dominant faces. */
+export function groundAffinityMod(state: GameState, ground?: Ground): number {
+  if (!ground?.aff) return 0;
+  let match = 0;
+  for (const part of ground.aff.split(',')) {
+    const f = part.trim() as keyof typeof state.faces;
+    if (f && (state.faces[f] ?? 0) >= 8) match += 1;
+  }
+  return Math.min(0.08, match * 0.03);
 }
 
 // === cardAttrMod: Root attributes now affect card power ===
@@ -99,7 +144,9 @@ export function executePlay(
   // Resistance tier escalates with the stakes (pre-ballot -> on-ballot -> general):
   // scrutiny/opposition organization grows as the race gets real. This widens
   // resolve()'s disaster band for STD/VOL plays and unlocks PL20 (show: tier>=1).
-  state.tier = getPhase(state) - 1;
+  // Difficulty tier tracks campaign phase (0 interim / 4 session → clamp)
+  const ph = getPhase(state);
+  state.tier = ph <= 0 ? 0 : Math.min(2, ph === 4 ? 2 : ph - 1);
 
   payCost(state, card);
 
@@ -115,7 +162,8 @@ export function executePlay(
 
   // === ACTIVATE SYNERGY ===
   const attrMod = cardAttrMod(state, card);
-  p = Math.max(0.02, Math.min(0.95, p + attrMod));
+  const groundMod = card.field ? groundAffinityMod(state, g) : 0;
+  p = Math.max(0.02, Math.min(0.95, p + attrMod + groundMod));
 
   const roll: RollResult = resolve(p, card.risk, state);
   const text = card.run ? card.run(state, roll, g) : `${card.n} resolves.`;
