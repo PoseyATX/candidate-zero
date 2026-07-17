@@ -15,10 +15,8 @@ You are a professional game designer assisting with Candidate Zero, a Texas Legi
 - `src/ui/` — presentation only (setup / play / draft)
 - `src/cli/` — interactive + auto play
 - `src/harness/` — balance and regression tests (`npm run harness`)
-- `data/cards.csv` — human-auditable catalog; regenerate with `npm run export:cards` after content changes
-- See `docs/ARCHITECTURE.md` for **foundation bootstrap**: layers, state machine, rulesets, balance gates for every new addition
+- See `docs/ARCHITECTURE.md` for calendar (Primary 8 / General 6) and Unity deferral
 - **Do not** implement a second rules engine in Unity; TS (then Swift) owns mechanics
-- Expand content only after architecture balance gates clear (peer anchors + harness green)
 - GitHub push works with `gh` auth; prefer normal `git push` over MCP file spam
 
 ## Covenants (non-negotiable)
