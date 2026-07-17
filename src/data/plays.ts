@@ -11,14 +11,11 @@
 
 import type { GameState, Ground, RollResult, PlayCard } from '../engine/types.js';
 import { random } from '../engine/rng.js';
+import { warm } from '../engine/reputation.js';
 import { WAVE4_PLAYS } from './plays-wave4.js';
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
-}
-function warm(state: GameState, id: string): boolean {
-  const a = state.allies.find(x => x.id === id);
-  return !!(a && a.warm > 0);
 }
 function rapGain(g: Ground, amt: number, state: GameState) {
   if (state.rapStall) amt = Math.ceil(amt / 2);
@@ -64,7 +61,13 @@ export const PL04_PetitionDrive: PlayCard = {
   odds: (s) => clamp(0.60 + s.volPool*0.035 + (warm(s,'AL09')?0.08:0), 0, 0.95),
   run: (s, o) => {
     if (o.tier <= 1) {
-      const g = o.tier === 0 ? 70 + Math.floor(random()*35) : 40 + Math.floor(random()*25);
+      // 2026-07-17 re-tune: labor path was costing ~5.5-6 of 8 primary weeks
+      // (nearly all AP) to clear sigNeed, starving nameID/contacts/endorsePts
+      // versus the money path's ~1.5-2 week fee grind. Raised yields (not
+      // odds) so labor stays the zero-dollar door without eating the primary.
+      // src/harness/ballot-qualification.ts imports this card directly, so
+      // there is nothing to keep in sync by hand anymore.
+      const g = o.tier === 0 ? 95 + Math.floor(random()*40) : 55 + Math.floor(random()*30);
       s.signatures += g;
       if (s.signatures >= s.sigNeed && !s.ballot) { s.ballot = true; return `+${g} signatures — threshold cleared. On the ballot, free but not cheap.`; }
       return `+${g} valid signatures (${s.signatures}/${s.sigNeed}).`;
@@ -75,9 +78,9 @@ export const PL04_PetitionDrive: PlayCard = {
 };
 
 export const PL05_PayFilingFee: PlayCard = {
-  id: 'PL05', n: 'Pay the Filing Fee', cost: { $:750 }, risk: 'SAFE', ph: [1], tag: 'the money door',
+  id: 'PL05', n: 'Pay the Filing Fee', cost: { $:1250 }, risk: 'SAFE', ph: [1], tag: 'the money door',
   attrs: ['CLO'],
-  d: '$750 and it\'s done. Shame-free, story-free.', show: (s) => !s.ballot, odds: () => 0.99,
+  d: '$1,250 and it\'s done. Shame-free, story-free.', show: (s) => !s.ballot, odds: () => 0.99,
   run: (s) => { s.ballot = true; return 'Receipt in hand. You are on the ballot the expensive way.'; }
 };
 export const PL06_TownHall: PlayCard = {
@@ -145,7 +148,7 @@ export const PL13_FishFry: PlayCard = {
   run: (s, o, g) => {
     if (!g) return 'No ground selected.';
     const mult = (g.id==='GR07'?3:1) * (s.backers.includes('B05')?1.4:1) * (s.regionHook==='permian'?1.25:1) * (s.moneyClash?0.8:1);
-    if (o.tier === 0) { const m = Math.round((650+random()*350)*mult); s.money+=m; rapGain(g,4,s); s.volPool+=2; return `+$${m} and the small-dollar list starts here at ${g.n}. +2 volunteers.`; }
+    if (o.tier === 0) { const m = Math.round((650+random()*350)*mult); s.money+=m; rapGain(g,4,s); s.volPool+=2; if (!s.backers.includes('B05')) s.backers.push('B05'); return `+$${m} and the small-dollar list starts here at ${g.n}. +2 volunteers.`; }
     if (o.tier === 1) { const m = Math.round((380+random()*200)*mult); s.money+=m; rapGain(g,2,s); s.volPool+=1; return `+$${m}, faces and names. +1 volunteer.`; }
     const m = Math.round(200*mult); s.money+=m; return `Even a rainy fish fry clears its cost. +$${m}.`;
   }

@@ -11,6 +11,7 @@ import {
   discardHand,
   drawCards,
   DEFAULT_HAND_SIZE,
+  STARTER_DECK_IDS,
   takeFromHand,
   enforceWeeklyDraw,
   buildPhaseDraft,
@@ -26,6 +27,7 @@ import {
   type StageTransition
 } from './calendar.js';
 import { markWeekStart, buildWeekSummary, type WeekSummary } from './feedback.js';
+import { repCheck } from './reputation.js';
 import {
   applySetup,
   HARNESS_DEFAULT_SETUP,
@@ -68,6 +70,7 @@ export interface WeekReport {
 export interface LedgerSnapshot {
   week: number;
   ap: number;
+  fieldAp: number;
   money: number;
   contacts: number;
   nameID: number;
@@ -89,6 +92,7 @@ export function snapshot(state: GameState): LedgerSnapshot {
   return {
     week: state.week,
     ap: state.ap,
+    fieldAp: state.fieldAp,
     money: state.money,
     contacts: state.contacts,
     nameID: state.nameID,
@@ -121,13 +125,9 @@ export function createCampaign(overrides: CreateCampaignOptions = {}): Campaign 
   applySetup(state, setup);
   state.lastPhase = getPhase(state);
 
-  // Seed starter deck inventory so weekly growth skips already-owned starters.
-  const starter = [
-    'PL01', 'PL01', 'PL01', 'PL02', 'PL03',
-    'PL04', 'PL04', 'PL04', 'PL04', 'PL04',
-    'PL05', 'PL05', 'PL06', 'PL10', 'PL13', 'PL13', 'PL13', 'PL08'
-  ];
-  state.deck = [...new Set(starter)];
+  // Seed starter deck inventory (ownership) from the same list that seeds the
+  // physical draw pile (createDeckState's default), so the two can't drift.
+  state.deck = [...new Set(STARTER_DECK_IDS)];
   return {
     state,
     deck: createDeckState(),
@@ -199,19 +199,25 @@ export const CAMP_FILING_FEE = -105;
 
 export function listPlayableHand(campaign: Campaign): { index: number; card: PlayCard }[] {
   const out: { index: number; card: PlayCard }[] = [];
+  const inHandIds = new Set<string>();
   campaign.deck.hand.forEach((id, index) => {
     const card = campaign.catalog.get(id);
     if (card && isPlayable(campaign.state, card)) {
       out.push({ index, card });
+      inHandIds.add(id);
     }
   });
   if (!campaign.state.ballot) {
+    // Only offer the camp-action fallback when the real card isn't already
+    // sitting in hand — otherwise Petition Drive / Filing Fee show up twice
+    // in the same menu (harmless but confusing: two entries, two mechanics
+    // for discarding the physical copy vs. leaving it inert).
     const petition = campaign.catalog.get('PL04');
     const fee = campaign.catalog.get('PL05');
-    if (petition && isPlayable(campaign.state, petition)) {
+    if (petition && !inHandIds.has('PL04') && isPlayable(campaign.state, petition)) {
       out.push({ index: CAMP_PETITION, card: petition });
     }
-    if (fee && isPlayable(campaign.state, fee)) {
+    if (fee && !inHandIds.has('PL05') && isPlayable(campaign.state, fee)) {
       out.push({ index: CAMP_FILING_FEE, card: fee });
     }
   }
@@ -309,7 +315,12 @@ export function playFromHand(
 
 export function endWeekInPlace(campaign: Campaign): StageTransition {
   discardHand(campaign.deck);
-  return advanceCampaignWeek(campaign.state);
+  const transition = advanceCampaignWeek(campaign.state);
+  // Catches week-gated reputation thresholds (e.g. R02) even on a week
+  // with no plays; play-triggered thresholds are already checked in
+  // executePlay. See src/engine/reputation.ts.
+  repCheck(campaign.state);
+  return transition;
 }
 
 /** Close the week feedback summary (call before calendar advance). */

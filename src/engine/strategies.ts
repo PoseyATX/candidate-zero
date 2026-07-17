@@ -27,7 +27,11 @@ export const laborBallotStrategy: Chooser = (playable, state) => {
   if (!state.ballot) {
     return pickByPriority(playable, ['PL04', 'PL01', 'PL02', 'PL06', 'PL10']);
   }
-  return pickByPriority(playable, ['PL01', 'PL02', 'PL06', 'PL08', 'PL16', 'PL10', 'PL03']);
+  // PL21B is labor's answer to PL39: a volunteer-pool-funded route to the
+  // same AL09 field-ops ally, so the labor path isn't locked out of the
+  // bonus money's PL39 grants. Prioritized above PL01/PL02 so it actually
+  // fires once affordable — it's a one-time grab (show gates it off after).
+  return pickByPriority(playable, ['PL21B', 'PL01', 'PL02', 'PL06', 'PL08', 'PL16', 'PL10', 'PL03']);
 };
 
 /** Bank fee early, then paid media / fish fry texture into general. */
@@ -38,12 +42,12 @@ export const moneyBallotStrategy: Chooser = (playable, state) => {
     ]);
   }
   if (!state.ballot) {
-    if (state.money >= 750) {
+    if (state.money >= 1250) {
       return pickByPriority(playable, ['PL05', 'PL13', 'PL01', 'PL10']);
     }
     return pickByPriority(playable, ['PL13', 'PL01', 'PL02', 'PL10', 'PL03']);
   }
-  return pickByPriority(playable, ['PL01', 'PL13', 'PL06', 'PL08', 'PL10', 'PL16']);
+  return pickByPriority(playable, ['PL01', 'PL13', 'PL39', 'PL06', 'PL08', 'PL10', 'PL16']);
 };
 
 /** Control: ignore ballot access. */
@@ -61,12 +65,21 @@ export const hybridStrategy: Chooser = (playable, state) => {
     ]);
   }
   if (!state.ballot) {
-    const petition = playable.find(p => p.card.id === 'PL04');
-    if (petition) return petition.index;
-    if (state.money >= 750) {
+    // Genuine hybrid: race both ballot doors instead of defaulting to
+    // labor-only (petition was always legal as a camp action, so a naive
+    // "try petition first" check never fell through to the fee branch).
+    // Alternate weeks between the two paths so both accrue.
+    if (state.money >= 1250) {
       const fee = playable.find(p => p.card.id === 'PL05');
       if (fee) return fee.index;
     }
+    const wantFish = state.week % 2 === 0;
+    if (wantFish) {
+      const fish = playable.find(p => p.card.id === 'PL13');
+      if (fish) return fish.index;
+    }
+    const petition = playable.find(p => p.card.id === 'PL04');
+    if (petition) return petition.index;
     return pickByPriority(playable, ['PL13', 'PL01', 'PL02', 'PL06', 'PL10']);
   }
   return pickByPriority(playable, ['PL01', 'PL06', 'PL08', 'PL13', 'PL16', 'PL10']);

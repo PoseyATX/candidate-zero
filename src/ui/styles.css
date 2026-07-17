@@ -1,15 +1,22 @@
 :root {
-  --ink: #1a1410;
-  --paper: #f4efe6;
-  --panel: #ebe3d4;
-  --gold: #b8860b;
-  --blood: #8b1e1e;
-  --line: #c9b99a;
-  --muted: #6b5d4d;
-  --trap: #5c1a1a;
+  --walnut: #1a130d;
+  --walnut-2: #241a11;
+  --walnut-3: #2e2115;
+  --parchment: #e9dcc0;
+  --parchment-dim: #cfc0a0;
+  --oxblood: #8a2f26;
+  --oxblood-bright: #b13c2f;
+  --gold: #b08d3e;
+  --gold-dim: #7d6530;
+  --ink: #221a10;
+  --sage: #6b7a5e;
+  --disaster: #5e1410;
+  --line: #3a2c1b;
+  --muted: var(--parchment-dim);
+  --trap: var(--disaster);
   font-family: 'Source Serif 4', Georgia, serif;
-  color: var(--ink);
-  background: var(--paper);
+  color: var(--parchment);
+  background: var(--walnut);
 }
 
 * { box-sizing: border-box; }
@@ -18,8 +25,8 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(ellipse at top, #fff8ec 0%, transparent 55%),
-    var(--paper);
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(176, 141, 62, 0.08), transparent 60%),
+    var(--walnut);
 }
 
 #app {
@@ -33,8 +40,9 @@ body {
   justify-content: space-between;
   align-items: flex-end;
   gap: 1rem;
-  border-bottom: 2px solid var(--ink);
-  padding-bottom: 0.75rem;
+  border-top: 3px double var(--gold);
+  border-bottom: 3px double var(--gold);
+  padding: 0.6rem 0.75rem;
   margin-bottom: 1rem;
 }
 
@@ -43,7 +51,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.14em;
   font-size: 0.72rem;
-  color: var(--muted);
+  color: var(--gold);
 }
 
 h1 {
@@ -52,6 +60,7 @@ h1 {
   margin: 0.15rem 0 0;
   font-size: 1.85rem;
   letter-spacing: 0.02em;
+  color: var(--parchment);
 }
 
 .top-actions {
@@ -62,39 +71,47 @@ h1 {
 
 .seed-label {
   font-size: 0.85rem;
-  color: var(--muted);
+  color: var(--parchment-dim);
 }
 
 .seed-label input {
   width: 7rem;
   margin-left: 0.35rem;
   padding: 0.3rem 0.4rem;
-  border: 1px solid var(--line);
-  background: #fff;
+  border: 1px solid var(--gold-dim);
+  background: var(--walnut-2);
+  color: var(--parchment);
   font: inherit;
 }
 
 .btn {
-  font: inherit;
+  font-family: Cinzel, serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   cursor: pointer;
-  border: 1px solid var(--ink);
-  background: #fff;
-  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--gold-dim);
+  background: transparent;
+  color: var(--gold);
+  padding: 0.5rem 0.95rem;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
-.btn:hover { background: var(--panel); }
+.btn:hover { border-color: var(--gold); color: var(--parchment); }
+.btn:active { transform: translateY(1px); }
+.btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
 .btn-gold {
-  background: var(--gold);
-  color: #fff;
-  border-color: #8a6508;
+  background: var(--oxblood);
+  color: var(--parchment);
+  border-color: var(--oxblood);
   font-weight: 600;
 }
 
-.btn-gold:hover { filter: brightness(1.05); }
+.btn-gold:hover { background: var(--oxblood-bright); border-color: var(--oxblood-bright); color: var(--parchment); }
 
 .ledger {
-  background: var(--panel);
+  background: var(--walnut-2);
   border: 1px solid var(--line);
   padding: 0.85rem 1rem;
   margin-bottom: 1rem;
@@ -108,7 +125,7 @@ h1 {
 }
 
 .ledger-grid .k {
-  color: var(--muted);
+  color: var(--gold);
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -126,7 +143,7 @@ h1 {
 }
 
 .panel {
-  background: #fffdf8;
+  background: var(--walnut-2);
   border: 1px solid var(--line);
   padding: 0.9rem 1rem 1.1rem;
   min-height: 280px;
@@ -136,49 +153,219 @@ h1 {
   font-family: Cinzel, serif;
   font-size: 1rem;
   margin: 0 0 0.5rem;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
 }
 
 .hint {
-  color: var(--muted);
+  color: var(--parchment-dim);
   font-size: 0.9rem;
   margin: 0 0 0.75rem;
 }
 
 .card-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
+  display: grid;
+  /* auto-fill's column *count* is computed from minmax()'s max when it's a
+     definite length, not the min — a 140/172 fixed-max pair silently
+     collapsed to one column on phone-width screens (measured: 308px
+     content width, 2 columns needed only 294px, still rendered as one).
+     1fr makes the max indefinite so the count uses the 140px min instead;
+     the per-card max-width below (not the track) caps individual card
+     growth on wide rows. */
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.9rem;
+  align-items: start;
 }
 
+/* The draft/playables hint paragraph is a sibling inside a now-grid
+   container — let it span the full row instead of squeezing into a cell. */
+.card-grid > .hint {
+  grid-column: 1 / -1;
+  margin: 0 0 0.15rem;
+}
+
+/* Cards stay physical-paper-light — parchment cards on a dark walnut
+   table, not dark-on-dark. Matches the archive prototype's .card
+   treatment (linear-gradient parchment, dark ink text). */
 .play-card {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  width: 100%;
+  max-width: 172px;
   text-align: left;
   font: inherit;
   cursor: pointer;
-  border: 1px solid var(--line);
-  background: #fff;
-  padding: 0.65rem 0.75rem;
-  display: grid;
-  gap: 0.2rem;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #9a824f;
+  outline: 1px solid #9a824f;
+  outline-offset: 3px;
+  border-radius: 2px;
+  background: linear-gradient(175deg, #efe3c6, #e2d2ae);
+  padding: 0.5rem 0.55rem 0.45rem;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.35),
+    0 8px 18px rgba(0, 0, 0, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, outline-color 0.15s ease;
+  overflow: hidden;
+}
+
+/* Inner Art Deco-ish frame line — a nod to the double-rule bordering in the
+   game's masthead treatment, scaled down to card size. */
+.play-card::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(138, 47, 38, 0.28);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+/* Faint watermark to give the card body some presence without art assets. */
+.play-card::after {
+  content: '\2726';
+  position: absolute;
+  right: -0.1rem;
+  bottom: 1.9rem;
+  font-size: 2.6rem;
+  line-height: 1;
+  color: rgba(34, 26, 16, 0.08);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.play-card.trap::after { color: rgba(138, 47, 38, 0.14); }
+.play-card.camp::after { color: rgba(176, 141, 62, 0.16); }
+
+.play-card .name,
+.play-card .tagline,
+.play-card .desc,
+.play-card .card-footer,
+.play-card .attrs {
+  position: relative;
+  z-index: 1;
 }
 
 .play-card:hover {
-  border-color: var(--ink);
-  background: #fffaf0;
+  outline-color: var(--gold);
+  transform: translateY(-3px);
+  box-shadow:
+    0 2px 5px rgba(0, 0, 0, 0.4),
+    0 16px 26px rgba(0, 0, 0, 0.45);
 }
 
-.play-card.camp { border-left: 4px solid var(--gold); }
-.play-card.trap { border-left: 4px solid var(--blood); background: #fff5f5; }
+.play-card:active { transform: translateY(-1px); }
 
-.play-card .name { font-weight: 600; }
-.play-card .meta { font-size: 0.8rem; color: var(--muted); }
-.play-card .desc { font-size: 0.88rem; color: #3a3028; }
-.play-card .attrs {
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  color: var(--gold);
+.play-card:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* Risk-class color coding — a quick-read signal before reading any text. */
+.play-card.risk-safe { border-left: 3px solid #2e6b30; }
+.play-card.risk-std { border-left: 3px solid var(--gold-dim); }
+.play-card.risk-vol { border-left: 3px solid #a1541c; }
+.play-card.risk-choice { border-left: 3px solid #3f5f8a; }
+
+.play-card.camp {
+  background: linear-gradient(175deg, #f2e6bf, #e6d3a0);
+  border-color: var(--gold);
+}
+
+.play-card.trap {
+  background: linear-gradient(175deg, #ecd3ce, #ddb9b2);
+  border-color: var(--oxblood);
+}
+
+.play-card .cost-badge {
+  align-self: flex-end;
+  font-family: Cinzel, serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  background: rgba(138, 47, 38, 0.14);
+  border: 1px solid rgba(138, 47, 38, 0.4);
+  border-radius: 3px;
+  padding: 0.1rem 0.32rem;
+  z-index: 1;
+  white-space: nowrap;
+}
+
+.play-card .name {
+  font-family: Cinzel, serif;
+  font-weight: 700;
+  font-size: 0.84rem;
+  line-height: 1.16;
+  margin: 0.3rem 0 0.05rem;
+  z-index: 1;
+  color: var(--ink);
+}
+
+.play-card .tagline {
+  font-style: italic;
+  font-size: 0.68rem;
+  color: #6a5426;
+  margin-bottom: 0.3rem;
+}
+
+.play-card .desc {
+  flex: 1 1 auto;
+  font-size: 0.74rem;
+  line-height: 1.32;
+  color: #4a3b24;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.play-card .card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 0.3rem;
+  padding-top: 0.28rem;
+  border-top: 1px dashed #9a824f;
+  font-size: 0.68rem;
+}
+
+.play-card .risk-tag {
+  color: #6a5426;
   text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
+
+.play-card .odds {
+  color: #6a5426;
+  font-variant-numeric: tabular-nums;
+}
+
+.play-card .attrs {
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  color: var(--oxblood);
+  text-transform: uppercase;
+  margin-top: 0.2rem;
+}
+
+.play-card .ribbon {
+  position: absolute;
+  top: 0.4rem;
+  left: -1.6rem;
+  width: 6rem;
+  text-align: center;
+  transform: rotate(-40deg);
+  font-family: Cinzel, serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.08rem 0;
+  z-index: 2;
+  pointer-events: none;
+  color: var(--parchment);
+}
+
+.play-card .ribbon-camp { background: var(--gold); }
+.play-card .ribbon-trap { background: var(--oxblood); }
 
 .row-actions { margin-top: 0.85rem; }
 
@@ -191,11 +378,12 @@ h1 {
 
 .log-line {
   padding: 0.25rem 0;
-  border-bottom: 1px solid #efe6d6;
+  border-bottom: 1px solid var(--line);
+  color: var(--parchment-dim);
 }
 
 .log-line .w {
-  color: var(--muted);
+  color: var(--gold-dim);
   margin-right: 0.35rem;
   font-size: 0.78rem;
 }
@@ -206,7 +394,7 @@ h1 {
   justify-content: space-between;
   gap: 1rem;
   font-size: 0.78rem;
-  color: var(--muted);
+  color: var(--parchment-dim);
   border-top: 1px solid var(--line);
   padding-top: 0.75rem;
 }
@@ -224,7 +412,7 @@ h1 {
   display: grid;
   gap: 0.3rem;
   font-size: 0.85rem;
-  color: var(--muted);
+  color: var(--gold);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -234,29 +422,29 @@ h1 {
   text-transform: none;
   letter-spacing: normal;
   padding: 0.4rem;
-  border: 1px solid var(--line);
-  background: #fff;
-  color: var(--ink);
+  border: 1px solid var(--gold-dim);
+  background: var(--walnut-2);
+  color: var(--parchment);
 }
 
-.draft-card {
-  border-left: 4px solid var(--gold);
-  background: #fffaf0;
-}
+/* .draft-card gets its card-shell styling from .play-card + a risk-* class
+   (assigned in main.ts renderDraft) — no separate rule needed here. */
 
 /* Dopamine / feedback */
 .juice-banner {
   margin: 0 0 0.75rem;
   padding: 0.65rem 0.85rem;
-  border: 1px solid var(--ink);
+  border: 1px solid var(--gold-dim);
+  background: var(--walnut-3);
+  color: var(--parchment);
   font-weight: 600;
   animation: juice-in 0.35s ease-out;
 }
-.juice-banner.spark { background: #fff3c4; border-color: var(--gold); }
-.juice-banner.hit { background: #e8f5e9; border-color: #2e7d32; }
-.juice-banner.thump { background: #f5f0e6; border-color: var(--muted); }
-.juice-banner.crash { background: #fdecea; border-color: var(--blood); color: var(--blood); }
-.juice-banner.whisper { background: #eef3f7; border-color: #607d8b; }
+.juice-banner.spark { background: #3a2c10; border-color: var(--gold); color: var(--gold); }
+.juice-banner.hit { background: #1e2e1c; border-color: var(--sage); color: #b9d1a9; }
+.juice-banner.thump { background: var(--walnut-3); border-color: var(--gold-dim); }
+.juice-banner.crash { background: #2e1210; border-color: var(--oxblood-bright); color: #e7a89f; }
+.juice-banner.whisper { background: #16232b; border-color: #3d5a68; color: #a9c4d1; }
 
 @keyframes juice-in {
   from { transform: translateY(-6px); opacity: 0; }
@@ -264,10 +452,10 @@ h1 {
 }
 
 .log-line.juice { color: var(--gold); font-style: italic; }
-.log-line.summary { font-weight: 600; border-left: 3px solid var(--gold); padding-left: 0.4rem; }
-.log-line.tier-0 { color: #8a6508; }
-.log-line.tier-1 { color: #2e5a2e; }
-.log-line.tier-3 { color: var(--blood); }
+.log-line.summary { font-weight: 600; border-left: 3px solid var(--gold); padding-left: 0.4rem; color: var(--parchment); }
+.log-line.tier-0 { color: var(--gold); }
+.log-line.tier-1 { color: #9fc491; }
+.log-line.tier-3 { color: var(--oxblood-bright); }
 
 .play-card.flash-spark { box-shadow: 0 0 0 2px var(--gold); }
-.play-card.flash-crash { box-shadow: 0 0 0 2px var(--blood); }
+.play-card.flash-crash { box-shadow: 0 0 0 2px var(--oxblood-bright); }

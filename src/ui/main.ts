@@ -103,7 +103,7 @@ function renderLedger(): void {
     <div class="ledger-grid">
       <div><span class="k">Stage</span> ${stageLabel(s)} · Phase ${getPhase(s)}</div>
       <div><span class="k">Week</span> ${stageWeek(s)} (cal ${snap.week}/${s.weeksTotal})</div>
-      <div><span class="k">AP</span> ${snap.ap}/${s.apMax}</div>
+      <div><span class="k">AP</span> ${snap.ap}/${s.apMax}${snap.fieldAp ? ` +${snap.fieldAp} field` : ''}</div>
       <div><span class="k">Money</span> $${snap.money}</div>
       <div><span class="k">Contacts</span> ${snap.contacts}</div>
       <div><span class="k">Name ID</span> ${snap.nameID}</div>
@@ -141,11 +141,16 @@ function renderDraft(): void {
     draft.options
       .map((id, i) => {
         const card = campaign!.catalog.get(id);
+        const risk = card ? card.risk.toLowerCase() : '';
         return `
-        <button type="button" class="play-card draft-card" data-draft="${i}">
+        <button type="button" class="play-card draft-card ${risk ? 'risk-' + risk : ''}" data-draft="${i}">
+          <span class="cost-badge">${id}</span>
           <span class="name">${card?.n ?? id}</span>
-          <span class="meta">${id}${card ? ` · ${card.risk}` : ''}</span>
+          <span class="tagline">${card?.tag ?? ''}</span>
           <span class="desc">${card?.d ?? ''}</span>
+          <span class="card-footer">
+            <span class="risk-tag">${card?.risk ?? ''}</span>
+          </span>
         </button>`;
       })
       .join('');
@@ -185,13 +190,20 @@ function renderPlayables(): void {
       const mod = cardAttrMod(campaign!.state, card);
       const p = base !== undefined ? Math.max(0.02, Math.min(0.95, base + mod)) : undefined;
       const odds = p !== undefined ? `p≈${(p * 100).toFixed(0)}%` : '';
-      const attr = card.attrs?.length ? card.attrs.join('/') : '';
+      const attr = card.attrs?.length ? card.attrs.join(' / ') : '';
       return `
-        <button type="button" class="play-card ${camp ? 'camp' : ''} ${card.trap ? 'trap' : ''}" data-idx="${index}">
-          <span class="name">${card.n}${camp ? ' [CAMP]' : ''}${card.trap ? ' · TRAP' : ''}</span>
-          <span class="meta">${card.risk} · ${costLabel(card)}${odds ? ' · ' + odds : ''}</span>
+        <button type="button" class="play-card risk-${card.risk.toLowerCase()} ${camp ? 'camp' : ''} ${card.trap ? 'trap' : ''}" data-idx="${index}">
+          <span class="cost-badge">${costLabel(card)}</span>
+          <span class="name">${card.n}</span>
+          <span class="tagline">${card.tag}</span>
           <span class="desc">${card.d}</span>
+          <span class="card-footer">
+            <span class="risk-tag">${card.risk}</span>
+            ${odds ? `<span class="odds">${odds}</span>` : ''}
+          </span>
           ${attr ? `<span class="attrs">${attr}</span>` : ''}
+          ${camp ? '<span class="ribbon ribbon-camp">Camp</span>' : ''}
+          ${card.trap ? '<span class="ribbon ribbon-trap">Trap</span>' : ''}
         </button>
       `;
     })
@@ -258,11 +270,19 @@ function renderLog(): void {
   box.scrollTop = box.scrollHeight;
 }
 
+function renderEndOfRun(): void {
+  if (!campaign) return;
+  const over = campaign.state.over;
+  $('btn-end').classList.toggle('hidden', over);
+  $('btn-restart').classList.toggle('hidden', !over);
+}
+
 function paint(): void {
   renderLedger();
   renderDraft();
   renderPlayables();
   renderLog();
+  renderEndOfRun();
 }
 
 function showGame(): void {
@@ -273,6 +293,25 @@ function showGame(): void {
 function showSetup(): void {
   $('setup').classList.remove('hidden');
   $('game').classList.add('hidden');
+}
+
+/**
+ * Persona (and the rest of setup) is a one-time, run-defining choice —
+ * it never changes mid-campaign at the engine level (applySetup runs
+ * exactly once, inside createCampaign). "New run" abandons the current
+ * campaign entirely rather than mutating it, so guard against doing that
+ * by accident mid-run.
+ */
+function requestNewRun(): void {
+  if (campaign && !campaign.state.over) {
+    const ok = window.confirm(
+      'Start a new run? This abandons the current campaign — persona, ' +
+        'district, and everything else were locked in at the start and ' +
+        'cannot be changed on an in-progress run.'
+    );
+    if (!ok) return;
+  }
+  showSetup();
 }
 
 function startRun(): void {
@@ -327,8 +366,9 @@ function boot(): void {
     $(id).addEventListener('change', updateBlurb);
   });
   $('btn-start').addEventListener('click', () => startRun());
-  $('btn-new').addEventListener('click', () => showSetup());
+  $('btn-new').addEventListener('click', () => requestNewRun());
   $('btn-end').addEventListener('click', () => endWeek());
+  $('btn-restart').addEventListener('click', () => requestNewRun());
   showSetup();
 }
 

@@ -7,11 +7,14 @@
 import { resolve, STAMPS } from './resolve.js';
 import { getPhase } from './state.js';
 import { buildPlayFeedback } from './feedback.js';
+import { repCheck, shadowCheck } from './reputation.js';
 import type { AttrId, GameState, Ground, PlayCard, PlayOutcome, RollResult } from './types.js';
 
 export function canAfford(state: GameState, card: PlayCard): boolean {
   const c = card.cost;
-  if ((c.a ?? 0) > state.ap) return false;
+  const apCost = c.a ?? 0;
+  const apCovered = apCost <= state.ap || (apCost > 0 && !!card.field && state.fieldAp > 0);
+  if (!apCovered) return false;
   if ((c.$ ?? 0) > state.money) return false;
   if ((c.vp ?? 0) > state.volPool) return false;
   if ((c.m ?? 0) > state.momentum) return false;
@@ -37,7 +40,13 @@ export function isPlayable(state: GameState, card: PlayCard): boolean {
 
 export function payCost(state: GameState, card: PlayCard): void {
   const c = card.cost;
-  if (c.a) state.ap -= c.a;
+  if (c.a) {
+    if (card.field && state.fieldAp > 0) {
+      state.fieldAp -= 1;
+    } else {
+      state.ap -= c.a;
+    }
+  }
   if (c.$) state.money -= c.$;
   if (c.vp) state.volPool -= c.vp;
   if (c.m) state.momentum -= c.m;
@@ -87,6 +96,11 @@ export function executePlay(
     return { ok: false, reason: 'No ground selected', cardId: card.id, cardName: card.n };
   }
 
+  // Resistance tier escalates with the stakes (pre-ballot -> on-ballot -> general):
+  // scrutiny/opposition organization grows as the race gets real. This widens
+  // resolve()'s disaster band for STD/VOL plays and unlocks PL20 (show: tier>=1).
+  state.tier = getPhase(state) - 1;
+
   payCost(state, card);
 
   // Snapshot for milestones (ballot / stage) before run mutates
@@ -129,6 +143,11 @@ export function executePlay(
     tier: roll.tier,
     beat: feedback.beat
   });
+
+  // Threshold checks against this play's yields: reputation grants and
+  // Shadow consequences on Faces (see src/engine/reputation.ts).
+  shadowCheck(state);
+  repCheck(state);
 
   return {
     ok: true,

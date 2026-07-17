@@ -2,7 +2,11 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ Fable-build ]
+    # GitHub branch matching is case-sensitive; the actual branch is
+    # "fable-build" (lowercase, confirmed via `git ls-remote`). The
+    # capitalized form here meant this trigger never matched a real push --
+    # deploy.yml has only ever run once, manually, since it was added.
+    branches: [ fable-build ]
   workflow_dispatch:
 
 permissions:
@@ -24,7 +28,9 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # Vite 8 requires Node ^20.19.0 || >=22.12.0; pin 22 to stay clear
+          # of the 20.x floor rather than trust "20" to resolve above it.
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
