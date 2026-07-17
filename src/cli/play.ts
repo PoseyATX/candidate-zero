@@ -96,7 +96,7 @@ function printBanner(): void {
 
 function printLedger(campaign: Campaign): void {
   const s = campaign.state;
-  console.log("-".repeat(52));
+  console.log("-" .repeat(52));
   console.log(
     `${stageLabel(s)} W${stageWeek(s)} (cal ${s.week}/${s.weeksTotal})  Phase ${getPhase(s)}  AP ${s.ap}/${s.apMax}` +
       (s.ballot ? "  BALLOT: ON" : `  Sigs ${s.signatures}/${s.sigNeed}`) +
@@ -109,7 +109,7 @@ function printLedger(campaign: Campaign): void {
       .join(" ");
     console.log(`Identity: ${s.persona} · ${s.issue} · ${s.district?.name ?? "?"} · attrs ${attrs}`);
   }
-  console.log("-".repeat(52));
+  console.log("-" .repeat(52));
 }
 
 async function maybeInteractiveDraft(campaign: Campaign, rl: readline.Interface): Promise<void> {
@@ -160,7 +160,7 @@ function printMenu(entries: MenuEntry[], campaign: Campaign): void {
     const attrs = e.card.attrs?.length ? ` [${e.card.attrs.join("/")}]` : "";
     console.log(
       `  ${e.key}. ${e.card.n} (${e.card.risk}, ${costLabel(e.card)})${odds}${attrs}` +
-        `${e.camp ? " [CAMP]" : ""}${e.card.trap ? " TRAP" : ""}`
+        `${e.camp ? " [CAMP]" : ""}${e.card.trap ? " RISK" : ""}`
     );
   }
   console.log("  e. End week   l. Ledger   h. Help   q. Quit");
