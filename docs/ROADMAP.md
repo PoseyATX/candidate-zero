@@ -20,6 +20,20 @@ or discovered in the codebase.
 
 ---
 
+## ⚠ One manual action needed (not fixable with the tools available in this session)
+
+**Repo Settings → Pages → Build and deployment → Source: switch from
+"Deploy from a branch" to "GitHub Actions."** Two Pages pipelines have been
+publishing to the same site all session — our correct `deploy.yml` (runs
+`npm run build`) and GitHub's built-in legacy Jekyll "deploy from branch"
+pipeline (publishes raw repo files, which cannot work for this app — see
+`docs/BALANCE-NOTES.md`, "GitHub Pages: branch-name typo + a second,
+competing deploy pipeline"). Whichever finishes last after any push wins.
+The current live state was published safely (manual `workflow_dispatch`,
+no accompanying push to race it), but every push from here on is a coin
+flip until this setting is changed by hand — no API/MCP tool available
+here can change it.
+
 ## Phase 0 — Foundation pass (done, 2026-07-17)
 
 Full detail: `docs/BALANCE-NOTES.md` (two 2026-07-17 entries), `docs/TICKET-v0.1-modular-baseline.md`.

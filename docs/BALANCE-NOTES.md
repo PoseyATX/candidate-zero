@@ -422,3 +422,54 @@ measured). Desktop (1200px, 5-card hand, 3 columns) re-verified unchanged
 ### Harness
 CSS-only change; `npm run harness` (12/12), `npm run typecheck`, `npm run
 build` all pass.
+
+## 2026-07-17 — GitHub Pages: branch-name typo + a second, competing deploy pipeline
+
+Requested: publish the current state as a GitHub Page. Investigating why
+this needed a manual push rather than already being current surfaced two
+real bugs, checked via the GitHub Actions API (`actions_list`/`actions_get`
+tools), not assumed.
+
+### Bug 1: deploy.yml branch trigger case mismatch
+`.github/workflows/deploy.yml` triggered on push to `Fable-build`
+(capital F); the actual remote branch (`git ls-remote`) is `fable-build`
+(lowercase). GitHub Actions branch matching is case-sensitive, so this
+trigger never matched a real push — confirmed via `deploy.yml`'s run
+history: exactly one run ever, from a manual trigger the moment the
+workflow file was added (2026-07-17T13:04, on `main`). Fixed to lowercase.
+
+### Bug 2: a second, uncoordinated Pages pipeline was live the whole time
+Beyond our custom `deploy.yml`, the Actions tab has a built-in
+`pages-build-deployment` workflow (GitHub's legacy "Deploy from a branch"
+pipeline — its job steps are literally "Pull jekyll-build-pages" / "Build
+with Jekyll"). This one fires automatically on **every push**, regardless
+of branch, and publishes the raw repository files directly — no `npm run
+build`, no Vite, no TypeScript compilation. Since the site's actual
+`index.html` requires `<script type="module" src="/src/ui/main.ts">` to be
+bundled by Vite first, this pipeline publishing it raw would produce a
+non-functional page (browsers cannot execute a raw `.ts` module import).
+Confirmed via run history: it fired 7 times across this session,
+correlated with ordinary `git push`es, across three different branches
+(`main`, `fable-build`, and our working branch) — evidence that Pages'
+"deploy from branch" source has effectively been racing our proper
+Actions-based deploy every time either side pushes.
+
+Both pipelines publish to the same Pages site, so whichever finishes last
+wins. Published the current state safely by triggering `deploy.yml` via
+`workflow_dispatch` **with no accompanying push** (so nothing could race
+it) — confirmed success at both the run and job level (`build`: checkout →
+setup node → `npm ci` → `npm run build` → upload artifact; `deploy`:
+`actions/deploy-pages@v4`), not just the top-level "success" flag.
+
+### Not fixed — needs a manual setting change, no tool access to do it here
+The durable fix is switching the repo's Pages source from "Deploy from a
+branch" to "GitHub Actions" (Settings → Pages → Build and deployment →
+Source). No MCP tool exposed here can change that setting — it needs to be
+done once, by hand, in the GitHub UI. Until then, any future push to any
+branch can re-trigger the legacy Jekyll pipeline and potentially race a
+subsequent proper deploy. Recorded here so this isn't a mystery flake if
+the site appears to regress after a future push-triggered deploy.
+
+### Harness
+Config-only changes; not applicable to `npm run harness`. Deployment
+verified via GitHub Actions API run/job status, not local tooling.
