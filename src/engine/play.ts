@@ -6,6 +6,7 @@
 
 import { resolve, STAMPS } from './resolve.js';
 import { getPhase } from './state.js';
+import { buildPlayFeedback } from './feedback.js';
 import type { AttrId, GameState, Ground, PlayCard, PlayOutcome, RollResult } from './types.js';
 
 export function canAfford(state: GameState, card: PlayCard): boolean {
@@ -88,6 +89,13 @@ export function executePlay(
 
   payCost(state, card);
 
+  // Snapshot for milestones (ballot / stage) before run mutates
+  const before = {
+    ballot: state.ballot,
+    sigs: state.signatures,
+    stage: state.stage
+  };
+
   // Base odds from card definition
   let p = card.odds ? card.odds(state, g) : 0.5;
 
@@ -102,12 +110,24 @@ export function executePlay(
     state.disasterLog.push(state.week);
   }
 
+  // Dopamine annotation — pure, no pity, after yields applied
+  const feedback = buildPlayFeedback(state, card, roll, before);
+
   state.log.push({
     week: state.week,
     kind: 'play',
     text,
     cardId: card.id,
-    tier: roll.tier
+    tier: roll.tier,
+    beat: feedback.beat
+  });
+  state.log.push({
+    week: state.week,
+    kind: 'juice',
+    text: feedback.juice,
+    cardId: card.id,
+    tier: roll.tier,
+    beat: feedback.beat
   });
 
   return {
@@ -116,6 +136,9 @@ export function executePlay(
     cardName: card.n,
     tier: roll.tier,
     text,
-    stamp: STAMPS[roll.tier]
+    stamp: STAMPS[roll.tier],
+    feedback,
+    p: roll.p,
+    roll: roll.roll
   };
 }

@@ -23,7 +23,8 @@
     "play:full": "npx tsx src/cli/play.ts --auto labor --full",
     "harness:yields": "npx tsx src/harness/yield-tables.ts",
     "harness:full": "npx tsx src/harness/full-campaign.ts",
-    "harness": "npm run harness:resolve && npm run harness:smoke && npm run harness:ballot && npm run harness:strategies && npm run harness:ac1 && npm run harness:ac1-parity && npm run harness:audit && npm run harness:calendar && npm run harness:setup && npm run harness:yields && npm run harness:full"
+    "harness:dopamine": "npx tsx src/harness/dopamine.ts",
+    "harness": "npm run harness:resolve && npm run harness:smoke && npm run harness:ballot && npm run harness:strategies && npm run harness:ac1 && npm run harness:ac1-parity && npm run harness:audit && npm run harness:calendar && npm run harness:setup && npm run harness:yields && npm run harness:full && npm run harness:dopamine"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",

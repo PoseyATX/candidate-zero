@@ -65,7 +65,15 @@ Unity deferred as presentation-only; TS engine remains rules authority.
 
 Sample (150 trials/strategy): labor ~13% overall general win, ~42% win given reach, avg GOTV ~0.35; grind ~95% miss filing.
 
+## Increment: Dopamine loop (2026-07-17)
+
+Pure feedback layer — **does not alter rolls, bands, or yields**:
+
+- `src/engine/feedback.ts` — beats, near-miss geometry, hot/cold streaks, milestones, week summaries
+- `executePlay` attaches `PlayFeedback` + juice log lines
+- CLI + UI surface juice banners and week close lines
+- Harness: `npm run harness:dopamine`
+
 ## Next
-1. **Dopamine loop** — feedback juice (stamps, beats, week summary, near-miss) without pity RNG
-2. Shadow consequences on Faces
-3. UI polish; only then consider v0.1 label with evidence bundle
+1. Shadow consequences on Faces
+2. UI polish (audio optional later); only then consider v0.1 label with evidence bundle

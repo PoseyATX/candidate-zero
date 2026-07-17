@@ -12,6 +12,7 @@ import {
   snapshot,
   pickPhaseDraft,
   maybeOfferPhaseDraft,
+  summarizeWeek,
   CAMP_PETITION,
   CAMP_FILING_FEE,
   type Campaign
@@ -19,6 +20,7 @@ import {
 import { getPhase, stageLabel, stageWeek } from '../engine/state.js';
 import { STAMPS } from '../engine/resolve.js';
 import { pickDefaultGround, cardAttrMod } from '../engine/play.js';
+import type { PlayFeedback } from '../engine/feedback.js';
 import {
   PERSONAS,
   ISSUES,
@@ -26,10 +28,12 @@ import {
   REGIONS,
   type SetupSelection
 } from '../data/setup.js';
-import type { PlayCard } from '../engine/types.js';
+import type { PlayCard, PlayOutcome } from '../engine/types.js';
 import './styles.css';
 
 let campaign: Campaign | null = null;
+let weekPlays: PlayOutcome[] = [];
+let juiceTimer: ReturnType<typeof setTimeout> | null = null;
 
 function $(id: string): HTMLElement {
   const el = document.getElementById(id);
@@ -204,6 +208,9 @@ function renderPlayables(): void {
           kind: 'note',
           text: outcome.reason ?? 'Play failed'
         });
+      } else {
+        weekPlays.push(outcome);
+        if (outcome.feedback) showJuice(outcome.feedback);
       }
       if (!wasBallot && campaign.state.ballot) {
         maybeOfferPhaseDraft(campaign, false);
@@ -213,14 +220,39 @@ function renderPlayables(): void {
   });
 }
 
+function showJuice(fb: PlayFeedback): void {
+  const el = $('juice');
+  el.classList.remove('hidden', 'spark', 'hit', 'thump', 'crash', 'whisper');
+  el.classList.add(fb.beat);
+  const streak =
+    fb.streak && fb.streak.count >= 2
+      ? fb.streak.kind === 'hot'
+        ? ` · hot ×${fb.streak.count}`
+        : ` · cold ×${fb.streak.count}`
+      : '';
+  el.textContent = `${fb.stamp}${streak} — ${fb.juice}`;
+  if (juiceTimer) clearTimeout(juiceTimer);
+  juiceTimer = setTimeout(() => {
+    el.classList.add('hidden');
+  }, 3200);
+}
+
 function renderLog(): void {
   if (!campaign) return;
   const box = $('log');
   box.innerHTML = campaign.state.log
-    .slice(-50)
+    .slice(-60)
     .map(e => {
-      const stamp = e.tier !== undefined ? `[${STAMPS[e.tier as 0 | 1 | 2 | 3] ?? '?'}] ` : '';
-      return `<div class="log-line"><span class="w">W${e.week}</span> ${stamp}${e.text}</div>`;
+      const stamp = e.tier !== undefined && e.kind === 'play' ? `[${STAMPS[e.tier as 0 | 1 | 2 | 3] ?? '?'}] ` : '';
+      const cls = [
+        'log-line',
+        e.kind === 'juice' ? 'juice' : '',
+        e.kind === 'summary' ? 'summary' : '',
+        e.tier !== undefined ? `tier-${e.tier}` : ''
+      ]
+        .filter(Boolean)
+        .join(' ');
+      return `<div class="${cls}"><span class="w">W${e.week}</span> ${stamp}${e.text}</div>`;
     })
     .join('');
   box.scrollTop = box.scrollHeight;
@@ -250,6 +282,7 @@ function startRun(): void {
   const input = document.getElementById('seed-input') as HTMLInputElement | null;
   if (input) input.value = String(seed);
   campaign = createCampaign({ seed, setup: currentSetup() });
+  weekPlays = [];
   startWeek(campaign);
   showGame();
   paint();
@@ -269,6 +302,15 @@ function endWeek(): void {
     paint();
     return;
   }
+  const summary = summarizeWeek(campaign, weekPlays);
+  showJuice({
+    stamp: summary.bestStamp ?? 'GAIN',
+    beat: summary.bestStamp === 'DISASTER' ? 'crash' : summary.bestStamp === 'BREAKTHROUGH' ? 'spark' : 'hit',
+    intensity: 0.7,
+    margin: 0,
+    juice: summary.juice
+  });
+  weekPlays = [];
   const transition = endWeekInPlace(campaign);
   if (transition.kind === 'enter_general') {
     maybeOfferPhaseDraft(campaign, false);

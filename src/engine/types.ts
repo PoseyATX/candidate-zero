@@ -163,6 +163,8 @@ export interface GameState {
   lastPhase?: 1 | 2 | 3;
   /** Pending phase-turn draft (3 card options). */
   pendingDraft?: { phase: number; options: string[] };
+  /** Dopamine / feedback loop state (presentation of truth; never alters RNG). */
+  feedback?: import('./feedback.js').FeedbackState;
 }
 
 export type CampaignOutcome =
@@ -193,12 +195,18 @@ export interface PlayOutcome {
   tier?: 0 | 1 | 2 | 3;
   text?: string;
   stamp?: string;
+  /** Dopamine payload — pure annotation of the roll. */
+  feedback?: import('./feedback.js').PlayFeedback;
+  /** Effective p after attr mod (for UI meters). */
+  p?: number;
+  roll?: number;
 }
 
 export interface LogEntry {
   week: number;
-  kind: 'play' | 'draw' | 'week' | 'note';
+  kind: 'play' | 'draw' | 'week' | 'note' | 'juice' | 'summary';
   text: string;
   cardId?: string;
   tier?: number;
+  beat?: string;
 }

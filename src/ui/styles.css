@@ -243,3 +243,31 @@ h1 {
   border-left: 4px solid var(--gold);
   background: #fffaf0;
 }
+
+/* Dopamine / feedback */
+.juice-banner {
+  margin: 0 0 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--ink);
+  font-weight: 600;
+  animation: juice-in 0.35s ease-out;
+}
+.juice-banner.spark { background: #fff3c4; border-color: var(--gold); }
+.juice-banner.hit { background: #e8f5e9; border-color: #2e7d32; }
+.juice-banner.thump { background: #f5f0e6; border-color: var(--muted); }
+.juice-banner.crash { background: #fdecea; border-color: var(--blood); color: var(--blood); }
+.juice-banner.whisper { background: #eef3f7; border-color: #607d8b; }
+
+@keyframes juice-in {
+  from { transform: translateY(-6px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.log-line.juice { color: var(--gold); font-style: italic; }
+.log-line.summary { font-weight: 600; border-left: 3px solid var(--gold); padding-left: 0.4rem; }
+.log-line.tier-0 { color: #8a6508; }
+.log-line.tier-1 { color: #2e5a2e; }
+.log-line.tier-3 { color: var(--blood); }
+
+.play-card.flash-spark { box-shadow: 0 0 0 2px var(--gold); }
+.play-card.flash-crash { box-shadow: 0 0 0 2px var(--blood); }

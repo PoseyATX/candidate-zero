@@ -25,6 +25,7 @@ import {
   advanceCampaignWeek,
   type StageTransition
 } from './calendar.js';
+import { markWeekStart, buildWeekSummary, type WeekSummary } from './feedback.js';
 import {
   applySetup,
   HARNESS_DEFAULT_SETUP,
@@ -61,6 +62,7 @@ export interface WeekReport {
   plays: PlayOutcome[];
   endLedger: LedgerSnapshot;
   transition?: StageTransition;
+  summary?: WeekSummary;
 }
 
 export interface LedgerSnapshot {
@@ -244,6 +246,7 @@ export function startWeek(campaign: Campaign): string[] {
   if (campaign.state.stage === 'general') {
     ensureGeneralTools(campaign);
   }
+  markWeekStart(campaign.state);
   // Mandatory weekly growth: own new cards AND put them in the draw pile
   const newCards = enforceWeeklyDraw(campaign.state);
   if (newCards.length > 0) {
@@ -309,6 +312,20 @@ export function endWeekInPlace(campaign: Campaign): StageTransition {
   return advanceCampaignWeek(campaign.state);
 }
 
+/** Close the week feedback summary (call before calendar advance). */
+export function summarizeWeek(campaign: Campaign, plays: PlayOutcome[]): WeekSummary {
+  const summary = buildWeekSummary(
+    campaign.state,
+    plays.filter(p => p.ok)
+  );
+  campaign.state.log.push({
+    week: campaign.state.week,
+    kind: 'summary',
+    text: summary.juice
+  });
+  return summary;
+}
+
 export function runWeek(campaign: Campaign, choose: Chooser): WeekReport {
   const weekAtStart = campaign.state.week;
   const phaseAtStart = getPhase(campaign.state);
@@ -333,6 +350,7 @@ export function runWeek(campaign: Campaign, choose: Chooser): WeekReport {
     }
     if (!outcome.ok) break;
   }
+  const summary = summarizeWeek(campaign, plays);
   const transition = endWeekInPlace(campaign);
   if (transition.kind === 'enter_general') {
     ensureGeneralTools(campaign);
@@ -345,7 +363,8 @@ export function runWeek(campaign: Campaign, choose: Chooser): WeekReport {
     drawn,
     plays,
     endLedger: snapshot(campaign.state),
-    transition: transition.kind === 'none' ? undefined : transition
+    transition: transition.kind === 'none' ? undefined : transition,
+    summary
   };
 }
 
