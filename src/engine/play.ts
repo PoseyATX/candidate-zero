@@ -87,6 +87,11 @@ export function executePlay(
     return { ok: false, reason: 'No ground selected', cardId: card.id, cardName: card.n };
   }
 
+  // Resistance tier escalates with the stakes (pre-ballot -> on-ballot -> general):
+  // scrutiny/opposition organization grows as the race gets real. This widens
+  // resolve()'s disaster band for STD/VOL plays and unlocks PL20 (show: tier>=1).
+  state.tier = getPhase(state) - 1;
+
   payCost(state, card);
 
   // Snapshot for milestones (ballot / stage) before run mutates

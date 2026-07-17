@@ -6,6 +6,7 @@
 import { createCampaign, listPlayableHand, runWeek, snapshot } from '../engine/loop.js';
 import { laborBallotStrategy } from '../engine/strategies.js';
 import { STAMPS } from '../engine/resolve.js';
+import { getPhase } from '../engine/state.js';
 
 const campaign = createCampaign();
 console.log('=== CANDIDATE ZERO — Play Loop Demo (labor strategy) ===');
@@ -13,7 +14,7 @@ console.log('Start:', snapshot(campaign.state));
 console.log('Starter deck size:', campaign.deck.draw.length);
 
 for (let w = 1; w <= 8; w++) {
-  console.log(`\n--- Week ${w} (phase ${w <= 8 ? 1 : 2}) ---`);
+  console.log(`\n--- Week ${w} (phase ${getPhase(campaign.state)}) ---`);
   const report = runWeek(campaign, laborBallotStrategy);
   console.log('Drew:', report.drawn.join(', ') || '(none)');
   for (const p of report.plays) {

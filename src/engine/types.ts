@@ -110,21 +110,21 @@ export interface GameState {
   assets: string[];
   obls: string[];
   reps: string[];
-  rivals: any[];
+  rivals: { id: string; n: string }[];
   tier: number;
   persona: string | null;
   issue: string | null;
-  district: any;
+  district: DistrictInfo | null;
   eventsFired: Record<string, boolean>;
   stage: 'primary' | 'general' | 'session';
-  genOpp: any;
+  genOpp: GeneralOpponent | null;
   genBase: number;
   over: boolean;
   /** Terminal outcome when `over` — pure campaign result label. */
   outcome?: CampaignOutcome;
   /** True after winning the primary and entering general. */
   primaryWon?: boolean;
-  log: any[];
+  log: LogEntry[];
   capital: number;
   favor: number;
   districtStanding: number;
@@ -165,6 +165,22 @@ export interface GameState {
   pendingDraft?: { phase: number; options: string[] };
   /** Dopamine / feedback loop state (presentation of truth; never alters RNG). */
   feedback?: import('./feedback.js').FeedbackState;
+}
+
+/** Runtime district binding (from data/setup.ts DISTRICTS, applied at setup). */
+export interface DistrictInfo {
+  id: string;
+  name: string;
+  align: 'safe' | 'competitive' | 'wrong';
+  incumbent: boolean;
+  field: number;
+  trap?: boolean;
+}
+
+/** General-election opponent summary (set on primary win in calendar.ts). */
+export interface GeneralOpponent {
+  n: string;
+  strength: number;
 }
 
 export type CampaignOutcome =

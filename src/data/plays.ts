@@ -68,7 +68,8 @@ export const PL04_PetitionDrive: PlayCard = {
       // (nearly all AP) to clear sigNeed, starving nameID/contacts/endorsePts
       // versus the money path's ~1.5-2 week fee grind. Raised yields (not
       // odds) so labor stays the zero-dollar door without eating the primary.
-      // Keep in sync with src/harness/ballot-qualification.mjs petitionOnce().
+      // src/harness/ballot-qualification.ts imports this card directly, so
+      // there is nothing to keep in sync by hand anymore.
       const g = o.tier === 0 ? 95 + Math.floor(random()*40) : 55 + Math.floor(random()*30);
       s.signatures += g;
       if (s.signatures >= s.sigNeed && !s.ballot) { s.ballot = true; return `+${g} signatures — threshold cleared. On the ballot, free but not cheap.`; }

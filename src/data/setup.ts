@@ -66,39 +66,34 @@ export interface SetupSelection {
   regionId: string;
 }
 
-export interface DistrictRuntime {
-  id: string;
-  name: string;
-  align: 'safe' | 'competitive' | 'wrong';
-  incumbent: boolean;
-  field: number;
-  trap?: boolean;
-}
-
+// Note: `apply` only sets persona-specific starting resources/flavor. Root
+// attr bumps come from `attrs` alone (applied once, centrally, in
+// applySetup) so the UI's pre-game blurb and the actual campaign grant can
+// never drift apart the way two hand-copied literals could.
 export const PERSONAS: PersonaDef[] = [
   {
     id: 'veteran', n: 'The Veteran', tag: 'bio armor',
     d: 'Two tours and a flag on the porch. Bio is armor.',
     attrs: { CON: 3, CLO: 2, CHA: 1 },
-    apply: s => { s.nameID += 3; s.faces.T += 8; s.assets.push('BIO_VETERAN'); bumpAttrs(s, { CON: 3, CLO: 2, CHA: 1 }); }
+    apply: s => { s.nameID += 3; s.faces.T += 8; s.assets.push('BIO_VETERAN'); }
   },
   {
     id: 'teacher', n: 'The Teacher', tag: 'the rooms',
     d: 'Twenty years of parent-teacher nights. You know the rooms.',
     attrs: { CHA: 3, DIP: 2, CON: 1 },
-    apply: s => { s.contacts += 25; s.faces.G += 8; s.assets.push('BIO_TEACHER'); bumpAttrs(s, { CHA: 3, DIP: 2, CON: 1 }); }
+    apply: s => { s.contacts += 25; s.faces.G += 8; s.assets.push('BIO_TEACHER'); }
   },
   {
     id: 'preacher', n: 'The Preacher', tag: 'pulpit precinct',
     d: 'A pulpit is a precinct. Sundays are turnout.',
     attrs: { CHA: 3, CLO: 2, DIP: 1 },
-    apply: s => { s.volPool += 2; s.faces.F += 8; s.assets.push('BIO_PREACHER'); bumpAttrs(s, { CHA: 3, CLO: 2, DIP: 1 }); }
+    apply: s => { s.volPool += 2; s.faces.F += 8; s.assets.push('BIO_PREACHER'); }
   },
   {
     id: 'smallbiz', n: 'The Feed-Store Owner', tag: 'credit and favors',
     d: 'Everyone owes you credit or a favor.',
     attrs: { CRA: 3, DIP: 2, CLO: 1 },
-    apply: s => { s.money += 1500; s.faces.O += 8; s.assets.push('BIO_FEEDSTORE'); bumpAttrs(s, { CRA: 3, DIP: 2, CLO: 1 }); }
+    apply: s => { s.money += 1500; s.faces.O += 8; s.assets.push('BIO_FEEDSTORE'); }
   }
 ];
 
@@ -142,6 +137,7 @@ export function applySetup(state: GameState, sel: SetupSelection): GameState {
     throw new Error(`Invalid setup: ${JSON.stringify(sel)}`);
   }
   persona.apply(state);
+  bumpAttrs(state, persona.attrs);
   state.persona = persona.n;
   state.issue = issue.n;
   state.assets.push('ISSUE_' + issue.tag);

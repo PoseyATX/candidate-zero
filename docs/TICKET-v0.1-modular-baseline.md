@@ -82,7 +82,22 @@ Pure feedback layer — **does not alter rolls, bands, or yields**:
 - Full detail + measured before/after tables: `docs/BALANCE-NOTES.md` (2026-07-17 — Cleanup / mechanics audit pass).
 - Harnesses: all pass under `npm run harness`.
 
+## Increment: Full routine-maintenance pass, round 2 (2026-07-17)
+
+Requested explicitly as a "solidify the foundation before any more feature work" pass. Full detail + rationale: `docs/BALANCE-NOTES.md` (2026-07-17 — round 2). Summary:
+
+- **Bugfix:** `state.tier` (resolve()'s resistance-tier disaster-band escalation, and PL20's `show` gate) was initialized to 0 and never written anywhere in production code — the difficulty curve never escalated across pre-ballot/on-ballot/general, and PL20 PAC Check was a permanently unreachable dead card. Now derived from `getPhase(state)` on every play.
+- **Cleanup:** removed two hand-duplicated data structures that could silently drift — the starter-deck list (`loop.ts` now imports `deck.ts`'s `STARTER_DECK_IDS` instead of a second copy) and persona attribute bonuses (`setup.ts`'s personas no longer duplicate their `attrs` literal inside `apply()`; `applySetup` applies it once, centrally).
+- **QoL:** Petition Drive / Filing Fee no longer show as duplicate menu entries pre-ballot (real hand copy + `[CAMP]` virtual entry were both being offered).
+- **Foundation:** retired the last three hand-duplicated-logic harnesses (`test-resolve.mjs`, `smoke-play.mjs`, `ballot-qualification.mjs`) — converted to `.ts`, now import `src/engine`/`src/data` directly instead of hand-copying formulas. No more `.mjs` harnesses in the repo.
+- **Foundation:** tightened `GameState.district`/`.genOpp`/`.rivals`/`.log` from `any` to real types (`DistrictInfo`, `GeneralOpponent`, `LogEntry` — the last of which already existed and was unused for this).
+- **Foundation:** `npm audit` found a moderate/high dev-server-only esbuild CVE via Vite 5's bundled esbuild; upgraded Vite 5.4→8.1 (user-directed scope: Vite only, not TypeScript). Zero vulnerabilities now. Verified build/deploy/harness/headless-click-through all green on Vite 8.
+- **Foundation:** added `.github/workflows/ci.yml` — typecheck + full harness + build on every push/PR. There was previously no automated check that would have caught the index.html regression (round 1) before it reached the branch; the deploy workflow only builds-to-deploy on pushes to `Fable-build`. Also bumped both workflows' pinned Node 20→22 (Vite 8 requires `^20.19.0 || >=22.12.0`).
+- All 12 harnesses + `npm run build` + `npm run typecheck` pass clean.
+- Roadmap for what's next (feature work, deferred items, and open risks): `docs/ROADMAP.md`.
+
 ## Next
-1. Shadow consequences on Faces
+See `docs/ROADMAP.md` for the full prioritized roadmap. Short version:
+1. Shadow consequences on Faces (debt/obligations currently taken on but mechanically inert — see BALANCE-NOTES round 2)
 2. Build out the allies/assets/reps acquisition system several Wave 1–3 cards already reference (`AL01`, `AL03`, `AL04`, `AL05`, `AL09`, `AL11`, `R01`, `R05`, `R06`, `R07`, `R10`, `A01`, `A09`, `B05`) — currently these ids are never granted anywhere, so the synergy bonuses that reference them can never trigger
 3. UI polish (audio optional later); only then consider v0.1 label with evidence bundle

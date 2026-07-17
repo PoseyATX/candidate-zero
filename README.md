@@ -11,15 +11,22 @@ This repository contains the modular TypeScript baseline for the durable, testab
 - Pure resolution engine (four-tier brutal RNG) extracted and verified
 - SAFE cards provably cannot produce DISASTER
 - **22 Play cards** in pure, explicit-state form (waves 1–4), root-attr tagged
-- Petition Drive balance-tuned; multi-strategy loop harness green
+- Petition Drive / Filing Fee balance-tuned (labor vs. money ballot-access paths)
 - Minimal hand + draw + play + week loop live (seeded end-to-end)
 - Attribute synergy (`cardAttrMod`) active; personas/regions tilt attrs
+- Difficulty (resistance tier) escalates pre-ballot → on-ballot → general
 - Primary **8 weeks** + General **6 weeks** with filing + elections
-- Setup binds (persona / issue / district / region) in CLI + UI
+- Setup binds (persona / issue / district / region) in CLI + UI; district
+  partisan lean (`align`/`trap`/`incumbent`) actually affects odds
 - Phase-turn 3-card drafts on ballot and general entry
 - Thin Vite UI shell + CLI play shell
-- Harnesses: resolve, smoke, ballot, loop, strategies, ac1, ac1-parity, audit, calendar, setup
-- **Open for honest v0.1:** yield-table archive compare, GOTV balance, UI polish
+- Harnesses (all `.ts`, no hand-duplicated engine logic): resolve, smoke,
+  ballot, loop, strategies, ac1, ac1-parity, audit, calendar, setup, yields,
+  full-campaign, dopamine
+- CI (`.github/workflows/ci.yml`): typecheck + full harness + build on every push/PR
+- **Open for honest v0.1 — see `docs/ROADMAP.md`:** archive yield-table
+  compare, allies/assets/reps acquisition system, shadow consequences
+  (debt/obligations), the Session stage, UI polish
 
 ## Architecture
 
@@ -36,6 +43,10 @@ src/
 
 - **SRD v1** is the authoritative mechanical contract.
 - Design Document remains the high-level vision document.
+- `docs/ROADMAP.md` — prioritized forward plan, grounded in what's already
+  built vs. scaffolded-but-inert in this repo.
+- `docs/BALANCE-NOTES.md` — dated log of every balance/mechanics change and
+  its measured before/after.
 
 ## Run harnesses
 

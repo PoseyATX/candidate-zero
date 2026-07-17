@@ -131,8 +131,10 @@ petition-only camp-action spam (petition is always legal/affordable while
 `!ballot`, so scripted and human "labor-first" play naturally spends every AP
 on it until the threshold clears).
 
-Change (`src/data/plays.ts`, mirrored in `src/harness/ballot-qualification.mjs`
-and `src/harness/smoke-play.mjs`):
+Change (`src/data/plays.ts`; `src/harness/ballot-qualification.ts` and
+`src/harness/smoke-play.ts` import the card directly, so this pass also
+retired the last hand-duplicated copies of engine logic in the harness
+suite — see "Cleanup / mechanics audit pass, round 2" below):
 - Petition Drive yields raised: BREAKTHROUGH 95–134 sigs (was 70–104), GAIN
   55–84 (was 40–64). SETBACK/DISASTER untouched — deadline risk still real.
 - Filing Fee cost raised $750 → $1,250 — money path now also spends real AP
@@ -177,5 +179,138 @@ silently regress again.
   against the "Shadow consequences on Faces" ticket item.
 
 ### Harness
-`src/harness/full-campaign.ts`, `src/harness/ballot-qualification.mjs`,
+`src/harness/full-campaign.ts`, `src/harness/ballot-qualification.ts`,
 `src/harness/primary-general.ts` — all pass under `npm run harness`.
+
+## 2026-07-17 — Cleanup / mechanics audit pass, round 2
+
+Full routine-maintenance pass requested after the round-1 fixes above. A
+background audit agent re-read `deck.ts`, `plays-wave4.ts`, `setup.ts`, the
+remaining harnesses, and the UI/CLI shells looking specifically for the same
+class of bug as round 1 (a field computed but never consulted, or two copies
+of the same logic that can drift). Findings, ranked by impact:
+
+### Bug: `state.tier` never advanced in real play — dead card + inert difficulty curve
+`state.tier` ("resistance tier") is read by `resolve()` to widen the
+DISASTER band as the race gets more real (`0.04 + tier*0.04`, doubled for
+VOL), and by `PL20_PacCheck`'s `show: (s) => s.tier >= 1` gate. Nothing in
+production code ever wrote to it — it stayed `0` for the entire campaign,
+which meant (a) the intended difficulty escalation across pre-ballot →
+on-ballot → general never happened, and (b) PL20 could never enter the
+weekly-draw pool, a phase draft, or become playable by any path — a fully
+dead card despite being wired into `WAVE4_PLAYS`/`ALL_PLAYS` and asserted
+present by `harness:ac1` (that assertion only checked catalog membership,
+not reachability).
+
+Fix (`src/engine/play.ts`, `executePlay`): `state.tier = getPhase(state) - 1`
+at the top of every play, so tier now escalates 0 (pre-ballot) → 1
+(on-ballot) → 2 (general) automatically, in step with the phase system that
+already governs card legality. Verified PL20 now enters the ownership pool
+once balloted (see commit); verified this doesn't perturb the AC1
+determinism/parity harnesses (they unit-test `resolve()` directly against a
+manually constructed state, and the campaign-replay check only asserts
+seed-to-seed equality, not a fixed golden tier trace).
+
+Secondary effect: STD/VOL disaster risk on-ballot and in the general is now
+real (previously it was flatly under-costed at the pre-ballot band for the
+whole campaign). Re-ran `harness:full`: money/labor ratio moved from ~1.68x
+to ~2.03x — still comfortably inside the 2.3x guardrail added in round 1, and
+an expected, legitimate consequence of fixing a real bug rather than a
+regression to chase back down.
+
+### Cleanup: two independently hand-duplicated starter-deck lists
+`deck.ts`'s `STARTER_DECK_IDS` (the actual physical draw pile default) and
+`loop.ts`'s inline `starter` array (used to seed deck *ownership*) listed
+identical ids/counts with nothing enforcing that. `loop.ts` now imports and
+reuses `STARTER_DECK_IDS` — one list, not two that happen to agree today.
+
+### Cleanup: persona attribute bonuses hand-duplicated between `attrs` and `apply()`
+Each `PersonaDef` in `setup.ts` had both an `attrs` field (read by the UI's
+pre-game blurb) and a second, separately-typed copy of the same bonuses
+inside its `apply()` closure (the one that actually lands on the campaign).
+They agreed for all four personas today but had no structural reason to.
+`apply()` no longer calls `bumpAttrs` itself; `applySetup` now calls
+`bumpAttrs(state, persona.attrs)` once, centrally, after `persona.apply()` —
+single source of truth for what a persona's attribute tilt is. Verified via
+`harness:setup` that the resulting attribute totals are byte-identical to
+before the refactor.
+
+### QoL: Petition Drive / Filing Fee showing twice in the play menu
+`ensureBallotAccessInHand` forces a physical PL04/PL05 copy into hand
+whenever neither is present pre-ballot, but `listPlayableHand` *also*
+appends a virtual `[CAMP]` entry for both whenever `!state.ballot` —
+both conditions are true simultaneously almost every pre-ballot week, so
+the CLI/UI menu typically showed "Petition Drive" twice with different
+backing mechanics (one discards the hand copy on play, the other leaves it
+inert until end-of-week discard). Harmless but confusing. `listPlayableHand`
+now skips the camp-action entry when the same card id is already a playable
+hand entry.
+
+### Foundation: retired the last hand-duplicated engine logic in the harness suite
+`test-resolve.mjs`, `smoke-play.mjs`, and `ballot-qualification.mjs` predate
+the TypeScript engine extraction and each hand-copied a slice of engine
+logic (`resolve()`, the state factory, Petition Drive's yield table) instead
+of importing it. This is exactly the drift-risk class that required manually
+mirroring the PL04 yield/PL05 cost change into `ballot-qualification.mjs`
+and `smoke-play.mjs` by hand in the round-1 pass above — a maintenance tax
+that compounds with every future tuning pass. Converted all three to `.ts`
+harnesses (`npx tsx`, matching every other harness in the suite) that import
+`src/engine`/`src/data` directly. Verified output distributions/rates match
+the retired `.mjs` versions within expected sampling noise. `package.json`
+scripts updated; no more `.mjs` harnesses in the repo.
+
+### Foundation: loose `any` typing on well-known state shapes
+`GameState.district`, `.genOpp`, `.rivals`, and `.log` were typed `any`/
+`any[]` despite every call site constructing values of one consistent
+shape — in `district`'s case, an exact-match `DistrictRuntime` interface
+already existed in `setup.ts` and simply wasn't being used for this. A typo
+or renamed field on any of these would previously have failed silently at
+runtime (e.g. `state.district.align` returning `undefined` with no compiler
+warning) instead of failing `tsc --noEmit`. Added `DistrictInfo` and
+`GeneralOpponent` to `engine/types.ts` (the correct dependency direction —
+`data/` already depends on `engine/`, not the reverse) and typed `district`,
+`genOpp`, `rivals`, and `log` (now `LogEntry[]`, reusing the interface that
+already existed and was already unused for this) accordingly. `tsc --noEmit`
+and the full harness suite pass unchanged.
+
+### Foundation: dependency hygiene
+- `npm audit`: one moderate/high finding (`GHSA-67mh-4wv8-2f99`, esbuild
+  <=0.24.2 via Vite 5's bundled esbuild — dev-server request/response
+  disclosure to any website; does not affect the built/deployed site).
+  Fixing it required a breaking Vite major bump. Per explicit direction,
+  upgraded Vite 5.4 → 8.1 (TypeScript left on 5.9 — not itself vulnerable,
+  and a 5→7 jump wasn't requested). `npm audit` now reports zero
+  vulnerabilities. Verified: `tsc --noEmit`, `npm run build`, a headless
+  click-through of the built site (Playwright, zero console errors), and
+  the full harness suite all pass unchanged on Vite 8.
+- `package-lock.json` confirmed in sync (`npm ci --dry-run` clean, no
+  warnings) both before and after the Vite bump.
+- No secrets/credentials tracked in git (`git ls-files` swept for
+  `.env`/`.pem`/`.key`/credential-shaped paths — clean).
+
+### Foundation: added a CI gate
+There was no automated check on pushes/PRs — only the GitHub Pages deploy
+workflow, which runs `npm run build` but only on pushes to `Fable-build` and
+only *deploys*; a broken build there is a broken production site, not a
+caught regression. This is exactly how the index.html regression (round 1)
+reached the branch undetected. Added `.github/workflows/ci.yml`: on every
+push and PR, run `npm ci && npm run typecheck && npm run harness && npm run
+build`. Also bumped both workflows' pinned Node from `20` to `22`, since
+Vite 8 requires Node `^20.19.0 || >=22.12.0` and trusting `20` to resolve
+above the `.19` floor is exactly the kind of assumption this pass is trying
+to stop making.
+
+### Not fixed this pass (see docs/ROADMAP.md)
+- `debt` (PL21 Self-Fund) and `obls` (PL20 PAC Check obligations) are taken
+  on but have zero mechanical consequence anywhere — the "trap" is honestly
+  labeled in flavor text but doesn't yet bite. Same shape of issue as the
+  district-trap bug fixed in round 1, except this one is *documented* as
+  future work (TICKET's "Shadow consequences on Faces") rather than an
+  accidental regression, so it's roadmapped rather than patched blind here.
+- The allies/assets/reps acquisition gap noted in round 1 (above) is
+  unchanged.
+- `state.rivals` is populated at setup but never read by any mechanic.
+
+### Harness
+All of `npm run harness` (12 harnesses) plus `npm run build` and `npm run
+typecheck` pass clean after this pass.
