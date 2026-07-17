@@ -115,16 +115,18 @@ console.log(`Primary ${PRIMARY_WEEKS}w · General ${GENERAL_WEEKS}w · Total ${C
       primaryWon: c.state.primaryWon
     };
   }
-  const stacked = primaryWinProbability({
-    nameID: 20,
-    contacts: 200,
-    endorsePts: 2,
-    volPool: 3,
-    momentum: 0,
-    hitPieces: 0,
-    exposure: 0,
-    district: { field: 2 }
-  } as any);
+  useRng(createRng(0));
+  setDefaultSeed(0);
+  const stackedCamp = createCampaign({ seed: 0 });
+  stackedCamp.state.nameID = 20;
+  stackedCamp.state.contacts = 200;
+  stackedCamp.state.endorsePts = 2;
+  stackedCamp.state.volPool = 3;
+  stackedCamp.state.momentum = 0;
+  stackedCamp.state.hitPieces = 0;
+  stackedCamp.state.exposure = 0;
+  stackedCamp.state.district = { id: 'open', name: 'Open', align: 'safe', incumbent: false, field: 2 };
+  const stacked = primaryWinProbability(stackedCamp.state);
   assert(stacked > 0.4, 'stacked primary should be favored');
   const r1 = transitionOnce(42);
   const r2 = transitionOnce(42);

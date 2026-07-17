@@ -10,10 +10,12 @@ You are a professional game designer assisting with Candidate Zero, a Texas Legi
 ## Architecture
 - `src/data/` — single source of truth for cards and content
 - `src/engine/` — pure functions only (portable toward Swift)
-- `src/ui/` — presentation only
-- `src/harness/` — balance and regression tests
-- See `docs/ARCHITECTURE.md` for deck/loop rules and Unity deferral
+- `src/ui/` — presentation only (setup / play / draft)
+- `src/cli/` — interactive + auto play
+- `src/harness/` — balance and regression tests (`npm run harness`)
+- See `docs/ARCHITECTURE.md` for calendar (Primary 8 / General 6) and Unity deferral
 - **Do not** implement a second rules engine in Unity; TS (then Swift) owns mechanics
+- GitHub push works with `gh` auth; prefer normal `git push` over MCP file spam
 
 ## Covenants (non-negotiable)
 1. Easy to learn, years to master

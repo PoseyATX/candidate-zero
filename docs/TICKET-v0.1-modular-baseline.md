@@ -10,8 +10,8 @@
 | AC1 | Side-by-side verification vs original prototype | **STRENGTHENED** — seeded RNG, campaign replay, STD≡prototypeRoll 2000/2000; intentional deltas documented |
 | AC2 | Full card audit vs SRD §10 | **STRENGTHENED** — `npm run harness:audit` evidence table; all plays attr-tagged |
 | AC3 | Clean layered extraction (Data / Engine / UI) | **STRENGTHENED** — Engine complete; thin Vite UI shell live |
-| AC4 | UI reliable | PARTIAL — minimal shell (ledger / play / end week / seed); not polished |
-| AC5 | Harness skeleton | **STRENGTHENED** — resolve, smoke, ballot, multi-strategy, play-loop, ac1, ac1-parity, audit |
+| AC4 | UI reliable | PARTIAL — setup + play + draft + stage/outcome; still thin |
+| AC5 | Harness skeleton | **STRENGTHENED** — + calendar, setup, yield tables |
 | AC6 | Honest version label | **Not v0.1** — package `0.0.1` |
 
 ## Increment: Minimal play loop + multi-strategy harness (2026-07-16)
@@ -45,8 +45,17 @@ Unity deferred as presentation-only; TS engine remains rules authority.
 - Phase-turn **3-card draft** on ballot (phase 2) and enter-general (phase 3); auto in harnesses
 - Harness: `npm run harness:setup`
 
+## Increment: Cleanup / QoL + yield tables + general strategies (2026-07-17)
+
+- Persona attr application DRY (single bumpAttrs path)
+- Strategies stage-aware (GOTV PL19 priority in general)
+- CLI: attr-adjusted odds, `--full` / `play:full`, clearer outcomes
+- UI: district + human outcome strings
+- `npm run harness:yields` — modular yield envelopes for walk / fry / petition
+- Removed harness `as any` in primary-general stacked win check
+
 ## Next
-1. Yield-table archive compare for walk/fund/chairs (AC1 open note)
-2. General-election card weight / GOTV balance pass
+1. Archive narrative/text parity notes for chairs path (optional; modular SoT for yields)
+2. General-election balance pass with full-campaign multi-strategy evidence
 3. Shadow consequences on Faces
-4. Polish UI; only then consider v0.1 label with evidence bundle
+4. UI polish; only then consider v0.1 label with evidence bundle

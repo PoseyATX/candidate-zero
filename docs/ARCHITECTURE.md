@@ -6,8 +6,9 @@
 |-------|------|------|
 | Data | `src/data/` | Cards and content — single source of truth |
 | Engine | `src/engine/` | Pure functions only — portable toward Swift |
-| UI | `src/ui/` | Thin Vite shell (presentation only) |
+| UI | `src/ui/` | Thin Vite shell (setup → play → draft → outcome) |
 | Harness | `src/harness/` | Balance and regression tests |
+| CLI | `src/cli/` | Interactive + auto strategies |
 
 ## Engine modules (v0.0.x)
 
@@ -19,8 +20,8 @@
 | `calendar.ts` | Primary 8w / General 6w, phase map, elections |
 | `play.ts` | Afford / legal / pay / executePlay |
 | `deck.ts` | Draw / hand / discard / starter pile |
-| `loop.ts` | Campaign session: startWeek → play → endWeek |
-| `strategies.ts` | Scripted policies for harnesses |
+| `loop.ts` | Campaign session: startWeek → play → endWeek + drafts |
+| `strategies.ts` | Scripted policies (stage-aware primary/general) |
 
 ## Campaign calendar
 

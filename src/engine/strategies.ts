@@ -1,6 +1,6 @@
 /**
- * CANDIDATE ZERO — Scripted early-game strategies for harness work
- * Each chooser returns an absolute hand index from the playable list.
+ * CANDIDATE ZERO — Scripted strategies for harness work
+ * Stage-aware: primary ballot race vs general GOTV.
  */
 
 import type { Chooser } from './loop.js';
@@ -17,28 +17,49 @@ function pickByPriority(
   return playable[0]?.index ?? null;
 }
 
+/** Primary labor path → general GOTV/name push. */
 export const laborBallotStrategy: Chooser = (playable, state) => {
+  if (state.stage === 'general') {
+    return pickByPriority(playable, [
+      'PL19', 'PL01', 'PL02', 'PL16', 'PL06', 'PL09', 'PL22', 'PL08', 'PL10'
+    ]);
+  }
   if (!state.ballot) {
     return pickByPriority(playable, ['PL04', 'PL01', 'PL02', 'PL06', 'PL10']);
   }
-  return pickByPriority(playable, ['PL01', 'PL02', 'PL06', 'PL08', 'PL10', 'PL03']);
+  return pickByPriority(playable, ['PL01', 'PL02', 'PL06', 'PL08', 'PL16', 'PL10', 'PL03']);
 };
 
+/** Bank fee early, then paid media / fish fry texture into general. */
 export const moneyBallotStrategy: Chooser = (playable, state) => {
+  if (state.stage === 'general') {
+    return pickByPriority(playable, [
+      'PL19', 'PL13', 'PL09', 'PL01', 'PL22', 'PL07', 'PL10', 'PL16'
+    ]);
+  }
   if (!state.ballot) {
     if (state.money >= 750) {
       return pickByPriority(playable, ['PL05', 'PL13', 'PL01', 'PL10']);
     }
     return pickByPriority(playable, ['PL13', 'PL01', 'PL02', 'PL10', 'PL03']);
   }
-  return pickByPriority(playable, ['PL01', 'PL13', 'PL06', 'PL08', 'PL10']);
+  return pickByPriority(playable, ['PL01', 'PL13', 'PL06', 'PL08', 'PL10', 'PL16']);
 };
 
-export const grindFirstStrategy: Chooser = (playable, _state) => {
+/** Control: ignore ballot access. */
+export const grindFirstStrategy: Chooser = (playable, state) => {
+  if (state.stage === 'general') {
+    return pickByPriority(playable, ['PL01', 'PL02', 'PL19', 'PL10', 'PL06']);
+  }
   return pickByPriority(playable, ['PL01', 'PL02', 'PL06', 'PL10', 'PL08', 'PL03', 'PL13']);
 };
 
 export const hybridStrategy: Chooser = (playable, state) => {
+  if (state.stage === 'general') {
+    return pickByPriority(playable, [
+      'PL19', 'PL01', 'PL13', 'PL06', 'PL08', 'PL16', 'PL10', 'PL22'
+    ]);
+  }
   if (!state.ballot) {
     const petition = playable.find(p => p.card.id === 'PL04');
     if (petition) return petition.index;
@@ -48,7 +69,7 @@ export const hybridStrategy: Chooser = (playable, state) => {
     }
     return pickByPriority(playable, ['PL13', 'PL01', 'PL02', 'PL06', 'PL10']);
   }
-  return pickByPriority(playable, ['PL01', 'PL06', 'PL08', 'PL13', 'PL10']);
+  return pickByPriority(playable, ['PL01', 'PL06', 'PL08', 'PL13', 'PL16', 'PL10']);
 };
 
 export const STRATEGIES: Record<string, Chooser> = {
@@ -59,5 +80,9 @@ export const STRATEGIES: Record<string, Chooser> = {
 };
 
 export function describeStrategy(_name: string, state: GameState): string {
-  return `week=${state.week} ballot=${state.ballot} $=${state.money} sigs=${state.signatures} contacts=${state.contacts}`;
+  return (
+    `stage=${state.stage} week=${state.week} ballot=${state.ballot} ` +
+    `$${state.money} sigs=${state.signatures} contacts=${state.contacts} ` +
+    `outcome=${state.outcome ?? 'ongoing'}`
+  );
 }

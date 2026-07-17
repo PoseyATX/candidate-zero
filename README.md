@@ -41,9 +41,10 @@ src/
 
 ```bash
 npm install
-npm run harness          # full suite
+npm run harness          # full suite (incl. yields, calendar, setup)
 npm run play             # interactive CLI
 npm run play:auto        # labor auto through week 8
+npm run play:full        # labor auto full Primary+General
 npm run dev              # Vite UI shell
 ```
 
