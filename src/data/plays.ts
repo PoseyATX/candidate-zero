@@ -212,15 +212,26 @@ export const PL17_DebatePrep: PlayCard = {
 };
 
 export const PL19_GOTVWeekend: PlayCard = {
-  id: 'PL19', n: 'GOTV Weekend', cost: { a:1, vp:2 }, risk: 'STD', ph: [3], field: true, tag: 'the point of it all',
+  id: 'PL19', n: 'GOTV Weekend', cost: { a:1, vp:1 }, risk: 'STD', ph: [3], field: true, tag: 'the point of it all',
   attrs: ['CLO'],
-  d: 'Rapport is a promise. Turnout is the promise kept.',
-  odds: (s) => clamp(0.6 + s.volPool*0.02 + (warm(s,'AL09')?0.1:0), 0, 0.95),
+  d: 'Rapport is a promise. Turnout is the promise kept. One volunteer and a weekend.',
+  odds: (s) => clamp(0.58 + s.volPool*0.025 + (warm(s,'AL09')?0.1:0) + s.faces.T*0.002, 0, 0.95),
   run: (s, o, g) => {
     if (!g) return 'No ground selected.';
-    if (o.tier <= 1) { const k = o.tier===0 ? 0.5 : 0.3; g.gotv += k; return `Turnout operation locks in at ${g.n} (+${Math.round(k*100)}% conversion).`; }
-    if (o.tier === 2) { g.gotv += 0.1; return 'Half the walk list, half the weekend. Something banked.'; }
-    g.gotv += 0.05; s.volPool = Math.max(0, s.volPool-1); return 'A van breaks down; a volunteer quits loudly. A little banked anyway.';
+    // GOTV banks conversion; also a little name heat for the general
+    if (o.tier <= 1) {
+      const k = o.tier === 0 ? 0.55 : 0.35;
+      g.gotv += k;
+      s.nameID += o.tier === 0 ? 2 : 1;
+      return `Turnout operation locks in at ${g.n} (+${Math.round(k * 100)}% conversion).`;
+    }
+    if (o.tier === 2) {
+      g.gotv += 0.12;
+      return 'Half the walk list, half the weekend. Something banked.';
+    }
+    g.gotv += 0.06;
+    s.volPool = Math.max(0, s.volPool - 1);
+    return 'A van breaks down; a volunteer quits loudly. A little banked anyway.';
   }
 };
 

@@ -15,7 +15,8 @@ import {
   enforceWeeklyDraw,
   buildPhaseDraft,
   autoResolvePhaseDraft,
-  resolvePhaseDraft
+  resolvePhaseDraft,
+  injectIntoDrawPile
 } from './deck.js';
 import { executePlay, isPlayable } from './play.js';
 import { createNewState, getPhase } from './state.js';
@@ -157,13 +158,38 @@ export function maybeOfferPhaseDraft(campaign: Campaign, auto = true): string | 
     text: `Phase ${phase} turn — draft ${draft.options.join(' / ')} (pick one for the pool).`
   });
   if (auto) {
-    return autoResolvePhaseDraft(campaign.state);
+    return autoResolvePhaseDraft(campaign.state, campaign.deck);
   }
   return null;
 }
 
 export function pickPhaseDraft(campaign: Campaign, index: number): ReturnType<typeof resolvePhaseDraft> {
-  return resolvePhaseDraft(campaign.state, index);
+  return resolvePhaseDraft(campaign.state, index, campaign.deck);
+}
+
+/** On entering general, ensure a GOTV card is in the physical deck (phase-3 spine). */
+export function ensureGeneralTools(campaign: Campaign): void {
+  if (campaign.state.stage !== 'general') return;
+  const hasGotv =
+    campaign.deck.draw.includes('PL19') ||
+    campaign.deck.hand.includes('PL19') ||
+    campaign.deck.discard.includes('PL19');
+  if (!hasGotv) {
+    injectIntoDrawPile(campaign.deck, campaign.state, ['PL19']);
+    campaign.state.log.push({
+      week: campaign.state.week,
+      kind: 'note',
+      text: 'General tools: GOTV Weekend enters the deck. Turnout is the promise kept.'
+    });
+  }
+  // Recruit path if still vol-starved
+  const hasRecruit =
+    campaign.deck.draw.includes('PL16') ||
+    campaign.deck.hand.includes('PL16') ||
+    campaign.deck.discard.includes('PL16');
+  if (!hasRecruit && (campaign.state.volPool ?? 0) < 2) {
+    injectIntoDrawPile(campaign.deck, campaign.state, ['PL16']);
+  }
 }
 
 export const CAMP_PETITION = -101;
@@ -215,9 +241,17 @@ export function ensureBallotAccessInHand(campaign: Campaign): string | null {
 }
 
 export function startWeek(campaign: Campaign): string[] {
-  // === NEW: Enforce mandatory weekly draw from the growing pool ===
+  if (campaign.state.stage === 'general') {
+    ensureGeneralTools(campaign);
+  }
+  // Mandatory weekly growth: own new cards AND put them in the draw pile
   const newCards = enforceWeeklyDraw(campaign.state);
   if (newCards.length > 0) {
+    // enforceWeeklyDraw already pushed ownership; inject physical copies
+    // (ownership may already include them — push to draw only)
+    for (const id of newCards) {
+      campaign.deck.draw.push(id);
+    }
     campaign.state.log.push({
       week: campaign.state.week,
       kind: 'draw',
@@ -285,7 +319,7 @@ export function runWeek(campaign: Campaign, choose: Chooser): WeekReport {
   while (campaign.state.ap > 0 && !campaign.state.over && guard-- > 0) {
     // Resolve any pending draft before plays (auto for harness path)
     if (campaign.state.pendingDraft) {
-      autoResolvePhaseDraft(campaign.state);
+      autoResolvePhaseDraft(campaign.state, campaign.deck);
     }
     const playable = listPlayableHand(campaign);
     if (playable.length === 0) break;
@@ -301,6 +335,7 @@ export function runWeek(campaign: Campaign, choose: Chooser): WeekReport {
   }
   const transition = endWeekInPlace(campaign);
   if (transition.kind === 'enter_general') {
+    ensureGeneralTools(campaign);
     maybeOfferPhaseDraft(campaign, true);
   }
   return {

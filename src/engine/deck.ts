@@ -141,10 +141,23 @@ export function buildPhaseDraft(state: GameState, count = 3): { phase: number; o
   return { phase: 0, options };
 }
 
-/** Commit a draft pick into owned deck (pool for future weekly growth). */
+/**
+ * Put card ids into the physical draw pile (and mark owned).
+ * Weekly growth + drafts must call this or cards never become playable.
+ */
+export function injectIntoDrawPile(deck: DeckState, state: GameState, cardIds: string[]): void {
+  if (!state.deck) state.deck = [];
+  for (const id of cardIds) {
+    if (!state.deck.includes(id)) state.deck.push(id);
+    deck.draw.push(id);
+  }
+}
+
+/** Commit a draft pick into owned + physical draw pile (when deck provided). */
 export function resolvePhaseDraft(
   state: GameState,
-  pickIndex: number
+  pickIndex: number,
+  deck?: DeckState
 ): { ok: boolean; cardId?: string; reason?: string } {
   const draft = state.pendingDraft;
   if (!draft || !draft.options.length) {
@@ -153,20 +166,24 @@ export function resolvePhaseDraft(
   const cardId = draft.options[pickIndex];
   if (!cardId) return { ok: false, reason: 'Invalid draft index' };
   if (!state.deck) state.deck = [];
-  if (!state.deck.includes(cardId)) state.deck.push(cardId);
+  if (deck) {
+    injectIntoDrawPile(deck, state, [cardId]);
+  } else if (!state.deck.includes(cardId)) {
+    state.deck.push(cardId);
+  }
   state.log.push({
     week: state.week,
     kind: 'note',
-    text: `Phase ${draft.phase} draft: added ${cardId} to the campaign pool. (Options were ${draft.options.join(', ')})`
+    text: `Phase ${draft.phase} draft: added ${cardId} to the deck. (Options were ${draft.options.join(', ')})`
   });
   state.pendingDraft = undefined;
   return { ok: true, cardId };
 }
 
 /** Seeded auto-pick (first option) for harnesses / strategies. */
-export function autoResolvePhaseDraft(state: GameState): string | null {
+export function autoResolvePhaseDraft(state: GameState, deck?: DeckState): string | null {
   if (!state.pendingDraft?.options.length) return null;
-  const r = resolvePhaseDraft(state, 0);
+  const r = resolvePhaseDraft(state, 0, deck);
   return r.cardId ?? null;
 }
 

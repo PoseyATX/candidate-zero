@@ -10,8 +10,8 @@
 | AC1 | Side-by-side verification vs original prototype | **STRENGTHENED** — seeded RNG, campaign replay, STD≡prototypeRoll 2000/2000; intentional deltas documented |
 | AC2 | Full card audit vs SRD §10 | **STRENGTHENED** — `npm run harness:audit` evidence table; all plays attr-tagged |
 | AC3 | Clean layered extraction (Data / Engine / UI) | **STRENGTHENED** — Engine complete; thin Vite UI shell live |
-| AC4 | UI reliable | PARTIAL — minimal shell (ledger / play / end week / seed); not polished |
-| AC5 | Harness skeleton | **STRENGTHENED** — resolve, smoke, ballot, multi-strategy, play-loop, ac1, ac1-parity, audit |
+| AC4 | UI reliable | PARTIAL — setup + play + draft + stage/outcome; still thin |
+| AC5 | Harness skeleton | **STRENGTHENED** — + calendar, setup, yield tables |
 | AC6 | Honest version label | **Not v0.1** — package `0.0.1` |
 
 ## Increment: Minimal play loop + multi-strategy harness (2026-07-16)
@@ -45,8 +45,27 @@ Unity deferred as presentation-only; TS engine remains rules authority.
 - Phase-turn **3-card draft** on ballot (phase 2) and enter-general (phase 3); auto in harnesses
 - Harness: `npm run harness:setup`
 
+## Increment: Cleanup / QoL + yield tables + general strategies (2026-07-17)
+
+- Persona attr application DRY (single bumpAttrs path)
+- Strategies stage-aware (GOTV PL19 priority in general)
+- CLI: attr-adjusted odds, `--full` / `play:full`, clearer outcomes
+- UI: district + human outcome strings
+- `npm run harness:yields` — modular yield envelopes for walk / fry / petition
+- Removed harness `as any` in primary-general stacked win check
+
+## Increment: Full-campaign general balance (2026-07-17)
+
+**Bugfix:** weekly growth + drafts only updated `state.deck` ownership — never the physical draw pile, so PL19 GOTV was unreachable (avg GOTV 0).
+
+- Inject growth/drafts into draw pile; general injects PL19 (+ PL16 if vol-starved)
+- PL19 cost 1 vol; stronger GOTV weight in `generalWinProbability`
+- Primary win curve modestly raised when balloted (teach the loop)
+- Harness: `npm run harness:full` — multi-strategy Primary+General outcomes
+
+Sample (150 trials/strategy): labor ~13% overall general win, ~42% win given reach, avg GOTV ~0.35; grind ~95% miss filing.
+
 ## Next
-1. Yield-table archive compare for walk/fund/chairs (AC1 open note)
-2. General-election card weight / GOTV balance pass
-3. Shadow consequences on Faces
-4. Polish UI; only then consider v0.1 label with evidence bundle
+1. **Dopamine loop** — feedback juice (stamps, beats, week summary, near-miss) without pity RNG
+2. Shadow consequences on Faces
+3. UI polish; only then consider v0.1 label with evidence bundle

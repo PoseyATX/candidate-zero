@@ -70,23 +70,25 @@ export function stageWeek(state: GameState): number {
 export function primaryWinProbability(state: GameState): number {
   const field =
     typeof state.district?.field === 'number' ? state.district.field : 2;
-  const fieldPressure = 0.04 * field;
+  const fieldPressure = 0.035 * field;
+  // Balloted skilled runs should reach general often enough to teach the loop;
+  // unbuilt name/chairs still lose most primaries (souls-like, not free).
   const p =
-    0.28 +
-    state.nameID * 0.012 +
-    state.contacts * 0.00045 +
-    state.endorsePts * 0.035 +
-    state.volPool * 0.018 +
-    state.momentum * 0.015 -
-    state.hitPieces * 0.06 -
+    0.36 +
+    state.nameID * 0.014 +
+    state.contacts * 0.0005 +
+    state.endorsePts * 0.04 +
+    state.volPool * 0.02 +
+    state.momentum * 0.018 -
+    state.hitPieces * 0.055 -
     (state.exposure || 0) * 0.04 -
     fieldPressure;
-  return clamp(p, 0.08, 0.88);
+  return clamp(p, 0.1, 0.9);
 }
 
 /**
  * General win probability vs genOpp / genBase.
- * GOTV rapport and contacts matter more than primary chairs.
+ * GOTV is the lever — without it, skilled primary still can lose November.
  */
 export function generalWinProbability(state: GameState): number {
   const rapport =
@@ -95,16 +97,16 @@ export function generalWinProbability(state: GameState): number {
   const gotv = state.groundsArr.reduce((s, g) => s + (g.gotv || 0), 0);
   const opp = state.genBase || 0.45;
   const p =
-    0.22 +
-    state.nameID * 0.01 +
-    state.contacts * 0.0004 +
-    state.volPool * 0.02 +
-    rapport * 0.002 +
-    gotv * 0.08 +
+    0.18 +
+    state.nameID * 0.011 +
+    state.contacts * 0.00035 +
+    state.volPool * 0.018 +
+    rapport * 0.0025 +
+    gotv * 0.14 + // GOTV is the general dopamine lever
     state.momentum * 0.02 -
     state.hitPieces * 0.05 -
-    opp * 0.25;
-  return clamp(p, 0.06, 0.9);
+    opp * 0.28;
+  return clamp(p, 0.06, 0.92);
 }
 
 function setOutcome(state: GameState, outcome: CampaignOutcome, text: string): StageTransition {

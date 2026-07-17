@@ -53,3 +53,33 @@ Data layer PL04 corrected to match this document.
 - Money path is faster to ballot and leaves more contacts/volunteers — intentional texture for now; re-check when paid media and obligations arrive.
 - Grind control proves filing is not automatic if you ignore ballot cards.
 - Harness: `npx tsx src/harness/multi-strategy.ts`
+
+## 2026-07-17 — Full-campaign general balance
+
+### Bug
+Weekly card growth and phase drafts only pushed ids into `GameState.deck` (ownership / pool). They never entered `DeckState.draw`, so phase-3 cards (especially **PL19 GOTV Weekend**) almost never appeared in hand. Full-campaign sampling showed **avg GOTV = 0** for generalists.
+
+### Fixes
+1. Inject weekly growth into the physical draw pile (`startWeek`).
+2. Draft resolution injects into draw pile (`resolvePhaseDraft` + campaign deck).
+3. On enter general: inject **PL19**; inject **PL16** if still vol-starved.
+4. PL19 cost `vp:1` (was 2); slight yield/name bump; `generalWinProbability` weights GOTV more heavily (`×0.14`).
+5. Primary win probability base raised (balloted skilled paths reach general often enough to teach the loop without free wins).
+
+### Measured (`npm run harness:full`, 150 trials/strategy)
+
+| Strategy | Miss filing | Reach general | Win general (all) | Win \| reach | Avg GOTV if gen |
+|----------|-------------|---------------|-------------------|--------------|-----------------|
+| labor    | ~7%         | ~30%          | ~13%              | ~42%         | ~0.35           |
+| money    | ~7%         | ~58%          | ~30%              | ~52%         | ~0.37           |
+| hybrid   | ~13%        | ~37%          | ~16%              | ~43%         | ~0.38           |
+| grind    | ~95%        | ~5%           | ~3%               | —            | —               |
+
+### Design read
+- Filing + dual path still distinct; grind is the control.
+- General is no longer a coin flip on primary stats alone — **GOTV is the lever**.
+- Overall win rates remain souls-like (most runs still lose).
+- Money path is stronger into November (more contacts/name from fry economy); acceptable texture; re-check when obligations/hit pieces matter more.
+
+### Harness
+`src/harness/full-campaign.ts` — `npm run harness:full`
