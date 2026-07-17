@@ -1,5 +1,88 @@
 # Balance Notes
 
+## 2026-07-17 — Foundation bootstrap (architecture + cards CSV)
+
+### Intent
+Lock rulesets and content inventory **before** mass expansion. Every new
+addition must stay balanced against peer anchors (PL01/PL04/PL05/PL13/PL19/
+PL20–21) and green harnesses.
+
+### Delivered
+- `docs/ARCHITECTURE.md` rewritten as foundation contract (layers, career SM,
+  resolve/SAFE, attrs, faces, obligations, shop, deck, elections, expansion gates)
+- `data/cards.csv` — 52 rows from live catalogs (24 play / 12 interim / 6 session / 10 asset)
+- `npm run export:cards` → `scripts/export-cards-csv.ts`
+
+### Expansion policy
+No new PL* beyond current catalog until: (1) role/path/peer documented, (2)
+harness suite green, (3) CSV re-exported, (4) this file notes any economy
+move. Mass archive import is explicitly out of scope until dual-path + GOTV
+envelopes remain stable under current set.
+
+## 2026-07-17 — TAX MAN debug persona + RISK labels
+
+- Persona `taxman` / **TAX MAN**: locked debug kit ($50k, full shop assets, high attrs/list/name). UI prompts password; session unlock only (not localStorage).
+- UI/CLI: trap plays/districts show **Risk** / **RISK**, not "TRAP" (on-the-nose). Internal `trap: true` flag unchanged for mechanics.
+
+## 2026-07-17 — Asset shop + failure loot (tangible)
+
+### Problem
+Money had almost nowhere to go (no billboards/web/staff). Failure only left
+abstract residue strings — not cards/flags the player sees as *stuff*.
+
+### Change
+- Shop catalog: A02 voter file, A01 walk list, A09 phone tree, A04 website,
+  A11 push cards, A03 mail, A06 flatbed, A12 billboard, A07 scheduler, A08 signs
+- Buy → money sink + kit chip + trophy entry + mechanical bonus
+- Passive passives: billboard/website name ID
+- Cycle failure → `grantCycleLoot`: scar/flag trophies + deck card inject + LOOT juice
+- UI: `#kit-strip` chips, `#shop` buy grid, juice on cycle close
+
+### Harness
+`npm run harness:shop`
+
+## 2026-07-17 — Obligations tick + grounds affinity
+
+### Obligations
+- Registry port (`OB1` PAC, `OB2` Bank Note, `OB8` Cousin, interim donor).
+- `tickObligations` runs every week/month end (primary, general, session, interim).
+- PL20 → OB1; PL21 → OB2 + debt; shadow G2 → OB8.
+- Free-text legacy strings normalize on tick.
+
+### Grounds
+- Default ground pick ranks by face-affinity match + rapport.
+- Church Corridor (gated) opens at T≥12 or preacher persona.
+- Field plays: +0–8% odds from matching high faces on ground `aff`.
+
+### Grant paths (dead-ref cleanup)
+- AL03 Club Chair: kitchen-table breakthrough
+- AL05 Media / AL04 Fixer: earned media tiers
+- A01 Walk Kit: after 6 walks; A09 Phone Kit: contacts≥80 on phone bank
+
+### Harness
+`npm run harness:obligations`
+
+## 2026-07-17 — Persistent career (Grok Build)
+
+### Design
+- Career no longer ends on `missed_filing` / primary or general loss/win.
+- Loop: Primary → General → (Session if win) → Interim → next Primary.
+- Persona permanent; issue/district/region only via thematic forks with cost.
+- Off-season residue feeds next cycle; session is thin (4w) not full pipeline.
+
+### Mechanical notes
+- `runFullCampaign` stops at first post-election park (interim or session).
+- Unseeded `Math.random` in session homestead bleed fixed → seeded `random()`.
+- Debt visible in ledger; still no win-prob tax (Phase 3 residual).
+
+### Harness
+- `npm run harness:career` — multi-cycle persona lock, win→session→interim, shifts
+- `npm run harness:dead-refs` — soft dead-id + card reachability scan
+
+### Docs
+- SRD: persistent career state machine section
+- ROADMAP: career done table; Phase 1 tools done; Phase 3/4 partial
+
 ## 2026-07-16 — Petition Drive Tuning
 
 ### Problem

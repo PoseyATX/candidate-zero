@@ -145,13 +145,106 @@ branching state machine, starting from Candidate-Zero.
 | Filing fee (expensive door) | **Implemented** — `PL05_PayFilingFee` |
 | Block walking | Implemented as a card, but see "Standing Actions" below — this was explicitly supposed to move off the deck |
 | Wrong-party-district trap | **Implemented, and fixed 2026-07-17** — this was mechanically backwards (easier, not harder) until this session; see `docs/BALANCE-NOTES.md` |
-| Self-funding-into-debt trap | Card exists (`PL21_SelfFundCredit`, honestly labeled) but the debt it records has **no mechanical consequence** — see `docs/ROADMAP.md` Phase 3 |
-| Early money/endorsement that forecloses coalitions | Card exists (`PL20_PacCheck`, honestly labeled, records an obligation) but the obligation has **no mechanical consequence** — same gap |
+| Self-funding-into-debt trap | **OB2 Bank Note** weekly drag (money/debt service) — `src/engine/obligations.ts` (2026-07-17) |
+| Early money/endorsement that forecloses coalitions | **OB1 PAC String** weekly drag (Lobbyist face + exposure) — same module; PL20 grants OB1 |
 | Indifference → notice → targeted resistance conflict shape | Partially implemented: `state.tier` now escalates disaster risk across pre-ballot/on-ballot/general (fixed 2026-07-17), but there's no explicit "you got noticed" event/spike — it's a smooth curve, not a phase-change moment |
-| Respectable-loss branches (Perennial Candidate / Advocate / Staffer) | **Not implemented.** Current terminal outcomes are only `missed_filing` / `lost_primary` / `won_general` / `lost_general` — no secondary paths exist at all |
-| Officeholder trunk beyond the general win | **Not implemented** — this is the Session stage; see below |
+| Respectable-loss branches (Perennial Candidate / Advocate / Staffer) | **Superseded 2026-07-17 (persistent career):** losses no longer terminal — they open **off-season** with the same persona; "perennial" is the default loop, not a named branch |
+| Officeholder trunk beyond the general win | **Thin Session implemented 2026-07-17** — 4 legislative weeks under the dome after general win, then off-season; full bill pipeline still open |
 | Shadow consequences on Faces | **Implemented 2026-07-17** — `src/engine/reputation.ts` ports `shadowCheck()` in full (see below) |
 | Reputation grants (R01/R02/R04/R07/R10/R11) | **Implemented 2026-07-17** — `src/engine/reputation.ts` ports the reachable subset of `repCheck()` (see below) |
+
+## Persistent career state machine (law as of 2026-07-17)
+
+The career **does not end** when a ballot does. `state.over` is reserved for
+rare ruin only. Normal election results set `lastCycleOutcome` and transition:
+
+```
+SETUP (once) — persona / issue / district / region lock
+    │
+    ▼
+PRIMARY (8 weeks) ── miss filing ──────────────────────────────┐
+    │ win primary                                              │
+    ▼                                                          │
+GENERAL (6 weeks) ── lose ─────────────────────────────────────┤
+    │ win                                                      │
+    ▼                                                          │
+SESSION (4 weeks, inOffice) ── sine die ───────────────────────┤
+    │                                                          │
+    └──────────────────────────► INTERIM / OFF-SEASON (6 mo) ──┤
+                                      │                        │
+                                      │ thematic forks (rare)  │
+                                      │ never persona          │
+                                      ▼                        │
+                                 next PRIMARY ◄────────────────┘
+                                 (incumbent if still inOffice)
+```
+
+### Identity rules (covenant 7, refined)
+
+| Facet | After first filing |
+|---|---|
+| **Persona** | **Permanent.** Never re-selected. Never on a fork menu. |
+| **Issue** | Shifts only via **thematic fork** (national detonation, crisis work) with cost (hit pieces / pivot scar). Hold is always an option. |
+| **District** | Shifts only via **map fork** (redistricting rumor / court order). Costs name ID / contacts, or debt if you stall-and-sue. |
+| **Region** | Shifts only via **geography pull** fork (cycle 2+). Petition math and lists change. |
+
+Free re-pick menus after the first screen are a **bug**, not a feature.
+
+### Off-season / residue
+
+Off-season work is themed by locked identity (persona bio work, district
+casework, region ritual, issue tour). Actions mint **residue**
+(`pendingResidue` → applied at next primary open) as boons or hindrances.
+This is the mechanical meaning of "a loss has value: banked list, name ID,
+reason to run again."
+
+### Failure must pay in the UI (dopamine / perennial design)
+
+Losing is not a blank terminal. On cycle close the engine mints **visible**
+loot into:
+
+1. **Trophies / flags / scars** — kit strip chips (`state.trophies`)
+2. **Deck cards** — e.g. miss filing → PL04 in pool; primary loss → recruit/fish-fry/chairs card; general loss → PL19 GOTV
+3. **Juice banner** — `LOOT: …` line the player cannot miss
+4. **Ledger kit line** — owned shop assets by name
+
+Money without sinks is a dead meter. The **Shop** sells billboards, websites,
+lists, phone trees, staff, mail, flatbed — each with a real mechanical effect
+(see archive `ASSETS` shop, ported to `src/data/assets.ts`).
+
+### Thin Session (in office)
+
+After general win only: 4 weeks of capitol verbs (file, whip lite, gallery,
+testify, district call, rest). Not a full bill pipeline yet — `bill` /
+`committee` remain future work. Homestead (`districtStanding`) bleeds.
+Then off-season, then reelection primary with incumbent lean.
+
+### Implementation map
+
+| Piece | Module |
+|---|---|
+| Calendar transitions | `src/engine/calendar.ts`, `src/engine/career.ts` |
+| Thematic forks | `src/engine/identity-shift.ts` |
+| Off-season plays | `src/data/interim-plays.ts` |
+| Session plays | `src/data/session-plays.ts` |
+| Foundation / expansion gates | `docs/ARCHITECTURE.md` |
+| Card inventory (audit) | `data/cards.csv` (`npm run export:cards`) |
+
+### Content expansion rule (SRD practice)
+
+New plays, assets, interim/session verbs, or obligations **must**:
+
+1. Fit a single role and labor/money/neutral path (do not erase dual ballot).
+2. Peer against an existing anchor card (see Architecture §6.2).
+3. Keep SAFE free of DISASTER; risk money carries obligation/exposure/debt.
+4. Ship with attrs (if rolled), grant paths for any named ally/rep/asset, and a CSV re-export.
+5. Leave `npm run harness` green; record measured moves in `docs/BALANCE-NOTES.md`.
+| UI career shell + localStorage | `src/ui/main.ts` |
+| Multi-cycle harness | `src/harness/career-persist.ts` |
+| Obligations weekly drag | `src/engine/obligations.ts` (`tickObligations` on week end) |
+| Ground affinity / gated grounds | `pickDefaultGround` + `groundAffinityMod` in `play.ts` |
+| Asset shop (money sinks) | `src/data/assets.ts` — buy kit; passives; UI Shop + Kit strip |
+| Failure loot (tangible) | `src/engine/failure-loot.ts` — trophies/flags + deck cards after loss |
 
 ## Standing Actions (PbtA basic moves / Blades downtime actions pattern)
 

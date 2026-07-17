@@ -18,6 +18,30 @@ or discovered in the codebase.
 - Each item lists its evidence so a future reader (human or agent) doesn't
   have to re-derive "why does this matter."
 
+### Pass discipline (mandatory — also in `AGENTS.md`)
+
+Every increment must: **CLEAN · DEBUG · UPDATE ROADMAP · UPDATE SRD**
+(as needed). No mechanical change without SRD touch; no pass left red on
+`tsc` / `npm run harness`.
+
+---
+
+## ✅ Persistent career loop (done 2026-07-17, Grok Build)
+
+Evidence: `src/engine/career.ts`, `calendar.ts`, `identity-shift.ts`,
+`src/data/interim-plays.ts`, `session-plays.ts`, `src/ui/main.ts`,
+`src/harness/career-persist.ts`. SRD: `docs/SRD-NOTES.md` § Persistent career.
+
+| Done | Notes |
+|---|---|
+| No terminal end on ballot outcomes | `over` only for rare ruin; `lastCycleOutcome` labels cycles |
+| Persona locked after first filing | UI "Abandon career" only hard wipe; no re-pick screen |
+| Off-season themed by identity | Residue boons/hindrances into next primary |
+| Thematic forks (issue/district/region) | Costly; never free menus; never persona |
+| Thin Session after general win | 4 weeks capitol verbs → interim → reelection |
+| localStorage career resume | `cz_career_v1` |
+| Debt surfaced in ledger | Phase 3 partial — still no weekly tax |
+
 ---
 
 ## ✅ GitHub Pages source fixed (was the one manual action; done 2026-07-17)
@@ -72,47 +96,43 @@ calling it law).
 
 ---
 
+## ✅ Foundation bootstrap (2026-07-17) — expand only after this holds
+
+Evidence: `docs/ARCHITECTURE.md` (rewritten as expansion gate), `data/cards.csv`
+(52 live rows: 24 plays + 12 interim + 6 session + 10 assets), `npm run export:cards`.
+
+| Done | Notes |
+|---|---|
+| Architecture as ruleset + balance-gate contract | Layers, career SM, resolve/SAFE, attrs, faces, obligations, shop, deck, elections |
+| Card inventory CSV | Re-export from code; authoring columns (`role`, path, economy) |
+| Expansion process written | Peer anchors + harness list + “do not mass-import archive yet” |
+| Still open before free expansion | Ground-pick UI; full ally port; remaining rep counters; full bill pipeline deferred |
+
+**Rule:** every new card must clear Architecture §6 (design + numeric peer + harness). No content dumps.
+
+---
+
 ## Phase 1 — Close the gaps this pass exposed but didn't fix (near-term, low risk)
 
 These are direct follow-ups to Phase 0 findings — verification and tooling,
 not new design.
 
-1. **Reachability check in `harness:audit`.** The audit harness
-   (`src/harness/audit-srd-plays.ts`) checks catalog *shape* (id format,
-   attrs, risk, phases) but not *reachability*. That's exactly the gap that
-   let PL20 sit dead for an unknown number of increments — it was asserted
-   present in the catalog (`harness:ac1`) but never asserted playable.
-   Add a check that simulates enough of a campaign (or directly walks
-   `show`/`req` gates against a matrix of representative states) to confirm
-   every card can, under some real game state, actually become playable.
+1. **~~Reachability check~~ Done (2026-07-17):** `npm run harness:dead-refs`
+   probes every catalog card against pre-ballot / ballot / general states
+   and reports unreachable ids. Soft-report for now (not hard-fail) until
+   remaining PL* show/req gates are intentional.
 
-2. **Automated "dead reference" scan for ally/rep/asset/backer ids.** This
-   pass found ~13 ids (`AL01`, `AL03`, `AL04`, `AL05`, `AL09`, `AL11`,
-   `R01`, `R05`, `R06`, `R07`, `R10`, `A01`, `A09`, `B05`) referenced in
-   `odds`/`run`/`req` functions across `src/data/plays.ts` that are never
-   granted anywhere. Rather than re-discover this by hand next time, add a
-   small script/harness that greps `warm(s,'ID')` / `hasRep(s,'ID')` /
-   `s.assets.includes('ID')` / `s.backers.includes('ID')` call sites,
-   collects referenced ids, and cross-checks each against every place an id
-   is pushed onto `state.allies`/`.assets`/`.reps`/`.backers`. Report any id
-   that's referenced but never granted. This is the same shape of bug as
-   the district-trap issue (Phase 0) and `state.tier` (Phase 0) — a
-   condition that can structurally never fire — so it's worth a permanent
-   guardrail, not just a one-time cleanup.
+2. **~~Dead reference scan~~ Done (2026-07-17):** `npm run harness:dead-refs`
+   greps `warm`/`hasRep`/`.includes` vs grant sites. Soft-report remaining
+   stubs (currently AL03/04/05, A01/A09 — no grant path yet; Phase 2 ally
+   port). Reachability probes use unlocked-state (B06/AL09) so gated cards
+   like PL11 are not false-unreachables.
 
-3. **Grounds subsystem is half-built.** `Ground.aff` (affinity tags like
-   `"O,G"`) and `Ground.gated` (only `GR04 Church Corridor` is `gated: true`)
-   are populated in `createDefaultGrounds()` (`src/engine/state.ts`) but
-   never read by any mechanic — no card checks affinity, nothing ever
-   un-gates a gated ground. Additionally, **there is no ground-selection UI
-   anywhere** (CLI or web): `pickDefaultGround` always auto-picks the first
-   ground with `pool > 0`, so the 8 named grounds with distinct pool sizes
-   and affinities are decorative flavor text, not a real strategic choice,
-   despite the data model clearly being designed for one. Either build the
-   selection UI + affinity mechanic, or (if it's genuinely out of scope for
-   now) simplify the data model so it stops implying a choice that doesn't
-   exist — leaving it half-wired is the same "looks real, isn't" problem
-   Phase 0 fixed twice already.
+3. **~~Grounds affinity (engine)~~ Partial (2026-07-17):**
+   `pickDefaultGround` now ranks by face affinity + rapport; gated GR04
+   opens at True Believer ≥12 or preacher bio; field plays get
+   `groundAffinityMod` odds tilt. **Still open:** explicit ground-pick UI
+   (player still doesn't choose by hand on mobile).
 
 4. **Archive-prototype yield parity is still open.** `docs/AC1-NOTES.md`:
    "Action yield-table full compare for archive ACTIONS (walk/fund/chairs)"
@@ -158,11 +178,11 @@ granted `B05` — now it does.
    (see `src/harness/full-campaign.ts` for the dated rationale) — both
    routes to `AL09` are affordability/RNG-gated, not guaranteed, so this is
    texture, not a landslide.
-2. **A purchasable assets shop:** the archive buys `A01`/`A09`/etc. with
-   real costs/requirements (`archive/prototype-single-file.html:820+`);
-   modular `state.assets` currently only ever receives setup-time tags.
-   Needs a UI surface (a "shop" panel) as well as engine support — bigger
-   than item 1.
+2. **~~A purchasable assets shop~~ Done (2026-07-17):** `src/data/assets.ts`
+   — billboard, website, voter file, walk list, phone tree, mail, flatbed,
+   push cards, yard cache, part-time scheduler. UI Shop grid + Kit strip.
+   Passives (billboard name ID weekly). Failure loot mints cards + flags.
+   Harness: `npm run harness:shop`.
 3. **~~6–21 more personas~~ Done (2026-07-17):** ported 20 of the archive's
    21 attribute-linked personas (one skipped — name collision with the
    existing `preacher`), plus all 12 remaining issues (18 total now). Pure
@@ -173,48 +193,28 @@ granted `B05` — now it does.
    starting power" isn't automatically balance-neutral, and 20 new personas
    is a lot of new starting-state surface that hasn't been through
    `harness:full` individually).
-4. **Obligations registry restructure:** the archive's `OBLS` are
-   structured `{n, drag}` records with an ongoing *weekly* effect (e.g. a
-   PAC obligation taxes `faces.L` and `exposure` every week it's held) —
-   not modular's free-text `state.obls: string[]`. This changes what
-   `state.obls` *is*, not just what's in it, and needs a weekly-tick call
-   site. This is the mechanical "bite" for `PL20_PacCheck`'s obligation
-   that Phase 3 (below) originally called for — same fix, correctly
-   relocated here since it's part of the same registry-porting work as
-   allies/reps, not a standalone design problem.
-5. **12 more allies** (`AL02`–`AL08`, `AL10`, `AL12`–`AL16`) with no
-   confirmed grant path even in the archive for several of them — would
-   need either finding their grant sites (search wasn't exhaustive) or
-   deliberately deferring them.
+4. **~~Obligations registry restructure~~ Done (2026-07-17):**
+   `src/engine/obligations.ts` — registry ids (`OB1` PAC String, `OB2` Bank
+   Note, `OB8` Cousin, etc.) with weekly `drag()`; `tickObligations` on
+   every week/month end; PL20/PL21/shadow/interim grant real ids; free-text
+   normalizes. Ledger shows obligation names. Harness: `harness:obligations`.
+5. **Allies remaining:** AL03/AL04/AL05 now have grant paths (kitchen-table
+   breakthrough, earned media). A01/A09 grant via walk volume / phone volume.
+   Still open: AL02, AL06–08, AL10, AL12–16 (archive port).
 
-## Phase 3 — Debt has no consequence (small; rescoped 2026-07-17)
+## Phase 3 — Debt has no consequence (partial; 2026-07-17)
 
-**Rescoped, smaller than originally estimated.** `state.debt`
-(`PL21_SelfFundCredit`) is still recorded but never read by any mechanic.
-Checking the archive for how debt "bites back" there: it doesn't tax any
-win probability or trigger a repayment mechanic — its only visible
-consequence is narrative, surfaced on the loss/terminal screen ("The bank
-still wants its money. Losing does not cancel the note.",
-`archive/prototype-single-file.html:1746`). So the honest, low-risk fix
-here is much smaller than a new mechanic: surface `state.debt` (and held
-obligations) in the terminal outcome text when a run ends, the way the
-archive does, rather than building a debt-collection system that the
-source material doesn't actually call for.
+| Status | Detail |
+|---|---|
+| **Done** | Debt shown in ledger (`$X · note $Y`) so the note is visible mid-career |
+| **Open** | Win-prob bite still absent; **OB2 Bank Note** now weekly-drags money/debt when self-fund or debt>0 |
 
-## Phase 4 — Build the Session stage
+## Phase 4 — Session stage (thin done; deep open)
 
-`GameState.stage` already includes `'session'`, `getPhase()` already maps
-it to phase 3, and a real chunk of state exists solely for it: `capital`,
-`favor`, `districtStanding`, `bill`, `committee`, `sessionFlags` — all
-initialized, all completely unread by any current mechanic.
-`ARCHITECTURE.md` already says the quiet part: "Session | later | 3 | Not
-yet simulated." This is the game's third act (after winning the general,
-you're a legislator trying to move something related to your chosen
-`issue`) and is very likely the single largest remaining systems
-investment in the project. **Recommend a dedicated design pass before
-implementation** — this shouldn't be improvised card-by-card the way Wave
-4 was; it's a new stage with its own win/loss shape, not a new wave of
-cards in the existing loop.
+| Status | Detail |
+|---|---|
+| **Done (thin)** | 4-week session after general win: file / whip / gallery / testify / district call / rest (`session-plays.ts`); sine die → interim |
+| **Open (deep)** | Real bill object lifecycle (`bill`/`committee` still mostly inert), issue-linked legislation win condition, calendar kill pressure as sine die approaches, Speaker favor as referral gate |
 
 ## Phase 5 — Sweep balance breadth beyond labor/money
 
