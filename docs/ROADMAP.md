@@ -20,19 +20,17 @@ or discovered in the codebase.
 
 ---
 
-## ⚠ One manual action needed (not fixable with the tools available in this session)
+## ✅ GitHub Pages source fixed (was the one manual action; done 2026-07-17)
 
-**Repo Settings → Pages → Build and deployment → Source: switch from
-"Deploy from a branch" to "GitHub Actions."** Two Pages pipelines have been
-publishing to the same site all session — our correct `deploy.yml` (runs
-`npm run build`) and GitHub's built-in legacy Jekyll "deploy from branch"
-pipeline (publishes raw repo files, which cannot work for this app — see
-`docs/BALANCE-NOTES.md`, "GitHub Pages: branch-name typo + a second,
-competing deploy pipeline"). Whichever finishes last after any push wins.
-The current live state was published safely (manual `workflow_dispatch`,
-no accompanying push to race it), but every push from here on is a coin
-flip until this setting is changed by hand — no API/MCP tool available
-here can change it.
+Root cause was the repo's Pages **source** setting: "Deploy from a branch"
+meant public traffic never routed through our `deploy.yml` at all,
+regardless of how many times it "succeeded" — a separate `github-pages`-app
+deployment (the legacy Jekyll pipeline) kept serving the raw, unbuilt
+source instead. User switched Settings → Pages → Build and deployment →
+Source → GitHub Actions; confirmed via the `/deployments` API that the
+legacy pipeline stopped deploying, redeployed, and the user confirmed the
+live site renders correctly. Full story (including the wrong "timing race"
+theory tried first): `docs/BALANCE-NOTES.md`, 2026-07-17 entries.
 
 ## Phase 0 — Foundation pass (done, 2026-07-17)
 
@@ -153,12 +151,16 @@ granted `B05` — now it does.
    modular `state.assets` currently only ever receives setup-time tags.
    Needs a UI surface (a "shop" panel) as well as engine support — bigger
    than item 1.
-3. **6–21 more personas** (archive has 21 attribute-linked personas vs.
-   modular's 4; several grant allies on selection). Bigger scope decision:
-   is the goal eventually all 21, or a curated subset? Worth a deliberate
-   call rather than porting all of them reflexively — see Phase 5's
-   `smallbiz`-persona note for why "more starting power" isn't free of
-   balance risk.
+3. **~~6–21 more personas~~ Done (2026-07-17):** ported 20 of the archive's
+   21 attribute-linked personas (one skipped — name collision with the
+   existing `preacher`), plus all 12 remaining issues (18 total now). Pure
+   data, no new mechanics needed, so this no longer needed the "curated
+   subset vs. all 21" judgment call the note below used to raise — all of
+   it went in. What *is* still an open call: whether the resulting 24-persona
+   roster needs its own balance pass (see Phase 5's `smallbiz` note — "more
+   starting power" isn't automatically balance-neutral, and 20 new personas
+   is a lot of new starting-state surface that hasn't been through
+   `harness:full` individually).
 4. **Obligations registry restructure:** the archive's `OBLS` are
    structured `{n, drag}` records with an ongoing *weekly* effect (e.g. a
    PAC obligation taxes `faces.L` and `exposure` every week it's held) —
@@ -205,17 +207,27 @@ cards in the existing loop.
 ## Phase 5 — Sweep balance breadth beyond labor/money
 
 Phase 0 fixed the two headline strategies and one systemic district bug,
-but the full setup matrix — 4 personas × 4 districts × 7 regions × 6 issues
-= 672 combinations — has only ever been spot-checked (`harness:setup`
-covers teacher/open/east and veteran/gulf; `harness:full` only runs the
-default setup). Two specific things worth checking now that Phase 0 changed
-the numbers they depend on:
+but the full setup matrix — now 24 personas × 4 districts × 7 regions × 18
+issues = 12,096 combinations (was 672 before the 2026-07-17 persona/issue
+port) — has only ever been spot-checked (`harness:setup` covers
+teacher/open/east and veteran/gulf; `harness:full` only runs the default
+setup, and none of the 20 newly-ported personas have been through it at
+all). This matrix just got substantially bigger without a corresponding
+increase in balance coverage — worth flagging as higher priority than it
+was this morning. Things worth checking:
 
+- **The 20 newly-ported personas**: verified mechanically correct (apply()
+  effects fire, `harness` suite green) but not balance-checked individually
+  — some grant `money += 2500` (`PA_DIP_CHA`) or `money += 1500` (both
+  `PA_CRA_DIP` and the existing `smallbiz`), which combined with the
+  filing-fee economics below could produce more degenerate-fast-money
+  personas than just `smallbiz`.
 - **`smallbiz` persona (+$1,500 starting money) vs. the new $1,250 filing
   fee**: this persona can now file in week 1 essentially for free. That may
   be exactly the intended identity ("everyone owes you credit or a favor")
-  or it may be too strong relative to the other three personas — worth a
-  deliberate call, not an accident.
+  or it may be too strong relative to the other personas — worth a
+  deliberate call, not an accident. Now shared by at least two of the
+  ported personas too (see above).
 - **The `wrong` district, post-Phase-0 fix**: it's now intentionally the
   hardest district (high `genBase` from `align: 'wrong'` + trap tax). Worth
   confirming via harness that it's brutal-but-winnable (a real risky

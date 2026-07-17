@@ -237,17 +237,22 @@ small-dollar list starts here" but the code never actually pushed `B05`
 into `state.backers` — the archive's equivalent card does
 (`archive/prototype-single-file.html:612`). Fixed to match.
 
-**Not ported — larger than initially scoped, needs its own pass:**
-reading further into the archive surfaced a much bigger design surface
-than `docs/ROADMAP.md` Phase 2 originally assumed:
+**Ported the same day (2026-07-17, later):** 20 of the archive's 21
+personas (`archive/prototype-single-file.html:340–365`) — 6 single-attribute
+(`PA_CLO` "The Powerhouse", `PA_CON` "The True Believer", `PA_CRA` "The
+Operator", `PA_INK` "The Parliamentarian", `PA_DIP` "The Coalition-Builder",
+`PA_CHA` "The Natural") plus 14 of 15 attribute-pair personas (`PA_CON_CHA`
+skipped — also named "The Preacher," colliding with the existing
+hand-authored `preacher`), plus all 12 remaining issues. `PA_CRA` and
+`PA_INK_DIP` granting `AL11`/`AL01` now actually connects to mechanics that
+already existed and were waiting for a reachable grant path (`resolve()`'s
+Kitchen Cabinet band reduction, Kitchen-Table Meeting's chair-count odds
+bonus). One archive persona effect dropped on port (`PA_CRA_DIP`'s
+`canTradeObl` flag — no corresponding `GameState` field, nothing reads it).
+See `docs/BALANCE-NOTES.md`, "Ported 20 personas + 12 issues from the
+archive," for full detail and verification.
 
-- **21 personas**, not 4 (`archive/prototype-single-file.html:340–365`) —
-  6 single-attribute (`PA_CLO` "The Powerhouse", `PA_CON` "The True
-  Believer", `PA_CRA` "The Operator", `PA_INK` "The Parliamentarian",
-  `PA_DIP` "The Coalition-Builder", `PA_CHA` "The Natural") plus 15
-  attribute-pair personas, several of which grant allies directly on
-  selection (e.g. `PA_CRA` grants `AL11` Kitchen Cabinet, `PA_DIP` and
-  `PA_INK_DIP` both grant `AL01` Precinct Chair).
+**Still not ported — larger than initially scoped, needs its own pass:**
 - **A structured obligations registry** (`OBLS`, archive line ~392+), not
   the modular engine's free-text `state.obls: string[]`. Archive
   obligations are `{n, drag}` records with an ongoing *weekly* drag effect

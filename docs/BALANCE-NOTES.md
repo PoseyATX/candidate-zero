@@ -473,3 +473,54 @@ the site appears to regress after a future push-triggered deploy.
 ### Harness
 Config-only changes; not applicable to `npm run harness`. Deployment
 verified via GitHub Actions API run/job status, not local tooling.
+
+### Resolution
+The actual root cause was the repo's Pages **source** setting itself
+("Deploy from a branch" vs. "GitHub Actions") — not a timing race, as
+first assumed. Confirmed via the `/deployments` API: a `github-pages`-app
+deployment (the legacy pipeline) was still being created as late as
+16:11:51Z, a distinct identity from our `github-actions`-app deployments,
+and no redeploy on our side could out-race a pipeline the site wasn't
+routing to in the first place. User changed the setting by hand (Settings
+→ Pages → Build and deployment → Source → GitHub Actions); confirmed no
+further `github-pages`-app deployments since, and the live site now
+renders correctly (screenshot-verified by the user: styled, populated
+persona/issue/district/region dropdowns, working blurb text).
+
+## 2026-07-17 — Ported 20 personas + 12 issues from the archive
+
+After seeing the live (now-working) site, user asked why it only had 4
+personas / 6 issues when the archive has 21 / 18 — a fair question. That
+gap predates this session (the modular baseline has always been a curated
+subset, not a full port — see `TICKET-v0.1-modular-baseline.md`), but
+personas and issues are pure data with no new mechanics required, so
+there was no good reason to leave them roadmapped instead of just porting
+them, unlike the allies/assets/obligations systems work held back
+earlier today.
+
+Ported from `archive/prototype-single-file.html`'s 21-persona archetype
+roster and 18-issue list into `src/data/setup.ts`'s `PERSONAS`/`ISSUES`
+arrays, additively (existing 4 personas / 6 issues untouched, so nothing
+already balanced or referenced moved). One persona skipped: archive's
+`PA_CON_CHA` is also named "The Preacher," colliding with the existing
+hand-authored `preacher` persona — kept the original, dropped the
+duplicate-named archetype rather than have two identically-named options
+in the dropdown.
+
+`apply()` effects ported directly using the shared `hasRep`/`warm`/
+`addRep`/`addAlly` helpers added earlier today (`src/engine/reputation.ts`)
+— several of these personas grant `AL01`/`AL11`, which already had real
+mechanical consequences waiting (Kitchen-Table Meeting's chair-count odds
+bonus, `resolve()`'s Kitchen Cabinet band reduction, the extra weekly
+draw) but no reachable grant path until now. One archive effect dropped:
+`PA_CRA_DIP`'s `canTradeObl` flag has no corresponding field in modular
+`GameState` and nothing reads it — consistent with this session's rule of
+not porting inert flags.
+
+Verified: 24 personas / 18 issues render in the UI dropdowns (screenshot,
+zero console errors); a targeted script confirmed a ported persona
+(`PA_CRA` "The Operator") applies its Faces/favors/attrs deltas correctly
+and that its `addAlly(s,'AL11',3)` call makes `warm(s,'AL11')` true.
+
+### Harness
+`npm run harness` (12/12), `npm run typecheck`, `npm run build` all pass.

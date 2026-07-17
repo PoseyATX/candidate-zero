@@ -5,6 +5,7 @@
 
 import type { AttrId, Attrs, Faces, GameState } from '../engine/types.js';
 import { random } from '../engine/rng.js';
+import { addAlly, addRep } from '../engine/reputation.js';
 
 export type FaceBoost = Partial<Faces>;
 export type AttrBoost = Partial<Attrs>;
@@ -94,6 +95,135 @@ export const PERSONAS: PersonaDef[] = [
     d: 'Everyone owes you credit or a favor.',
     attrs: { CRA: 3, DIP: 2, CLO: 1 },
     apply: s => { s.money += 1500; s.faces.O += 8; s.assets.push('BIO_FEEDSTORE'); }
+  },
+  // Ported from archive/prototype-single-file.html's 21-persona archetype
+  // roster (2026-07-17) — see docs/SRD-NOTES.md. PA_CON_CHA ("The Preacher")
+  // skipped: name collision with the hand-authored 'preacher' persona above.
+  {
+    id: 'PA_CLO', n: 'The Powerhouse', tag: 'fills the room',
+    d: 'A presence that fills a room and a turnout operation to match. You win by showing up bigger than anyone.',
+    attrs: { CLO: 5 },
+    apply: s => { s.faces.G += 20; s.volPool += 1; }
+  },
+  {
+    id: 'PA_CON', n: 'The True Believer', tag: 'message discipline',
+    d: 'The message arrives pre-sharpened and never wavers. Discipline is your whole discipline.',
+    attrs: { CON: 5 },
+    apply: s => { s.faces.T += 24; s.messageSharp = true; s.estabPenalty = true; }
+  },
+  {
+    id: 'PA_CRA', n: 'The Operator', tag: 'knows an angle',
+    d: 'You know whose cousin owes whom, and when to move. The angle is always there if you look.',
+    attrs: { CRA: 5 },
+    apply: s => { s.faces.O += 24; s.favors = 1; addAlly(s, 'AL11', 3); }
+  },
+  {
+    id: 'PA_INK', n: 'The Parliamentarian', tag: 'reads the rules twice',
+    d: 'You read the rules twice. Process is a weapon that never jams.',
+    attrs: { INK: 5 },
+    apply: s => { s.faces.P += 24; s.parlSave = true; }
+  },
+  {
+    id: 'PA_DIP', n: 'The Coalition-Builder', tag: 'rooms open for you',
+    d: 'You can seat the rancher next to the union man and make them both feel heard. Rooms open for you.',
+    attrs: { DIP: 5 },
+    apply: s => { s.faces.O += 12; addAlly(s, 'AL01', 2); }
+  },
+  {
+    id: 'PA_CHA', n: 'The Natural', tag: 'doors open wider',
+    d: 'Every door opens a little wider. People just take to you, and you know exactly what to do with that.',
+    attrs: { CHA: 5 },
+    apply: s => { s.faces.F += 18; s.nameID += 4; }
+  },
+  {
+    id: 'PA_CLO_CON', n: 'The Movement Champion', tag: 'crowd and discipline',
+    d: 'Conviction with muscle behind it. You bring the crowd and you keep them in line.',
+    attrs: { CLO: 3, CON: 3 },
+    apply: s => { s.faces.T += 14; s.faces.F += 8; s.momentum += 2; }
+  },
+  {
+    id: 'PA_CLO_CRA', n: 'The Bare-Knuckle Populist', tag: 'fights dirty when it must',
+    d: 'You go out loud and you fight dirty when you must. The establishment never sees the elbow coming.',
+    attrs: { CLO: 3, CRA: 3 },
+    apply: s => { s.faces.F += 14; s.faces.O -= 4; s.nameID += 3; }
+  },
+  {
+    id: 'PA_CLO_INK', n: 'The Workhorse', tag: 'grind plus rules',
+    d: 'You outwork everyone and you know the process cold. Grind plus rules is a hard thing to beat.',
+    attrs: { CLO: 3, INK: 3 },
+    apply: s => { s.faces.P += 10; s.faces.G += 10; }
+  },
+  {
+    id: 'PA_CLO_DIP', n: 'The Rural Patriarch', tag: 'two grounds start warm',
+    d: 'Your name means something here, and the chairs already wave. Two grounds start warm.',
+    attrs: { CLO: 3, DIP: 3 },
+    apply: s => {
+      s.faces.G += 18;
+      const g1 = s.groundsArr.find(g => g.id === 'GR02');
+      if (g1) g1.rapport = 20;
+      const g2 = s.groundsArr.find(g => g.id === 'GR06');
+      if (g2) g2.rapport = 20;
+    }
+  },
+  {
+    id: 'PA_CLO_CHA', n: 'The Local Legend', tag: "the county's been rooting for you",
+    d: 'Star quarterback, then feed-store owner, now this. The county has been rooting for you for decades.',
+    attrs: { CLO: 3, CHA: 3 },
+    apply: s => { s.faces.G += 10; s.faces.F += 8; s.nameID += 8; }
+  },
+  {
+    id: 'PA_CON_CRA', n: 'The Insurgent', tag: 'a knife for the primary',
+    d: 'A disciplined message and a knife for the primary. You are exactly as angry as you choose to be.',
+    attrs: { CON: 3, CRA: 3 },
+    apply: s => { s.faces.T += 12; s.faces.O -= 6; s.messageSharp = true; }
+  },
+  {
+    id: 'PA_CON_INK', n: 'The Reform Crusader', tag: 'straight shooter, week one',
+    d: 'A cause and the rulebook to advance it. Straight Shooter before week one.',
+    attrs: { CON: 3, INK: 3 },
+    apply: s => { s.faces.P += 12; s.faces.F += 8; addRep(s, 'R02'); }
+  },
+  {
+    id: 'PA_CON_DIP', n: 'The Statesman', tag: 'trusted across the aisle',
+    d: 'Steady, principled, trusted across the aisle. The kind they call "serious."',
+    attrs: { CON: 3, DIP: 3 },
+    apply: s => { s.faces.P += 8; s.faces.G += 8; s.endorsePts += 1; }
+  },
+  {
+    id: 'PA_CRA_INK', n: 'The Fixer', tag: 'bends the rules cleanly',
+    d: 'You know the rules AND how to bend them. Dangerous in a committee, deadly near a deadline.',
+    attrs: { CRA: 3, INK: 3 },
+    apply: s => { s.faces.O += 10; s.faces.P += 8; s.favors = 1; }
+  },
+  {
+    id: 'PA_CRA_DIP', n: 'The Wheeler-Dealer', tag: 'a price on everything',
+    d: 'Two of everything and a price on each. You can trade your way out of almost anything.',
+    attrs: { CRA: 3, DIP: 3 },
+    apply: s => { s.faces.O += 12; s.faces.L += 8; s.money += 1500; s.favors = 1; }
+  },
+  {
+    id: 'PA_CRA_CHA', n: 'The Showman', tag: 'made for the cameras',
+    d: 'Timing and charm: you know the line AND the moment to land it. Made for the cameras.',
+    attrs: { CRA: 3, CHA: 3 },
+    apply: s => { s.faces.F += 16; s.backers.push('B07'); s.mediaBonus = 0.15; }
+  },
+  {
+    id: 'PA_INK_DIP', n: 'The Committee Chair-in-Waiting', tag: 'leadership is watching this profile',
+    d: 'Process mastery and the relationships to use it. Leadership is watching this profile.',
+    attrs: { INK: 3, DIP: 3 },
+    apply: s => { s.faces.O += 8; s.faces.P += 8; addAlly(s, 'AL01', 2); }
+  },
+  {
+    id: 'PA_INK_CHA', n: 'The Homegrown Wonk', tag: 'smart and likeable is rare',
+    d: 'You explain the water district budget so plainly people thank you for it. Smart and likeable is rare.',
+    attrs: { INK: 3, CHA: 3 },
+    apply: s => { s.faces.P += 10; s.assets.push('A02'); }
+  },
+  {
+    id: 'PA_DIP_CHA', n: "The Dealmaker's Heir", tag: 'the family reputation opens doors',
+    d: "A known name and a gift for people. Doors open on the family reputation; you keep them open on your own.",
+    attrs: { DIP: 3, CHA: 3 },
+    apply: s => { s.faces.G += 10; s.faces.L += 6; s.money += 2500; s.nameID += 6; }
   }
 ];
 
@@ -103,7 +233,20 @@ export const ISSUES: IssueDef[] = [
   { id: 'schools', n: 'School finance', tag: 'schools', d: 'Formulas, facilities, and Friday nights.' },
   { id: 'border', n: 'The border', tag: 'border', d: 'Federal failure, local consequence. Easy to shout; hard to govern.' },
   { id: 'hospitals', n: 'Rural hospitals', tag: 'hospitals', d: 'OB deserts, ambulance miles, and the last ER light.' },
-  { id: 'land', n: 'Eminent domain', tag: 'land', d: 'Pipelines, corridors, and ranch gates.' }
+  { id: 'land', n: 'Eminent domain', tag: 'land', d: 'Pipelines, corridors, and ranch gates.' },
+  // Ported from archive/prototype-single-file.html (2026-07-17) — see docs/SRD-NOTES.md.
+  { id: 'tolls', n: 'Highway tolls', tag: 'tolls', d: 'They promised the tolls would come off when the road was paid. The road is paid.' },
+  { id: 'teacherpay', n: 'Teacher pay', tag: 'teacherpay', d: 'Twenty years in a classroom and a second job at the feed store. The room already agrees; make it vote.' },
+  { id: 'ag-subsidies', n: 'Ag subsidies & crop insurance', tag: 'ag-subsidies', d: 'One hailstorm from foreclosure, every single year. The FM roads know the arithmetic.' },
+  { id: 'corruption', n: 'Courthouse corruption', tag: 'corruption', d: "The commissioners' court has been a family business for forty years. Naming it takes nerve." },
+  { id: 'broadband', n: 'Rural broadband', tag: 'broadband', d: 'Kids do homework in the church parking lot for the wifi. The future has a dead zone.' },
+  { id: 'bail-reform', n: 'Prison & bail reform', tag: 'bail-reform', d: "The unit is the county's biggest employer and its heaviest silence. Careful, serious ground." },
+  { id: 'mental-health', n: 'Mental health funding', tag: 'mental-health', d: 'The sheriff runs the largest psychiatric facility in three counties: his jail. Even he says so.' },
+  { id: 'veterans', n: "Veterans' services", tag: 'veterans', d: 'The Legion hall knows every name on the waiting list. Show up and listen first.' },
+  { id: 'grid', n: 'Rural grid reliability', tag: 'grid', d: 'Everyone remembers the freeze. Every generator in every barn is a campaign memorial.' },
+  { id: 'payday-lending', n: 'Payday lending', tag: 'payday-lending', d: 'Four storefronts by the plant gate, 400% APR. The math preys on shift workers by design.' },
+  { id: 'vouchers', n: 'Public school vouchers', tag: 'vouchers', d: 'The church wants them; the small towns fear them — the district IS the school. A knife-edge issue.' },
+  { id: 'election-integrity', n: 'Election integrity', tag: 'election-integrity', d: 'The county clerk is tired, honest, and yelled at from both directions. Order-flavored, radioactive, real.' }
 ];
 
 export const DISTRICTS: DistrictDef[] = [
