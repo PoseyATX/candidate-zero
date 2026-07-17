@@ -29,8 +29,16 @@ Unity deferred as presentation-only; TS engine remains rules authority.
 - Thin Vite UI (`src/ui/main.ts`) over pure engine
 - Harnesses: `ac1-prototype-parity`, `audit-srd-plays`
 
+## Increment: Primary (8) + General (6) calendar (2026-07-17)
+
+- `src/engine/calendar.ts` — continuous weeks 1–14, phase map, filing + elections
+- Phase: pre-ballot primary=1, on-ballot primary=2, general=3
+- Terminal outcomes wired through `endWeekInPlace` / `runFullCampaign`
+- Harness: `npm run harness:calendar`
+
 ## Next
 1. Persona/setup wiring into UI + CLI (choices bind)
 2. Yield-table archive compare for walk/fund/chairs (AC1 open note)
 3. Phase-turn deck evolution choices (not just auto extra draw)
-4. Polish UI; only then consider v0.1 label with evidence bundle
+4. General-election card weight / GOTV balance pass
+5. Polish UI; only then consider v0.1 label with evidence bundle

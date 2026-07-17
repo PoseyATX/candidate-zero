@@ -5,6 +5,20 @@
 
 import type { GameState, Ground, Faces, Attrs } from './types.js';
 import { setDefaultSeed, random } from './rng.js';
+import {
+  CAMPAIGN_WEEKS_TOTAL,
+  advanceCampaignWeek
+} from './calendar.js';
+
+export {
+  getPhase,
+  stageLabel,
+  stageWeek,
+  PRIMARY_WEEKS,
+  GENERAL_WEEKS,
+  FILING_DEADLINE_WEEK,
+  CAMPAIGN_WEEKS_TOTAL
+} from './calendar.js';
 
 export function createInitialFaces(): Faces {
   return { P: 0, O: 0, L: 0, G: 0, T: 0, F: 0 };
@@ -34,7 +48,7 @@ export function createNewState(overrides: Partial<GameState> = {}): GameState {
     setDefaultSeed(overrides.seed);
   }
   const base: GameState = {
-    week: 1, weeksTotal: 24, ap: 2, apMax: 2, fieldAp: 0,
+    week: 1, weeksTotal: CAMPAIGN_WEEKS_TOTAL, ap: 2, apMax: 2, fieldAp: 0,
     money: 0, debt: 0, contacts: 0, nameID: 2, volPool: 0, momentum: 0, favors: 0,
     signatures: 0, sigNeed: 450, ballot: false, hitPieces: 0, exposure: 0,
     messageSharp: false, clubOdds: 0, walkCount: 0, shadowPlays: 0, disasterLog: [],
@@ -42,7 +56,8 @@ export function createNewState(overrides: Partial<GameState> = {}): GameState {
     faces: createInitialFaces(), shFired: {}, groundsArr: createDefaultGrounds(),
     allies: [], backers: [], assets: [], obls: [], reps: [], rivals: [],
     tier: 0, persona: null, issue: null, district: null, eventsFired: {},
-    stage: 'primary', genOpp: null, genBase: 0, over: false, log: [],
+    stage: 'primary', genOpp: null, genBase: 0, over: false, outcome: 'ongoing',
+    primaryWon: false, log: [],
     capital: 0, favor: 50, districtStanding: 60, bill: null, committee: null, sessionFlags: {},
     wave: (random() - 0.5) * 16, skippedTownHall: false, townHallThisWeek: false,
     debatePrepped: false, oppoFile: false, favWitness: 0, globalBand: 0,
@@ -52,20 +67,11 @@ export function createNewState(overrides: Partial<GameState> = {}): GameState {
   return { ...base, ...overrides, attrs: { ...createDefaultAttrs(), ...overrides.attrs } };
 }
 
-export function getPhase(state: GameState): 1 | 2 | 3 {
-  if (state.stage === 'general') return 3;
-  if (state.week <= 8) return 1;
-  if (state.week <= 16) return 2;
-  return 3;
-}
-
-/** Advance one week: refresh AP, decay momentum, clear per-week flags. Pure. */
+/**
+ * Advance one week on the campaign calendar (may resolve elections).
+ * Prefer loop.endWeekInPlace which also discards the hand.
+ */
 export function advanceWeek(state: GameState): GameState {
-  return {
-    ...state,
-    week: state.week + 1,
-    ap: state.apMax,
-    momentum: Math.max(0, state.momentum - 1),
-    townHallThisWeek: false
-  };
+  advanceCampaignWeek(state);
+  return state;
 }

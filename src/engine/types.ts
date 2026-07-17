@@ -120,6 +120,10 @@ export interface GameState {
   genOpp: any;
   genBase: number;
   over: boolean;
+  /** Terminal outcome when `over` — pure campaign result label. */
+  outcome?: CampaignOutcome;
+  /** True after winning the primary and entering general. */
+  primaryWon?: boolean;
   log: any[];
   capital: number;
   favor: number;
@@ -156,6 +160,13 @@ export interface GameState {
   deck?: string[];
   handBonus?: number;
 }
+
+export type CampaignOutcome =
+  | 'ongoing'
+  | 'missed_filing'
+  | 'lost_primary'
+  | 'won_general'
+  | 'lost_general';
 
 export interface LegacyState {
   runs: any[];

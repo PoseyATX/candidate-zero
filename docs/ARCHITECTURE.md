@@ -6,7 +6,7 @@
 |-------|------|------|
 | Data | `src/data/` | Cards and content — single source of truth |
 | Engine | `src/engine/` | Pure functions only — portable toward Swift |
-| UI | `src/ui/` | Presentation only (not started) |
+| UI | `src/ui/` | Thin Vite shell (presentation only) |
 | Harness | `src/harness/` | Balance and regression tests |
 
 ## Engine modules (v0.0.x)
@@ -15,11 +15,22 @@
 |--------|------|
 | `resolve.ts` | Four-tier brutal RNG; SAFE band = 0 |
 | `types.ts` | GameState, PlayCard, DeckState, outcomes |
-| `state.ts` | Factory, phase, week helpers |
+| `state.ts` | Factory + re-exports calendar helpers |
+| `calendar.ts` | Primary 8w / General 6w, phase map, elections |
 | `play.ts` | Afford / legal / pay / executePlay |
 | `deck.ts` | Draw / hand / discard / starter pile |
 | `loop.ts` | Campaign session: startWeek → play → endWeek |
 | `strategies.ts` | Scripted policies for harnesses |
+
+## Campaign calendar
+
+| Stage | Calendar weeks | Phase | Notes |
+|-------|----------------|-------|--------|
+| Primary | 1–8 | 1 if `!ballot`, else 2 | Filing deadline end of week 8 |
+| General | 9–14 | 3 | Only if primary won |
+| Session | later | 3 | Not yet simulated |
+
+Terminal outcomes: `missed_filing` · `lost_primary` · `won_general` · `lost_general`.
 
 ## Ballot access rule
 

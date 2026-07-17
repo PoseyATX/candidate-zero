@@ -14,7 +14,7 @@ import {
   CAMP_FILING_FEE,
   type Campaign
 } from '../engine/loop.js';
-import { getPhase } from '../engine/state.js';
+import { getPhase, stageLabel, stageWeek } from '../engine/state.js';
 import { STAMPS } from '../engine/resolve.js';
 import { pickDefaultGround, cardAttrMod } from '../engine/play.js';
 import type { PlayCard } from '../engine/types.js';
@@ -43,7 +43,8 @@ function renderLedger(): void {
   const snap = snapshot(s);
   $('ledger').innerHTML = `
     <div class="ledger-grid">
-      <div><span class="k">Week</span> ${snap.week} / ${s.weeksTotal} · Phase ${getPhase(s)}</div>
+      <div><span class="k">Stage</span> ${stageLabel(s)} · Phase ${getPhase(s)}</div>
+      <div><span class="k">Week</span> ${stageWeek(s)} (cal ${snap.week}/${s.weeksTotal})</div>
       <div><span class="k">AP</span> ${snap.ap}/${s.apMax}</div>
       <div><span class="k">Money</span> $${snap.money}</div>
       <div><span class="k">Contacts</span> ${snap.contacts}</div>
@@ -53,11 +54,19 @@ function renderLedger(): void {
       <div><span class="k">Ballot</span> ${
         snap.ballot ? 'ON' : `${snap.signatures}/${s.sigNeed} sigs`
       }</div>
+      ${s.over && s.outcome ? `<div><span class="k">Outcome</span> ${s.outcome}</div>` : ''}
     </div>
   `;
-  $('week-hint').textContent = s.ballot
-    ? 'On the ballot. Spend AP on field and force multipliers.'
-    : 'Not on ballot — Petition Drive and Filing Fee are always offered as camp actions.';
+  if (s.over) {
+    $('week-hint').textContent = `Campaign over: ${s.outcome ?? 'ended'}.`;
+  } else if (s.stage === 'general') {
+    $('week-hint').textContent = 'General election — GOTV and contrast. Six weeks to November.';
+  } else if (s.ballot) {
+    $('week-hint').textContent = 'On the primary ballot. Build name, chairs, and force before week 8.';
+  } else {
+    $('week-hint').textContent =
+      'Not on ballot — Petition Drive and Filing Fee are always offered as camp actions. Deadline: end of week 8.';
+  }
 }
 
 function renderLog(): void {
@@ -138,15 +147,14 @@ function newRun(seed?: number): void {
 }
 
 function endWeek(): void {
-  endWeekInPlace(campaign);
-  if (campaign.state.week === 9 && !campaign.state.ballot) {
-    campaign.state.log.push({
-      week: campaign.state.week,
-      kind: 'note',
-      text: '*** Filing deadline missed ***'
-    });
+  if (campaign.state.over) {
+    paint();
+    return;
   }
-  startWeek(campaign);
+  endWeekInPlace(campaign);
+  if (!campaign.state.over) {
+    startWeek(campaign);
+  }
   paint();
 }
 

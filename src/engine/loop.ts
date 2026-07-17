@@ -16,6 +16,11 @@ import {
 } from './deck.js';
 import { executePlay, isPlayable } from './play.js';
 import { createNewState, getPhase } from './state.js';
+import {
+  PRIMARY_WEEKS,
+  advanceCampaignWeek,
+  type StageTransition
+} from './calendar.js';
 import type {
   DeckState,
   GameState,
@@ -35,9 +40,11 @@ export interface Campaign {
 export interface WeekReport {
   week: number;
   phase: 1 | 2 | 3;
+  stage: GameState['stage'];
   drawn: string[];
   plays: PlayOutcome[];
   endLedger: LedgerSnapshot;
+  transition?: StageTransition;
 }
 
 export interface LedgerSnapshot {
@@ -100,7 +107,7 @@ export function createCampaign(overrides: Partial<GameState> = {}): Campaign {
     deck: createDeckState(),
     catalog: buildCatalog(),
     handSize: DEFAULT_HAND_SIZE,
-    filingDeadline: 8
+    filingDeadline: PRIMARY_WEEKS
   };
 }
 
@@ -208,27 +215,19 @@ export function playFromHand(
   return outcome;
 }
 
-export function endWeekInPlace(campaign: Campaign): void {
+export function endWeekInPlace(campaign: Campaign): StageTransition {
   discardHand(campaign.deck);
-  const s = campaign.state;
-  s.week += 1;
-  s.ap = s.apMax;
-  s.momentum = Math.max(0, s.momentum - 1);
-  s.townHallThisWeek = false;
-  s.log.push({
-    week: s.week,
-    kind: 'week',
-    text: `Week ${s.week} begins (phase ${getPhase(s)}). AP refreshed.`
-  });
+  return advanceCampaignWeek(campaign.state);
 }
 
 export function runWeek(campaign: Campaign, choose: Chooser): WeekReport {
   const weekAtStart = campaign.state.week;
   const phaseAtStart = getPhase(campaign.state);
+  const stageAtStart = campaign.state.stage;
   const drawn = startWeek(campaign);
   const plays: PlayOutcome[] = [];
   let guard = campaign.state.apMax * 4 + 4;
-  while (campaign.state.ap > 0 && guard-- > 0) {
+  while (campaign.state.ap > 0 && !campaign.state.over && guard-- > 0) {
     const playable = listPlayableHand(campaign);
     if (playable.length === 0) break;
     const handIndex = choose(playable, campaign.state);
@@ -237,13 +236,15 @@ export function runWeek(campaign: Campaign, choose: Chooser): WeekReport {
     plays.push(outcome);
     if (!outcome.ok) break;
   }
-  endWeekInPlace(campaign);
+  const transition = endWeekInPlace(campaign);
   return {
     week: weekAtStart,
     phase: phaseAtStart,
+    stage: stageAtStart,
     drawn,
     plays,
-    endLedger: snapshot(campaign.state)
+    endLedger: snapshot(campaign.state),
+    transition: transition.kind === 'none' ? undefined : transition
   };
 }
 
@@ -254,6 +255,16 @@ export function runWeeks(
 ): WeekReport[] {
   const reports: WeekReport[] = [];
   while (campaign.state.week <= throughWeek && !campaign.state.over) {
+    reports.push(runWeek(campaign, choose));
+  }
+  return reports;
+}
+
+/** Run primary + general until the campaign ends or calendar exhausts. */
+export function runFullCampaign(campaign: Campaign, choose: Chooser): WeekReport[] {
+  const reports: WeekReport[] = [];
+  let guard = 40;
+  while (!campaign.state.over && guard-- > 0) {
     reports.push(runWeek(campaign, choose));
   }
   return reports;

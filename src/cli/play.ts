@@ -16,7 +16,7 @@ import {
   CAMP_FILING_FEE,
   CAMP_PETITION
 } from "../engine/loop.js";
-import { getPhase } from "../engine/state.js";
+import { getPhase, stageLabel, stageWeek, CAMPAIGN_WEEKS_TOTAL } from "../engine/state.js";
 import { STAMPS } from "../engine/resolve.js";
 import { STRATEGIES } from "../engine/strategies.js";
 import { pickDefaultGround } from "../engine/play.js";
@@ -55,8 +55,9 @@ function printLedger(campaign: Campaign): void {
   const s = campaign.state;
   console.log("-".repeat(52));
   console.log(
-    `Week ${s.week}/${s.weeksTotal}  Phase ${getPhase(s)}  AP ${s.ap}/${s.apMax}` +
-      (s.ballot ? "  BALLOT: ON" : `  Sigs ${s.signatures}/${s.sigNeed}`)
+    `${stageLabel(s)} W${stageWeek(s)} (cal ${s.week}/${s.weeksTotal})  Phase ${getPhase(s)}  AP ${s.ap}/${s.apMax}` +
+      (s.ballot ? "  BALLOT: ON" : `  Sigs ${s.signatures}/${s.sigNeed}`) +
+      (s.over && s.outcome ? `  [${s.outcome}]` : "")
   );
   console.log(`$${s.money}  contacts ${s.contacts}  nameID ${s.nameID}  vol ${s.volPool}  mom ${s.momentum}`);
   console.log("-".repeat(52));
@@ -160,8 +161,7 @@ async function main(): Promise<void> {
   }
   const rl = readline.createInterface({ input, output });
   try {
-    while (campaign.state.week <= 24 && !campaign.state.over) {
-      if (campaign.state.week === 9 && !campaign.state.ballot) console.log("*** Filing deadline missed ***");
+    while (campaign.state.week <= CAMPAIGN_WEEKS_TOTAL && !campaign.state.over) {
       if ((await interactiveWeek(campaign, rl)) === "quit") break;
       printLedger(campaign);
       const cont = (await rl.question("Enter next week, q quit> ")).trim().toLowerCase();

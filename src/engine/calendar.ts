@@ -1,0 +1,226 @@
+/**
+ * CANDIDATE ZERO — Campaign calendar (Primary → General)
+ * Primary: 8 weeks, filing deadline at end of week 8.
+ * General: 6 weeks after winning the primary.
+ * Pure transitions; RNG via shared stream.
+ */
+
+import { random } from './rng.js';
+import type { CampaignOutcome, GameState } from './types.js';
+
+/** Primary campaign length (includes filing window). */
+export const PRIMARY_WEEKS = 8;
+/** General election length after primary win. */
+export const GENERAL_WEEKS = 6;
+/** Must be on the ballot by the end of this primary week. */
+export const FILING_DEADLINE_WEEK = PRIMARY_WEEKS;
+/** Continuous calendar: primary 1–8, general 9–14. */
+export const CAMPAIGN_WEEKS_TOTAL = PRIMARY_WEEKS + GENERAL_WEEKS;
+
+export type StageTransitionKind =
+  | 'none'
+  | 'missed_filing'
+  | 'lost_primary'
+  | 'enter_general'
+  | 'won_general'
+  | 'lost_general';
+
+export interface StageTransition {
+  kind: StageTransitionKind;
+  text: string;
+  winP?: number;
+  roll?: number;
+}
+
+function clamp(v: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, v));
+}
+
+/**
+ * Phase legality for cards:
+ * - Primary, not on ballot → 1 (petition / fee window)
+ * - Primary, on ballot → 2 (late primary / relationship / oppo)
+ * - General → 3 (GOTV / contrast / general swing)
+ */
+export function getPhase(state: GameState): 1 | 2 | 3 {
+  if (state.stage === 'general') return 3;
+  if (state.stage === 'session') return 3;
+  if (!state.ballot) return 1;
+  return 2;
+}
+
+export function stageLabel(state: GameState): string {
+  if (state.stage === 'general') return 'General';
+  if (state.stage === 'session') return 'Session';
+  return 'Primary';
+}
+
+/** Week within the current stage (1-based). */
+export function stageWeek(state: GameState): number {
+  if (state.stage === 'general') {
+    return Math.max(1, state.week - PRIMARY_WEEKS);
+  }
+  return state.week;
+}
+
+/**
+ * Primary win probability — skilled force (name, contacts, chairs, vols)
+ * vs damage (hit pieces, exposure). Brutal but not random-walk.
+ */
+export function primaryWinProbability(state: GameState): number {
+  const field =
+    typeof state.district?.field === 'number' ? state.district.field : 2;
+  const fieldPressure = 0.04 * field;
+  const p =
+    0.28 +
+    state.nameID * 0.012 +
+    state.contacts * 0.00045 +
+    state.endorsePts * 0.035 +
+    state.volPool * 0.018 +
+    state.momentum * 0.015 -
+    state.hitPieces * 0.06 -
+    (state.exposure || 0) * 0.04 -
+    fieldPressure;
+  return clamp(p, 0.08, 0.88);
+}
+
+/**
+ * General win probability vs genOpp / genBase.
+ * GOTV rapport and contacts matter more than primary chairs.
+ */
+export function generalWinProbability(state: GameState): number {
+  const rapport =
+    state.groundsArr.reduce((s, g) => s + (g.rapport || 0), 0) /
+    Math.max(1, state.groundsArr.length);
+  const gotv = state.groundsArr.reduce((s, g) => s + (g.gotv || 0), 0);
+  const opp = state.genBase || 0.45;
+  const p =
+    0.22 +
+    state.nameID * 0.01 +
+    state.contacts * 0.0004 +
+    state.volPool * 0.02 +
+    rapport * 0.002 +
+    gotv * 0.08 +
+    state.momentum * 0.02 -
+    state.hitPieces * 0.05 -
+    opp * 0.25;
+  return clamp(p, 0.06, 0.9);
+}
+
+function setOutcome(state: GameState, outcome: CampaignOutcome, text: string): StageTransition {
+  state.over = true;
+  state.outcome = outcome;
+  state.log.push({ week: state.week, kind: 'note', text });
+  return { kind: outcome as StageTransitionKind, text };
+}
+
+/**
+ * Resolve end of primary week 8 (filing deadline + primary election).
+ * Mutates state. Call when completing PRIMARY_WEEKS while still in primary.
+ */
+export function resolvePrimaryConclusion(state: GameState): StageTransition {
+  if (state.stage !== 'primary') {
+    return { kind: 'none', text: '' };
+  }
+
+  if (!state.ballot) {
+    return setOutcome(
+      state,
+      'missed_filing',
+      `Filing deadline (week ${FILING_DEADLINE_WEEK}): not on the ballot. The primary goes on without you.`
+    );
+  }
+
+  const winP = primaryWinProbability(state);
+  const roll = random();
+  if (roll < winP) {
+    state.primaryWon = true;
+    state.stage = 'general';
+    state.week = PRIMARY_WEEKS + 1;
+    state.ap = state.apMax;
+    state.momentum = Math.max(0, state.momentum - 1);
+    state.townHallThisWeek = false;
+    state.outcome = 'ongoing';
+    // Opponent strength from district field / residual primary heat
+    const field =
+      typeof state.district?.field === 'number' ? state.district.field : 2;
+    state.genBase = clamp(0.35 + field * 0.06 + state.hitPieces * 0.03, 0.25, 0.75);
+    state.genOpp = {
+      n: 'General election opponent',
+      strength: state.genBase
+    };
+    const text =
+      `PRIMARY WIN (p≈${(winP * 100).toFixed(0)}%, roll ${(roll * 100).toFixed(0)}%). ` +
+      `You advance to the General — ${GENERAL_WEEKS} weeks. Opponent strength ${state.genBase.toFixed(2)}.`;
+    state.log.push({ week: state.week, kind: 'note', text });
+    state.log.push({
+      week: state.week,
+      kind: 'week',
+      text: `General week ${stageWeek(state)} begins (phase ${getPhase(state)}). AP refreshed.`
+    });
+    return { kind: 'enter_general', text, winP, roll };
+  }
+
+  return setOutcome(
+    state,
+    'lost_primary',
+    `PRIMARY LOSS (p≈${(winP * 100).toFixed(0)}%, roll ${(roll * 100).toFixed(0)}%). ` +
+      `On the ballot, short of the nomination. Run over.`
+  );
+}
+
+/**
+ * Resolve end of general (week CAMPAIGN_WEEKS_TOTAL).
+ */
+export function resolveGeneralConclusion(state: GameState): StageTransition {
+  if (state.stage !== 'general') {
+    return { kind: 'none', text: '' };
+  }
+  const winP = generalWinProbability(state);
+  const roll = random();
+  if (roll < winP) {
+    return setOutcome(
+      state,
+      'won_general',
+      `GENERAL WIN (p≈${(winP * 100).toFixed(0)}%, roll ${(roll * 100).toFixed(0)}%). ` +
+        `The district is yours. Session waits.`
+    );
+  }
+  return setOutcome(
+    state,
+    'lost_general',
+    `GENERAL LOSS (p≈${(winP * 100).toFixed(0)}%, roll ${(roll * 100).toFixed(0)}%). ` +
+      `Primary glory, November heartbreak.`
+  );
+}
+
+/**
+ * After completing a week of play, advance calendar or resolve elections.
+ * Returns transition info for harnesses / UI.
+ */
+export function advanceCampaignWeek(state: GameState): StageTransition {
+  if (state.over) {
+    return { kind: 'none', text: '' };
+  }
+
+  // Completing final primary week → filing + primary election
+  if (state.stage === 'primary' && state.week === PRIMARY_WEEKS) {
+    return resolvePrimaryConclusion(state);
+  }
+
+  // Completing final general week → general election
+  if (state.stage === 'general' && state.week === CAMPAIGN_WEEKS_TOTAL) {
+    return resolveGeneralConclusion(state);
+  }
+
+  state.week += 1;
+  state.ap = state.apMax;
+  state.momentum = Math.max(0, state.momentum - 1);
+  state.townHallThisWeek = false;
+  state.log.push({
+    week: state.week,
+    kind: 'week',
+    text: `${stageLabel(state)} week ${stageWeek(state)} (calendar W${state.week}) begins (phase ${getPhase(state)}). AP refreshed.`
+  });
+  return { kind: 'none', text: '' };
+}
