@@ -6,8 +6,7 @@
 import {
   createCampaign,
   endWeekInPlace,
-  runFullCampaign,
-  runWeeks
+  runFullCampaign
 } from '../engine/loop.js';
 import {
   PRIMARY_WEEKS,
@@ -44,16 +43,19 @@ console.log(`Primary ${PRIMARY_WEEKS}w · General ${GENERAL_WEEKS}w · Total ${C
   console.log('PASSED: phase map (pre-ballot=1, ballot primary=2, general=3)');
 }
 
-// Filing miss under grind
+// Filing miss under grind → off-season (career continues)
 {
   useRng(createRng(7));
   setDefaultSeed(7);
   const c = createCampaign({ seed: 7 });
-  runWeeks(c, PRIMARY_WEEKS, grindFirstStrategy);
-  assert(c.state.over === true, 'grind should end at filing');
-  assert(c.state.outcome === 'missed_filing', `expected missed_filing, got ${c.state.outcome}`);
-  assert(c.state.stage === 'primary', 'should still be primary stage on miss');
-  console.log('PASSED: grind misses filing → missed_filing');
+  runFullCampaign(c, grindFirstStrategy);
+  assert(c.state.over === false, 'career must not end on missed filing');
+  assert(
+    c.state.lastCycleOutcome === 'missed_filing' || c.state.outcome === 'missed_filing',
+    `expected missed_filing, got ${c.state.lastCycleOutcome ?? c.state.outcome}`
+  );
+  assert(c.state.stage === 'interim', 'missed filing opens off-season');
+  console.log('PASSED: grind misses filing → interim (persistent career)');
 }
 
 // Labor path full campaigns terminate coherently
@@ -68,18 +70,27 @@ console.log(`Primary ${PRIMARY_WEEKS}w · General ${GENERAL_WEEKS}w · Total ${C
     setDefaultSeed(1000 + i);
     const c = createCampaign({ seed: 1000 + i });
     runFullCampaign(c, laborBallotStrategy);
-    assert(c.state.over, `seed ${1000 + i} should end`);
+    assert(c.state.over === false, `seed ${1000 + i} career should persist`);
+    // Losses park in interim; general wins park in thin session
+    const o = c.state.lastCycleOutcome ?? c.state.outcome;
+    if (o === 'won_general') {
+      assert(c.state.stage === 'session', `seed ${1000 + i} win should open session`);
+    } else {
+      assert(c.state.stage === 'interim', `seed ${1000 + i} should open off-season`);
+    }
     assert(
-      c.state.outcome === 'missed_filing' ||
-        c.state.outcome === 'lost_primary' ||
-        c.state.outcome === 'won_general' ||
-        c.state.outcome === 'lost_general',
-      `seed ${1000 + i} bad outcome ${c.state.outcome}`
+      o === 'missed_filing' ||
+        o === 'lost_primary' ||
+        o === 'won_general' ||
+        o === 'lost_general',
+      `seed ${1000 + i} bad outcome ${o}`
     );
-    if (c.state.outcome === 'missed_filing') missed++;
-    if (c.state.outcome === 'lost_primary') lostPrimary++;
-    if (c.state.primaryWon) reachedGeneral++;
-    if (c.state.outcome === 'won_general' || c.state.outcome === 'lost_general') generalDecided++;
+    if (o === 'missed_filing') missed++;
+    if (o === 'lost_primary') lostPrimary++;
+    if (o === 'won_general' || o === 'lost_general') {
+      reachedGeneral++;
+      generalDecided++;
+    }
   }
   console.log('Labor full-campaign sample (n=%d):', N, {
     missedFilingRate: +((missed / N) * 100).toFixed(1),
@@ -89,7 +100,7 @@ console.log(`Primary ${PRIMARY_WEEKS}w · General ${GENERAL_WEEKS}w · Total ${C
   });
   assert(missed < N * 0.35, 'labor should usually clear filing');
   assert(missed + lostPrimary + generalDecided === N, 'outcomes should partition');
-  console.log('PASSED: labor full campaigns terminate with coherent outcomes');
+  console.log('PASSED: labor full cycles open interim with coherent outcomes');
 }
 
 // Seeded primary transition replay
