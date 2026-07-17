@@ -227,6 +227,18 @@ Then off-season, then reelection primary with incumbent lean.
 | Thematic forks | `src/engine/identity-shift.ts` |
 | Off-season plays | `src/data/interim-plays.ts` |
 | Session plays | `src/data/session-plays.ts` |
+| Foundation / expansion gates | `docs/ARCHITECTURE.md` |
+| Card inventory (audit) | `data/cards.csv` (`npm run export:cards`) |
+
+### Content expansion rule (SRD practice)
+
+New plays, assets, interim/session verbs, or obligations **must**:
+
+1. Fit a single role and labor/money/neutral path (do not erase dual ballot).
+2. Peer against an existing anchor card (see Architecture §6.2).
+3. Keep SAFE free of DISASTER; risk money carries obligation/exposure/debt.
+4. Ship with attrs (if rolled), grant paths for any named ally/rep/asset, and a CSV re-export.
+5. Leave `npm run harness` green; record measured moves in `docs/BALANCE-NOTES.md`.
 | UI career shell + localStorage | `src/ui/main.ts` |
 | Multi-cycle harness | `src/harness/career-persist.ts` |
 | Obligations weekly drag | `src/engine/obligations.ts` (`tickObligations` on week end) |

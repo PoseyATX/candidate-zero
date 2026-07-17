@@ -1,5 +1,24 @@
 # Balance Notes
 
+## 2026-07-17 — Foundation bootstrap (architecture + cards CSV)
+
+### Intent
+Lock rulesets and content inventory **before** mass expansion. Every new
+addition must stay balanced against peer anchors (PL01/PL04/PL05/PL13/PL19/
+PL20–21) and green harnesses.
+
+### Delivered
+- `docs/ARCHITECTURE.md` rewritten as foundation contract (layers, career SM,
+  resolve/SAFE, attrs, faces, obligations, shop, deck, elections, expansion gates)
+- `data/cards.csv` — 52 rows from live catalogs (24 play / 12 interim / 6 session / 10 asset)
+- `npm run export:cards` → `scripts/export-cards-csv.ts`
+
+### Expansion policy
+No new PL* beyond current catalog until: (1) role/path/peer documented, (2)
+harness suite green, (3) CSV re-exported, (4) this file notes any economy
+move. Mass archive import is explicitly out of scope until dual-path + GOTV
+envelopes remain stable under current set.
+
 ## 2026-07-17 — TAX MAN debug persona + RISK labels
 
 - Persona `taxman` / **TAX MAN**: locked debug kit ($50k, full shop assets, high attrs/list/name). UI prompts password; session unlock only (not localStorage).

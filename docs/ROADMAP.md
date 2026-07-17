@@ -96,6 +96,22 @@ calling it law).
 
 ---
 
+## ✅ Foundation bootstrap (2026-07-17) — expand only after this holds
+
+Evidence: `docs/ARCHITECTURE.md` (rewritten as expansion gate), `data/cards.csv`
+(52 live rows: 24 plays + 12 interim + 6 session + 10 assets), `npm run export:cards`.
+
+| Done | Notes |
+|---|---|
+| Architecture as ruleset + balance-gate contract | Layers, career SM, resolve/SAFE, attrs, faces, obligations, shop, deck, elections |
+| Card inventory CSV | Re-export from code; authoring columns (`role`, path, economy) |
+| Expansion process written | Peer anchors + harness list + “do not mass-import archive yet” |
+| Still open before free expansion | Ground-pick UI; full ally port; remaining rep counters; full bill pipeline deferred |
+
+**Rule:** every new card must clear Architecture §6 (design + numeric peer + harness). No content dumps.
+
+---
+
 ## Phase 1 — Close the gaps this pass exposed but didn't fix (near-term, low risk)
 
 These are direct follow-ups to Phase 0 findings — verification and tooling,
