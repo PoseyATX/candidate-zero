@@ -21,7 +21,7 @@ import {
 import { getPhase, stageLabel, stageWeek, CAMPAIGN_WEEKS_TOTAL } from "../engine/state.js";
 import { STAMPS } from "../engine/resolve.js";
 import { STRATEGIES } from "../engine/strategies.js";
-import { pickDefaultGround, cardAttrMod } from "../engine/play.js";
+import { pickDefaultGround } from "../engine/play.js";
 import {
   PERSONAS,
   ISSUES,
@@ -36,7 +36,7 @@ function parseArgs(argv: string[]) {
   const out: {
     seed?: number;
     auto?: string;
-    weeks: number | "full";
+    weeks: number;
     help?: boolean;
     persona?: string;
     issue?: string;
@@ -50,14 +50,9 @@ function parseArgs(argv: string[]) {
     else if (a.startsWith("--seed=")) out.seed = Number(a.slice(7));
     else if (a === "--auto" || a === "-a") out.auto = argv[++i];
     else if (a.startsWith("--auto=")) out.auto = a.slice(7);
-    else if (a === "--full") out.weeks = "full";
-    else if (a === "--weeks" || a === "-w") {
-      const v = argv[++i];
-      out.weeks = v === "full" ? "full" : Number(v);
-    } else if (a.startsWith("--weeks=")) {
-      const v = a.slice(8);
-      out.weeks = v === "full" ? "full" : Number(v);
-    } else if (a === "--persona") out.persona = argv[++i];
+    else if (a === "--weeks" || a === "-w") out.weeks = Number(argv[++i]);
+    else if (a.startsWith("--weeks=")) out.weeks = Number(a.slice(8));
+    else if (a === "--persona") out.persona = argv[++i];
     else if (a.startsWith("--persona=")) out.persona = a.slice(10);
     else if (a === "--issue") out.issue = argv[++i];
     else if (a.startsWith("--issue=")) out.issue = a.slice(8);
@@ -150,16 +145,9 @@ function printMenu(entries: MenuEntry[], campaign: Campaign): void {
   }
   console.log("Playable:");
   for (const e of entries) {
-    const g = pickDefaultGround(campaign.state);
-    const base = e.card.odds?.(campaign.state, g);
-    const mod = cardAttrMod(campaign.state, e.card);
-    const p = base !== undefined ? Math.max(0.02, Math.min(0.95, base + mod)) : undefined;
+    const p = e.card.odds?.(campaign.state, pickDefaultGround(campaign.state));
     const odds = p !== undefined ? ` p≈${(p * 100).toFixed(0)}%` : "";
-    const attrs = e.card.attrs?.length ? ` [${e.card.attrs.join("/")}]` : "";
-    console.log(
-      `  ${e.key}. ${e.card.n} (${e.card.risk}, ${costLabel(e.card)})${odds}${attrs}` +
-        `${e.camp ? " [CAMP]" : ""}${e.card.trap ? " TRAP" : ""}`
-    );
+    console.log(`  ${e.key}. ${e.card.n} (${e.card.risk}, ${costLabel(e.card)})${odds}${e.camp ? " [CAMP]" : ""}${e.card.trap ? " TRAP" : ""}`);
   }
   console.log("  e. End week   l. Ledger   h. Help   q. Quit");
 }
@@ -215,56 +203,36 @@ async function interactiveWeek(campaign: Campaign, rl: readline.Interface): Prom
   return "ok";
 }
 
-function autoPlay(campaign: Campaign, strategyName: string, weeks: number | "full"): void {
+function autoPlay(campaign: Campaign, strategyName: string, weeks: number): void {
   const choose = STRATEGIES[strategyName];
   if (!choose) {
     console.error("Unknown strategy", strategyName);
     process.exitCode = 1;
     return;
   }
-  const through = weeks === "full" ? CAMPAIGN_WEEKS_TOTAL : weeks;
-  console.log(`Auto: ${strategyName} through calendar week ${through}${weeks === "full" ? " (full campaign)" : ""}`);
-  while (campaign.state.week <= through && !campaign.state.over) {
+  console.log(`Auto: ${strategyName} through week ${weeks}`);
+  while (campaign.state.week <= weeks && !campaign.state.over) {
     startWeek(campaign);
     let guard = campaign.state.apMax * 4 + 4;
-    while (campaign.state.ap > 0 && !campaign.state.over && guard-- > 0) {
-      if (campaign.state.pendingDraft) {
-        pickPhaseDraft(campaign, 0);
-      }
+    while (campaign.state.ap > 0 && guard-- > 0) {
       const playable = listPlayableHand(campaign);
       if (!playable.length) break;
       const idx = choose(playable, campaign.state);
       if (idx == null) break;
-      const wasBallot = campaign.state.ballot;
       const outcome = playFromHand(campaign, idx);
-      if (outcome.ok) {
-        console.log(
-          `W${campaign.state.week} [${outcome.stamp}] ${outcome.cardName}: ${outcome.text?.slice(0, 80)}`
-        );
-      } else break;
-      if (!wasBallot && campaign.state.ballot) maybeOfferPhaseDraft(campaign, true);
+      if (outcome.ok) console.log(`W${campaign.state.week} [${outcome.stamp}] ${outcome.cardName}: ${outcome.text?.slice(0, 80)}`);
+      else break;
     }
-    const transition = endWeekInPlace(campaign);
-    if (transition.kind === "enter_general") maybeOfferPhaseDraft(campaign, true);
-    if (transition.kind !== "none" && transition.text) {
-      console.log(`  >> ${transition.text}`);
-    }
+    endWeekInPlace(campaign);
   }
   console.log("\nFinal:", snapshot(campaign.state));
-  console.log("Outcome:", campaign.state.outcome ?? "ongoing");
-  console.log(
-    campaign.state.ballot
-      ? campaign.state.primaryWon
-        ? "Reached general."
-        : "On the ballot (primary)."
-      : "Not on the ballot."
-  );
+  console.log(campaign.state.ballot ? "On the ballot." : "Not on the ballot.");
 }
 
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
   if (args.help) {
-    console.log("npm run play [--seed N] [--auto labor|money|hybrid|grind] [--weeks N|full] [--full]");
+    console.log("npm run play [--seed N] [--auto labor|money|hybrid|grind] [--weeks N]");
     console.log("  [--persona id] [--issue id] [--district id] [--region id]");
     console.log("Personas:", PERSONAS.map(p => p.id).join(", "));
     console.log("Issues:", ISSUES.map(i => i.id).join(", "));
