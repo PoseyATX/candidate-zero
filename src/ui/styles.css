@@ -633,6 +633,21 @@ h1 {
   padding-top: 0.75rem;
 }
 
+.foot .kofi,
+.alpha-note .kofi {
+  color: inherit;
+  text-decoration: none;
+  opacity: 0.9;
+  letter-spacing: inherit;
+  text-transform: none;
+}
+
+.foot .kofi:hover,
+.alpha-note .kofi:hover {
+  text-decoration: underline;
+  opacity: 1;
+}
+
 .hidden { display: none !important; }
 
 /* ============================ TITLE SCREEN ============================
