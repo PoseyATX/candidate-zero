@@ -73,7 +73,7 @@ GitHub: https://github.com/PoseyATX/candidate-zero
 
 ## Support
 
-If the climb is worth a coffee: [ko-fi.com/poseyatx](https://ko-fi.com/poseyatx)
+If the climb is worth a coffee: [buy me a ko-fi](https://ko-fi.com/poseyatx)
 
 ---
 
