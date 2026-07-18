@@ -343,9 +343,19 @@ Concretely still open:
   verify the index.html fix and the Vite 8 upgrade this session) isn't
   automated yet. Worth adding once the UI is a real target for iteration
   rather than a recently-repaired one.
-- Card art is still typographic-only (watermark glyph + frame). Real art
-  direction (even placeholder woodcut/engraving-style pieces per card
-  family) is the single biggest remaining aesthetic gap vs. the genre.
+- ~~Card art is still typographic-only~~ Addressed (2026-07-17, same-day
+  follow-up after direct feedback that the cards hadn't visibly improved
+  since the 2:3 change): every card now has a real anatomy — centered
+  name banner, Art Deco hairline-and-diamond divider, an engraved emblem
+  plate (24 hand-drawn lineart SVG marks in `src/ui/card-art.ts`, one
+  per card: boot, rotary phone, fish, pie tin, megaphone, money bag, …)
+  with a sunburst backdrop, a rotated notary-seal cost stamp with
+  sub-cost tags, rubber-stamp CAMP/TRAP treatments replacing the corner
+  ribbons, aged-paper grain (inline feTurbulence noise), corner
+  brackets, and a ticket-stub footer with a risk-colored dot. Draft
+  cards and terminal/Chronicle choice cards share the same anatomy via
+  one `cardInner()` renderer. Raster/painted art per card remains the
+  eventual ceiling, but the typographic-only gap is closed.
 - The log panel is plain text; popular deckbuilders surface last-action
   results as transient stacked toasts. The juice banner covers the
   headline case; a fuller notification stack is future polish.

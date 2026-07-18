@@ -674,3 +674,36 @@ errors.
 `npm run harness` (12/12, 23 PASSED lines), `npm run typecheck`,
 `npm run build` all pass.
 
+
+## 2026-07-17 — Card visual overhaul (emblems, seals, stamps, grain)
+
+Direct feedback: the cards themselves hadn't improved since the 2:3
+aspect change — prior passes kept rearranging chrome around them. This
+pass redesigned the card face itself:
+
+- **Anatomy**: centered Cinzel name banner → Art Deco divider (hairlines
+  flanking a diamond) → engraved emblem plate → italic tagline → body
+  text → ticket-stub footer (risk dot + class, p%, odds meter) → attr
+  line. One shared `cardInner()` renderer now draws hand cards, camp
+  actions, phase-draft cards, and terminal/Chronicle choice cards, so no
+  card surface drifts from the others.
+- **Emblems** (`src/ui/card-art.ts`, new): 24 hand-drawn lineart SVG
+  marks, one per play card (boot for Block Walk, rotary phone for Phone
+  Bank, fish for Fish Fry, pie tin for Court the Chairs, ballot jar for
+  Straw Poll, money bag for the PAC check, …), stroke-based woodcut
+  style in sepia ink on a sunburst-backed plate. Terminal paths get
+  fitting marks (pennant/megaphone/clipboard/cup); traits get the quill.
+- **Cost as a seal**: primary cost is a rotated notary-stamp circle
+  overlapping the emblem plate; secondary costs ($, vols) hang beneath
+  it as small stamped tags. Replaces the gray text chip.
+- **CAMP / TRAP as rubber stamps** across the emblem plate (rotated,
+  double-bordered, multiply-blended) replacing the rotated corner
+  ribbons.
+- **Paper**: feTurbulence grain (inline data URI, warm-tinted, ~7%
+  alpha), inset vignette, and gold corner brackets on the inner frame.
+- **Hover**: slight lift-rotate-scale (deckbuilder "pick me" wobble).
+
+Verified via screenshots at desktop and 390×844 across hand, draft, and
+terminal surfaces; two emblems (boot, quill) redrawn after the first
+screenshot pass read as a blob and a leaf respectively. Zero console
+errors across a full seeded run. Harness (12/12), typecheck, build pass.

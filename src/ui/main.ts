@@ -45,6 +45,7 @@ import {
   type InterimPath
 } from '../engine/legacy.js';
 import type { CampaignOutcome, LegacyState, PlayCard, PlayOutcome, TraitId } from '../engine/types.js';
+import { emblemFor, emblem } from './card-art.js';
 import './styles.css';
 
 let campaign: Campaign | null = null;
@@ -58,17 +59,6 @@ function $(id: string): HTMLElement {
   const el = document.getElementById(id);
   if (!el) throw new Error(`#${id} missing`);
   return el;
-}
-
-function costLabel(card: PlayCard): string {
-  const c = card.cost;
-  const parts: string[] = [];
-  if (c.a) parts.push(`${c.a} AP`);
-  if (c.$) parts.push(`$${c.$}`);
-  if (c.vp) parts.push(`${c.vp} vol`);
-  if (c.m) parts.push(`${c.m} mom`);
-  if (c.fav) parts.push(`${c.fav} favor`);
-  return parts.join(' · ') || 'free';
 }
 
 function fillSelects(): void {
@@ -190,16 +180,10 @@ function renderDraft(): void {
     draft.options
       .map((id, i) => {
         const card = campaign!.catalog.get(id);
-        const risk = card ? card.risk.toLowerCase() : '';
+        if (!card) return '';
         return `
-        <button type="button" class="play-card draft-card ${risk ? 'risk-' + risk : ''}" data-draft="${i}">
-          <span class="cost-badge">${id}</span>
-          <span class="name">${card?.n ?? id}</span>
-          <span class="tagline">${card?.tag ?? ''}</span>
-          <span class="desc">${card?.d ?? ''}</span>
-          <span class="card-footer">
-            <span class="risk-tag">${card?.risk ?? ''}</span>
-          </span>
+        <button type="button" class="${cardClasses(card)} draft-card" data-draft="${i}">
+          ${cardInner(card)}
         </button>`;
       })
       .join('');
@@ -211,10 +195,27 @@ function renderDraft(): void {
   });
 }
 
-function cardHtml(
+/** Primary cost for the seal + any secondary costs for the sub-stamp row. */
+function costParts(card: PlayCard): { seal: string; subs: string[] } {
+  const c = card.cost;
+  const all: string[] = [];
+  if (c.a) all.push(`${c.a} AP`);
+  if (c.$) all.push(`$${c.$}`);
+  if (c.vp) all.push(`${c.vp} vol`);
+  if (c.m) all.push(`${c.m} mom`);
+  if (c.fav) all.push(`${c.fav} fav`);
+  if (!all.length) return { seal: 'free', subs: [] };
+  return { seal: all[0]!, subs: all.slice(1) };
+}
+
+/**
+ * Shared card body — the one card anatomy every surface uses (hand, camp
+ * actions, phase drafts). Name banner, deco divider, engraved emblem with
+ * a cost seal stamped over it, tagline, body text, ticket-stub footer.
+ */
+function cardInner(
   card: PlayCard,
-  index: number,
-  opts: { camp?: boolean; locked?: boolean; lockReason?: string }
+  opts: { camp?: boolean; locked?: boolean; lockReason?: string } = {}
 ): string {
   const state = campaign!.state;
   const g = pickDefaultGround(state);
@@ -226,8 +227,36 @@ function cardHtml(
     p !== undefined
       ? `<span class="odds-meter"><i style="width:${Math.round(p * 100)}%"></i></span>`
       : '';
-  const attr = card.attrs?.length ? card.attrs.join(' / ') : '';
-  const classes = [
+  const attr = card.attrs?.length ? card.attrs.join(' · ') : '';
+  const { seal, subs } = costParts(card);
+  const stamp = opts.camp
+    ? '<span class="stamp stamp-camp">Camp</span>'
+    : card.trap
+      ? '<span class="stamp stamp-trap">Trap</span>'
+      : '';
+  return `
+    <span class="name">${card.n}</span>
+    <span class="orn"><i></i>&#10022;<i></i></span>
+    <span class="card-art">${emblemFor(card.id)}${stamp}</span>
+    <span class="cost-seal">${seal}</span>
+    ${subs.length ? `<span class="cost-subs">${subs.map(s => `<span>${s}</span>`).join('')}</span>` : ''}
+    <span class="tagline">${card.tag}</span>
+    <span class="desc">${card.d}</span>
+    ${opts.locked && opts.lockReason ? `<span class="locked-reason">${opts.lockReason}</span>` : ''}
+    <span class="card-footer">
+      <span class="risk-tag">${card.risk}</span>
+      ${odds ? `<span class="odds">${odds}</span>` : ''}
+    </span>
+    ${meter}
+    ${attr ? `<span class="attrs">${attr}</span>` : ''}
+  `;
+}
+
+function cardClasses(
+  card: PlayCard,
+  opts: { camp?: boolean; locked?: boolean } = {}
+): string {
+  return [
     'play-card',
     `risk-${card.risk.toLowerCase()}`,
     opts.camp ? 'camp' : '',
@@ -236,22 +265,17 @@ function cardHtml(
   ]
     .filter(Boolean)
     .join(' ');
+}
+
+function cardHtml(
+  card: PlayCard,
+  index: number,
+  opts: { camp?: boolean; locked?: boolean; lockReason?: string }
+): string {
   return `
-    <button type="button" class="${classes}" data-idx="${index}"
+    <button type="button" class="${cardClasses(card, opts)}" data-idx="${index}"
       ${opts.locked ? 'disabled aria-disabled="true"' : ''}>
-      <span class="cost-badge">${costLabel(card)}</span>
-      <span class="name">${card.n}</span>
-      <span class="tagline">${card.tag}</span>
-      <span class="desc">${card.d}</span>
-      ${opts.locked && opts.lockReason ? `<span class="locked-reason">${opts.lockReason}</span>` : ''}
-      <span class="card-footer">
-        <span class="risk-tag">${card.risk}</span>
-        ${odds ? `<span class="odds">${odds}</span>` : ''}
-      </span>
-      ${meter}
-      ${attr ? `<span class="attrs">${attr}</span>` : ''}
-      ${opts.camp ? '<span class="ribbon ribbon-camp">Camp</span>' : ''}
-      ${card.trap ? '<span class="ribbon ribbon-trap">Trap</span>' : ''}
+      ${cardInner(card, opts)}
     </button>
   `;
 }
@@ -494,12 +518,16 @@ function renderTerminalOutcome(): void {
 function renderTerminalWinChoices(): void {
   const grid = $('terminal-choices');
   grid.innerHTML = `
-    <button type="button" class="play-card" data-choice="reelect">
+    <button type="button" class="play-card choice-card" data-choice="reelect">
       <span class="name">Stand for Reelection</span>
+      <span class="orn"><i></i>&#10022;<i></i></span>
+      <span class="card-art">${emblem('star')}</span>
       <span class="desc">The wheel turns. File again for the same seat — this time you're the incumbent.</span>
     </button>
-    <button type="button" class="play-card" data-choice="rest">
+    <button type="button" class="play-card choice-card" data-choice="rest">
       <span class="name">Rest on the Win</span>
+      <span class="orn"><i></i>&#10022;<i></i></span>
+      <span class="card-art">${emblem('cup')}</span>
       <span class="desc">Start a new run, a new ballad entry. The Chronicle keeps this one.</span>
     </button>
   `;
@@ -519,12 +547,20 @@ function renderTerminalWinChoices(): void {
 function renderTerminalPaths(): void {
   if (!campaign) return;
   const paths = buildPaths(campaign.state, terminalShare);
+  const pathEmblems: Record<string, string> = {
+    perennial: 'pennant',
+    advocate: 'megaphone',
+    staffer: 'clipboard',
+    home: 'cup'
+  };
   const grid = $('terminal-choices');
   grid.innerHTML = paths
     .map(
       p => `
-    <button type="button" class="play-card" data-path="${p.id}">
+    <button type="button" class="play-card choice-card" data-path="${p.id}">
       <span class="name">${p.n}</span>
+      <span class="orn"><i></i>&#10022;<i></i></span>
+      <span class="card-art">${emblem(pathEmblems[p.id] ?? 'star')}</span>
       <span class="desc">${p.d}</span>
     </button>
   `
@@ -546,8 +582,10 @@ function renderTerminalTraits(path: InterimPath): void {
     path.traits
       .map(
         t => `
-    <button type="button" class="play-card" data-trait="${t}">
+    <button type="button" class="play-card choice-card" data-trait="${t}">
       <span class="name">${TRAITS[t].n}</span>
+      <span class="orn"><i></i>&#10022;<i></i></span>
+      <span class="card-art">${emblem('quill')}</span>
       <span class="desc">${TRAITS[t].d}</span>
     </button>
   `
