@@ -20,7 +20,7 @@ import {
 } from '../engine/loop.js';
 import { getPhase, stageLabel, stageWeek } from '../engine/state.js';
 import { STAMPS } from '../engine/resolve.js';
-import { pickDefaultGround, cardAttrMod } from '../engine/play.js';
+import { pickDefaultGround, cardAttrMod, isPhaseLegal, isVisible, canAfford } from '../engine/play.js';
 import type { PlayFeedback } from '../engine/feedback.js';
 import {
   PERSONAS,
@@ -67,6 +67,7 @@ function costLabel(card: PlayCard): string {
   if (c.$) parts.push(`$${c.$}`);
   if (c.vp) parts.push(`${c.vp} vol`);
   if (c.m) parts.push(`${c.m} mom`);
+  if (c.fav) parts.push(`${c.fav} favor`);
   return parts.join(' · ') || 'free';
 }
 
@@ -109,6 +110,35 @@ function updateBlurb(): void {
   ]
     .filter(Boolean)
     .join(' ');
+}
+
+/**
+ * Compact persistent HUD — mobile deckbuilder convention (the vitals never
+ * scroll away). Hidden on wide screens where the full ledger is visible
+ * anyway; sticky at the top of #game on phones.
+ */
+function renderHud(): void {
+  if (!campaign) return;
+  const s = campaign.state;
+  const snap = snapshot(s);
+  const pips = Array.from({ length: s.apMax }, (_, i) =>
+    `<i class="pip ${i < snap.ap ? 'on' : ''}"></i>`
+  ).join('');
+  const fieldChip = snap.fieldAp ? `<span class="chip chip-field">+${snap.fieldAp} field</span>` : '';
+  const weekPct = Math.round((snap.week / s.weeksTotal) * 100);
+  const ballotBit = snap.ballot
+    ? '<span class="chip chip-on">BALLOT ON</span>'
+    : `<span class="hud-meter" title="${snap.signatures}/${s.sigNeed} signatures">
+         <i style="width:${Math.min(100, Math.round((snap.signatures / s.sigNeed) * 100))}%"></i>
+       </span><span class="hud-meter-label">${snap.signatures}/${s.sigNeed} sigs</span>`;
+  $('hud').innerHTML = `
+    <span class="hud-item"><span class="k">AP</span> <span class="pips">${pips}</span>${fieldChip}</span>
+    <span class="hud-item"><span class="k">$</span>${snap.money}</span>
+    <span class="hud-item"><span class="k">W${snap.week}</span>
+      <span class="hud-meter hud-meter-week"><i style="width:${weekPct}%"></i></span>
+    </span>
+    <span class="hud-item">${ballotBit}</span>
+  `;
 }
 
 function renderLedger(): void {
@@ -181,6 +211,66 @@ function renderDraft(): void {
   });
 }
 
+function cardHtml(
+  card: PlayCard,
+  index: number,
+  opts: { camp?: boolean; locked?: boolean; lockReason?: string }
+): string {
+  const state = campaign!.state;
+  const g = pickDefaultGround(state);
+  const base = card.odds?.(state, g);
+  const mod = cardAttrMod(state, card);
+  const p = base !== undefined ? Math.max(0.02, Math.min(0.95, base + mod)) : undefined;
+  const odds = p !== undefined ? `p≈${(p * 100).toFixed(0)}%` : '';
+  const meter =
+    p !== undefined
+      ? `<span class="odds-meter"><i style="width:${Math.round(p * 100)}%"></i></span>`
+      : '';
+  const attr = card.attrs?.length ? card.attrs.join(' / ') : '';
+  const classes = [
+    'play-card',
+    `risk-${card.risk.toLowerCase()}`,
+    opts.camp ? 'camp' : '',
+    card.trap ? 'trap' : '',
+    opts.locked ? 'locked' : ''
+  ]
+    .filter(Boolean)
+    .join(' ');
+  return `
+    <button type="button" class="${classes}" data-idx="${index}"
+      ${opts.locked ? 'disabled aria-disabled="true"' : ''}>
+      <span class="cost-badge">${costLabel(card)}</span>
+      <span class="name">${card.n}</span>
+      <span class="tagline">${card.tag}</span>
+      <span class="desc">${card.d}</span>
+      ${opts.locked && opts.lockReason ? `<span class="locked-reason">${opts.lockReason}</span>` : ''}
+      <span class="card-footer">
+        <span class="risk-tag">${card.risk}</span>
+        ${odds ? `<span class="odds">${odds}</span>` : ''}
+      </span>
+      ${meter}
+      ${attr ? `<span class="attrs">${attr}</span>` : ''}
+      ${opts.camp ? '<span class="ribbon ribbon-camp">Camp</span>' : ''}
+      ${card.trap ? '<span class="ribbon ribbon-trap">Trap</span>' : ''}
+    </button>
+  `;
+}
+
+function lockReason(card: PlayCard): string {
+  const state = campaign!.state;
+  if (!isPhaseLegal(state, card)) return `Phase ${card.ph.join('/')} only`;
+  if (!canAfford(state, card)) {
+    const c = card.cost;
+    if ((c.a ?? 0) > state.ap && !(card.field && state.fieldAp > 0)) return 'No AP left';
+    if ((c.$ ?? 0) > state.money) return 'Not enough money';
+    if ((c.vp ?? 0) > state.volPool) return 'Not enough volunteers';
+    if ((c.m ?? 0) > state.momentum) return 'Not enough momentum';
+    if ((c.fav ?? 0) > state.favors) return 'No favors owed';
+    return "Can't afford";
+  }
+  return 'Unavailable';
+}
+
 function renderPlayables(): void {
   if (!campaign) return;
   const grid = $('playables');
@@ -192,43 +282,41 @@ function renderPlayables(): void {
     grid.innerHTML = `<p class="hint">Run over (${campaign.state.outcome}). Start a new run.</p>`;
     return;
   }
-  if (campaign.state.ap <= 0) {
-    grid.innerHTML = `<p class="hint">No AP left — end the week.</p>`;
-    return;
-  }
-  const playable = listPlayableHand(campaign);
-  if (!playable.length) {
-    grid.innerHTML = `<p class="hint">Nothing playable. End week.</p>`;
-    return;
-  }
-  grid.innerHTML = playable
-    .map(({ index, card }) => {
-      const camp = index === CAMP_PETITION || index === CAMP_FILING_FEE;
-      const g = pickDefaultGround(campaign!.state);
-      const base = card.odds?.(campaign!.state, g);
-      const mod = cardAttrMod(campaign!.state, card);
-      const p = base !== undefined ? Math.max(0.02, Math.min(0.95, base + mod)) : undefined;
-      const odds = p !== undefined ? `p≈${(p * 100).toFixed(0)}%` : '';
-      const attr = card.attrs?.length ? card.attrs.join(' / ') : '';
-      return `
-        <button type="button" class="play-card risk-${card.risk.toLowerCase()} ${camp ? 'camp' : ''} ${card.trap ? 'trap' : ''}" data-idx="${index}">
-          <span class="cost-badge">${costLabel(card)}</span>
-          <span class="name">${card.n}</span>
-          <span class="tagline">${card.tag}</span>
-          <span class="desc">${card.d}</span>
-          <span class="card-footer">
-            <span class="risk-tag">${card.risk}</span>
-            ${odds ? `<span class="odds">${odds}</span>` : ''}
-          </span>
-          ${attr ? `<span class="attrs">${attr}</span>` : ''}
-          ${camp ? '<span class="ribbon ribbon-camp">Camp</span>' : ''}
-          ${card.trap ? '<span class="ribbon ribbon-trap">Trap</span>' : ''}
-        </button>
-      `;
-    })
-    .join('');
 
-  grid.querySelectorAll<HTMLButtonElement>('.play-card').forEach(btn => {
+  const state = campaign.state;
+  const playable = listPlayableHand(campaign);
+  const playableIdx = new Set(playable.map(p => p.index));
+  const apExhausted = state.ap <= 0 && state.fieldAp <= 0;
+
+  // The whole hand stays on the table, deckbuilder-style: cards you can't
+  // play right now render dimmed with the reason, instead of vanishing.
+  // Cards failing show/req stay hidden — those are undiscovered content,
+  // not locked options.
+  const handCards = campaign.deck.hand
+    .map((id, index) => ({ index, card: campaign!.catalog.get(id) }))
+    .filter((e): e is { index: number; card: PlayCard } => !!e.card && isVisible(state, e.card));
+  const campCards = playable.filter(p => p.index < 0);
+
+  const hintLine = apExhausted
+    ? `<p class="hint">Out of actions — end the week.</p>`
+    : !playable.length && !handCards.length
+      ? `<p class="hint">Nothing playable. End week.</p>`
+      : '';
+
+  grid.innerHTML =
+    hintLine +
+    handCards
+      .map(({ index, card }) => {
+        const locked = apExhausted || !playableIdx.has(index);
+        return cardHtml(card, index, {
+          locked,
+          lockReason: locked ? (apExhausted ? 'No AP left' : lockReason(card)) : undefined
+        });
+      })
+      .join('') +
+    campCards.map(({ index, card }) => cardHtml(card, index, { camp: true })).join('');
+
+  grid.querySelectorAll<HTMLButtonElement>('.play-card:not(.locked)').forEach(btn => {
     btn.addEventListener('click', () => {
       if (!campaign) return;
       const wasBallot = campaign.state.ballot;
@@ -290,6 +378,7 @@ function renderLog(): void {
 }
 
 function paint(): void {
+  renderHud();
   renderLedger();
   renderDraft();
   renderPlayables();

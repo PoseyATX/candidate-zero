@@ -311,13 +311,30 @@ way balance changes get harness-verified before considering them done.
 
 TICKET already names general UI polish as the last gate before considering
 v0.1 ("UI polish; only then consider v0.1 label with evidence bundle").
-Beyond Phase 1's ground-selection gap, concretely still missing (verified
-by reading `src/ui/main.ts`/`src/ui/styles.css`, not assumed):
 
-- No visual distinction between SAFE / STD / VOL risk classes beyond the
-  text label (a trap-card border color exists; a risk-class color coding
-  doesn't).
-- No mobile-responsiveness pass has been done or verified.
+**Done in the 2026-07-17 mobile-game UI pass** (patterns borrowed from the
+mobile-deckbuilder canon — persistent vitals HUD, thumb-reach primary
+action, never hide the hand):
+
+- ✅ Risk-class color coding (left border per class + risk-tinted odds
+  meter fill).
+- ✅ Mobile pass, screenshot-verified at 390×844: sticky compact HUD (AP
+  pips, money, week + signature progress meters) pinned to the top of the
+  screen while scrolling; End Week pinned to the bottom of the viewport in
+  thumb reach; both hidden/normal on desktop widths.
+- ✅ Full-hand visibility: cards you can't currently play render dimmed
+  with the specific reason ("No AP left", "Not enough money", "Phase 2/3
+  only") instead of vanishing from the list — plan-around information,
+  standard in the genre. Cards gated by `show`/`req` stay hidden
+  (undiscovered content, not locked options).
+- ✅ Per-card success-odds meter bar (at-a-glance p%, tinted by risk).
+- ✅ Fixed a fieldAp regression: with 0 AP but a field action banked, the
+  UI said "No AP left — end the week" and hid the playable field card.
+- ✅ `theme-color` meta + `color-scheme: dark` (mobile browser chrome
+  matches the walnut theme; form controls render dark natively).
+
+Concretely still open:
+
 - No accessibility pass (color contrast, keyboard nav for the card grid,
   `aria-live` regions exist on log/juice but haven't been screen-reader
   tested).
@@ -326,6 +343,12 @@ by reading `src/ui/main.ts`/`src/ui/styles.css`, not assumed):
   verify the index.html fix and the Vite 8 upgrade this session) isn't
   automated yet. Worth adding once the UI is a real target for iteration
   rather than a recently-repaired one.
+- Card art is still typographic-only (watermark glyph + frame). Real art
+  direction (even placeholder woodcut/engraving-style pieces per card
+  family) is the single biggest remaining aesthetic gap vs. the genre.
+- The log panel is plain text; popular deckbuilders surface last-action
+  results as transient stacked toasts. The juice banner covers the
+  headline case; a fuller notification stack is future polish.
 
 ## Phase 7 — v0.1 label
 

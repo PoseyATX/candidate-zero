@@ -633,3 +633,44 @@ week 1 — consistent with 30% of the prior run's banked contacts total.
 
 ### Harness
 `npm run harness` (12/12), `npm run typecheck`, `npm run build` all pass.
+
+## 2026-07-17 — Mobile-game UI pass (aesthetics + one real bug)
+
+Patterns borrowed from the mobile-deckbuilder canon (Balatro / Slay the
+Spire / Marvel Snap conventions), applied without simplifying anything —
+strictly more information on screen, arranged for one-handed play:
+
+- **Sticky HUD** (mobile only, ≤800px): AP as pips, money, week-progress
+  meter, signature-progress meter (or BALLOT ON chip), `+N field` chip
+  when a field action is banked. Pinned to the viewport top while the
+  card grid and log scroll under it. Desktop keeps the full ledger and
+  hides the HUD.
+- **Thumb-reach End Week**: on phones the primary action is pinned to the
+  bottom of the viewport (full-width) while the Actions panel is in view.
+- **Full-hand visibility**: `renderPlayables` previously rendered only
+  `listPlayableHand`'s results — an unaffordable card silently vanished
+  from the table. Now the whole hand renders; locked cards are dimmed
+  with the specific reason ("Not enough money", "Phase 2/3 only", …).
+  `show`/`req`-gated cards stay hidden — undiscovered content, not locked
+  options.
+- **Odds meter** on every card with defined odds: a thin p% fill bar,
+  tinted by risk class (SAFE green / STD gold / VOL burnt orange / trap
+  oxblood).
+- **Bug (fieldAp regression)**: with `ap=0` but `fieldAp=1`,
+  `renderPlayables` early-returned "No AP left — end the week", hiding a
+  legally playable field card. The out-of-actions check now requires both
+  pools empty; verified at engine level (`canAfford` true at ap=0/
+  fieldAp=1 for a field card) since the UI mirrors the same check.
+- `costLabel` now includes favor costs (was silently omitted).
+- `theme-color` meta + `color-scheme: dark`.
+
+Verified via Playwright at 390×844 and 1280×900: HUD sticks at y=0 after
+scroll, locked cards render with reasons after AP is spent, End Week
+stays in the viewport, desktop hides the HUD, and a full seeded run
+through drafts → terminal → trait pick → Chronicle produced zero console
+errors.
+
+### Harness
+`npm run harness` (12/12, 23 PASSED lines), `npm run typecheck`,
+`npm run build` all pass.
+

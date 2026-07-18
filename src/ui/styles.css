@@ -17,6 +17,7 @@
   font-family: 'Source Serif 4', Georgia, serif;
   color: var(--parchment);
   background: var(--walnut);
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -109,6 +110,91 @@ h1 {
 }
 
 .btn-gold:hover { background: var(--oxblood-bright); border-color: var(--oxblood-bright); color: var(--parchment); }
+
+/* Persistent compact HUD — the mobile deckbuilder convention (vitals never
+   scroll away). Hidden on wide screens where the full ledger is visible;
+   sticky at the top of the page on phones. */
+.hud {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  background: rgba(26, 19, 13, 0.96);
+  border-bottom: 2px solid var(--gold-dim);
+  padding: 0.45rem 0.6rem;
+  margin: 0 -0.25rem 0.75rem;
+  font-size: 0.82rem;
+  backdrop-filter: blur(2px);
+}
+
+@media (max-width: 800px) {
+  .hud { display: flex; }
+}
+
+.hud .k {
+  color: var(--gold);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-right: 0.2rem;
+}
+
+.hud-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+.pips { display: inline-flex; gap: 0.22rem; }
+.pip {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  border: 1px solid var(--gold-dim);
+  background: transparent;
+  display: inline-block;
+}
+.pip.on { background: var(--gold); border-color: var(--gold); }
+
+.chip {
+  font-family: Cinzel, serif;
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid var(--gold-dim);
+  color: var(--gold);
+  padding: 0.08rem 0.35rem;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.chip-field { border-color: var(--sage); color: #b9d1a9; }
+.chip-on { border-color: var(--sage); color: #b9d1a9; }
+
+.hud-meter {
+  display: inline-block;
+  width: 3.2rem;
+  height: 0.38rem;
+  border: 1px solid var(--gold-dim);
+  border-radius: 2px;
+  overflow: hidden;
+  vertical-align: middle;
+  background: rgba(0, 0, 0, 0.3);
+}
+.hud-meter i {
+  display: block;
+  height: 100%;
+  background: var(--gold);
+}
+.hud-meter-week i { background: var(--oxblood-bright); }
+.hud-meter-label {
+  font-size: 0.72rem;
+  color: var(--parchment-dim);
+  font-variant-numeric: tabular-nums;
+}
 
 .ledger {
   background: var(--walnut-2);
@@ -368,6 +454,64 @@ h1 {
 .play-card .ribbon-trap { background: var(--oxblood); }
 
 .row-actions { margin-top: 0.85rem; }
+
+/* Thumb reach: on phones the primary action stays pinned to the bottom of
+   the viewport while the Actions panel is in view — no scrolling back down
+   to end the week. */
+@media (max-width: 800px) {
+  .row-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    margin: 0.85rem -1rem 0;
+    padding: 0.6rem 1rem 0.7rem;
+    background: linear-gradient(rgba(36, 26, 17, 0), var(--walnut-2) 40%);
+  }
+  .row-actions .btn { width: 100%; padding: 0.75rem 1rem; font-size: 0.82rem; }
+}
+
+/* Locked cards stay on the table, dimmed, with the reason — information
+   the deckbuilder genre never hides (you plan around what you can't
+   afford yet). */
+.play-card.locked {
+  cursor: default;
+  opacity: 0.55;
+  filter: saturate(0.55);
+}
+.play-card.locked:hover {
+  transform: none;
+  outline-color: #9a824f;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.35),
+    0 8px 18px rgba(0, 0, 0, 0.4);
+}
+.play-card .locked-reason {
+  position: relative;
+  z-index: 1;
+  font-family: Cinzel, serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--oxblood);
+  margin-top: 0.15rem;
+}
+
+/* Success-odds meter — at-a-glance p% under the footer, tinted by risk class. */
+.play-card .odds-meter {
+  position: relative;
+  z-index: 1;
+  display: block;
+  height: 0.3rem;
+  margin-top: 0.25rem;
+  border: 1px solid rgba(34, 26, 16, 0.35);
+  border-radius: 2px;
+  overflow: hidden;
+  background: rgba(34, 26, 16, 0.12);
+}
+.play-card .odds-meter i { display: block; height: 100%; background: var(--gold-dim); }
+.play-card.risk-safe .odds-meter i { background: #2e6b30; }
+.play-card.risk-vol .odds-meter i { background: #a1541c; }
+.play-card.trap .odds-meter i { background: var(--oxblood); }
 
 .log {
   max-height: 420px;
