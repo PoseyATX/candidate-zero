@@ -409,24 +409,42 @@ function paint(): void {
   renderLog();
 }
 
+const SCREENS = ['title', 'tutorial', 'setup', 'game', 'terminal'] as const;
+type ScreenId = (typeof SCREENS)[number];
+let currentScreen: ScreenId = 'title';
+let tutorialReturn: ScreenId = 'title';
+
+function showScreen(id: ScreenId): void {
+  currentScreen = id;
+  for (const s of SCREENS) $(s).classList.toggle('hidden', s !== id);
+  // The masthead top bar and footer duplicate the title screen's nameplate
+  // and tag line — hide both there; everywhere else the bar carries
+  // How to Play / New run.
+  $('topbar').classList.toggle('hidden', id === 'title');
+  $('foot').classList.toggle('hidden', id === 'title');
+  window.scrollTo({ top: 0 });
+}
+
+function showTitle(): void {
+  showScreen('title');
+}
+
+function showTutorial(): void {
+  if (currentScreen !== 'tutorial') tutorialReturn = currentScreen;
+  showScreen('tutorial');
+}
+
 function showGame(): void {
-  $('setup').classList.add('hidden');
-  $('game').classList.remove('hidden');
-  $('terminal').classList.add('hidden');
+  showScreen('game');
 }
 
 function showSetup(): void {
-  $('setup').classList.remove('hidden');
-  $('game').classList.add('hidden');
-  $('terminal').classList.add('hidden');
+  showScreen('setup');
   renderChronicle();
 }
 
 function showTerminal(): void {
-  $('setup').classList.add('hidden');
-  $('game').classList.add('hidden');
-  $('terminal').classList.remove('hidden');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  showScreen('terminal');
 }
 
 /**
@@ -688,10 +706,15 @@ function boot(): void {
   ['sel-persona', 'sel-issue', 'sel-district', 'sel-region'].forEach(id => {
     $(id).addEventListener('change', updateBlurb);
   });
+  $('title-emblem').innerHTML = emblem('star');
+  $('btn-title-start').addEventListener('click', () => showSetup());
+  $('btn-title-howto').addEventListener('click', () => showTutorial());
+  $('btn-howto').addEventListener('click', () => showTutorial());
+  $('btn-tut-back').addEventListener('click', () => showScreen(tutorialReturn));
   $('btn-start').addEventListener('click', () => startRun());
   $('btn-new').addEventListener('click', () => requestNewRun());
   $('btn-end').addEventListener('click', () => endWeek());
-  showSetup();
+  showTitle();
 }
 
 boot();

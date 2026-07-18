@@ -647,6 +647,136 @@ h1 {
 
 .hidden { display: none !important; }
 
+/* ============================ TITLE SCREEN ============================
+   Deco nameplate: eyebrow, double rules, giant Cinzel wordmark, engraved
+   star, tag quote, two big actions. Sunburst glow rises from the bottom
+   like footlights on a stage. */
+.title-screen {
+  min-height: calc(100vh - 6rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.9rem;
+  padding: 2.5rem 1rem 3rem;
+  background:
+    repeating-conic-gradient(from 176deg at 50% 130%, rgba(176, 141, 62, 0.045) 0deg 2deg, transparent 2deg 7deg),
+    radial-gradient(ellipse 90% 55% at 50% 108%, rgba(138, 47, 38, 0.22), transparent 65%),
+    radial-gradient(ellipse 70% 40% at 50% -10%, rgba(176, 141, 62, 0.1), transparent 60%);
+}
+
+.title-screen .eyebrow {
+  font-size: 0.82rem;
+  letter-spacing: 0.34em;
+}
+
+.title-rule {
+  width: min(340px, 72vw);
+  border-top: 3px double var(--gold);
+  position: relative;
+}
+.title-rule::after {
+  content: '\2726';
+  position: absolute;
+  left: 50%;
+  top: -0.62em;
+  transform: translateX(-50%);
+  background: var(--walnut);
+  padding: 0 0.5rem;
+  color: var(--gold);
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+.title-name {
+  font-family: Cinzel, serif;
+  font-weight: 700;
+  font-size: clamp(2.6rem, 11vw, 4.6rem);
+  line-height: 1.02;
+  letter-spacing: 0.06em;
+  margin: 0.2rem 0;
+  color: var(--parchment);
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.6),
+    0 0 24px rgba(176, 141, 62, 0.25);
+}
+
+.title-emblem {
+  width: 4.4rem;
+  height: 4.4rem;
+  color: var(--gold);
+  opacity: 0.9;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
+}
+.title-emblem svg { width: 100%; height: 100%; }
+
+.title-tag {
+  font-style: italic;
+  color: var(--parchment-dim);
+  font-size: 0.98rem;
+  line-height: 1.5;
+  margin: 0.1rem 0 0.4rem;
+}
+
+.title-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  width: min(320px, 80vw);
+}
+
+.btn-big {
+  padding: 0.85rem 1rem;
+  font-size: 0.88rem;
+  letter-spacing: 0.14em;
+}
+
+.title-foot {
+  margin-top: 1.1rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+}
+
+/* ============================== TUTORIAL ============================== */
+.tutorial .panel { max-width: 720px; margin: 0 auto; }
+
+.tutorial h3 {
+  font-family: Cinzel, serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 1.3rem 0 0.35rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--line);
+}
+
+.tutorial p { margin: 0 0 0.6rem; line-height: 1.55; font-size: 0.93rem; color: var(--parchment); }
+.tutorial p b, .tutorial li b { color: var(--gold); font-weight: 600; }
+
+.tut-list {
+  margin: 0 0 0.6rem;
+  padding-left: 1.1rem;
+  line-height: 1.55;
+  font-size: 0.93rem;
+}
+.tut-list li { margin-bottom: 0.3rem; }
+
+.dot {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  margin-right: 0.4rem;
+  vertical-align: baseline;
+}
+.dot-safe { background: #2e6b30; }
+.dot-std { background: var(--gold-dim); }
+.dot-vol { background: #a1541c; }
+
 .setup-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));

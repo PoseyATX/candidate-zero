@@ -707,3 +707,35 @@ Verified via screenshots at desktop and 390×844 across hand, draft, and
 terminal surfaces; two emblems (boot, quill) redrawn after the first
 screenshot pass read as a blob and a leaf respectively. Zero console
 errors across a full seeded run. Harness (12/12), typecheck, build pass.
+
+## 2026-07-17 — Title screen, tutorial, seed relocation, $ glyph fix
+
+- **Bug**: the `$` on the coin emblem (Pay the Filing Fee) and inside the
+  money-bag emblem rendered mirrored (`Ƨ`) — the S-curve path was drawn
+  backwards. Both paths mirrored horizontally; verified via close-up
+  screenshot.
+- **Title screen** (new): deco nameplate — eyebrow, double rules with
+  center diamond, Cinzel wordmark, engraved star, tag quote, BEGIN THE
+  CLIMB / HOW TO PLAY, sunburst footlights. The masthead top bar and page
+  footer hide on the title screen so nothing duplicates the nameplate.
+- **Tutorial** (new `#tutorial` screen): in-voice HOW TO PLAY covering
+  the campaign shape, the weekly AP/hand loop, card anatomy (seal =
+  cost, risk dot, p≈ meter, dimmed = locked + reason, CAMP/TRAP stamps),
+  risk classes and the widening disaster band, the two ballot doors,
+  resource glossary, allies/reputations/Faces/obligations, and the
+  Chronicle ("Losing Well"). Reached from the title screen or the top
+  bar anywhere in-game; Back returns to wherever you came from with
+  game state intact.
+- **Seed selector** moved out of the top bar into the setup screen's
+  identity grid (placeholder "random") — per direct instruction it only
+  appears on the persona/issue/district/region selection screen. The top
+  bar slot it occupied now holds HOW TO PLAY.
+- Screen management centralized (`showScreen`) over
+  title/tutorial/setup/game/terminal.
+
+Verified via scripted Playwright flows at 390×844 and 1280×900: title
+first (top bar + footer hidden), tutorial from title and back, Begin the
+Climb → setup (seed present there, absent from top bar), start run,
+tutorial from mid-game and back with ledger state intact, and a locked
+"Pay the Filing Fee" card close-up confirming the corrected `$`. Zero
+console errors; harness (12/12), typecheck, build pass.
