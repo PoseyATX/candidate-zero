@@ -57,7 +57,7 @@ export const PL18_SharpenMessage: PlayCard = {
 };
 
 export const PL20_PacCheck: PlayCard = {
-  id: 'PL20', n: 'Take the PAC Check', cost: { a: 1 }, risk: 'STD', ph: [1, 2, 3], tag: 'TRAP — honestly labeled',
+  id: 'PL20', n: 'Take the PAC Check', cost: { a: 1 }, risk: 'STD', ph: [1, 2, 3], tag: 'the Third House pays well',
   attrs: ['CRA', 'DIP'],
   trap: true,
   d: 'A man in a good suit admires your race. The check is real. So is the string tied to it.',
@@ -78,7 +78,7 @@ export const PL20_PacCheck: PlayCard = {
 };
 
 export const PL21_SelfFundCredit: PlayCard = {
-  id: 'PL21', n: 'Self-Fund on Credit', cost: { a: 1 }, risk: 'SAFE', ph: [1, 2], tag: 'TRAP — honestly labeled',
+  id: 'PL21', n: 'Self-Fund on Credit', cost: { a: 1 }, risk: 'SAFE', ph: [1, 2], tag: 'the bank believes in you',
   attrs: ['CRA'],
   trap: true,
   d: "The bank will lend against the homestead. Campaigns have eaten better men's farms.",

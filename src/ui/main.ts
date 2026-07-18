@@ -94,7 +94,7 @@ function updateBlurb(): void {
   const attr = p ? Object.entries(p.attrs).map(([k, v]) => `${k}+${v}`).join(' ') : '';
   $('setup-blurb').textContent = [
     p?.d ?? '',
-    d?.trap ? 'TRAP district — bravery is not arithmetic.' : d?.d ?? '',
+    d?.d ?? '',
     r ? `${r.n}: petition mod ${r.petitionMod >= 0 ? '+' : ''}${r.petitionMod}.` : '',
     attr ? `Attr tilt: ${attr}` : ''
   ]
@@ -229,11 +229,10 @@ function cardInner(
       : '';
   const attr = card.attrs?.length ? card.attrs.join(' · ') : '';
   const { seal, subs } = costParts(card);
-  const stamp = opts.camp
-    ? '<span class="stamp stamp-camp">Camp</span>'
-    : card.trap
-      ? '<span class="stamp stamp-trap">Trap</span>'
-      : '';
+  // Devil's-bargain cards deliberately carry no visual tell — the label
+  // was removed by design decision (alpha): the string is in the card
+  // text, and reading it is the skill.
+  const stamp = opts.camp ? '<span class="stamp stamp-camp">Camp</span>' : '';
   return `
     <span class="name">${card.n}</span>
     <span class="orn"><i></i>&#10022;<i></i></span>
@@ -260,7 +259,6 @@ function cardClasses(
     'play-card',
     `risk-${card.risk.toLowerCase()}`,
     opts.camp ? 'camp' : '',
-    card.trap ? 'trap' : '',
     opts.locked ? 'locked' : ''
   ]
     .filter(Boolean)

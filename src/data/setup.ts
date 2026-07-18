@@ -253,7 +253,7 @@ export const DISTRICTS: DistrictDef[] = [
   { id: 'open', n: 'Open seat, safe district', d: 'Incumbent retired. Crowded field.', align: 'safe', incumbent: false, field: rng => 3 + Math.floor(rng() * 3) },
   { id: 'incumb', n: 'Safe district, entrenched incumbent', d: 'Twelve years and a war chest.', align: 'safe', incumbent: true, field: () => 1 },
   { id: 'comp', n: 'Competitive district, open primary', d: 'Primary then general. Two fights.', align: 'competitive', incumbent: false, field: () => 2 },
-  { id: 'wrong', n: 'Wrong-party district', d: 'TRAP: bravery is not arithmetic.', align: 'wrong', incumbent: false, trap: true, field: () => 0 }
+  { id: 'wrong', n: 'Wrong-party district', d: 'Bravery is not arithmetic.', align: 'wrong', incumbent: false, trap: true, field: () => 0 }
 ];
 
 export const REGIONS: RegionDef[] = [

@@ -739,3 +739,36 @@ Climb → setup (seed present there, absent from top bar), start run,
 tutorial from mid-game and back with ledger state intact, and a locked
 "Pay the Filing Fee" card close-up confirming the corrected `$`. Zero
 console errors; harness (12/12), typecheck, build pass.
+
+## 2026-07-17 — Alpha verbiage, branding fix, traps unlabeled (design decision)
+
+Per direct instruction, now that outside players are on the build:
+
+- Removed the "PRIMARY 8W · GENERAL 6W · SAFE NEVER DISASTERS · LOSING
+  WRITES THE BALLAD" stripe from the title screen, and the page footer's
+  copy of it.
+- "A Hot Texas Primary" → "A Texas Political Epic" (title screen eyebrow,
+  top bar, and the page `<title>`, now "Candidate Zero — Alpha") — the
+  game is primary → general → (eventually) the Session, not just a
+  primary.
+- Alpha state surfaced: a small rotated ALPHA tag next to the masthead
+  wordmark, "Alpha — systems, balance, and content in motion" under the
+  title actions, and the footer now reads "Candidate Zero · alpha build".
+- **Traps are no longer labeled** — a real design change, not just copy.
+  The archive's "honestly labeled" trap covenant is retired by the
+  project owner: the TRAP stamp, the trap paper tint, the oxblood risk
+  dot/meter overrides, the "TRAP — honestly labeled" card tags (PL20 →
+  "the Third House pays well", PL21 → "the bank believes in you"), the
+  district blurb's "TRAP:" prefix, and the tutorial's TRAP-stamp bullet
+  are all gone. The string is in the card text; reading it is the skill.
+  The engine-side `trap` flag stays (balance/audit tooling), and the
+  audit harness's "trap flag without trap tag" check was removed with a
+  dated comment since unlabeled is now intentional. Tutorial's Risk
+  section gained the replacement line ("some offers are devil's
+  bargains… the county does not label them").
+
+Verified via Playwright at 390×844: old stripe gone, alpha note and tag
+present, eyebrow/topbar/footer updated, wrong-party district blurb
+TRAP-free, and the built bundle greps clean for "TRAP" and the stamp
+class. Harness (12/12 after the audit-rule update), typecheck, build
+pass.

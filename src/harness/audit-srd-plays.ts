@@ -41,7 +41,11 @@ function audit(card: PlayCard): Row {
   if (!card.run) issues.push('missing run');
   // SAFE cards with show/req still need odds or implicit
   if (card.risk !== 'SAFE' && !card.odds) issues.push('missing odds');
-  if (card.trap && card.tag && !/trap/i.test(card.tag)) issues.push('trap flag without trap tag');
+  // 2026-07-17 design decision: trap cards are no longer labeled — the
+  // "honestly labeled" covenant was retired by the project owner (alpha).
+  // The engine-side trap flag stays (it drives balance/audit tooling);
+  // the *absence* of a player-facing tell is now intentional, so the old
+  // "trap flag without trap tag" check is gone.
 
   return {
     id: card.id,
