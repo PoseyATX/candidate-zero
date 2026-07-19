@@ -31,7 +31,7 @@ function rapGain(g: Ground, amt: number, state: GameState) {
 export const PL01_BlockWalk: PlayCard = {
   id: 'PL01', n: 'Block Walk', cost: { a: 1 }, risk: 'SAFE', ph: [1,2,3], field: true, tag: 'the spine',
   attrs: ['CHA'],
-  d: 'Boots and a clipboard. The one play that never turns on you. When in doubt.',
+  d: 'Boots and a clipboard. The one play that never turns on you. When in doubt. In the general, doors become turnout.',
   odds: (s) => clamp(0.62 + s.volPool*0.02 + (s.assets.includes('A01')?0.12:0) + (s.messageSharp?0.05:0), 0, 0.95),
   run: (s, o, g) => {
     if (!g) return 'No ground selected.'; s.walkCount++;
@@ -39,18 +39,53 @@ export const PL01_BlockWalk: PlayCard = {
     const mult = (s.assets.includes('A01')?1.5:1) * (allyWarmAtGround(s,'AL09',g.id)?1.2:1);
     // archive:547–548 — A11 Push Cards add +1 name ID on successful walks
     const push = s.assets.includes('A11') ? 1 : 0;
-    if (o.tier === 0) { const c = Math.min(g.pool, Math.round((55+random()*30)*mult)); g.pool-=c; s.contacts+=c; rapGain(g,6,s); s.volPool+=1; s.nameID+=2+push; return `A church picnic adopts you whole. +${c} contacts, a volunteer, and rapport at ${g.n}.`; }
-    if (o.tier === 1) { const c = Math.min(g.pool, Math.round((22+random()*16)*mult)); g.pool-=c; s.contacts+=c; s.volPool+=1; rapGain(g,3,s); s.nameID+=push; return `Doors open. +${c} contacts, +1 volunteer at ${g.n}`; }
-    const c = Math.min(g.pool,6); g.pool-=c; s.contacts+=c; return 'Heat, dogs, closed blinds. +'+c+' contacts and one ruined pair of boots.';
+    const gen = s.stage === 'general';
+    if (o.tier === 0) {
+      const c = Math.min(g.pool, Math.round((55+random()*30)*mult));
+      g.pool-=c; s.contacts+=c; rapGain(g, gen ? 2 : 6, s); s.volPool+=1; s.nameID+=2+push;
+      if (gen) {
+        g.gotv += 0.18;
+        return `General doors: +${c} contacts and +18% GOTV banked at ${g.n}. Turnout, not introductions.`;
+      }
+      return `A church picnic adopts you whole. +${c} contacts, a volunteer, and rapport at ${g.n}.`;
+    }
+    if (o.tier === 1) {
+      const c = Math.min(g.pool, Math.round((22+random()*16)*mult));
+      g.pool-=c; s.contacts+=c; s.volPool+=1; rapGain(g, gen ? 1 : 3, s); s.nameID+=push;
+      if (gen) {
+        g.gotv += 0.1;
+        return `Turnout walk at ${g.n}: +${c} contacts, +10% GOTV. The list is a vote plan now.`;
+      }
+      return `Doors open. +${c} contacts, +1 volunteer at ${g.n}`;
+    }
+    const c = Math.min(g.pool,6); g.pool-=c; s.contacts+=c;
+    if (gen) {
+      g.gotv += 0.03;
+      return `Heat and closed blinds — still +${c} contacts and a thin +3% GOTV at ${g.n}.`;
+    }
+    return 'Heat, dogs, closed blinds. +'+c+' contacts and one ruined pair of boots.';
   }
 };
 
 export const PL02_PhoneBank: PlayCard = {
   id: 'PL02', n: 'Phone Bank', cost: { a:1, vp:1 }, risk: 'SAFE', ph: [1,2,3], field: true, tag: 'rain-proof',
   attrs: ['CHA'],
-  d: 'Half the yield, none of the weather. Grandma\'s kitchen table is HQ.',
+  d: 'Half the yield, none of the weather. Grandma\'s kitchen table is HQ. In the general, the phone is a GOTV tool.',
   odds: (s) => clamp(0.6 + (s.assets.includes('A09')?0.15:0), 0, 0.95),
-  run: (s, o, g) => { if (!g) return 'No ground.'; const mult = s.assets.includes('A09')?2:1; const c = Math.min(g.pool, Math.round((o.tier<=1?14:5)*mult)); g.pool-=c; s.contacts+=c; rapGain(g, o.tier<=1?2:1, s); return `+${c} contacts by wire at ${g.n}.`; }
+  run: (s, o, g) => {
+    if (!g) return 'No ground.';
+    const mult = s.assets.includes('A09')?2:1;
+    const gen = s.stage === 'general';
+    const c = Math.min(g.pool, Math.round((o.tier<=1?14:5)*mult));
+    g.pool-=c; s.contacts+=c;
+    rapGain(g, o.tier<=1 ? (gen ? 1 : 2) : (gen ? 0 : 1), s);
+    if (gen) {
+      const k = o.tier === 0 ? 0.12 : o.tier === 1 ? 0.07 : 0.02;
+      g.gotv += k;
+      return `Phone GOTV at ${g.n}: +${c} contacts, +${Math.round(k * 100)}% conversion banked.`;
+    }
+    return `+${c} contacts by wire at ${g.n}.`;
+  }
 };
 
 export const PL03_YardSignBlitz: PlayCard = {
@@ -124,9 +159,10 @@ export const PL07_CandidateForum: PlayCard = {
  * allyWarmAtGround remains the field-ops tool (AL09 on PL01/PL19/PL21B/PL39).
  */
 export const PL08_KitchenTable: PlayCard = {
-  id: 'PL08', n: 'Kitchen-Table Meeting', cost: { a:1 }, risk: 'STD', ph: [1,2,3], tag: 'pie is not optional',
+  // Kit gravity: primary club politics — not a November lever (ph 1–2 only).
+  id: 'PL08', n: 'Kitchen-Table Meeting', cost: { a:1 }, risk: 'STD', ph: [1,2], tag: 'pie is not optional',
   attrs: ['DIP'],
-  d: "A chair's kitchen, her rules. Bring pie; leave with a precinct or nothing.",
+  d: "A chair's kitchen, her rules. Bring pie; leave with a precinct or nothing. (Primary circuit — out of the general.)",
   odds: (s) => {
     const chairs =
       s.allies.filter(a => a.id === 'AL01' && a.warm > 0).length + (s.chairCount || 0);
@@ -285,7 +321,7 @@ export const PL17_DebatePrep: PlayCard = {
 export const PL19_GOTVWeekend: PlayCard = {
   id: 'PL19', n: 'GOTV Weekend', cost: { a:1, vp:1 }, risk: 'STD', ph: [3], field: true, tag: 'the point of it all',
   attrs: ['CLO'],
-  d: 'Rapport is a promise. Turnout is the promise kept. One volunteer and a weekend.',
+  d: 'Rapport is a promise. Turnout is the promise kept. One volunteer and a weekend. The general spine.',
   odds: (s, g) => clamp(0.58 + s.volPool*0.025 + (allyWarmAtGround(s,'AL09',g?.id)?0.1:0) + s.faces.T*0.002, 0, 0.95),
   run: (s, o, g) => {
     if (!g) return 'No ground selected.';
@@ -306,6 +342,32 @@ export const PL19_GOTVWeekend: PlayCard = {
   }
 };
 
+/**
+ * Archive PL20 "Rides to the Polls" — modular id PL23 (PL20 is PAC Check here).
+ * Flatbed / A06 unlock. Pure general GOTV field lever.
+ */
+export const PL23_RidesToPolls: PlayCard = {
+  id: 'PL23',
+  n: 'Rides to the Polls',
+  cost: { a: 1, vp: 1 },
+  risk: 'SAFE',
+  ph: [3],
+  field: true,
+  tag: 'the flatbed doctrine',
+  attrs: ['CLO'],
+  d: 'The truck runs routes. Steepest conversion where turnout is lowest. Needs the Flatbed (shop A06).',
+  req: s => s.assets.includes('A06'),
+  odds: () => 0.8,
+  run: (s, o, g) => {
+    if (!g) return 'No ground.';
+    // Low-prop grounds (hard turnout) convert hardest — archive logic
+    const base = (g.prop ?? 0.5) < 0.4 ? 0.4 : 0.15;
+    const k = o.tier === 0 ? base : o.tier === 1 ? base * 0.75 : base * 0.4;
+    g.gotv += k;
+    return `The flatbed runs routes through ${g.n}. (+${Math.round(k * 100)}% conversion — steepest where turnout is lowest.)`;
+  }
+};
+
 /** Tag Main-deck player verbs (mutates; see docs/CARD-RESIDENCY.md). */
 function tagMainPlayer(cards: PlayCard[]): PlayCard[] {
   for (const c of cards) {
@@ -319,7 +381,7 @@ function tagMainPlayer(cards: PlayCard[]): PlayCard[] {
 export const CORE_PLAYS: PlayCard[] = tagMainPlayer([
   PL01_BlockWalk, PL02_PhoneBank, PL03_YardSignBlitz, PL04_PetitionDrive, PL05_PayFilingFee, PL06_TownHall,
   PL07_CandidateForum, PL08_KitchenTable, PL09_EarnedMedia, PL10_PressRelease, PL13_FishFry, PL14_CourtTheChairs,
-  PL11_StrawPoll, PL12_ClubSpeech, PL15_OppoResearch, PL17_DebatePrep, PL19_GOTVWeekend
+  PL11_StrawPoll, PL12_ClubSpeech, PL15_OppoResearch, PL17_DebatePrep, PL19_GOTVWeekend, PL23_RidesToPolls
 ]);
 
 /** Shop BUY* templates (catalog entries; live availability via show()). Main unlocks. */

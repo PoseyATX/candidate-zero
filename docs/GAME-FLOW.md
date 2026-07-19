@@ -32,7 +32,10 @@ Setup (persona · issue · district · region · seed)
              │ win primary
              ▼
 ┌─────────────────── GENERAL (weeks 9–14) ──────────────────┐
-│  Phase 3 · GOTV, contrast, name heat                         │
+│  Phase 3 · TURNOUT KIT (not primary club math)             │
+│  · Rapport seeds GOTV on enter · PL19 in hand              │
+│  · Block walk / phone bank bank GOTV · PL08 off-table      │
+│  · PL23 Rides (needs A06) · win math weights GOTV hard     │
 │  End of week 14 rolls general                              │
 └────────────┬───────────────────────────────┬───────────────┘
              │ lose                           │ win
@@ -110,7 +113,7 @@ Presentation layer (`src/ui/main.ts` + `styles.css`). Engine still owns transiti
 | Act | Stage | Splash CTA | Persistent chrome | Kit feel |
 |---|---|---|---|---|
 | **I** | Primary | “File the papers” | Oxblood frame · banner · masthead **Primary** | Campaign hand + shop (Main) |
-| **II** | General | “Take the field” | Slate/blue frame · **General** | Same Main kit + GOTV inject |
+| **II** | General | “Take the field” | Slate/blue frame · **General** | Turnout kit: GOTV in hand; field → GOTV; rapport seed; no kitchen-table |
 | **III** | Session | “Enter the chamber” | Gold frame · **Session** | Legislative SS* only (Special) |
 
 - Full-screen splash on: run start, primary win → general, general win → session, reelection start.  

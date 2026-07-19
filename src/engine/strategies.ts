@@ -25,7 +25,7 @@ function pickByPriority(
 export const laborBallotStrategy: Chooser = (playable, state) => {
   if (state.stage === 'general') {
     return pickByPriority(playable, [
-      'PL19', 'PL01', 'PL02', 'PL16', 'PL06', 'PL09', 'PL22', 'PL08', 'PL10'
+      'PL19', 'PL23', 'PL01', 'PL02', 'PL16', 'PL22', 'PL06', 'PL09', 'PL10'
     ]);
   }
   if (!state.ballot) {
@@ -42,7 +42,7 @@ export const laborBallotStrategy: Chooser = (playable, state) => {
 export const moneyBallotStrategy: Chooser = (playable, state) => {
   if (state.stage === 'general') {
     return pickByPriority(playable, [
-      'PL19', 'PL13', 'PL09', 'PL01', 'PL22', 'PL07', 'PL10', 'PL16'
+      'PL19', 'PL23', 'PL01', 'PL22', 'PL13', 'PL09', 'PL07', 'PL10', 'PL16'
     ]);
   }
   if (!state.ballot) {
@@ -57,6 +57,7 @@ export const moneyBallotStrategy: Chooser = (playable, state) => {
 /** Control: ignore ballot access. */
 export const grindFirstStrategy: Chooser = (playable, state) => {
   if (state.stage === 'general') {
+    // Still ignores "proper" GOTV priority relative to doors — control texture
     return pickByPriority(playable, ['PL01', 'PL02', 'PL19', 'PL10', 'PL06']);
   }
   return pickByPriority(playable, ['PL01', 'PL02', 'PL06', 'PL10', 'PL08', 'PL03', 'PL13']);
@@ -65,7 +66,7 @@ export const grindFirstStrategy: Chooser = (playable, state) => {
 export const hybridStrategy: Chooser = (playable, state) => {
   if (state.stage === 'general') {
     return pickByPriority(playable, [
-      'PL19', 'PL01', 'PL13', 'PL06', 'PL08', 'PL16', 'PL10', 'PL22'
+      'PL19', 'PL23', 'PL01', 'PL13', 'PL16', 'PL22', 'PL06', 'PL10'
     ]);
   }
   if (!state.ballot) {
@@ -110,7 +111,7 @@ export const debtLeverageStrategy: Chooser = (playable, state) => {
   }
   if (state.stage === 'general') {
     return pickByPriority(playable, [
-      'PL19', 'PL13', 'PL01', 'PL09', 'PL22', 'PL07', 'PL10', 'PL16'
+      'PL19', 'PL23', 'PL01', 'PL22', 'PL13', 'PL09', 'PL07', 'PL10', 'PL16'
     ]);
   }
   if (!state.ballot) {

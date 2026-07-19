@@ -349,3 +349,21 @@ Pilot: 2× warm AL01 (or endorse+AL01) → ORBIT OPEN log → MV01 camp offer �
 
 **Presentation only** — engine transitions unchanged. Honest note: General chrome is still mostly Main kit (correct fiction); Session is the hard kit swap. Ceremony without Session’s Special package would be empty theater — we already had the package.
 
+---
+
+## General kit gravity (2026-07-19)
+
+**Owner ask:** make Act II *play* different, not just look different.
+
+| Change | Detail |
+|---|---|
+| Rapport → GOTV seed | On primary win, high-rapport grounds bank GOTV head start |
+| Field converts | PL01/PL02 in general bank GOTV (less pure contact farm) |
+| Phase out club math | PL08 Kitchen Table → `ph: [1,2]` only |
+| GOTV in hand | `ensureGeneralTools` injects + prefers PL19 into hand |
+| PL23 Rides to the Polls | Archive flatbed lever (needs A06); modular id PL23 |
+| Win math | Heavier GOTV weight, lighter contacts in `generalWinProbability` |
+| Proof | `harness:calendar` kit-gravity block; strategies prioritize PL19/PL23 |
+
+**Recommendation logged:** this path over new entity kits first — General was the weak act.
+

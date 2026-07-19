@@ -78,6 +78,25 @@ Weekly card growth and phase drafts only pushed ids into `GameState.deck` (owner
 ### Design read
 - Filing + dual path still distinct; grind is the control.
 - General is no longer a coin flip on primary stats alone — **GOTV is the lever**.
+
+## 2026-07-19 — General kit gravity
+
+### Problem
+Act II (General) looked distinct (ceremony shell) but still *played* like late primary:
+kitchen-table politics legal, field plays only banked contacts/rapport, GOTV often buried
+in the draw pile, November math still too kind to raw contact padding.
+
+### Changes
+1. `seedGeneralGotvFromRapport` on primary win (15/30/50 rapport tiers → GOTV seed).
+2. PL01/PL02 general branch: bank GOTV; softer rapport.
+3. PL08 Kitchen Table `ph: [1,2]` only.
+4. `ensureGeneralTools`: PL19 preferred into **hand**; PL16 if vol-starved; PL23 if A06.
+5. PL23 Rides to the Polls (archive flatbed; modular id — archive PL20 is PAC here).
+6. `generalWinProbability`: GOTV `×0.18`, contacts downweighted.
+
+### Intent
+November is turnout arithmetic. Primary ground work *pays off* (seed) but you still must
+run GOTV. Club pie is a primary sport. Ceremony shell now matches mechanical kit.
 - Overall win rates remain souls-like (most runs still lose).
 - Money path is stronger into November (more contacts/name from fry economy); acceptable texture; re-check when obligations/hit pieces matter more.
 

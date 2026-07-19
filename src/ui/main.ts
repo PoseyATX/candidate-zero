@@ -103,18 +103,18 @@ const ACT_SHELLS: Record<ActId, ActShellDef> = {
     id: 'general',
     actNum: 'Act II',
     title: 'The General',
-    bannerSub: 'GOTV · contrast · November',
+    bannerSub: 'GOTV · turnout · November',
     splashBody:
       'You survived the primary. Same run — new clock. Six weeks to November. ' +
-      'Rapport was a promise; turnout is the promise kept.',
+      'Primary rapport seeds GOTV on the grounds that know you. Block walks and phones now bank turnout, not just introductions. Kitchen-table club math is closed.',
     splashHint:
-      'GOTV Weekend and Recruit Volunteers enter the deck. Contrast mail if you have the file. Still campaign verbs — not Session yet.',
+      'GOTV Weekend is in your hand. Field work converts to conversion %. Flatbed (A06) unlocks Rides to the Polls. November is arithmetic — contacts alone will not save you.',
     cta: 'Take the field',
     endWeekLabel: 'End general week',
     actionsTitle: 'General field',
     logTitle: 'Campaign log',
     tag: 'General',
-    kitLabel: 'Campaign plays · general phase'
+    kitLabel: 'Turnout kit · GOTV is the lever'
   },
   session: {
     id: 'session',

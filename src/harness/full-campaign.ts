@@ -164,7 +164,8 @@ assert(
 
 console.log('\nDesign read:');
 console.log('- Deck growth injects into the physical draw pile (ownership-only bug fixed).');
-console.log('- General injects PL19 GOTV; cost 1 vol so the lever is usable.');
+console.log('- General kit gravity: PL19 into hand; field→GOTV; rapport seed; PL08 off-table.');
+console.log('- PL23 Rides to the Polls when A06 owned; win math weights GOTV harder than contacts.');
 console.log('- Primary modestly more winnable when balloted; general still GOTV-gated.');
 console.log('- grind remains the control (miss filing).');
 console.log('\nHarness complete.');

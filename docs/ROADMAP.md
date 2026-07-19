@@ -335,6 +335,17 @@ Files: `src/engine/session.ts`, `src/data/session-plays.ts`, UI/strategy wires.
 
 **Presentation only** — `enter_general` / `enter_session` engine paths unchanged.
 
+## ✅ General kit gravity (DONE 2026-07-19)
+
+| Deliverable | Status | Evidence |
+|---|---|---|
+| Rapport seeds GOTV on enter general | **Done** | `seedGeneralGotvFromRapport` in `calendar.ts` |
+| Field plays bank GOTV in general | **Done** | PL01/PL02 stage branches |
+| Primary club plays off-table | **Done** | PL08 `ph: [1,2]` |
+| PL19 into hand + PL23 Rides | **Done** | `ensureGeneralTools`, `plays.ts` |
+| Win math favors GOTV over contact pad | **Done** | `generalWinProbability` weights |
+| Harness | **Done** | `harness:calendar` kit-gravity asserts |
+
 ## Phase 5 — Sweep balance breadth beyond labor/money
 
 Phase 0 fixed the two headline strategies and one systemic district bug,

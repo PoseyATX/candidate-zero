@@ -276,28 +276,66 @@ export function pickPhaseDraft(campaign: Campaign, index: number): ReturnType<ty
   return resolvePhaseDraft(campaign.state, index, campaign.deck);
 }
 
-/** On entering general, ensure a GOTV card is in the physical deck (phase-3 spine). */
+/**
+ * General kit gravity — make Act II play different from Act I.
+ * Inject GOTV spine into physical deck + pull key tools into hand when possible.
+ */
 export function ensureGeneralTools(campaign: Campaign): void {
   if (campaign.state.stage !== 'general') return;
-  const hasGotv =
-    campaign.deck.draw.includes('PL19') ||
-    campaign.deck.hand.includes('PL19') ||
-    campaign.deck.discard.includes('PL19');
-  if (!hasGotv) {
-    injectIntoDrawPile(campaign.deck, campaign.state, ['PL19']);
-    campaign.state.log.push({
-      week: campaign.state.week,
+  const { deck, state } = campaign;
+
+  const inPlay = (id: string) =>
+    deck.draw.includes(id) || deck.hand.includes(id) || deck.discard.includes(id);
+
+  /** Prefer hand so the lever is usable this week, not buried in a 20-card pile. */
+  const ensureInDeckAndPreferHand = (id: string): void => {
+    if (!inPlay(id)) {
+      injectIntoDrawPile(deck, state, [id]);
+    }
+    // Pull from draw/discard into hand if room (or always if missing from hand)
+    if (deck.hand.includes(id)) return;
+    const di = deck.draw.indexOf(id);
+    if (di >= 0) {
+      deck.draw.splice(di, 1);
+      deck.hand.push(id);
+      return;
+    }
+    const ci = deck.discard.indexOf(id);
+    if (ci >= 0) {
+      deck.discard.splice(ci, 1);
+      deck.hand.push(id);
+    }
+  };
+
+  const hadGotv = inPlay('PL19');
+  ensureInDeckAndPreferHand('PL19');
+  if (!hadGotv) {
+    state.log.push({
+      week: state.week,
       kind: 'note',
-      text: 'General tools: GOTV Weekend enters the deck. Turnout is the promise kept.'
+      text:
+        'GENERAL KIT — GOTV Weekend is in your hand. Block walks and phone banks now bank turnout. Kitchen-table club math is closed for November.'
     });
   }
-  // Recruit path if still vol-starved
-  const hasRecruit =
-    campaign.deck.draw.includes('PL16') ||
-    campaign.deck.hand.includes('PL16') ||
-    campaign.deck.discard.includes('PL16');
-  if (!hasRecruit && (campaign.state.volPool ?? 0) < 2) {
-    injectIntoDrawPile(campaign.deck, campaign.state, ['PL16']);
+
+  // Volunteer spine for GOTV cost (vp:1)
+  if ((state.volPool ?? 0) < 2 && !inPlay('PL16')) {
+    injectIntoDrawPile(deck, state, ['PL16']);
+    state.log.push({
+      week: state.week,
+      kind: 'note',
+      text: 'Volunteer starve-out: Recruit Volunteers enters the deck. GOTV costs bodies.'
+    });
+  }
+
+  // Flatbed doctrine — archive Rides to the Polls when A06 owned
+  if (state.assets.includes('A06') && !inPlay('PL23')) {
+    ensureInDeckAndPreferHand('PL23');
+    state.log.push({
+      week: state.week,
+      kind: 'note',
+      text: 'The Flatbed is gassed: Rides to the Polls available. Low-turnout turf converts hardest.'
+    });
   }
 }
 

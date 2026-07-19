@@ -244,6 +244,8 @@ function genBaseForDistrict(district: GameState['district']): number {
 /**
  * General win probability vs genOpp / genBase.
  * GOTV is the lever — without it, skilled primary still can lose November.
+ * 2026-07-19 kit gravity: heavier GOTV weight, lighter raw contacts
+ * (primary contact pad is not a November substitute).
  */
 export function generalWinProbability(state: GameState): number {
   const rapport =
@@ -252,16 +254,39 @@ export function generalWinProbability(state: GameState): number {
   const gotv = state.groundsArr.reduce((s, g) => s + (g.gotv || 0), 0);
   const opp = state.genBase || 0.45;
   const p =
-    0.18 +
-    state.nameID * 0.011 +
-    state.contacts * 0.00035 +
-    state.volPool * 0.018 +
-    rapport * 0.0025 +
-    gotv * 0.14 + // GOTV is the general dopamine lever
-    state.momentum * 0.02 -
+    0.16 +
+    state.nameID * 0.01 +
+    state.contacts * 0.00022 +
+    state.volPool * 0.02 +
+    rapport * 0.0018 +
+    gotv * 0.18 + // GOTV is the general lever (kit gravity)
+    state.momentum * 0.018 -
     state.hitPieces * 0.05 -
     opp * 0.28;
   return clamp(p, 0.06, 0.92);
+}
+
+/**
+ * Primary ground work pays off in November: bank a sliver of GOTV from
+ * rapport when entering the general. High-rapport turf becomes turnout
+ * arithmetic — not a free win, a head start on the only lever that matters.
+ */
+export function seedGeneralGotvFromRapport(state: GameState): { seeded: number; grounds: number } {
+  let seeded = 0;
+  let grounds = 0;
+  for (const g of state.groundsArr) {
+    const r = g.rapport || 0;
+    let add = 0;
+    if (r >= 50) add = 0.12;
+    else if (r >= 30) add = 0.07;
+    else if (r >= 15) add = 0.03;
+    if (add > 0) {
+      g.gotv = (g.gotv || 0) + add;
+      seeded += add;
+      grounds += 1;
+    }
+  }
+  return { seeded, grounds };
 }
 
 function setOutcome(state: GameState, outcome: CampaignOutcome, text: string): StageTransition {
@@ -310,14 +335,28 @@ export function resolvePrimaryConclusion(state: GameState): StageTransition {
       n: 'General election opponent',
       strength: state.genBase
     };
+    // Kit gravity: primary rapport becomes a GOTV head start.
+    const seed = seedGeneralGotvFromRapport(state);
+    const seedNote =
+      seed.grounds > 0
+        ? ` Grounds that know you seed +${seed.seeded.toFixed(2)} GOTV across ${seed.grounds} turf(s).`
+        : ' No rapport banked deep enough to seed GOTV — turnout starts from zero.';
     const text =
       `PRIMARY WIN (p≈${(winP * 100).toFixed(0)}%, roll ${(roll * 100).toFixed(0)}%). ` +
-      `You advance to the General — ${GENERAL_WEEKS} weeks. Opponent strength ${state.genBase.toFixed(2)}.`;
+      `You advance to the General — ${GENERAL_WEEKS} weeks. Opponent strength ${state.genBase.toFixed(2)}.` +
+      seedNote;
     state.log.push({ week: state.week, kind: 'note', text });
+    if (seed.grounds > 0) {
+      state.log.push({
+        week: state.week,
+        kind: 'note',
+        text: `TURNOUT SEED — primary rapport converts to GOTV head start (+${seed.seeded.toFixed(2)} total). November is arithmetic.`
+      });
+    }
     state.log.push({
       week: state.week,
       kind: 'week',
-      text: `General week ${stageWeek(state)} begins (phase ${getPhase(state)}). AP refreshed.`
+      text: `General week ${stageWeek(state)} begins (phase ${getPhase(state)}). AP refreshed. Field work banks GOTV now.`
     });
     return { kind: 'enter_general', text, winP, roll };
   }
