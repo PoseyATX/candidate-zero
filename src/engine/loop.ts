@@ -29,7 +29,7 @@ import {
 import { markWeekStart, buildWeekSummary, type WeekSummary } from './feedback.js';
 import { repCheck } from './reputation.js';
 import { applyLegacy } from './legacy.js';
-import { retireDebtOnWin } from './debt.js';
+import { availableCash, retireDebtOnWin } from './debt.js';
 import {
   applySetup,
   HARNESS_DEFAULT_SETUP,
@@ -75,6 +75,9 @@ export interface LedgerSnapshot {
   ap: number;
   fieldAp: number;
   money: number;
+  /** Phase 3: cash after debt service reserve (what $ costs actually see). */
+  availableCash: number;
+  debt: number;
   contacts: number;
   nameID: number;
   volPool: number;
@@ -84,6 +87,9 @@ export interface LedgerSnapshot {
   endorsePts: number;
   hitPieces: number;
   walkCount: number;
+  alliesWarm: number;
+  assetsOwned: number;
+  oblsCount: number;
 }
 
 export type Chooser = (
@@ -97,6 +103,8 @@ export function snapshot(state: GameState): LedgerSnapshot {
     ap: state.ap,
     fieldAp: state.fieldAp,
     money: state.money,
+    availableCash: availableCash(state),
+    debt: state.debt || 0,
     contacts: state.contacts,
     nameID: state.nameID,
     volPool: state.volPool,
@@ -105,7 +113,10 @@ export function snapshot(state: GameState): LedgerSnapshot {
     momentum: state.momentum,
     endorsePts: state.endorsePts,
     hitPieces: state.hitPieces,
-    walkCount: state.walkCount
+    walkCount: state.walkCount,
+    alliesWarm: state.allies.filter(a => a.warm > 0).length,
+    assetsOwned: state.assets.filter(a => /^A\d+/.test(a)).length,
+    oblsCount: state.obls.length
   };
 }
 

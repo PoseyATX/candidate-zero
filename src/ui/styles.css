@@ -173,6 +173,11 @@ h1 {
 }
 .chip-field { border-color: var(--sage); color: #b9d1a9; }
 .chip-on { border-color: var(--sage); color: #b9d1a9; }
+.chip-debt {
+  border-color: var(--oxblood-bright);
+  color: #e8b4a8;
+  margin-left: 0.25rem;
+}
 
 .hud-meter {
   display: inline-block;
@@ -216,6 +221,28 @@ h1 {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   display: block;
+}
+.ledger-grid .ledger-wide {
+  grid-column: 1 / -1;
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+.ledger-grid .muted,
+.muted {
+  color: var(--ink-dim, #8a7a62);
+  font-size: 0.82em;
+}
+.shop-hint {
+  grid-column: 1 / -1;
+  margin: 0.75rem 0 0.25rem;
+  color: var(--gold);
+  letter-spacing: 0.04em;
+}
+.play-card.shop {
+  border-color: #5a6e4a;
+}
+.play-card .stamp-shop {
+  color: #3d5a32;
 }
 
 .panels {
@@ -516,6 +543,7 @@ h1 {
   pointer-events: none;
 }
 .play-card .stamp-camp { color: #7d6018; }
+.play-card .stamp-shop { color: #3d5a32; }
 
 /* --- Body text --- */
 .play-card .tagline {

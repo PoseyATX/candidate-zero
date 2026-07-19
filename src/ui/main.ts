@@ -116,15 +116,24 @@ function renderHud(): void {
     `<i class="pip ${i < snap.ap ? 'on' : ''}"></i>`
   ).join('');
   const fieldChip = snap.fieldAp ? `<span class="chip chip-field">+${snap.fieldAp} field</span>` : '';
+  const debtChip =
+    snap.debt > 0
+      ? `<span class="chip chip-debt" title="Debt does not tax odds — win/loss branch only">−$${snap.debt}</span>`
+      : '';
   const weekPct = Math.round((snap.week / s.weeksTotal) * 100);
   const ballotBit = snap.ballot
     ? '<span class="chip chip-on">BALLOT ON</span>'
     : `<span class="hud-meter" title="${snap.signatures}/${s.sigNeed} signatures">
          <i style="width:${Math.min(100, Math.round((snap.signatures / s.sigNeed) * 100))}%"></i>
        </span><span class="hud-meter-label">${snap.signatures}/${s.sigNeed} sigs</span>`;
+  const spendNote =
+    snap.debt > 0 && snap.availableCash < snap.money
+      ? `<span class="hud-item" title="Service reserve — elevated debt tightens spend, not odds"><span class="k">Spend</span>$${snap.availableCash}</span>`
+      : '';
   $('hud').innerHTML = `
     <span class="hud-item"><span class="k">AP</span> <span class="pips">${pips}</span>${fieldChip}</span>
-    <span class="hud-item"><span class="k">$</span>${snap.money}</span>
+    <span class="hud-item"><span class="k">$</span>${snap.money}${debtChip}</span>
+    ${spendNote}
     <span class="hud-item"><span class="k">W${snap.week}</span>
       <span class="hud-meter hud-meter-week"><i style="width:${weekPct}%"></i></span>
     </span>
@@ -139,21 +148,53 @@ function renderLedger(): void {
   const attrs = Object.entries(s.attrs)
     .map(([k, v]) => `${k}${v}`)
     .join(' ');
+  const allyBits = s.allies
+    .filter(a => a.warm > 0)
+    .map(a => {
+      const g =
+        a.grounds && a.grounds.length
+          ? ` @ ${a.grounds
+              .map(id => s.groundsArr.find(x => x.id === id)?.n ?? id)
+              .join(', ')}`
+          : '';
+      return `${a.id}${g}`;
+    })
+    .join(' · ');
+  const assetBits = s.assets.filter(a => /^A\d+/.test(a)).join(' · ');
+  const oblBits = s.obls.join(' · ');
+  const spendLine =
+    snap.debt > 0
+      ? `<div><span class="k">Spendable</span> $${snap.availableCash}${
+          snap.availableCash < snap.money ? ' <span class="muted">(service reserve)</span>' : ''
+        }</div>`
+      : '';
+  const debtLine =
+    snap.debt > 0
+      ? `<div><span class="k">Debt</span> $${snap.debt}${
+          s.pacBridgeDebt ? ` · PAC bridge $${s.pacBridgeDebt}` : ''
+        } <span class="muted">— no odds tax</span></div>`
+      : '';
   $('ledger').innerHTML = `
     <div class="ledger-grid">
       <div><span class="k">Stage</span> ${stageLabel(s)} · Phase ${getPhase(s)}</div>
       <div><span class="k">Week</span> ${stageWeek(s)} (cal ${snap.week}/${s.weeksTotal})</div>
       <div><span class="k">AP</span> ${snap.ap}/${s.apMax}${snap.fieldAp ? ` +${snap.fieldAp} field` : ''}</div>
       <div><span class="k">Money</span> $${snap.money}</div>
+      ${spendLine}
+      ${debtLine}
       <div><span class="k">Contacts</span> ${snap.contacts}</div>
       <div><span class="k">Name ID</span> ${snap.nameID}</div>
       <div><span class="k">Vols</span> ${snap.volPool}</div>
       <div><span class="k">Momentum</span> ${snap.momentum}</div>
+      <div><span class="k">Endorse</span> ${snap.endorsePts}</div>
       <div><span class="k">Ballot</span> ${
         snap.ballot ? 'ON' : `${snap.signatures}/${s.sigNeed} sigs`
       }</div>
       <div><span class="k">Identity</span> ${s.persona ?? '—'} · ${s.issue ?? '—'}</div>
       <div><span class="k">Attrs</span> ${attrs}</div>
+      <div class="ledger-wide"><span class="k">Allies</span> ${allyBits || '—'}</div>
+      <div class="ledger-wide"><span class="k">Assets</span> ${assetBits || '—'}</div>
+      <div class="ledger-wide"><span class="k">Obligations</span> ${oblBits || '—'}</div>
       ${s.over && s.outcome ? `<div><span class="k">Outcome</span> ${s.outcome}</div>` : ''}
     </div>
   `;
@@ -162,10 +203,11 @@ function renderLedger(): void {
   } else if (s.stage === 'general') {
     $('week-hint').textContent = 'General election — GOTV and contrast. Six weeks to November.';
   } else if (s.ballot) {
-    $('week-hint').textContent = 'On the primary ballot. Build force before the week-8 primary.';
+    $('week-hint').textContent =
+      'On the primary ballot. Build force before the week-8 primary. Shop buys are free actions (0 AP).';
   } else {
     $('week-hint').textContent =
-      'Not on ballot — Petition / Filing Fee are camp actions. Deadline: end of week 8.';
+      'Not on ballot — Petition / Filing Fee / Shop are always available. Deadline: end of week 8.';
   }
 }
 
@@ -216,7 +258,7 @@ function costParts(card: PlayCard): { seal: string; subs: string[] } {
  */
 function cardInner(
   card: PlayCard,
-  opts: { camp?: boolean; locked?: boolean; lockReason?: string } = {}
+  opts: { camp?: boolean; shop?: boolean; locked?: boolean; lockReason?: string } = {}
 ): string {
   const state = campaign!.state;
   const g = pickDefaultGround(state);
@@ -230,7 +272,11 @@ function cardInner(
       : '';
   const attr = card.attrs?.length ? card.attrs.join(' · ') : '';
   const { seal, subs } = costParts(card);
-  const stamp = opts.camp ? '<span class="stamp stamp-camp">Camp</span>' : '';
+  const stamp = opts.shop
+    ? '<span class="stamp stamp-shop">Shop</span>'
+    : opts.camp
+      ? '<span class="stamp stamp-camp">Camp</span>'
+      : '';
   // Kind seal (top-left, mirroring the cost seal): a subtle corner glyph
   // marking the card's family. No verdict text — the category name lives
   // in title/aria only. `action` cards carry no mark (unmarked default).
@@ -261,14 +307,15 @@ function cardInner(
 
 function cardClasses(
   card: PlayCard,
-  opts: { camp?: boolean; locked?: boolean } = {}
+  opts: { camp?: boolean; shop?: boolean; locked?: boolean } = {}
 ): string {
   const kind = card.kind ?? 'action';
   return [
     'play-card',
     `risk-${card.risk.toLowerCase()}`,
     kind !== 'action' ? `kind-${kind}` : '',
-    opts.camp ? 'camp' : '',
+    opts.shop ? 'shop' : '',
+    opts.camp && !opts.shop ? 'camp' : '',
     opts.locked ? 'locked' : ''
   ]
     .filter(Boolean)
@@ -278,7 +325,7 @@ function cardClasses(
 function cardHtml(
   card: PlayCard,
   index: number,
-  opts: { camp?: boolean; locked?: boolean; lockReason?: string }
+  opts: { camp?: boolean; shop?: boolean; locked?: boolean; lockReason?: string }
 ): string {
   return `
     <button type="button" class="${cardClasses(card, opts)}" data-idx="${index}"
@@ -294,7 +341,13 @@ function lockReason(card: PlayCard): string {
   if (!canAfford(state, card)) {
     const c = card.cost;
     if ((c.a ?? 0) > state.ap && !(card.field && state.fieldAp > 0)) return 'No AP left';
-    if ((c.$ ?? 0) > state.money) return 'Not enough money';
+    // Phase 3: $ costs check availableCash (debt service reserve), not raw money
+    const spend = snapshot(state).availableCash;
+    if ((c.$ ?? 0) > spend) {
+      return (state.debt || 0) > 0 && spend < state.money
+        ? 'Cash reserved for the note'
+        : 'Not enough money';
+    }
     if ((c.vp ?? 0) > state.volPool) return 'Not enough volunteers';
     if ((c.m ?? 0) > state.momentum) return 'Not enough momentum';
     if ((c.fav ?? 0) > state.favors) return 'No favors owed';
@@ -327,10 +380,12 @@ function renderPlayables(): void {
   const handCards = campaign.deck.hand
     .map((id, index) => ({ index, card: campaign!.catalog.get(id) }))
     .filter((e): e is { index: number; card: PlayCard } => !!e.card && isVisible(state, e.card));
-  const campCards = playable.filter(p => p.index < 0);
+  const campCards = playable.filter(p => p.index < 0 && !p.card.id.startsWith('BUY'));
+  const shopCards = playable.filter(p => p.card.id.startsWith('BUY'));
 
+  // Shop is 0-AP — still available when AP is gone (spend-now lever visibility).
   const hintLine = apExhausted
-    ? `<p class="hint">Out of actions — end the week.</p>`
+    ? `<p class="hint">Out of actions — shop buys (0 AP) still work, or end the week.</p>`
     : !playable.length && !handCards.length
       ? `<p class="hint">Nothing playable. End week.</p>`
       : '';
@@ -346,7 +401,20 @@ function renderPlayables(): void {
         });
       })
       .join('') +
-    campCards.map(({ index, card }) => cardHtml(card, index, { camp: true })).join('');
+    campCards.map(({ index, card }) => cardHtml(card, index, { camp: true })).join('') +
+    (shopCards.length
+      ? `<p class="hint shop-hint">Campaign shop — 0 AP · money or volunteers</p>` +
+        shopCards
+          .map(({ index, card }) => {
+            const locked = !playableIdx.has(index);
+            return cardHtml(card, index, {
+              shop: true,
+              locked,
+              lockReason: locked ? lockReason(card) : undefined
+            });
+          })
+          .join('')
+      : '');
 
   grid.querySelectorAll<HTMLButtonElement>('.play-card:not(.locked)').forEach(btn => {
     btn.addEventListener('click', () => {
