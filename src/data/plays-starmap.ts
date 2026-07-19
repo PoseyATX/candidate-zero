@@ -18,6 +18,10 @@ export const MV01_PrecinctNetwork: PlayCard = {
   ph: [1, 2],
   tag: 'orbit movement',
   kind: 'ally',
+  /** Entity package — not Main; only when Precinct Chair orbit is open. */
+  residency: 'special',
+  control: 'player',
+  entityScope: [PILOT_ENTITY_ID],
   attrs: ['DIP'],
   d: 'The chairs you banked open a door: lists, volunteers, a quiet county nod. Starmap pilot — Precinct Chair orbit.',
   show: s => isPilotMovementAvailable(s),

@@ -83,9 +83,22 @@ Does **not** leave primary/general — overlay on existing campaign.
 
 ---
 
+## Card residency (entity kits)
+
+Entity/loop verbs are **Special** cards (`residency: 'special'`), not Main.
+Pilot MV01 carries `entityScope: ['ENT_PRECINCT_CHAIR']`. Session SS* are
+the elected-member Special package (`ENT_FRESHMAN_MEMBER` / `ENT_STATE_REP`).
+
+**Law:** do not invent 93 unique decks — use **role templates + deltas**.
+Outside (world) cards never live on entity kits. Full design:
+[`CARD-RESIDENCY.md`](./CARD-RESIDENCY.md).
+
+---
+
 ## Next roads (not this v0)
 
 1. Ceremony / act delineation (feel of transitions)  
 2. Second pilot: Canvass Captain / County Judge  
 3. Waiting loops absorb Chronicle paths  
 4. Movement UI (orbit awareness) — Phase 6 adjacent  
+5. Entity Special packages beyond MV01 (template-first)

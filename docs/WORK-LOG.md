@@ -6,7 +6,7 @@
 **Live alpha:** https://poseyatx.github.io/candidate-zero/  
 **Repo:** https://github.com/PoseyATX/candidate-zero  
 
-**Last updated:** 2026-07-19  
+**Last updated:** 2026-07-19 (card residency)  
 
 Related docs:
 
@@ -15,6 +15,8 @@ Related docs:
 | [`PROJECT-BOARD.md`](./PROJECT-BOARD.md) | Ops roadmap mirror of Project #2 |
 | [`ROADMAP.md`](./ROADMAP.md) | Evidence log (what shipped + harness proof) |
 | [`GAME-FLOW.md`](./GAME-FLOW.md) | Current player-facing loop |
+| [`CARD-RESIDENCY.md`](./CARD-RESIDENCY.md) | Main / Special / Outside deck architecture law |
+| [`CARD-TAXONOMY.md`](./CARD-TAXONOMY.md) | Kind/risk visual channels (orthogonal to residency) |
 | [`SRD-NOTES.md`](./SRD-NOTES.md) | Design law recovered from archive |
 | [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Layers + ship path |
 | Issues #4–#15 | Phase tickets + meta/bugs |
@@ -172,7 +174,8 @@ Over this workstream we:
 5. **Port over invent** for archive content; cite lines in comments.  
 6. **Unity = presentation only** for ship path; TS owns rules.  
 7. **Project board = ops roadmap; ROADMAP.md = evidence.** Code + harnesses beat agent vibes.  
-8. **Complexity discussion ≠ implementation room** — use vanilla Grok (or long design chat) to decide depth; Grok Build to enforce.
+8. **Complexity discussion ≠ implementation room** — use vanilla Grok (or long design chat) to decide depth; Grok Build to enforce.  
+9. **Card residency:** Main = always-carry; Special = entity/loop kit; Outside = event-only world pressure (`control: world`). Templates not 93× unique decks. Boosters later.
 
 ---
 
@@ -311,4 +314,22 @@ This is **not** Phase 5 balance matrix and **not** a cookie-clicker tint pass. I
 | Docs | `docs/STARMAP.md` |
 
 Pilot: 2× warm AL01 (or endorse+AL01) → ORBIT OPEN log → MV01 camp offer → yields + entityHistory.
+
+---
+
+## Card residency law (2026-07-19) — Main / Special / Outside
+
+**Owner ask:** MTG-scale catalog; every loop needs persistent Main cards + entity Specials; Outside for world events the player cannot play (e.g. New World Screw Worm). Honest critique, not yes-man.
+
+| Artifact | Path |
+|---|---|
+| Design law + critique | `docs/CARD-RESIDENCY.md` |
+| Schema | `CardResidency` / `CardControl` / `entityScope` on `PlayCard` (`types.ts`) |
+| Tags | CORE+WAVE4+shop → `main`/`player`; SESSION → `special` + freshman/rep scope; MV01 → `special` + `ENT_PRECINCT_CHAIR` |
+| Audit | `harness:audit` residency tally + session/shop checks |
+| Taxonomy link | `docs/CARD-TAXONOMY.md` (orthogonal channels) |
+
+**Explicit non-goals this pass:** boosters, event deck pipeline, Outside card content, 93 entity kits.
+
+**Design calls logged:** templates not unique decks; show-gate ≠ residency; event-triggered player verbs (funeral) stay Main; Outside never enters player hand.
 

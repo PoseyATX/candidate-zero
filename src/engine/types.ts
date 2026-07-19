@@ -84,6 +84,28 @@ export type AttrId = 'CLO' | 'CON' | 'CRA' | 'INK' | 'DIP' | 'CHA';
 
 export type Attrs = Record<AttrId, number>;
 
+/**
+ * Deck residency — WHERE a card lives architecturally.
+ * Orthogonal to CardKind (what it is) and RiskClass (variance).
+ * See docs/CARD-RESIDENCY.md.
+ *
+ * - main: always relevant across the career; lives in the Main Deck
+ *   (unless lost to scandal/misfortune later).
+ * - special: only relevant when embodying certain entities / loops;
+ *   may leave the main deck or live in an entity/event package.
+ * - outside: event-deck only; world pressure the player does not play
+ *   or control (New World Screw Worm, redistricting storm, etc.).
+ */
+export type CardResidency = 'main' | 'special' | 'outside';
+
+/**
+ * Who controls the card as an action.
+ * - player: something the player may choose / play / spend.
+ * - world: encounters the engine (or rivals) force; never a player play.
+ * Outside cards MUST be control: 'world'. Player never plays Outside.
+ */
+export type CardControl = 'player' | 'world';
+
 export interface PlayCard {
   id: string;
   n: string;
@@ -104,6 +126,22 @@ export interface PlayCard {
    * versa.
    */
   trap?: boolean;
+  /**
+   * Deck architecture residency (default treated as 'main' for player
+   * verbs). Required for new cards; legacy catalog is tagged in data.
+   * See docs/CARD-RESIDENCY.md.
+   */
+  residency?: CardResidency;
+  /**
+   * Who may choose this card. Default 'player'. Outside → always 'world'.
+   */
+  control?: CardControl;
+  /**
+   * When residency is 'special': entity ids (ENT_*) this package belongs
+   * to. Empty/undefined = loop-scoped special (e.g. all Session SS*)
+   * rather than a single entity kit.
+   */
+  entityScope?: string[];
   odds?: (state: GameState, ground?: Ground) => number;
   run?: (state: GameState, result: RollResult, ground?: Ground) => string;
   show?: (state: GameState) => boolean;

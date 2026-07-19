@@ -270,17 +270,29 @@ export const PL29_AttendFuneral: PlayCard = {
   }
 };
 
-export const WAVE4_PLAYS: PlayCard[] = [
-  PL16_RecruitVolunteers,
-  PL18_SharpenMessage,
-  PL20_PacCheck,
-  PL21_SelfFundCredit,
-  PL22_ContrastMail,
-  PL21B_PromoteCanvassCaptain,
-  PL39_HireFieldDirector,
-  PL22B_SeeSlateMaker,
-  PL30_PrayerBreakfast,
-  PL32_CoffeeEditor,
-  PL48_CourtCountyJudge,
-  PL29_AttendFuneral
-];
+/**
+ * Wave 4 — Main Deck (including scarce bargains PL20/PL21).
+ * PL29 funeral is Main + event-triggered show-gate, not Outside
+ * (player still chooses to attend). See docs/CARD-RESIDENCY.md.
+ */
+export const WAVE4_PLAYS: PlayCard[] = (() => {
+  const cards: PlayCard[] = [
+    PL16_RecruitVolunteers,
+    PL18_SharpenMessage,
+    PL20_PacCheck,
+    PL21_SelfFundCredit,
+    PL22_ContrastMail,
+    PL21B_PromoteCanvassCaptain,
+    PL39_HireFieldDirector,
+    PL22B_SeeSlateMaker,
+    PL30_PrayerBreakfast,
+    PL32_CoffeeEditor,
+    PL48_CourtCountyJudge,
+    PL29_AttendFuneral
+  ];
+  for (const c of cards) {
+    if (c.residency === undefined) c.residency = 'main';
+    if (c.control === undefined) c.control = 'player';
+  }
+  return cards;
+})();

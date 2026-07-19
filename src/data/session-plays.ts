@@ -394,18 +394,33 @@ export const SS13_PlayWrit: PlayCard = {
   }
 };
 
-export const SESSION_PLAYS: PlayCard[] = [
-  SS01_FileBill,
-  SS02_SeekReferral,
-  SS_PAC_Refuse,
-  SS03_CourtChair,
-  SS04_Testimony,
-  SS05_CalendarSlot,
-  SS06_FloorFight,
-  SS07_WorkSenate,
-  SS08_Casework,
-  SS09_SpeakerErrand,
-  SS10_WhipTrade,
-  SS12_StudyRules,
-  SS13_PlayWrit
-];
+/**
+ * Session loop package — Special residency (not Main Deck).
+ * Scoped to freshman / state-rep family; departs kit on sine die (future wire).
+ * See docs/CARD-RESIDENCY.md.
+ */
+const SESSION_ENTITY_SCOPE = ['ENT_FRESHMAN_MEMBER', 'ENT_STATE_REP'] as const;
+
+export const SESSION_PLAYS: PlayCard[] = (() => {
+  const cards: PlayCard[] = [
+    SS01_FileBill,
+    SS02_SeekReferral,
+    SS_PAC_Refuse,
+    SS03_CourtChair,
+    SS04_Testimony,
+    SS05_CalendarSlot,
+    SS06_FloorFight,
+    SS07_WorkSenate,
+    SS08_Casework,
+    SS09_SpeakerErrand,
+    SS10_WhipTrade,
+    SS12_StudyRules,
+    SS13_PlayWrit
+  ];
+  for (const c of cards) {
+    c.residency = 'special';
+    c.control = 'player';
+    c.entityScope = [...SESSION_ENTITY_SCOPE];
+  }
+  return cards;
+})();

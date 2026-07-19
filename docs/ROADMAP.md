@@ -19,6 +19,8 @@ Grounded in repo evidence (`TICKET-v0.1-modular-baseline.md`, `ARCHITECTURE.md`,
 
 - **Phase 0–4** done (issues #4–#8; Session shipped 2026-07-19).
 - **Starmap v0** started — entity/orbit/loop cartography + Precinct Chair pilot (#17/#18).
+- **Card residency law** — Main / Special / Outside + control channel
+  (`docs/CARD-RESIDENCY.md`); schema + catalog tags; no boosters/event deck yet.
 - **Phase 5** — balance breadth (issue #9); still valid for campaign math.
 - **Phases 6–7** — mobile polish, honest v0.1.
 - **Phase 8** — ship path: **TS pure engine → Unity presentation → iOS / App Store**
@@ -306,6 +308,21 @@ Files: `src/engine/session.ts`, `src/data/session-plays.ts`, UI/strategy wires.
 | `npm run harness:starmap` | **Done** | inventory + pilot e2e |
 
 **Not in v0:** multi-entity playable loops, movement UI modal, waiting-loop stage rewrite.
+
+## ✅ Card residency — Main / Special / Outside (DONE 2026-07-19)
+
+**Design law:** [`docs/CARD-RESIDENCY.md`](./CARD-RESIDENCY.md) (includes honest critique + MTG-scale template rule).
+
+| Deliverable | Status | Evidence |
+|---|---|---|
+| `CardResidency` / `CardControl` / `entityScope` on `PlayCard` | **Done** | `src/engine/types.ts` |
+| CORE + WAVE4 + shop → main/player | **Done** | `plays.ts`, `plays-wave4.ts`, `assets.ts` |
+| SESSION SS* → special + entityScope | **Done** | `session-plays.ts` |
+| MV01 → special + ENT_PRECINCT_CHAIR | **Done** | `plays-starmap.ts` |
+| Outside content | **Deferred** | schema ready; 0 Outside cards (correct) |
+| Audit residency tally | **Done** | `harness:audit` — main=37 special=14 outside=0 |
+
+**Not in this pass:** event deck, boosters/draft, auto-strip on scandal, Unity kit UI.
 
 ## Phase 5 — Sweep balance breadth beyond labor/money
 

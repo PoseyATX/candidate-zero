@@ -306,20 +306,29 @@ export const PL19_GOTVWeekend: PlayCard = {
   }
 };
 
-/** Wave 1–3 core plays (attr-tagged). */
-export const CORE_PLAYS: PlayCard[] = [
+/** Tag Main-deck player verbs (mutates; see docs/CARD-RESIDENCY.md). */
+function tagMainPlayer(cards: PlayCard[]): PlayCard[] {
+  for (const c of cards) {
+    if (c.residency === undefined) c.residency = 'main';
+    if (c.control === undefined) c.control = 'player';
+  }
+  return cards;
+}
+
+/** Wave 1–3 core plays (attr-tagged). Main Deck — always-carry campaign spine. */
+export const CORE_PLAYS: PlayCard[] = tagMainPlayer([
   PL01_BlockWalk, PL02_PhoneBank, PL03_YardSignBlitz, PL04_PetitionDrive, PL05_PayFilingFee, PL06_TownHall,
   PL07_CandidateForum, PL08_KitchenTable, PL09_EarnedMedia, PL10_PressRelease, PL13_FishFry, PL14_CourtTheChairs,
   PL11_StrawPoll, PL12_ClubSpeech, PL15_OppoResearch, PL17_DebatePrep, PL19_GOTVWeekend
-];
+]);
 
-/** Shop BUY* templates (catalog entries; live availability via show()). */
-export const SHOP_PLAYS: PlayCard[] = allShopPlayTemplates();
+/** Shop BUY* templates (catalog entries; live availability via show()). Main unlocks. */
+export const SHOP_PLAYS: PlayCard[] = tagMainPlayer(allShopPlayTemplates());
 
 /**
  * Play catalog for SRD audit / draw pool (excludes BUY* shop items —
  * those are camp actions, not deck plays; see SHOP_PLAYS + buildCatalog).
- * Starmap pilot verbs (MV01) included — tightly show-gated.
+ * Starmap pilot verbs (MV01) included — tightly show-gated; Special residency.
  */
 export const ALL_PLAYS: PlayCard[] = [...CORE_PLAYS, ...WAVE4_PLAYS, ...STARMAP_PLAYS];
 

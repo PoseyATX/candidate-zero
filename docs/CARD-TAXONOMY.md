@@ -78,3 +78,13 @@ usual home for `trap: true`, but they're independent on purpose: a future
 non-bargain card could want the balance flag, and not every bargain must be
 a mechanical trap. The player never sees `trap` — they see the `bargain`
 frame and the card's own words.
+
+## Relationship to residency (Main / Special / Outside)
+
+**Taxonomy is not residency.** `CardKind` + `RiskClass` answer *what is this
+and how swingy is it?* Residency answers *where does it live and who may
+play it?* — Main Deck, entity/loop Special package, or Outside event deck.
+
+See [`CARD-RESIDENCY.md`](./CARD-RESIDENCY.md). A Main `bargain` (PAC Check)
+and a Special Session `action` (Floor Fight) can share risk classes; they
+must not share deck ownership rules.

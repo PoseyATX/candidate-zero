@@ -108,6 +108,8 @@ export function buildShopPlays(state: GameState): PlayCard[] {
       ph: [1, 2, 3],
       tag: 'asset',
       kind: 'item',
+      residency: 'main',
+      control: 'player',
       d: a.d,
       odds: () => 1,
       run: s => {
@@ -129,6 +131,9 @@ export function allShopPlayTemplates(): PlayCard[] {
     ph: [1, 2, 3],
     tag: 'asset',
     kind: 'item' as const,
+    /** Main unlocks — persistent assets the campaign carries. */
+    residency: 'main' as const,
+    control: 'player' as const,
     d: a.d,
     show: (s: GameState) => !s.assets.includes(id) && (!a.req || a.req(s)),
     odds: () => 1,
