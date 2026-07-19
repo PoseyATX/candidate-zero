@@ -5,6 +5,7 @@
  */
 
 import { ALL_PLAYS, SHOP_PLAYS } from '../data/plays.js';
+import { SESSION_PLAYS } from '../data/session-plays.js';
 import {
   createDeckState,
   discardCard,
@@ -120,11 +121,13 @@ export function snapshot(state: GameState): LedgerSnapshot {
   };
 }
 
-/** Full runtime catalog: deck plays + shop BUY* camp actions. */
+/** Full runtime catalog: deck plays + shop BUY* + session SS* actions. */
 export function buildCatalog(plays: PlayCard[] = ALL_PLAYS): Map<string, PlayCard> {
   const map = new Map(plays.map(p => [p.id, p]));
   // Shop is always registered (archive assetPlays always available in menu).
   for (const p of SHOP_PLAYS) map.set(p.id, p);
+  // Phase 4: session pipeline + survival plays
+  for (const p of SESSION_PLAYS) map.set(p.id, p);
   return map;
 }
 
@@ -300,10 +303,25 @@ export const CAMP_PETITION = -101;
 export const CAMP_FILING_FEE = -105;
 /** Camp-style shop index base: -200 - i for the i-th available BUY* play. */
 export const CAMP_SHOP_BASE = -200;
+/** Session play synthetic index base: -300 - i. */
+export const CAMP_SESSION_BASE = -300;
 
 export function listPlayableHand(campaign: Campaign): { index: number; card: PlayCard }[] {
   const out: { index: number; card: PlayCard }[] = [];
   const inHandIds = new Set<string>();
+
+  // Phase 4: session uses always-available SS* plays, not campaign hand/shop.
+  if (campaign.state.stage === 'session') {
+    let i = 0;
+    for (const card of SESSION_PLAYS) {
+      if (isPlayable(campaign.state, card)) {
+        out.push({ index: CAMP_SESSION_BASE - i, card });
+        i++;
+      }
+    }
+    return out;
+  }
+
   campaign.deck.hand.forEach((id, index) => {
     const card = campaign.catalog.get(id);
     if (card && isPlayable(campaign.state, card)) {
@@ -338,13 +356,18 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
   return out;
 }
 
-/** Resolve a camp / shop synthetic index to a catalog card id, or null. */
+/** Resolve a camp / shop / session synthetic index to a catalog card id, or null. */
 export function campIndexToCardId(
   campaign: Campaign,
   handIndex: number
 ): string | null {
   if (handIndex === CAMP_PETITION) return 'PL04';
   if (handIndex === CAMP_FILING_FEE) return 'PL05';
+  if (handIndex <= CAMP_SESSION_BASE) {
+    const sessionCards = SESSION_PLAYS.filter(c => isPlayable(campaign.state, c));
+    const i = CAMP_SESSION_BASE - handIndex;
+    return sessionCards[i]?.id ?? null;
+  }
   if (handIndex <= CAMP_SHOP_BASE) {
     const shopCards = [...campaign.catalog.entries()]
       .filter(([id, card]) => id.startsWith('BUY') && isPlayable(campaign.state, card))
@@ -384,6 +407,17 @@ export function startWeek(campaign: Campaign): string[] {
     ensureGeneralTools(campaign);
   }
   markWeekStart(campaign.state);
+
+  // Phase 4: session does not grow the campaign deck (archive: capital/writs)
+  if (campaign.state.stage === 'session') {
+    campaign.state.log.push({
+      week: campaign.state.week,
+      kind: 'week',
+      text: `Session week ${campaign.state.week} — the building moves at the building's pace.`
+    });
+    return [];
+  }
+
   // Mandatory weekly growth: own new cards AND put them in the draw pile
   const newCards = enforceWeeklyDraw(campaign.state);
   if (newCards.length > 0) {

@@ -58,17 +58,24 @@ function runStrategy(name: string): Row {
     runFullCampaign(c, choose);
     const o = (c.state.outcome ?? 'ongoing') as CampaignOutcome;
 
+    // Phase 4: general win enters Session — terminal outcomes are session_* or lost_general.
+    const wonGenPath =
+      o === 'won_general' ||
+      o === 'session_law' ||
+      o === 'session_survived' ||
+      o === 'session_primaried';
     if (o === 'missed_filing') missedFiling++;
     else if (o === 'lost_primary') lostPrimary++;
-    else if (o === 'won_general') wonGeneral++;
+    else if (wonGenPath) wonGeneral++;
     else if (o === 'lost_general') lostGeneral++;
 
-    if (o === 'won_general' || o === 'lost_general') {
+    if (wonGenPath || o === 'lost_general') {
       nGenStats++;
       const gotv = c.state.groundsArr.reduce((s, g) => s + (g.gotv || 0), 0);
       gotvSum += gotv;
       nameSum += c.state.nameID;
       contactSum += c.state.contacts;
+      // After session, genOpp math is historical; still useful for pre-session force.
       genPSum += generalWinProbability(c.state);
     }
   }

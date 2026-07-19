@@ -73,13 +73,22 @@ console.log(`Primary ${PRIMARY_WEEKS}w · General ${GENERAL_WEEKS}w · Total ${C
       c.state.outcome === 'missed_filing' ||
         c.state.outcome === 'lost_primary' ||
         c.state.outcome === 'won_general' ||
-        c.state.outcome === 'lost_general',
+        c.state.outcome === 'lost_general' ||
+        c.state.outcome === 'session_law' ||
+        c.state.outcome === 'session_survived' ||
+        c.state.outcome === 'session_primaried',
       `seed ${1000 + i} bad outcome ${c.state.outcome}`
     );
     if (c.state.outcome === 'missed_filing') missed++;
     if (c.state.outcome === 'lost_primary') lostPrimary++;
     if (c.state.primaryWon) reachedGeneral++;
-    if (c.state.outcome === 'won_general' || c.state.outcome === 'lost_general') generalDecided++;
+    const genDecided =
+      c.state.outcome === 'won_general' ||
+      c.state.outcome === 'lost_general' ||
+      c.state.outcome === 'session_law' ||
+      c.state.outcome === 'session_survived' ||
+      c.state.outcome === 'session_primaried';
+    if (genDecided) generalDecided++;
   }
   console.log('Labor full-campaign sample (n=%d):', N, {
     missedFilingRate: +((missed / N) * 100).toFixed(1),

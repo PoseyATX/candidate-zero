@@ -197,7 +197,14 @@ function runStrategyTrials(
     }
     runFullCampaign(camp, choose);
     if (camp.state.ballot) ballot++;
-    if (camp.state.outcome === 'won_general') wins++;
+    if (
+      camp.state.outcome === 'won_general' ||
+      camp.state.outcome === 'session_law' ||
+      camp.state.outcome === 'session_survived' ||
+      camp.state.outcome === 'session_primaried'
+    ) {
+      wins++;
+    }
     debtSum += camp.state.debt || 0;
     if (
       camp.state.selfLoanTaken ||

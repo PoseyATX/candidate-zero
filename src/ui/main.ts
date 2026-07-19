@@ -174,6 +174,28 @@ function renderLedger(): void {
           s.pacBridgeDebt ? ` · PAC bridge $${s.pacBridgeDebt}` : ''
         } <span class="muted">— no odds tax</span></div>`
       : '';
+  const sessionBits =
+    s.stage === 'session'
+      ? `
+      <div><span class="k">Capital</span> ${s.capital}</div>
+      <div><span class="k">Favor</span> ${Math.round(s.favor)}</div>
+      <div><span class="k">District</span> ${Math.round(s.districtStanding)}</div>
+      <div class="ledger-wide"><span class="k">Committee</span> ${s.committee?.n ?? '—'}</div>
+      <div class="ledger-wide bill-status"><span class="k">Bill</span> ${
+        s.bill
+          ? `${s.bill.title} · <b>${s.bill.status}</b> (${billStageLabelUi(s.bill)}) · heat ${s.bill.heat}${
+              s.bill.tally.aye || s.bill.tally.nay
+                ? ` · tally ${s.bill.tally.aye}–${s.bill.tally.nay}`
+                : ''
+            }`
+          : '—'
+      }</div>
+      ${
+        s.sessionFlags?.pac_lender_claim || s.obls.includes('OB1')
+          ? '<div class="ledger-wide muted">PAC claim rides — referral will collect.</div>'
+          : ''
+      }`
+      : '';
   $('ledger').innerHTML = `
     <div class="ledger-grid">
       <div><span class="k">Stage</span> ${stageLabel(s)} · Phase ${getPhase(s)}</div>
@@ -182,6 +204,10 @@ function renderLedger(): void {
       <div><span class="k">Money</span> $${snap.money}</div>
       ${spendLine}
       ${debtLine}
+      ${
+        s.stage === 'session'
+          ? ''
+          : `
       <div><span class="k">Contacts</span> ${snap.contacts}</div>
       <div><span class="k">Name ID</span> ${snap.nameID}</div>
       <div><span class="k">Vols</span> ${snap.volPool}</div>
@@ -189,9 +215,11 @@ function renderLedger(): void {
       <div><span class="k">Endorse</span> ${snap.endorsePts}</div>
       <div><span class="k">Ballot</span> ${
         snap.ballot ? 'ON' : `${snap.signatures}/${s.sigNeed} sigs`
-      }</div>
+      }</div>`
+      }
       <div><span class="k">Identity</span> ${s.persona ?? '—'} · ${s.issue ?? '—'}</div>
       <div><span class="k">Attrs</span> ${attrs}</div>
+      ${sessionBits}
       <div class="ledger-wide"><span class="k">Allies</span> ${allyBits || '—'}</div>
       <div class="ledger-wide"><span class="k">Assets</span> ${assetBits || '—'}</div>
       <div class="ledger-wide"><span class="k">Obligations</span> ${oblBits || '—'}</div>
@@ -200,6 +228,9 @@ function renderLedger(): void {
   `;
   if (s.over) {
     $('week-hint').textContent = `Campaign over: ${s.outcome ?? 'ended'}.`;
+  } else if (s.stage === 'session') {
+    $('week-hint').textContent =
+      'THE SESSION — one motion on the bill per week. Casework keeps the seat; the clock is the first antagonist.';
   } else if (s.stage === 'general') {
     $('week-hint').textContent = 'General election — GOTV and contrast. Six weeks to November.';
   } else if (s.ballot) {
@@ -209,6 +240,22 @@ function renderLedger(): void {
     $('week-hint').textContent =
       'Not on ballot — Petition / Filing Fee / Shop are always available. Deadline: end of week 8.';
   }
+}
+
+function billStageLabelUi(bill: { pipelineStage: number; status: string }): string {
+  const labels = [
+    'Unfiled',
+    'Filed',
+    'Referred',
+    'Heard',
+    'Voted Out',
+    'Calendar',
+    'Passed House',
+    'Through Senate',
+    'SIGNED'
+  ];
+  if (bill.pipelineStage < 0) return 'Dead';
+  return labels[Math.min(8, bill.pipelineStage)] ?? bill.status;
 }
 
 function renderDraft(): void {
@@ -380,6 +427,37 @@ function renderPlayables(): void {
   const handCards = campaign.deck.hand
     .map((id, index) => ({ index, card: campaign!.catalog.get(id) }))
     .filter((e): e is { index: number; card: PlayCard } => !!e.card && isVisible(state, e.card));
+  // Phase 4: session is all synthetic SS* plays (no hand / shop)
+  if (state.stage === 'session') {
+    const sessionCards = playable;
+    const hintLine = apExhausted
+      ? `<p class="hint">Out of actions — end the week (or play free motions if any).</p>`
+      : !sessionCards.length
+        ? `<p class="hint">Nothing legal this week — end week (pipeline already used, or wait for calendar).</p>`
+        : `<p class="hint session-hint">Legislative motions · one pipeline play per week</p>`;
+    grid.innerHTML =
+      hintLine +
+      sessionCards
+        .map(({ index, card }) => {
+          const free = (card.cost.a ?? 0) === 0;
+          const locked = !free && apExhausted;
+          return cardHtml(card, index, {
+            camp: true,
+            locked,
+            lockReason: locked ? 'No AP left' : undefined
+          });
+        })
+        .join('');
+    grid.querySelectorAll<HTMLButtonElement>('.play-card:not(.locked)').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = Number(btn.dataset.idx);
+        if (Number.isNaN(idx)) return;
+        commitPlay(idx);
+      });
+    });
+    return;
+  }
+
   const campCards = playable.filter(p => p.index < 0 && !p.card.id.startsWith('BUY'));
   const shopCards = playable.filter(p => p.card.id.startsWith('BUY'));
 
@@ -662,7 +740,10 @@ function renderTerminalOutcome(): void {
     missed_filing: 'Never Made the Ballot',
     lost_primary: 'Primary Lost',
     won_general: 'The Seat Is Won',
-    lost_general: 'The General’s Wall'
+    lost_general: 'The General’s Wall',
+    session_law: 'Sine Die — Law',
+    session_survived: 'Sine Die — Seat Holds',
+    session_primaried: 'Sine Die — Primaried Out'
   };
   const epithet = buildEpithet(state, terminalKind, terminalShare);
   const growth = buildGrowthLine(state);
@@ -680,9 +761,12 @@ function renderTerminalOutcome(): void {
         : '';
     debtNote = `<p class="debt-note">The bank still wants its money ($${state.debt || 0}). Losing does not cancel the note — it compounds into the next cycle.${crisis}</p>`;
   }
-  const nextHint =
-    terminalKind === 'won_general'
-      ? 'Ahead: the swearing-in and the next filing period. Stand again, or rest on the win.'
+  const sessionWin =
+    terminalKind === 'session_law' || terminalKind === 'session_survived';
+  const nextHint = sessionWin
+    ? 'The gavel fell. Stand for reelection as the incumbent, or rest on the term.'
+    : terminalKind === 'won_general'
+      ? 'Ahead: the session (live) or reelection path — Session now starts on general win in-engine.'
       : 'Two years until the next filing deadline. How do you spend them?';
 
   $('terminal-head').innerHTML = `
@@ -693,7 +777,7 @@ function renderTerminalOutcome(): void {
     <p class="hint">${nextHint}</p>
   `;
 
-  if (terminalKind === 'won_general') {
+  if (sessionWin || terminalKind === 'won_general') {
     renderTerminalWinChoices();
   } else {
     renderTerminalPaths();
@@ -857,6 +941,14 @@ function endWeek(): void {
   const transition = endWeekInPlace(campaign);
   if (transition.kind === 'enter_general') {
     maybeOfferPhaseDraft(campaign, false);
+  }
+  if (transition.kind === 'enter_session') {
+    // Phase 4: general win continues into Session — no terminal yet.
+    campaign.state.log.push({
+      week: campaign.state.week,
+      kind: 'note',
+      text: transition.text
+    });
   }
   if (campaign.state.over) {
     enterTerminal(campaign);

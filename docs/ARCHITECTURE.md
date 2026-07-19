@@ -29,7 +29,7 @@
 |-------|----------------|-------|--------|
 | Primary | 1–8 | 1 if `!ballot`, else 2 | Filing deadline end of week 8 |
 | General | 9–14 | 3 | Only if primary won |
-| Session | later | 3 | Not yet simulated |
+| Session | after general win | 3 | Phase 4: 14w sine die, bill pipeline (SS01–SS07) |
 
 Terminal outcomes: `missed_filing` · `lost_primary` · `won_general` · `lost_general`.
 

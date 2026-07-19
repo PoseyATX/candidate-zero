@@ -24,8 +24,8 @@ become a second rules implementation.
 | **DONE** | [#5](https://github.com/PoseyATX/candidate-zero/issues/5) | Phase 1 — Ground-centered campaign model |
 | **DONE** | [#6](https://github.com/PoseyATX/candidate-zero/issues/6) | Phase 2 — Allies / assets / obligations port |
 | **DONE** | [#7](https://github.com/PoseyATX/candidate-zero/issues/7) | Phase 3 — Debt as leveraged optionality |
-| **NEXT** | [#8](https://github.com/PoseyATX/candidate-zero/issues/8) | Phase 4 — Session stage (bill lifecycle) |
-| PLANNED | [#9](https://github.com/PoseyATX/candidate-zero/issues/9) | Phase 5 — Balance breadth |
+| **DONE** | [#8](https://github.com/PoseyATX/candidate-zero/issues/8) | Phase 4 — Session stage (bill lifecycle) |
+| **NEXT** | [#9](https://github.com/PoseyATX/candidate-zero/issues/9) | Phase 5 — Balance breadth |
 | PLANNED | [#10](https://github.com/PoseyATX/candidate-zero/issues/10) | Phase 6 — Mobile-first UI + a11y |
 | PLANNED | [#11](https://github.com/PoseyATX/candidate-zero/issues/11) | Phase 7 — Honest v0.1 label |
 | PLANNED | [#12](https://github.com/PoseyATX/candidate-zero/issues/12) | Phase 8 — TS → Unity → iOS / App Store |
@@ -67,11 +67,14 @@ Commit: `57936c6`.
 `src/engine/debt.ts` — no resolve odds tax; win/loss asymmetric;  
 `harness:debt`. Commit: `f7dff8f`. Pages firm-up: `6e8ec53`.
 
-### NEXT — Phase 4 Session
-Enter session after general win; bill lifecycle on existing types;  
-PAC claim gate; UI + `harness:session`. **Start here.**
+### DONE — Phase 4 Session
+General win → Session; SS01–SS07 pipeline; PAC claim on referral; sine die
+outcomes; `harness:session`. Commit trail on #8.
 
-### Later — 5 Balance → 6 Mobile polish → 7 v0.1 → 8 Ship
+### NEXT — Phase 5 Balance breadth
+Matrix harness personas × districts × regions. **Start here.**
+
+### Later — 6 Mobile polish → 7 v0.1 → 8 Unity/iOS ship
 
 ---
 

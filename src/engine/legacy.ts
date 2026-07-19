@@ -86,6 +86,11 @@ export interface InterimPath {
 export function buildPaths(state: GameState, share: number): InterimPath[] {
   const respectable = share > 28 && state.hitPieces < 3;
   const crisis = isDebtCrisis(state);
+  const wasSession =
+    state.outcome === 'session_law' ||
+    state.outcome === 'session_survived' ||
+    state.outcome === 'session_primaried' ||
+    state.stage === 'session';
   const paths: (InterimPath & { gate: boolean })[] = [
     {
       id: 'perennial',
@@ -127,6 +132,14 @@ export function buildPaths(state: GameState, share: number): InterimPath[] {
       interim: crisis
         ? 'Two years of fences, Friday games, and interest.'
         : 'Two years of fences and Friday games.'
+    },
+    {
+      id: 'exmember',
+      n: 'The Ex-Member',
+      d: 'Two years as a former legislator — half lobbyist-in-waiting, half elder statesman, all rolodex.',
+      traits: ['T_AUTHOR', 'T_LEVERS'],
+      gate: wasSession,
+      interim: 'Two years as a former member — doors still open, title still warm.'
     }
   ];
   return paths.filter(p => p.gate);
@@ -176,6 +189,13 @@ export function applyLegacy(state: GameState, legacy: LegacyState): void {
 export function computeShare(state: GameState, kind: CampaignOutcome): number {
   if (kind === 'lost_primary') return primaryWinProbability(state) * 100;
   if (kind === 'lost_general') return generalWinProbability(state) * 100;
+  // Session reelection outlook is baked into the outcome text; surface standing.
+  if (kind === 'session_law' || kind === 'session_survived') {
+    return Math.min(95, 50 + state.districtStanding * 0.4);
+  }
+  if (kind === 'session_primaried') {
+    return Math.max(5, state.districtStanding * 0.35);
+  }
   return 0;
 }
 
@@ -194,6 +214,12 @@ export function buildEpithet(state: GameState, kind: CampaignOutcome, share: num
     core = state.incumbentRun
       ? `defended the seat as the incumbent on ${state.issue ?? 'the issue'}`
       : `won the seat outright on ${state.issue ?? 'the issue'}`;
+  } else if (kind === 'session_law') {
+    core = `passed a bill into law on ${state.issue ?? 'the issue'} and held the seat`;
+  } else if (kind === 'session_survived') {
+    core = `survived a first session on ${state.issue ?? 'the issue'} and held the seat`;
+  } else if (kind === 'session_primaried') {
+    core = `won the seat, fought a session, and was primaried out`;
   } else if (kind === 'missed_filing') {
     core = `never made the ballot — ${state.signatures} signatures and an empty coffee can`;
   } else if (kind === 'lost_general') {

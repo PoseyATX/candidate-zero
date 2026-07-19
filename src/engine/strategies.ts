@@ -128,13 +128,43 @@ export const conservativeMoneyStrategy: Chooser = (playable, state) => {
   return moneyBallotStrategy(noLoan, state);
 };
 
+/** Phase 4: advance the bill pipeline when legal, else casework / favor. */
+export const sessionPipelineStrategy: Chooser = (playable, _state) => {
+  const order = [
+    'SS01',
+    'SS_PAC', // refuse is optional; skip if we want auto-pay on referral
+    'SS02',
+    'SS03',
+    'SS04',
+    'SS05',
+    'SS06',
+    'SS07',
+    'SS13',
+    'SS10',
+    'SS09',
+    'SS08',
+    'SS12'
+  ];
+  // Prefer pipeline; do not auto-refuse PAC (SS_PAC) — referral auto-pays.
+  const noRefuse = playable.filter(p => p.card.id !== 'SS_PAC');
+  return pickByPriority(noRefuse, order);
+};
+
+function withSession(chooser: Chooser): Chooser {
+  return (playable, state) => {
+    if (state.stage === 'session') return sessionPipelineStrategy(playable, state);
+    return chooser(playable, state);
+  };
+}
+
 export const STRATEGIES: Record<string, Chooser> = {
-  labor: laborBallotStrategy,
-  money: moneyBallotStrategy,
-  grind: grindFirstStrategy,
-  hybrid: hybridStrategy,
-  debt: debtLeverageStrategy,
-  'money-safe': conservativeMoneyStrategy
+  labor: withSession(laborBallotStrategy),
+  money: withSession(moneyBallotStrategy),
+  grind: withSession(grindFirstStrategy),
+  hybrid: withSession(hybridStrategy),
+  debt: withSession(debtLeverageStrategy),
+  'money-safe': withSession(conservativeMoneyStrategy),
+  session: sessionPipelineStrategy
 };
 
 export function describeStrategy(_name: string, state: GameState): string {

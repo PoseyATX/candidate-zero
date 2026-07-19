@@ -15,9 +15,9 @@ Grounded in repo evidence (`TICKET-v0.1-modular-baseline.md`, `ARCHITECTURE.md`,
 
 ## How to read this doc
 
-- **Phase 0–3** done (issues #4–#7 closed 2026-07-19).
-- **Phase 4 NEXT** — Session stage (issue #8). Claude’s “thin done” claim was false.
-- **Phases 5–7** — balance, mobile polish, honest v0.1.
+- **Phase 0–4** done (issues #4–#8; Session shipped 2026-07-19).
+- **Phase 5 NEXT** — balance breadth (issue #9).
+- **Phases 6–7** — mobile polish, honest v0.1.
 - **Phase 8** — ship path: **TS pure engine → Unity presentation → iOS / App Store**
   (issue #12). Unity is not a second rules engine.
 - Each item lists evidence so agents don’t re-derive status from vibes.
@@ -268,19 +268,23 @@ Hooks reused (no parallel systems): `addObl`/`OB1`/`OB2` (`obligations.ts`),
 
 Detail: `docs/SRD-NOTES.md` § debt / Phase 3.
 
-## Phase 4 — Build the Session stage — **NEXT** ([#8](https://github.com/PoseyATX/candidate-zero/issues/8))
+## ✅ Phase 4 — Session stage (DONE 2026-07-19, [#8](https://github.com/PoseyATX/candidate-zero/issues/8))
 
-`GameState.stage` includes `'session'`; scaffold fields `capital`, `favor`,
-`districtStanding`, `bill`, `committee`, `sessionFlags` exist; Phase 2 typed
-`Bill` / `Committee` / `VoteTally`. **Nothing simulates Session yet**
-(`ARCHITECTURE.md`: "Not yet simulated"). Claude’s project issue claimed
-`session-plays.ts` and sine die were already done — **false**, cleaned up
-2026-07-19.
+Port of archive Session (prototype ~917–1075). General win **enters Session**
+(no longer terminal). Sine die yields `session_law` | `session_survived` |
+`session_primaried`.
 
-This is the third act (post–general win, legislator on your **issue**). Also
-honor Phase 3’s `sessionFlags.pac_lender_claim` / OB1. Do not improvise a
-second GameState shape — extend the Phase 2 types. Full acceptance criteria
-on issue #8.
+| Requirement | Status | Evidence |
+|---|---|---|
+| Enter Session on general win | **Done** | `enterSessionFromGeneral` in `calendar.ts` / `session.ts` |
+| Bill lifecycle draft→…→law | **Done** | `pipelineStage` 0–8 + `BillStatus`; SS01–SS07 |
+| Issue-linked signature bill | **Done** | `createDraftBill` uses `state.issue` |
+| PAC claim gates referral | **Done** | `applyPacClaimOnReferral` on SS02; SS_PAC refuse |
+| UI bill status | **Done** | Ledger bill line + session actions menu |
+| `harness:session` | **Done** | green — law/survived/primaried partition |
+
+Files: `src/engine/session.ts`, `src/data/session-plays.ts`, UI/strategy wires.
+`resolve.ts` untouched.
 
 ## Phase 5 — Sweep balance breadth beyond labor/money
 

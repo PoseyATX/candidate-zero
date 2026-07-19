@@ -91,8 +91,16 @@ function runGroundCampaign(seed: number, cardStrat: string, groundStrat: GroundS
   const groundsGE40 = c.state.groundsArr.filter(g => (g.rapport || 0) >= 40).length;
   const topRapport = Math.max(0, ...c.state.groundsArr.map(g => g.rapport || 0));
   return {
-    won: outcome === 'won_general',
-    reachedGeneral: outcome === 'won_general' || outcome === 'lost_general',
+    won:
+      outcome === 'won_general' ||
+      outcome === 'session_law' ||
+      outcome === 'session_survived',
+    reachedGeneral:
+      outcome === 'won_general' ||
+      outcome === 'lost_general' ||
+      outcome === 'session_law' ||
+      outcome === 'session_survived' ||
+      outcome === 'session_primaried',
     contested,
     groundsGE40,
     topRapport,

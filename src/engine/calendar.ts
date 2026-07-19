@@ -8,6 +8,12 @@
 import { random } from './rng.js';
 import { addAlly, warm } from './reputation.js';
 import { applyOblDrag } from '../data/obligations.js';
+import {
+  enterSessionFromGeneral,
+  onSessionWeekAdvance,
+  resolveSineDie,
+  SESSION_WEEKS
+} from './session.js';
 import type { CampaignOutcome, GameState, Ground } from './types.js';
 
 /** Primary campaign length (includes filing window). */
@@ -18,6 +24,7 @@ export const GENERAL_WEEKS = 6;
 export const FILING_DEADLINE_WEEK = PRIMARY_WEEKS;
 /** Continuous calendar: primary 1–8, general 9–14. */
 export const CAMPAIGN_WEEKS_TOTAL = PRIMARY_WEEKS + GENERAL_WEEKS;
+export { SESSION_WEEKS };
 
 export type StageTransitionKind =
   | 'none'
@@ -25,7 +32,11 @@ export type StageTransitionKind =
   | 'lost_primary'
   | 'enter_general'
   | 'won_general'
-  | 'lost_general';
+  | 'lost_general'
+  | 'enter_session'
+  | 'session_law'
+  | 'session_survived'
+  | 'session_primaried';
 
 export interface StageTransition {
   kind: StageTransitionKind;
@@ -186,6 +197,7 @@ export function stageWeek(state: GameState): number {
   if (state.stage === 'general') {
     return Math.max(1, state.week - PRIMARY_WEEKS);
   }
+  // Session and primary both use week as stage-local (session resets to 1).
   return state.week;
 }
 
@@ -320,6 +332,7 @@ export function resolvePrimaryConclusion(state: GameState): StageTransition {
 
 /**
  * Resolve end of general (week CAMPAIGN_WEEKS_TOTAL).
+ * Phase 4: a win enters Session immediately (does not terminal the run).
  */
 export function resolveGeneralConclusion(state: GameState): StageTransition {
   if (state.stage !== 'general') {
@@ -328,12 +341,7 @@ export function resolveGeneralConclusion(state: GameState): StageTransition {
   const winP = generalWinProbability(state);
   const roll = random();
   if (roll < winP) {
-    return setOutcome(
-      state,
-      'won_general',
-      `GENERAL WIN (p≈${(winP * 100).toFixed(0)}%, roll ${(roll * 100).toFixed(0)}%). ` +
-        `The district is yours. Session waits.`
-    );
+    return enterSessionFromGeneral(state, winP, roll);
   }
   return setOutcome(
     state,
@@ -357,21 +365,36 @@ export function advanceCampaignWeek(state: GameState): StageTransition {
     return resolvePrimaryConclusion(state);
   }
 
-  // Completing final general week → general election
+  // Completing final general week → general election (win → Session)
   if (state.stage === 'general' && state.week === CAMPAIGN_WEEKS_TOTAL) {
     return resolveGeneralConclusion(state);
   }
 
+  // Completing final session week → sine die
+  if (state.stage === 'session' && state.week === SESSION_WEEKS) {
+    return resolveSineDie(state);
+  }
+
   state.week += 1;
   state.ap = state.apMax;
-  state.fieldAp = warm(state, 'AL09') ? 1 : 0;
+  state.fieldAp = state.stage === 'session' ? 0 : warm(state, 'AL09') ? 1 : 0;
   state.momentum = Math.max(0, state.momentum - 1);
   state.townHallThisWeek = false;
-  onWeekAdvance(state);
+  if (state.stage === 'session') {
+    onSessionWeekAdvance(state);
+    // Rival ground growth is campaign-era; skip in session
+    state.groundPlays = {};
+    applyOblDrag(state);
+  } else {
+    onWeekAdvance(state);
+  }
   state.log.push({
     week: state.week,
     kind: 'week',
-    text: `${stageLabel(state)} week ${stageWeek(state)} (calendar W${state.week}) begins (phase ${getPhase(state)}). AP refreshed.`
+    text:
+      state.stage === 'session'
+        ? `SESSION WEEK ${state.week} — ${SESSION_WEEKS - state.week} to sine die. AP refreshed.`
+        : `${stageLabel(state)} week ${stageWeek(state)} (calendar W${state.week}) begins (phase ${getPhase(state)}). AP refreshed.`
   });
   return { kind: 'none', text: '' };
 }

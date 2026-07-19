@@ -269,9 +269,9 @@ export interface GameState {
 }
 
 /**
- * Session bill — Phase 4 will wire lifecycle; Phase 2 only freezes the shape.
- * Mirrors what a Texas House bill needs to be a game object: who sponsored it,
- * which issue it serves, where it sits, and how the floor math looks.
+ * Session bill — Phase 2 froze the shape; Phase 4 wires the lifecycle.
+ * `pipelineStage` mirrors archive BILLSTAGES 0–8 for motion gating;
+ * `status` is the player-facing enum for UI / harnesses.
  */
 export interface Bill {
   id: string;
@@ -286,8 +286,15 @@ export interface Bill {
   status: BillStatus;
   /** Aye / nay / present tallies when a floor or committee vote is open. */
   tally: VoteTally;
-  /** Calendar week the bill was filed (campaign or session clock). */
+  /** Calendar week the bill was filed (session clock). */
   filedWeek?: number;
+  /**
+   * Archive pipeline index 0–8 (Unfiled → SIGNED). Source:
+   * prototype-single-file.html BILLSTAGES / bill.stage.
+   */
+  pipelineStage: number;
+  /** Political heat — raises disaster pressure on later motions (archive heat). */
+  heat: number;
 }
 
 export type BillStatus =
@@ -343,7 +350,13 @@ export type CampaignOutcome =
   | 'missed_filing'
   | 'lost_primary'
   | 'won_general'
-  | 'lost_general';
+  | 'lost_general'
+  /** Phase 4: sine die — signature bill became law. */
+  | 'session_law'
+  /** Phase 4: sine die — no law (or near-miss), seat still holds. */
+  | 'session_survived'
+  /** Phase 4: sine die — reelection outlook broke (primaried out). */
+  | 'session_primaried';
 
 /** One archive-authored trait — see src/engine/legacy.ts TRAITS for effects. */
 export type TraitId =
