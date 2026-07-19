@@ -1232,12 +1232,74 @@ function endWeek(): void {
   }
   applyStageChrome();
   paint();
-  // Full-screen act handoffs — after paint so chrome is already correct under the splash
-  if (transition.kind === 'enter_general') {
-    openActSplash('general', transition.text);
-  } else if (transition.kind === 'enter_session') {
-    // Phase 4: general win continues into Session — no terminal, no new run.
-    openActSplash('session', transition.text);
+  // Weather first, then act handoffs — Outside never stacks under a missed splash
+  const afterWeather = (): void => {
+    if (transition.kind === 'enter_general') {
+      openActSplash('general', transition.text);
+    } else if (transition.kind === 'enter_session') {
+      openActSplash('session', transition.text);
+    }
+  };
+  if (campaign.state.pendingOutside) {
+    openOutsideWeather(campaign.state.pendingOutside, afterWeather);
+  } else {
+    afterWeather();
+  }
+}
+
+/**
+ * Outside weather surface — world pressure the player does not play.
+ * Fixed modal (not hand, not toast). Dismiss clears pendingOutside.
+ */
+function openOutsideWeather(
+  notice: { id: string; n: string; text: string },
+  onDone?: () => void
+): void {
+  if (!campaign) {
+    onDone?.();
+    return;
+  }
+  let root = document.getElementById('outside-weather');
+  if (!root) {
+    root = document.createElement('div');
+    root.id = 'outside-weather';
+    root.className = 'outside-weather';
+    root.setAttribute('role', 'dialog');
+    root.setAttribute('aria-modal', 'true');
+    root.setAttribute('aria-labelledby', 'outside-weather-title');
+    root.innerHTML = `
+      <div class="outside-weather-panel">
+        <p class="eyebrow outside-weather-tag">Outside · world weather</p>
+        <h2 id="outside-weather-title" class="outside-weather-title"></h2>
+        <p class="outside-weather-body"></p>
+        <p class="hint outside-weather-hint">You cannot play this card. You answer it — or you weather it.</p>
+        <button type="button" class="btn btn-gold" id="outside-weather-ok">Understood</button>
+      </div>`;
+    document.getElementById('game')?.appendChild(root);
+  }
+  root.classList.remove('hidden');
+  const title = root.querySelector('.outside-weather-title');
+  const body = root.querySelector('.outside-weather-body');
+  const ok = root.querySelector('#outside-weather-ok') as HTMLButtonElement | null;
+  if (title) title.textContent = notice.n;
+  // Strip leading "OUTSIDE — …" stamp if present for cleaner body (log keeps full line)
+  let bodyText = notice.text;
+  const dash = bodyText.indexOf('—');
+  if (/^OUTSIDE/i.test(bodyText) && dash >= 0) {
+    bodyText = bodyText.slice(dash + 1).trim();
+  }
+  if (body) body.textContent = bodyText;
+  const dismiss = (): void => {
+    root!.classList.add('hidden');
+    if (campaign) campaign.state.pendingOutside = null;
+    ok?.removeEventListener('click', dismiss);
+    onDone?.();
+  };
+  if (ok) {
+    ok.replaceWith(ok.cloneNode(true));
+    const fresh = root.querySelector('#outside-weather-ok') as HTMLButtonElement;
+    fresh.addEventListener('click', dismiss);
+    fresh.focus();
   }
 }
 

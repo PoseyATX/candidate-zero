@@ -874,6 +874,64 @@ h1 {
   margin-bottom: 1rem;
 }
 
+/* Outside weather — world event surface (never hand; Phase 6+ UI) */
+.outside-weather {
+  position: fixed;
+  inset: 0;
+  z-index: 85; /* above act splash if both queue (weather first in flow) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background:
+    radial-gradient(ellipse 80% 55% at 50% 20%, rgba(61, 90, 104, 0.4), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(138, 47, 38, 0.15), transparent 55%),
+    rgba(6, 10, 14, 0.94);
+}
+.outside-weather.hidden {
+  display: none;
+}
+.outside-weather-panel {
+  max-width: 28rem;
+  width: 100%;
+  background: linear-gradient(175deg, #1a2228, var(--walnut-2));
+  border: 1px solid #3d5a68;
+  outline: 1px solid rgba(169, 196, 209, 0.25);
+  outline-offset: 3px;
+  padding: 1.4rem 1.3rem 1.25rem;
+  text-align: center;
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.55);
+}
+.outside-weather-tag {
+  color: #a9c4d1;
+  letter-spacing: 0.2em;
+  margin: 0 0 0.35rem;
+}
+.outside-weather-title {
+  font-family: Cinzel, serif;
+  font-size: 1.28rem;
+  color: #c5dce8;
+  margin: 0.2rem 0 0.85rem;
+  letter-spacing: 0.03em;
+  line-height: 1.2;
+}
+.outside-weather-body {
+  font-size: 0.94rem;
+  line-height: 1.5;
+  color: var(--parchment);
+  text-align: left;
+  margin: 0 0 0.75rem;
+}
+.outside-weather-hint {
+  text-align: left;
+  margin: 0 0 1.1rem;
+  color: #8aa3b0;
+  font-style: italic;
+}
+.outside-weather-panel .btn {
+  min-width: 10rem;
+}
+
 /* HUD / masthead stage chips */
 .chip-act {
   font-weight: 700;

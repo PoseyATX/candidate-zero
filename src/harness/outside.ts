@@ -54,6 +54,8 @@ for (const e of OUTSIDE_EVENTS) {
   assert(s.eventsFired['EV_SCREWWORM'] === true, 'once fired');
   assert(s.contacts < 100, 'contacts hit');
   assert(s.log.some(l => l.text.includes('OUTSIDE')), 'logged');
+  assert(s.pendingOutside?.id === 'EV_SCREWWORM', 'pendingOutside for UI surface');
+  assert(!!s.pendingOutside?.n && !!s.pendingOutside?.text, 'pendingOutside payload');
   // Once: not eligible again
   assert(
     !listEligibleOutside(s).some(e => e.id === 'EV_SCREWWORM'),

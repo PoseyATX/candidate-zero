@@ -59,7 +59,14 @@ export function resolveOutsideEvent(state: GameState, event: OutsideEvent): stri
     kind: 'note',
     text
   });
+  // Presentation hook — host shows weather chrome, then clears. Never hand.
+  state.pendingOutside = { id: event.id, n: event.n, text };
   return text;
+}
+
+/** Host dismisses Outside weather surface. */
+export function clearPendingOutside(state: GameState): void {
+  state.pendingOutside = null;
 }
 
 /**

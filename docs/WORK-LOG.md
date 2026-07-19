@@ -547,3 +547,41 @@ Rated 2026-07-19: topical Outside quotes **GREAT**; hand→persona creation **GO
 
 **14** playable pilots. Harness e2e extended.
 
+---
+
+## QoL — GR08 rename (2026-07-19)
+
+| Was | Now |
+|---|---|
+| The Barrio Blocks | **Southside Blocks** |
+
+Live grounds + archive prototype. Same `GR08` id (saves/orbits unchanged).
+
+---
+
+## Outside pack #2 — quote-forward weather (2026-07-19)
+
+| ID | Name |
+|---|---|
+| EV_GRID_FREEZE | Grid Freeze Hangover |
+| EV_PROPERTY_TAX | Property Tax Revival |
+| EV_LIBRARY_FIGHT | Library Shelf Fight |
+| EV_BORDER_BUSES | Buses on the Cable News |
+| EV_COUNTY_FAIR | County Fair Week |
+| EV_RURAL_HOSPITAL | Rural Hospital Scare |
+
+Still **outside / world** only. Original paraphrase, not copyrighted soundbites. Catalog **16**. Harness:outside green.
+
+---
+
+## Outside weather UI surface (2026-07-19)
+
+| Piece | Detail |
+|---|---|
+| Engine | `pendingOutside` on resolve; host clears on dismiss |
+| UI | `#outside-weather` modal — title, body, “cannot play this” |
+| Flow | After End Week → weather (if any) → act splash if needed |
+| Law | Never hand; log line still written |
+
+Makes pack #1–2 readable without burying weather in the log only.
+

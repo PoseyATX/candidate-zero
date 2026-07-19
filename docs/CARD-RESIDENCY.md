@@ -1,6 +1,6 @@
 # Card Residency — Main / Special / Outside
 
-**Status:** design law · Outside event deck **v0 + pack #2** (16 events in `outside-events.ts`) · boosters still later  
+**Status:** design law · Outside event deck **v0 + pack #2** (16 events) · **player weather surface** (`pendingOutside` + `#outside-weather`) · still never hand · boosters later  
 **Related:** [`CARD-TAXONOMY.md`](./CARD-TAXONOMY.md) (kind/risk *visual* channels) · [`STARMAP.md`](./STARMAP.md) (entities/loops) · `PlayCard` in `src/engine/types.ts`
 
 This is the **deck architecture** law for a Magic-scale catalog. Taxonomy answers *what is this card?* Residency answers *where does it live, and who is allowed to use it?*

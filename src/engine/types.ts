@@ -292,6 +292,11 @@ export interface GameState {
   lastPhase?: 1 | 2 | 3;
   /** Pending phase-turn draft (3 card options). */
   pendingDraft?: { phase: number; options: string[] };
+  /**
+   * Latest Outside event for presentation (UI / Unity). Set by resolveOutsideEvent;
+   * cleared by the host after the weather surface is dismissed. Never hand.
+   */
+  pendingOutside?: { id: string; n: string; text: string } | null;
   /** Set on a "Stand for Reelection" continuation (src/engine/legacy.ts). */
   incumbentRun?: boolean;
   /** 1 on a first run; increments each successful reelection continuation. */
