@@ -14,6 +14,7 @@ import {
   resolveSineDie,
   SESSION_WEEKS
 } from './session.js';
+import { tickOutsideDeck } from './outside.js';
 import type { CampaignOutcome, GameState, Ground } from './types.js';
 
 /** Primary campaign length (includes filing window). */
@@ -190,6 +191,8 @@ function onWeekAdvance(state: GameState): void {
   applyOblDrag(state);
   applyWeeklyAssetAllyTicks(state);
   advanceAllyEvents(state);
+  // Outside event deck — world weather, never hand (CARD-RESIDENCY)
+  tickOutsideDeck(state);
 }
 
 /** Week within the current stage (1-based). */

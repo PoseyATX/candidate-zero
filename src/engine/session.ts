@@ -15,6 +15,7 @@
 import { random } from './rng.js';
 import { hasRep } from './reputation.js';
 import { retireDebtOnWin } from './debt.js';
+import { tickOutsideDeck } from './outside.js';
 import type { Bill, BillStatus, CampaignOutcome, Committee, GameState } from './types.js';
 import type { StageTransition } from './calendar.js';
 
@@ -492,7 +493,7 @@ export function tickSessionPressure(state: GameState): string[] {
 }
 
 /**
- * Session week advance housekeeping + Session teeth pressure.
+ * Session week advance housekeeping + Session teeth pressure + Outside deck.
  */
 export function onSessionWeekAdvance(state: GameState): void {
   state.sessionFlags = state.sessionFlags || {};
@@ -503,6 +504,9 @@ export function onSessionWeekAdvance(state: GameState): void {
   for (const text of lines) {
     state.log.push({ week: state.week, kind: 'note', text });
   }
+
+  // Outside weather during session (special session, challenger ads, …)
+  tickOutsideDeck(state);
 
   // Filing deadline: unfiled signature bill dies (archive 1581)
   if (

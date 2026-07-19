@@ -81,6 +81,14 @@ report it. Engine path is `enter_session`, not `won_general` terminal.
 
 ---
 
+## Outside weather (event deck v0)
+
+World cards the player **never plays**. ~28% of campaign weeks / ~22% of session weeks may draw one (`OUTSIDE —` in the log).
+
+Examples: New World Screw Worm, mid-decade map rumor, ethics complaint, drought, energy boom, rival dump, flood, school-board war, special session, challenger ad.
+
+React with Main/Special verbs. You do not “play the worm.”
+
 ## Money traps (current balance)
 
 | Card | Limit | Cost of taking it |

@@ -347,6 +347,16 @@ Files: `src/engine/session.ts`, `src/data/session-plays.ts`, UI/strategy wires.
 | Win math favors GOTV over contact pad | **Done** | `generalWinProbability` weights |
 | Harness | **Done** | `harness:calendar` kit-gravity asserts |
 
+## ✅ Outside event deck v0 (DONE 2026-07-19)
+
+| Deliverable | Status | Evidence |
+|---|---|---|
+| OutsideEvent catalog (10) | **Done** | `src/data/outside-events.ts` |
+| Draw + resolve (never hand) | **Done** | `src/engine/outside.ts` |
+| Week ticks (campaign + session) | **Done** | `calendar.ts` / `session.ts` |
+| Screw worm + map/ethics/weather | **Done** | residency examples live |
+| `harness:outside` | **Done** | catalog + once + no hand inject |
+
 ## ✅ Session teeth (DONE 2026-07-19)
 
 | Deliverable | Status | Evidence |

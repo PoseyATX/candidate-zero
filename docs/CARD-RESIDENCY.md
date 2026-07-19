@@ -1,6 +1,6 @@
 # Card Residency — Main / Special / Outside
 
-**Status:** design law (schema live; event deck + boosters not built)  
+**Status:** design law · Outside event deck **v0 live** (`src/data/outside-events.ts`, `src/engine/outside.ts`) · boosters still later  
 **Related:** [`CARD-TAXONOMY.md`](./CARD-TAXONOMY.md) (kind/risk *visual* channels) · [`STARMAP.md`](./STARMAP.md) (entities/loops) · `PlayCard` in `src/engine/types.ts`
 
 This is the **deck architecture** law for a Magic-scale catalog. Taxonomy answers *what is this card?* Residency answers *where does it live, and who is allowed to use it?*
@@ -81,7 +81,9 @@ MV01 is the pilot of this pattern: one Special verb, tightly show-gated, not stu
 | Hostile actors as events | Rival dump, PAC counter-offer as forced encounter | Not player agency |
 | Ambient Texas | Drought, energy boom, culture-war week | Texture + pressure |
 
-**None of these are implemented as cards yet.** Schema supports them; catalog has zero Outside rows on purpose. When the event deck lands, Outside cards must set `control: 'world'` and must **not** appear in `listPlayableHand` / player draw.
+**v0 implemented (10 events):** Screw Worm, map rumor, ethics complaint, drought, energy boom, rival dump, flood week, school-board war, special session, challenger ad.  
+Wired via `tickOutsideDeck` on campaign + session week advance. Never enters hand.  
+Harness: `npm run harness:outside`.
 
 **Gray zone (be honest):** PL29 Attend Funeral is *show-gated by calendar* but is still a **player choice** when available → **Main** (event-triggered Main), not Outside. Outside would be “A beloved judge dies” as a world card that *opens* the funeral option. Do not collapse “event-triggered player verb” into Outside; that confuses control with trigger source.
 

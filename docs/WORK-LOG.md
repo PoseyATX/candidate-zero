@@ -186,6 +186,7 @@ Over this workstream we:
 | **DONE** | #9 | Phase 5 — Balance breadth (matrix + wrong retune) |
 | **DONE** | #17/#18 | Starmap — 8 entity templates (MV01–08 + Slate) |
 | **DONE** | — | Session teeth (pressure, stall, freeze, challenger) |
+| **DONE** | — | Outside event deck v0 (10 world cards) |
 | PLANNED | #10 | Phase 6 — Mobile-first UI + a11y |
 | PLANNED | #11 | Phase 7 — Honest v0.1 label |
 | PLANNED | #12 | Phase 8 — TS → Unity → iOS / App Store |
@@ -392,5 +393,34 @@ Issue #9 closed with evidence.
 | 1 | MV01–03 | Precinct, Captain, Judge |
 | 2 | MV04–07 | County Party, Club, Editor, Faith |
 
-7 templates total; registry `pilots.ts`; harness e2e all paths. Issues **#17 / #18 closed**.
+8 templates (incl. Slate MV08). Issues **#17 / #18 closed**.
+
+---
+
+## Session teeth (2026-07-19)
+
+| Tooth | Effect |
+|---|---|
+| Casework or bleed | No casework week → district −2 (else −1) |
+| Stall heat | Bill same stage 2+ weeks → heat +1 |
+| Challenger heat | Standing &lt; 52 → heat stacks; bites sine die reelect |
+| Speaker freeze | Low favor + advanced bill → freeze; blocks SS05/SS06 |
+| Weekly events | Lobby / district emergency / Speaker mark / PAC / press / rare gift |
+| Strategy | Session AI does casework + errands under pressure |
+
+`tickSessionPressure` in `session.ts`; harness:session asserts.
+
+---
+
+## Outside event deck v0 (2026-07-19)
+
+| Piece | Detail |
+|---|---|
+| Catalog | 10 Outside events · `outside` / `world` |
+| Engine | `tickOutsideDeck` on campaign + session week advance |
+| Law | Never enters hand; `OUTSIDE —` log prefix |
+| Example | EV_SCREWWORM (New World Screw Worm) |
+| Harness | `npm run harness:outside` |
+
+Boosters / full event UI still later.
 
