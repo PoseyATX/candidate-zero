@@ -544,6 +544,123 @@ const PILOT_LOBBY: LoopDef = {
   exampleNouns: ['Access map', 'Retainer', 'Conscience']
 };
 
+/** Union local president — plant gate (MV12). */
+const PILOT_UNION: LoopDef = {
+  id: 'LOOP_ENT_UNION_LOCAL_PRES',
+  name: 'Plant-gate endorsement',
+  kind: 'entity_primary',
+  entityId: 'ENT_UNION_LOCAL_PRES',
+  description: 'Local president, shift change, hands that vote. Opens MV12.',
+  advancement: [
+    {
+      id: 'ADV_UNION_FIELD',
+      type: 'advancement',
+      description: 'nameID ≥ 8 + volPool ≥ 4 (you look like a field campaign the hall can back).',
+      kind: 'name_id_gte',
+      params: { n: 8, requireVol: 4 },
+      movementTarget: 'ENT_UNION_LOCAL_PRES'
+    },
+    {
+      id: 'ADV_UNION_ENDORSE',
+      type: 'advancement',
+      description: 'endorsePts ≥ 3 (someone already nodded; the hall can second it).',
+      kind: 'endorse_gte',
+      params: { n: 3 },
+      movementTarget: 'ENT_UNION_LOCAL_PRES'
+    }
+  ],
+  setback: [
+    {
+      id: 'SET_UNION_HIT',
+      type: 'setback',
+      description: 'Hit pieces sour the hall.',
+      kind: 'hit_pieces_gte',
+      params: { n: 3 },
+      residue: ['scar_union_cold']
+    }
+  ],
+  exampleVerbs: ['Work the gate', 'Take the local', 'Spend the hall'],
+  exampleNouns: ['Plant gate', 'Shift change', 'Union hall']
+};
+
+/** Chamber executive — rubber chicken (MV13). */
+const PILOT_CHAMBER: LoopDef = {
+  id: 'LOOP_ENT_CHAMBER_EXEC',
+  name: 'Chamber rubber-chicken circuit',
+  kind: 'entity_primary',
+  entityId: 'ENT_CHAMBER_EXEC',
+  description: 'Reliable voters and polite checks. Opens MV13.',
+  advancement: [
+    {
+      id: 'ADV_CHAMBER_WAR_CHEST',
+      type: 'advancement',
+      description: 'endorse ≥ 2 + $≥1000 (you look fundable at the chicken dinner).',
+      kind: 'endorse_gte',
+      params: { n: 2, requireCash: 1000 },
+      movementTarget: 'ENT_CHAMBER_EXEC'
+    },
+    {
+      id: 'ADV_CHAMBER_NAME',
+      type: 'advancement',
+      description: 'nameID ≥ 14 (main street already knows the name).',
+      kind: 'name_id_gte',
+      params: { n: 14 },
+      movementTarget: 'ENT_CHAMBER_EXEC'
+    }
+  ],
+  setback: [
+    {
+      id: 'SET_CHAMBER_HIT',
+      type: 'setback',
+      description: 'Hit pieces cancel the chicken dinner.',
+      kind: 'hit_pieces_gte',
+      params: { n: 3 },
+      residue: ['scar_chamber_cold']
+    }
+  ],
+  exampleVerbs: ['Work the chamber', 'Eat the chicken', 'Spend main street'],
+  exampleNouns: ['Rubber chicken', 'Chamber board', 'Main street']
+};
+
+/** Feed-Store Regulars — unofficial senate (AL07 / MV14). */
+const PILOT_FEED: LoopDef = {
+  id: 'LOOP_ENT_FEED_STORE',
+  name: 'Feed-store bench',
+  kind: 'entity_primary',
+  entityId: 'ENT_FEED_STORE',
+  description: 'Unofficial senate on the bench out front. Opens MV14.',
+  advancement: [
+    {
+      id: 'ADV_FEED_ALLY',
+      type: 'advancement',
+      description: 'Warm Feed-Store Regulars ally (AL07).',
+      kind: 'has_ally',
+      params: { allyId: 'AL07' },
+      movementTarget: 'ENT_FEED_STORE'
+    },
+    {
+      id: 'ADV_FEED_CONTACTS',
+      type: 'advancement',
+      description: 'nameID ≥ 10 + volPool ≥ 2 (you have shown up enough for the bench to notice).',
+      kind: 'name_id_gte',
+      params: { n: 10, requireVol: 2 },
+      movementTarget: 'ENT_FEED_STORE'
+    }
+  ],
+  setback: [
+    {
+      id: 'SET_FEED_HIT',
+      type: 'setback',
+      description: 'Hit pieces and the bench goes quiet.',
+      kind: 'hit_pieces_gte',
+      params: { n: 3 },
+      residue: ['scar_feed_cold']
+    }
+  ],
+  exampleVerbs: ['Sit the bench', 'Buy a bag of feed', 'Spend the regulars'],
+  exampleNouns: ['Feed store', 'Bench', 'County rumor']
+};
+
 const T0_T2_NAMED: LoopDef[] = [
   PILOT_PRECINCT,
   ...PILOT_SUB,
@@ -557,6 +674,9 @@ const T0_T2_NAMED: LoopDef[] = [
   PILOT_FINANCE,
   PILOT_RADIO,
   PILOT_LOBBY,
+  PILOT_UNION,
+  PILOT_CHAMBER,
+  PILOT_FEED,
   entLoop('SOUTH_STEPS_ACTIVIST', 'South Steps rant', 'Presence, grievance, viral clip risk.', 'ENT_SOUTH_STEPS_ACTIVIST'),
   entLoop('BLOCK_WALKER', 'Block walker', 'Doors, heat, dogs, clipboards.', 'ENT_BLOCK_WALKER'),
   entLoop('CONSTITUENT', 'Disgruntled constituent', 'Casework demand, town hall ambush.', 'ENT_CONSTITUENT'),
@@ -581,8 +701,7 @@ const T0_T2_NAMED: LoopDef[] = [
   entLoop('CITY_COUNCIL', 'City council / mayor', 'Local ordinance, name heat.', 'ENT_CITY_COUNCIL'),
   entLoop('SCHOOL_BOARD', 'School board / superintendent', 'Parents, bonds, culture.', 'ENT_SCHOOL_BOARD'),
   entLoop('LOCAL_BIZ_PAC', 'Local business PAC', 'Checks and expectations.', 'ENT_LOCAL_BIZ_PAC'),
-  entLoop('UNION_LOCAL_PRES', 'Union local president', 'Endorsement, volunteers.', 'ENT_UNION_LOCAL_PRES'),
-  entLoop('CHAMBER_EXEC', 'Chamber executive', 'Rubber chicken, reliable voters.', 'ENT_CHAMBER_EXEC'),
+  // UNION_LOCAL_PRES / CHAMBER_EXEC / FEED_STORE: real pilot loops above (MV12–14)
   // RADIO_HOST: real pilot loop above (MV10)
   entLoop('COMMUNITY_ORG', 'Community organizer', 'Nonprofit, coalition.', 'ENT_COMMUNITY_ORG'),
   entLoop('PRIMARY_RIVAL', 'Primary rival', 'Same ballot, zero-sum.', 'ENT_PRIMARY_RIVAL')

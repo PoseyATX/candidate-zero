@@ -88,8 +88,12 @@ const TIER2: EntityDef[] = [
   }),
   e('ENT_SCHOOL_BOARD', 'School Board / Superintendent', 2, 'local', 'Parents, bonds, culture fights.', 'LOOP_ENT_SCHOOL_BOARD'),
   e('ENT_LOCAL_BIZ_PAC', 'Local business PAC', 2, 'local', 'Checks, expectations, rate talk.', 'LOOP_ENT_LOCAL_BIZ_PAC'),
-  e('ENT_UNION_LOCAL_PRES', 'Union local president', 2, 'local', 'Endorsement, volunteers, plant gate.', 'LOOP_ENT_UNION_LOCAL_PRES'),
-  e('ENT_CHAMBER_EXEC', 'Chamber of Commerce executive', 2, 'local', 'Rubber chicken; reliable voters.', 'LOOP_ENT_CHAMBER_EXEC'),
+  e('ENT_UNION_LOCAL_PRES', 'Union local president', 2, 'local', 'Endorsement, volunteers, plant gate.', 'LOOP_ENT_UNION_LOCAL_PRES', {
+    tags: ['pilot']
+  }),
+  e('ENT_CHAMBER_EXEC', 'Chamber of Commerce executive', 2, 'local', 'Rubber chicken; reliable voters.', 'LOOP_ENT_CHAMBER_EXEC', {
+    tags: ['pilot']
+  }),
   e('ENT_LOCAL_EDITOR', 'Local newspaper editor / reporter', 2, 'local', 'Fair shake or page six.', 'LOOP_ENT_LOCAL_EDITOR', {
     allyId: 'AL04',
     tags: ['pilot']
@@ -175,7 +179,10 @@ const TIER7: EntityDef[] = [
     allyId: 'AL10',
     tags: ['pilot']
   }),
-  e('ENT_FEED_STORE', 'Feed-Store Regulars', 7, 'federal', 'Unofficial senate on the bench.', 'LOOP_TMPL_FEDERAL', { allyId: 'AL07' }),
+  e('ENT_FEED_STORE', 'Feed-Store Regulars', 7, 'federal', 'Unofficial senate on the bench.', 'LOOP_ENT_FEED_STORE', {
+    allyId: 'AL07',
+    tags: ['pilot']
+  }),
   e('ENT_RIVAL_STAFFER', "Rival's disgruntled staffer", 7, 'federal', 'Folder potential; plant risk.', 'LOOP_TMPL_FEDERAL', { allyId: 'AL14' })
 ];
 

@@ -57,7 +57,7 @@ src/data/starmap/pilots.ts     # playable template registry
 
 ---
 
-## Playable entity templates (11)
+## Playable entity templates (14)
 
 Registry: `src/data/starmap/pilots.ts` · verbs: `src/data/plays-starmap.ts`  
 Harness: `npm run harness:starmap` (all e2e). **Templates + deltas only** — not 93 decks.
@@ -75,6 +75,9 @@ Harness: `npm run harness:starmap` (all e2e). **Templates + deltas only** — no
 | 9 | Finance Chair | AL10 | **MV09** | AL10 / endorse≥1+$≥1000 | +$900, +20 contacts, +1 endorse |
 | 10 | Radio Host | AL05 | **MV10** | AL05 / name≥12 | +9 name, +2 mom, +25 contacts, Faces F |
 | 11 | Junior Lobbyist | AL13 | **MV11** | AL13 / OB1 / endorse≥2+$≥800 | +45 contacts, +1 endorse, +1 mom, +1 capital, favor |
+| 12 | Union Local Pres | — | **MV12** | name≥8+vol≥4 / endorse≥3 | +3 vol, +2 endorse, +35 contacts, gate GOTV |
+| 13 | Chamber Exec | — | **MV13** | endorse≥2+$≥1000 / name≥14 | +$500, +2 endorse, +5 name, +30 contacts |
+| 14 | Feed-Store Regulars | AL07 | **MV14** | AL07 / name≥10+vol≥2 | +55 contacts, +4 name, rural rapport |
 
 - Special residency + `entityScope`; multi-orbit camp offers (−401+).  
 - Overlay on primary/general — not a stage leave.
@@ -88,7 +91,7 @@ Harness: `npm run harness:starmap` (all e2e). **Templates + deltas only** — no
 | Full entity catalog | Higher-tier deep subloops |
 | Full orbit skeleton | Timing/attr-gated orbit filtering (basic only) |
 | Loop IDs for waiting/elected/templates | Most non-pilot advancement still `manual_todo` |
-| **11 playable templates** (MV01–11) | Deeper higher-office campaigns |
+| **14 playable templates** (MV01–14) | Deeper higher-office campaigns |
 | Bridges to AL* | Movement UI modal (Phase 6 adjacent) |
 
 ---
@@ -96,7 +99,7 @@ Harness: `npm run harness:starmap` (all e2e). **Templates + deltas only** — no
 ## Card residency (entity kits)
 
 Entity/loop verbs are **Special** cards (`residency: 'special'`), not Main.
-MV01–11 carry `entityScope`. Session SS* are the elected-member Special package.
+MV01–14 carry `entityScope`. Session SS* are the elected-member Special package.
 
 **Law:** do not invent 93 unique decks — use **role templates + deltas**.
 Outside (world) cards never live on entity kits. Full design:
@@ -123,6 +126,6 @@ Harness: `npm run harness:waiting`.
 
 ## Next roads
 
-1. More templates (union / chamber / feed-store / kitchen cabinet / old bull)  
-2. Movement UI (orbit awareness) — Phase 6 adjacent  
+1. More templates (kitchen cabinet / old bull / community org / biz PAC)  
+2. Outside pack #2 (quote-forward topical — see Stupid Ideas #20 GREAT)  
 3. Deeper higher-office campaigns (not just exploratory waiting)

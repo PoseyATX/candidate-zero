@@ -1,5 +1,5 @@
 /**
- * Starmap integrity + playable entity-template e2e (MV01–11).
+ * Starmap integrity + playable entity-template e2e (MV01–14).
  * Run: npm run harness:starmap
  */
 
@@ -30,7 +30,10 @@ import {
   MV08_SlateCard,
   MV09_FinanceBook,
   MV10_DriveTime,
-  MV11_LobbyMap
+  MV11_LobbyMap,
+  MV12_PlantGate,
+  MV13_RubberChicken,
+  MV14_FeedBench
 } from '../data/plays-starmap.js';
 import { addObl } from '../data/obligations.js';
 import { ALL_PLAYS } from '../data/plays.js';
@@ -49,7 +52,7 @@ console.log('=== CANDIDATE ZERO — Starmap (entity templates) ===\n');
 
 const counts = starmapCounts();
 console.log('Counts:', counts);
-assert(counts.playablePilots >= 11, `need ≥11 playable pilots, got ${counts.playablePilots}`);
+assert(counts.playablePilots >= 14, `need ≥14 playable pilots, got ${counts.playablePilots}`);
 
 // Unique entities
 assert(ALL_ENTITY_IDS.length === new Set(ALL_ENTITY_IDS).size, 'duplicate entity ids');
@@ -425,6 +428,83 @@ assert(getEntity('ENT_JUNIOR_LOBBYIST')?.allyId === 'AL13', 'lobby → AL13');
 assert(getEntity('ENT_FINANCE_CHAIR')?.primaryLoopId === 'LOOP_ENT_FINANCE_CHAIR', 'finance own loop');
 assert(getEntity('ENT_JUNIOR_LOBBYIST')?.primaryLoopId === 'LOOP_ENT_JUNIOR_LOBBYIST', 'lobby own loop');
 
+// --- Pack #4: Union / Chamber / Feed-Store (MV12–14) ---
+{
+  const s = createNewState({ seed: 25, nameID: 10, volPool: 4, endorsePts: 0, contacts: 0, ap: 2 });
+  s.ballot = true;
+  s.stage = 'primary';
+  syncMovementFlags(s);
+  assert(isMovementVerbAvailable(s, 'MV12'), 'MV12 open via name+vol');
+  const v0 = s.volPool;
+  playVerb(s, MV12_PlantGate);
+  assert(s.volPool >= v0 + 3, 'MV12 vols +3');
+  assert(!!s.sessionFlags?.mv12Consumed && !!s.sessionFlags?.orbit_plant_gate, 'MV12 residue');
+  assert(!!s.entityHistory?.includes('ENT_UNION_LOCAL_PRES'), 'union history');
+  console.log('PASSED: MV12 Union e2e');
+}
+{
+  const s = createNewState({ seed: 26, endorsePts: 3, ap: 1 });
+  s.ballot = true;
+  s.stage = 'primary';
+  syncMovementFlags(s);
+  assert(isMovementVerbAvailable(s, 'MV12'), 'MV12 open via endorse path');
+  console.log('PASSED: MV12 alternate (endorse)');
+}
+{
+  const s = createNewState({
+    seed: 27,
+    endorsePts: 2,
+    money: 1200,
+    nameID: 5,
+    contacts: 0,
+    ap: 2
+  });
+  s.ballot = true;
+  s.stage = 'primary';
+  syncMovementFlags(s);
+  assert(isMovementVerbAvailable(s, 'MV13'), 'MV13 open via war chest');
+  const m0 = s.money;
+  playVerb(s, MV13_RubberChicken);
+  assert(s.money === m0 + 500, 'MV13 money +500');
+  assert(!!s.sessionFlags?.mv13Consumed && !!s.sessionFlags?.orbit_rubber_chicken, 'MV13 residue');
+  assert(!!s.entityHistory?.includes('ENT_CHAMBER_EXEC'), 'chamber history');
+  console.log('PASSED: MV13 Chamber e2e');
+}
+{
+  const s = createNewState({ seed: 28, nameID: 14, ap: 1 });
+  s.ballot = true;
+  s.stage = 'general';
+  syncMovementFlags(s);
+  assert(isMovementVerbAvailable(s, 'MV13'), 'MV13 open via name path');
+  console.log('PASSED: MV13 alternate (nameID)');
+}
+{
+  const s = createNewState({ seed: 29, contacts: 0, nameID: 5, volPool: 1, ap: 2 });
+  s.ballot = true;
+  s.stage = 'primary';
+  addAlly(s, 'AL07', 2);
+  syncMovementFlags(s);
+  assert(isMovementVerbAvailable(s, 'MV14'), 'MV14 open via AL07');
+  const c0 = s.contacts;
+  playVerb(s, MV14_FeedBench);
+  assert(s.contacts === c0 + 55, 'MV14 contacts +55');
+  assert(!!s.sessionFlags?.mv14Consumed && !!s.sessionFlags?.orbit_feed_bench, 'MV14 residue');
+  assert(!!s.entityHistory?.includes('ENT_FEED_STORE'), 'feed history');
+  console.log('PASSED: MV14 Feed-Store e2e');
+}
+{
+  const s = createNewState({ seed: 30, nameID: 10, volPool: 2, ap: 1 });
+  s.ballot = true;
+  s.stage = 'primary';
+  syncMovementFlags(s);
+  assert(isMovementVerbAvailable(s, 'MV14'), 'MV14 open via name+vol path');
+  console.log('PASSED: MV14 alternate (name+vol)');
+}
+assert(getEntity('ENT_FEED_STORE')?.allyId === 'AL07', 'feed → AL07');
+assert(getEntity('ENT_UNION_LOCAL_PRES')?.primaryLoopId === 'LOOP_ENT_UNION_LOCAL_PRES', 'union own loop');
+assert(getEntity('ENT_CHAMBER_EXEC')?.primaryLoopId === 'LOOP_ENT_CHAMBER_EXEC', 'chamber own loop');
+assert(getEntity('ENT_FEED_STORE')?.primaryLoopId === 'LOOP_ENT_FEED_STORE', 'feed own loop');
+
 // Condition smoke
 {
   const s = createNewState({ seed: 1 });
@@ -441,6 +521,6 @@ assert(getEntity('ENT_JUNIOR_LOBBYIST')?.primaryLoopId === 'LOOP_ENT_JUNIOR_LOBB
 }
 
 console.log('Loops:', ALL_LOOP_IDS.length, 'Orbits:', ORBITS.length, 'Pilots:', PLAYABLE_PILOTS.length);
-console.log('PASSED: inventory, graph integrity, bridges, 11-template e2e');
+console.log('PASSED: inventory, graph integrity, bridges, 14-template e2e');
 console.log('\nStarmap entity templates green.');
 process.exit(0);

@@ -7,16 +7,19 @@ import type { PlayCard } from '../engine/types.js';
 import { isMovementVerbAvailable } from '../engine/entities.js';
 import {
   PILOT_CAPTAIN,
+  PILOT_CHAMBER,
   PILOT_CLUB,
   PILOT_EDITOR,
   PILOT_FAITH,
+  PILOT_FEED,
   PILOT_FINANCE,
   PILOT_JUDGE,
   PILOT_LOBBY,
   PILOT_PARTY,
   PILOT_PRECINCT,
   PILOT_RADIO,
-  PILOT_SLATE
+  PILOT_SLATE,
+  PILOT_UNION
 } from './starmap/pilots.js';
 
 function markEntity(s: { entityHistory?: string[] }, entityId: string): void {
@@ -421,6 +424,113 @@ export const MV11_LobbyMap: PlayCard = {
   }
 };
 
+/**
+ * MV12 — Spend the plant-gate endorsement (union local).
+ */
+export const MV12_PlantGate: PlayCard = {
+  id: PILOT_UNION.verbPlayId,
+  n: 'Spend the plant-gate nod',
+  cost: { a: 1 },
+  risk: 'SAFE',
+  ph: [1, 2, 3],
+  field: true,
+  tag: 'orbit movement',
+  kind: 'ally',
+  residency: 'special',
+  control: 'player',
+  entityScope: [PILOT_UNION.entityId],
+  attrs: ['CLO', 'DIP'],
+  d: 'The local president puts a hand on your shoulder at shift change. Special kit — Union orbit. Volunteers and doors.',
+  show: s => isMovementVerbAvailable(s, PILOT_UNION.verbPlayId),
+  odds: () => 0.9,
+  run: (s, _o, g) => {
+    s.volPool += 3;
+    s.endorsePts += 2;
+    s.contacts += 35;
+    s.faces.G = Math.min(100, (s.faces.G || 0) + 4);
+    if (g) {
+      g.rapport = Math.min(100, (g.rapport || 0) + 6);
+      g.gotv = (g.gotv || 0) + 0.08;
+    }
+    markEntity(s, PILOT_UNION.entityId);
+    consumePilot(s, PILOT_UNION.consumeFlag, PILOT_UNION.residueFlag);
+    return (
+      'The gate nods. +3 volunteers, +2 endorsement, +35 contacts, Faces G up' +
+      (g ? `, rapport/GOTV at ${g.n}` : '') +
+      '. (Starmap: ENT_UNION_LOCAL_PRES. Residue: orbit_plant_gate.)'
+    );
+  }
+};
+
+/**
+ * MV13 — Work the chamber chicken circuit.
+ */
+export const MV13_RubberChicken: PlayCard = {
+  id: PILOT_CHAMBER.verbPlayId,
+  n: 'Work the chicken circuit',
+  cost: { a: 1 },
+  risk: 'SAFE',
+  ph: [1, 2, 3],
+  tag: 'orbit movement',
+  kind: 'ally',
+  residency: 'special',
+  control: 'player',
+  entityScope: [PILOT_CHAMBER.entityId],
+  attrs: ['DIP', 'CHA'],
+  d: 'Rubber chicken, name tags, reliable voters. Special kit — Chamber orbit. Money and polite weight.',
+  show: s => isMovementVerbAvailable(s, PILOT_CHAMBER.verbPlayId),
+  odds: () => 0.9,
+  run: s => {
+    s.money += 500;
+    s.endorsePts += 2;
+    s.nameID += 5;
+    s.contacts += 30;
+    markEntity(s, PILOT_CHAMBER.entityId);
+    consumePilot(s, PILOT_CHAMBER.consumeFlag, PILOT_CHAMBER.residueFlag);
+    return (
+      'Main street files you under serious. +$500, +2 endorsement, +5 name ID, +30 contacts. ' +
+      '(Starmap: ENT_CHAMBER_EXEC. Residue: orbit_rubber_chicken.)'
+    );
+  }
+};
+
+/**
+ * MV14 — Sit the feed-store bench (AL07).
+ */
+export const MV14_FeedBench: PlayCard = {
+  id: PILOT_FEED.verbPlayId,
+  n: 'Sit the feed-store bench',
+  cost: { a: 1 },
+  risk: 'SAFE',
+  ph: [1, 2],
+  tag: 'orbit movement',
+  kind: 'ally',
+  residency: 'special',
+  control: 'player',
+  entityScope: [PILOT_FEED.entityId],
+  attrs: ['CHA', 'CON'],
+  d: 'Unofficial senate on the bench out front. Special kit — Feed-Store orbit. Rumor is infrastructure.',
+  show: s => isMovementVerbAvailable(s, PILOT_FEED.verbPlayId),
+  odds: () => 0.92,
+  run: s => {
+    s.contacts += 55;
+    s.momentum += 1;
+    s.nameID += 4;
+    s.volPool += 1;
+    // Rural grounds soft open if present
+    for (const id of ['GR02', 'GR05', 'GR06']) {
+      const ground = s.groundsArr.find(x => x.id === id);
+      if (ground) ground.rapport = Math.min(100, (ground.rapport || 0) + 4);
+    }
+    markEntity(s, PILOT_FEED.entityId);
+    consumePilot(s, PILOT_FEED.consumeFlag, PILOT_FEED.residueFlag);
+    return (
+      'The bench remembers your face. +55 contacts, +4 name ID, +1 volunteer, +1 momentum, rural rapport. ' +
+      '(Starmap: ENT_FEED_STORE. Residue: orbit_feed_bench.)'
+    );
+  }
+};
+
 export const STARMAP_PLAYS: PlayCard[] = [
   MV01_PrecinctNetwork,
   MV02_FieldPlan,
@@ -432,5 +542,8 @@ export const STARMAP_PLAYS: PlayCard[] = [
   MV08_SlateCard,
   MV09_FinanceBook,
   MV10_DriveTime,
-  MV11_LobbyMap
+  MV11_LobbyMap,
+  MV12_PlantGate,
+  MV13_RubberChicken,
+  MV14_FeedBench
 ];

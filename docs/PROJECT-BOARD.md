@@ -29,15 +29,16 @@ become a second rules implementation.
 | **DONE** | [#7](https://github.com/PoseyATX/candidate-zero/issues/7) | Phase 3 — Debt as leveraged optionality |
 | **DONE** | [#8](https://github.com/PoseyATX/candidate-zero/issues/8) | Phase 4 — Session stage (bill lifecycle) |
 | **DONE** | [#9](https://github.com/PoseyATX/candidate-zero/issues/9) | Phase 5 — Balance breadth |
-| **DONE** | [#17](https://github.com/PoseyATX/candidate-zero/issues/17) / [#18](https://github.com/PoseyATX/candidate-zero/issues/18) | Starmap — catalog + templates through MV11 |
+| **DONE** | [#17](https://github.com/PoseyATX/candidate-zero/issues/17) / [#18](https://github.com/PoseyATX/candidate-zero/issues/18) | Starmap — catalog + templates through MV14 |
 | **DONE** | [#10](https://github.com/PoseyATX/candidate-zero/issues/10) | Phase 6 — UI hierarchy + toasts (core); a11y CI residual |
-| **NEXT** | — | More starmap templates *or* Phase 7 honesty prep (owner call) |
+| **NEXT** | — | Outside pack #2 *or* more templates *or* Phase 7 prep |
 | PLANNED | [#11](https://github.com/PoseyATX/candidate-zero/issues/11) | Phase 7 — Honest v0.1 label |
 | PLANNED | [#12](https://github.com/PoseyATX/candidate-zero/issues/12) | Phase 8 — TS → Unity → iOS / App Store |
 | META | [#13](https://github.com/PoseyATX/candidate-zero/issues/13) | Board hygiene rules |
 | BUG | [#14](https://github.com/PoseyATX/candidate-zero/issues/14) | Pages deploy auto-fire / workflow scope |
 | PLANNED | [#15](https://github.com/PoseyATX/candidate-zero/issues/15) | AC1 archive yield-table full compare |
 | REF | [#16](https://github.com/PoseyATX/candidate-zero/issues/16) | Work log pin |
+| PARK | [#20](https://github.com/PoseyATX/candidate-zero/issues/20) | **Stupid Ideas** — ADD parking lot; agent rates only, not NEXT |
 
 ---
 

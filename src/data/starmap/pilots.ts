@@ -149,6 +149,42 @@ export const PILOT_LOBBY: PilotDef = {
   logLabel: 'Lobbyist access map'
 };
 
+/** Union local president — plant gate (MV12). */
+export const PILOT_UNION: PilotDef = {
+  entityId: 'ENT_UNION_LOCAL_PRES',
+  loopId: 'LOOP_ENT_UNION_LOCAL_PRES',
+  verbPlayId: 'MV12',
+  movementId: 'MOVE_PLANT_GATE',
+  consumeFlag: 'mv12Consumed',
+  announceFlag: 'mv12Announced',
+  residueFlag: 'orbit_plant_gate',
+  logLabel: 'Union plant-gate endorsement'
+};
+
+/** Chamber executive — rubber chicken (MV13). */
+export const PILOT_CHAMBER: PilotDef = {
+  entityId: 'ENT_CHAMBER_EXEC',
+  loopId: 'LOOP_ENT_CHAMBER_EXEC',
+  verbPlayId: 'MV13',
+  movementId: 'MOVE_RUBBER_CHICKEN',
+  consumeFlag: 'mv13Consumed',
+  announceFlag: 'mv13Announced',
+  residueFlag: 'orbit_rubber_chicken',
+  logLabel: 'Chamber rubber-chicken circuit'
+};
+
+/** Feed-Store Regulars — bench politics (AL07 / MV14). */
+export const PILOT_FEED: PilotDef = {
+  entityId: 'ENT_FEED_STORE',
+  loopId: 'LOOP_ENT_FEED_STORE',
+  verbPlayId: 'MV14',
+  movementId: 'MOVE_FEED_BENCH',
+  consumeFlag: 'mv14Consumed',
+  announceFlag: 'mv14Announced',
+  residueFlag: 'orbit_feed_bench',
+  logLabel: 'Feed-store bench'
+};
+
 /**
  * All playable entity-template loops.
  * Templates + deltas only — never one unique deck per ENT_*.
@@ -164,7 +200,10 @@ export const PLAYABLE_PILOTS: PilotDef[] = [
   PILOT_SLATE,
   PILOT_FINANCE,
   PILOT_RADIO,
-  PILOT_LOBBY
+  PILOT_LOBBY,
+  PILOT_UNION,
+  PILOT_CHAMBER,
+  PILOT_FEED
 ];
 
 export function pilotByVerb(verbPlayId: string): PilotDef | undefined {

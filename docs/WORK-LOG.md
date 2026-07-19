@@ -185,7 +185,8 @@ Over this workstream we:
 | Status | Issue | Title |
 |---|---|---|
 | **DONE** | #9 | Phase 5 — Balance breadth (matrix + wrong retune) |
-| **DONE** | #17/#18 | Starmap — 11 entity templates (MV01–11) |
+| **DONE** | #17/#18 | Starmap — 14 entity templates (MV01–14) |
+| PARK | #20 | Stupid Ideas — rate only, never auto-NEXT |
 | **DONE** | — | Session teeth (pressure, stall, freeze, challenger) |
 | **DONE** | — | Outside event deck v0 (10 world cards) |
 | **DONE** | — | RivalRap teeth + Chronicle→waiting loop bridge |
@@ -523,4 +524,26 @@ Own loops (`LOOP_ENT_*`), Special residency, harness e2e. **11** playable pilots
 | Plan | `docs/UI-IA.md` marked shipped for core furniture |
 
 Residual: WCAG deep pass, screenshot CI, formal mobile playtest sign-off.
+
+---
+
+## Stupid Ideas parking (#20)
+
+Owner ADD sink. Build agent rates comments with:
+`GREAT` · `GOOD` · `MEH` · `BAD` · `ABSOLUTELY NOT…`  
+Never becomes board NEXT without explicit promote.
+
+Rated 2026-07-19: topical Outside quotes **GREAT**; hand→persona creation **GOOD** optional / **MEH** default.
+
+---
+
+## Starmap pack #4 — Union / Chamber / Feed (2026-07-19)
+
+| # | Entity | Verb | Notes |
+|---|---|---|---|
+| 12 | Union Local Pres | **MV12** | Field vols + gate GOTV |
+| 13 | Chamber Exec | **MV13** | Rubber chicken $ + endorse |
+| 14 | Feed-Store Regulars | **MV14** | AL07 / rural bench contacts |
+
+**14** playable pilots. Harness e2e extended.
 
