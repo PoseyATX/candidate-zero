@@ -40,7 +40,7 @@ export function createDefaultGrounds(): Ground[] {
     { id: 'GR05', n: 'The Plant Gate', pool: 240, pool0: 240, prop: 0.5, aff: 'T,O', rapport: 0, gotv: 0, rivalRap: 0 },
     { id: 'GR06', n: 'VFW & Legion Halls', pool: 110, pool0: 110, prop: 0.92, aff: 'G,T', rapport: 0, gotv: 0, rivalRap: 0 },
     { id: 'GR07', n: 'Lake Country', pool: 230, pool0: 230, prop: 0.55, aff: 'L,G', rapport: 0, gotv: 0, rivalRap: 0 },
-    { id: 'GR08', n: 'The Barrio Blocks', pool: 430, pool0: 430, prop: 0.3, aff: 'T,F', rapport: 0, gotv: 0, rivalRap: 0 }
+    { id: 'GR08', n: 'Southside Blocks', pool: 430, pool0: 430, prop: 0.3, aff: 'T,F', rapport: 0, gotv: 0, rivalRap: 0 }
   ];
 }
 

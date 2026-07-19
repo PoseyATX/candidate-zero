@@ -333,7 +333,7 @@ function mkGrounds(){return[
  {id:'GR05',n:'The Plant Gate',pool:240,pool0:240,prop:.5,aff:'T,O',rapport:0,gotv:0},
  {id:'GR06',n:'VFW & Legion Halls',pool:110,pool0:110,prop:.92,aff:'G,T',rapport:0,gotv:0},
  {id:'GR07',n:'Lake Country',pool:230,pool0:230,prop:.55,aff:'L,G',rapport:0,gotv:0},
- {id:'GR08',n:'The Barrio Blocks',pool:430,pool0:430,prop:.3,aff:'T,F',rapport:0,gotv:0},
+ {id:'GR08',n:'Southside Blocks',pool:430,pool0:430,prop:.3,aff:'T,F',rapport:0,gotv:0},
 ];}
 
 /* ---------- personas ---------- */
@@ -1859,7 +1859,7 @@ const REGIONS=[
   fx:s=>{s.attrs.DIP=(s.attrs.DIP||8)+1;s.attrs.CON=(s.attrs.CON||8)+1;const g=ground(s,'GR07');g.pool0=Math.round(g.pool0*1.7);g.pool=g.pool0;grounds(s).forEach(x=>x.prop=Math.min(.95,x.prop+.06));
    s.regionNote='Every turnout habit runs hotter here. Nobody sleeps through a primary in the Hill Country.';s.regionHook='hills';}},
  {id:'valley',n:'The Border & El Valle',d:'The Rio Grande Valley: deep family networks, thin turnout habits, and loyalty curves steep as a levee.',
-  fx:s=>{s.attrs.CHA=(s.attrs.CHA||8)+2;s.attrs.DIP=(s.attrs.DIP||8)+1;const g=ground(s,'GR08');g.n='Las Colonias & the Barrios';g.pool0=Math.round(g.pool0*1.8);g.pool=g.pool0;
+  fx:s=>{s.attrs.CHA=(s.attrs.CHA||8)+2;s.attrs.DIP=(s.attrs.DIP||8)+1;const g=ground(s,'GR08');g.n='Las Colonias & Southside';g.pool0=Math.round(g.pool0*1.8);g.pool=g.pool0;
    s.regionNote='Las Colonias: the steepest GOTV payoff in Texas. Rapport here converts like nowhere else.';s.regionHook='valley';}},
  {id:'permian',n:'The Permian Basin',d:'Oil money, man-camps, boom clocks. Everything here is priced in barrels, including attention.',
   fx:s=>{s.attrs.CLO=(s.attrs.CLO||8)+1;s.attrs.CRA=(s.attrs.CRA||8)+1;const g=ground(s,'GR05');g.n='The Patch Gates';g.pool0=Math.round(g.pool0*1.4);g.pool=g.pool0;

@@ -269,6 +269,196 @@ export const EV_PRIMARY_CHALLENGER_AD: OutsideEvent = {
   }
 };
 
+// --- Pack #2: quote-forward topical weather (Stupid Ideas #20 GREAT) ---
+// Flavor is original paraphrase / public cadence — not verbatim soundbites.
+
+/** Grid freeze memory — "the lights went out and nobody owned it." */
+export const EV_GRID_FREEZE: OutsideEvent = {
+  id: 'EV_GRID_FREEZE',
+  n: 'Grid Freeze Hangover',
+  d: 'Pipes still burst in the stories people tell. The ERCOT slide deck is a campaign issue whether you like it.',
+  residency: 'outside',
+  control: 'world',
+  kind: 'liability',
+  stages: ['primary', 'general', 'session'],
+  once: true,
+  w: 3,
+  show: s =>
+    s.regionHook === 'metro' ||
+    s.regionHook === 'hill' ||
+    s.regionHook === 'east' ||
+    s.regionHook === 'gulf' ||
+    !s.regionHook,
+  apply: s => {
+    s.faces.T = clamp((s.faces.T || 0) + 4, -50, 100);
+    s.momentum = Math.max(0, s.momentum - 1);
+    s.exposure = (s.exposure || 0) + 1;
+    if (s.stage === 'session') {
+      s.districtStanding = clamp(s.districtStanding - 2, 0, 100);
+      return (
+        'OUTSIDE — GRID FREEZE. "Keep your family safe" is what every mailer says now. ' +
+        'Truth face +4, standing −2, exposure +1. You did not call the blackout. You answer the porch questions.'
+      );
+    }
+    s.contacts = Math.max(0, s.contacts - 10);
+    return (
+      'OUTSIDE — GRID FREEZE. Somebody on a porch says, "We boiled snow." Momentum −1, contacts −10, Truth +4. ' +
+      'Infrastructure weather — not a Main card.'
+    );
+  }
+};
+
+/** Property tax sermon season. */
+export const EV_PROPERTY_TAX: OutsideEvent = {
+  id: 'EV_PROPERTY_TAX',
+  n: 'Property Tax Revival',
+  d: 'Every candidate will "fix the appraisal district." The math is harder than the slogan.',
+  residency: 'outside',
+  control: 'world',
+  kind: 'liability',
+  stages: ['primary', 'general'],
+  once: true,
+  w: 3,
+  show: _s => true,
+  apply: s => {
+    s.momentum += 1;
+    s.nameID = Math.max(0, s.nameID - 1);
+    s.faces.O = clamp((s.faces.O || 0) + 2, -50, 100);
+    for (const g of s.groundsArr) {
+      if (g.id === 'GR03') g.rapport = clamp(g.rapport + 3, 0, 100);
+    }
+    return (
+      'OUTSIDE — PROPERTY TAX. "Cut the rates" is the only hymn at the subdivision HOA. ' +
+      'Momentum +1, name −1 (you are one of a dozen promising the same), Order face +2, New Subdivisions listen. ' +
+      'You do not play the tax code. You inherit the sermon.'
+    );
+  }
+};
+
+/** Book / library culture fight. */
+export const EV_LIBRARY_FIGHT: OutsideEvent = {
+  id: 'EV_LIBRARY_FIGHT',
+  n: 'Library Shelf Fight',
+  d: 'A list of titles becomes a county identity test. Cameras love a microphone in the stacks.',
+  residency: 'outside',
+  control: 'world',
+  kind: 'liability',
+  stages: ['primary', 'general'],
+  once: true,
+  w: 3,
+  show: _s => true,
+  apply: s => {
+    s.exposure = (s.exposure || 0) + 1;
+    s.hitPieces += 1;
+    s.faces.T = clamp((s.faces.T || 0) + 3, -50, 100);
+    s.momentum += 1;
+    return (
+      'OUTSIDE — LIBRARY FIGHT. "Think of the children" and "think of the First Amendment" share a parking lot. ' +
+      'Hit piece +1, exposure +1, Truth +3, momentum +1. Culture weather — answer carefully or not at all.'
+    );
+  }
+};
+
+/** Border bus / busing politics as weather (not a player verb). */
+export const EV_BORDER_BUSES: OutsideEvent = {
+  id: 'EV_BORDER_BUSES',
+  n: 'Buses on the Cable News',
+  d: 'Four hundred miles away and on every screen in the district. Heat guaranteed; light optional.',
+  residency: 'outside',
+  control: 'world',
+  kind: 'liability',
+  stages: ['primary', 'general', 'session'],
+  once: true,
+  w: 3,
+  show: s =>
+    s.regionHook === 'valley' ||
+    s.regionHook === 'metro' ||
+    s.regionHook === 'gulf' ||
+    s.regionHook === 'west' ||
+    !s.regionHook,
+  apply: s => {
+    s.hitPieces += 1;
+    s.momentum = Math.max(0, s.momentum - 1);
+    s.faces.P = clamp((s.faces.P || 0) - 2, -50, 100);
+    if (s.stage === 'session') {
+      s.favor = clamp(s.favor - 2, 0, 100);
+      return (
+        'OUTSIDE — BORDER BUSES. Leadership wants a statement by noon. Favor −2, hit piece, Parliamentarian face dips. ' +
+        '"Secure the border" is not a bill you filed. It is the weather on the fifth floor.'
+      );
+    }
+    s.endorsePts = Math.max(0, s.endorsePts - 1);
+    return (
+      'OUTSIDE — BORDER BUSES. A cable chyron becomes a kitchen-table test. Hit piece +1, momentum −1, endorse −1. ' +
+      'You do not drive the buses. You get asked about them at the fish fry.'
+    );
+  }
+};
+
+/** County fair / carnival week — lighter texture. */
+export const EV_COUNTY_FAIR: OutsideEvent = {
+  id: 'EV_COUNTY_FAIR',
+  n: 'County Fair Week',
+  d: 'Corn dogs, livestock, and every candidate in a booth. Presence is free; absence is noted.',
+  residency: 'outside',
+  control: 'world',
+  kind: 'ally',
+  stages: ['primary', 'general'],
+  once: true,
+  w: 2,
+  show: s => s.stage === 'primary' || s.stage === 'general',
+  apply: s => {
+    s.contacts += 20;
+    s.nameID += 2;
+    s.faces.G = clamp((s.faces.G || 0) + 2, -50, 100);
+    for (const g of s.groundsArr) {
+      if (g.id === 'GR01' || g.id === 'GR06') g.rapport = clamp(g.rapport + 2, 0, 100);
+    }
+    return (
+      'OUTSIDE — COUNTY FAIR. "See you at the fair" is the only polite threat in the county. ' +
+      '+20 contacts, +2 name, Grit +2, square and halls warm. You did not schedule the fair. You show up or you do not.'
+    );
+  }
+};
+
+/** Hospital / rural care closure scare. */
+export const EV_RURAL_HOSPITAL: OutsideEvent = {
+  id: 'EV_RURAL_HOSPITAL',
+  n: 'Rural Hospital Scare',
+  d: 'A closure rumor, a travel distance, a Facebook post with a thousand shares.',
+  residency: 'outside',
+  control: 'world',
+  kind: 'liability',
+  stages: ['primary', 'general', 'session'],
+  once: true,
+  w: 2,
+  show: s =>
+    s.regionHook === 'east' ||
+    s.regionHook === 'panhandle' ||
+    s.regionHook === 'west' ||
+    s.regionHook === 'hill' ||
+    s.regionHook === 'permian',
+  apply: s => {
+    s.faces.G = clamp((s.faces.G || 0) + 3, -50, 100);
+    s.momentum = Math.max(0, s.momentum - 1);
+    for (const g of s.groundsArr) {
+      if (g.id === 'GR02' || g.id === 'GR07') g.rapport = clamp(g.rapport - 2, 0, 100);
+    }
+    if (s.stage === 'session') {
+      s.districtStanding = clamp(s.districtStanding - 2, 0, 100);
+      return (
+        'OUTSIDE — RURAL HOSPITAL. "How far to the next ER?" Standing −2, Grit +3. ' +
+        'Casework will be full of rides and referrals. Not your card — your office phone.'
+      );
+    }
+    s.contacts = Math.max(0, s.contacts - 12);
+    return (
+      'OUTSIDE — RURAL HOSPITAL. Somebody says, "We already drive an hour." Contacts −12, momentum −1, Grit +3; ' +
+      'FM roads and lake country go cool. Health weather is not a hand verb.'
+    );
+  }
+};
+
 /** Full Outside catalog. */
 export const OUTSIDE_EVENTS: OutsideEvent[] = [
   EV_SCREWWORM,
@@ -280,7 +470,13 @@ export const OUTSIDE_EVENTS: OutsideEvent[] = [
   EV_FLOOD_WEEK,
   EV_SCHOOL_BOARD_WAR,
   EV_SPECIAL_SESSION,
-  EV_PRIMARY_CHALLENGER_AD
+  EV_PRIMARY_CHALLENGER_AD,
+  EV_GRID_FREEZE,
+  EV_PROPERTY_TAX,
+  EV_LIBRARY_FIGHT,
+  EV_BORDER_BUSES,
+  EV_COUNTY_FAIR,
+  EV_RURAL_HOSPITAL
 ];
 
 export const OUTSIDE_EVENT_IDS = OUTSIDE_EVENTS.map(e => e.id);

@@ -6,7 +6,7 @@
 **Live alpha:** https://poseyatx.github.io/candidate-zero/  
 **Repo:** https://github.com/PoseyATX/candidate-zero  
 
-**Last updated:** 2026-07-19 (Phase 6 UI hierarchy)  
+**Last updated:** 2026-07-19 (Outside pack #2 + GR08 rename)  
 
 Related docs:
 

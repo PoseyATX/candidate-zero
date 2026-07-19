@@ -127,5 +127,5 @@ Harness: `npm run harness:waiting`.
 ## Next roads
 
 1. More templates (kitchen cabinet / old bull / community org / biz PAC)  
-2. Outside pack #2 (quote-forward topical — see Stupid Ideas #20 GREAT)  
+2. Outside pack #2 **shipped** (16 events) — further Outside as needed  
 3. Deeper higher-office campaigns (not just exploratory waiting)

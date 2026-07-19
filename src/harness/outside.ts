@@ -24,10 +24,16 @@ console.log('=== CANDIDATE ZERO — Outside Event Deck ===\n');
 
 const stats = outsideCatalogStats();
 console.log('Catalog:', stats);
-assert(stats.count >= 8, 'need a real Outside slate');
+assert(stats.count >= 14, 'need Outside slate incl. pack #2');
 assert(stats.allOutside, 'every event residency=outside');
 assert(stats.allWorld, 'every event control=world');
 assert(stats.ids.includes('EV_SCREWWORM'), 'screw worm present (design example)');
+assert(stats.ids.includes('EV_GRID_FREEZE'), 'pack #2 grid freeze');
+assert(stats.ids.includes('EV_PROPERTY_TAX'), 'pack #2 property tax');
+assert(stats.ids.includes('EV_LIBRARY_FIGHT'), 'pack #2 library fight');
+assert(stats.ids.includes('EV_BORDER_BUSES'), 'pack #2 border buses');
+assert(stats.ids.includes('EV_COUNTY_FAIR'), 'pack #2 county fair');
+assert(stats.ids.includes('EV_RURAL_HOSPITAL'), 'pack #2 rural hospital');
 
 // Never player-playable shape
 for (const e of OUTSIDE_EVENTS) {
@@ -54,6 +60,26 @@ for (const e of OUTSIDE_EVENTS) {
     'once events leave pool'
   );
   console.log('PASSED: screw worm resolve + once gate');
+}
+
+// Pack #2 sample resolve (quote-forward, still Outside law)
+{
+  useRng(createRng(11));
+  setDefaultSeed(11);
+  const s = createNewState({ seed: 11, contacts: 80, momentum: 2 });
+  s.stage = 'primary';
+  s.regionHook = 'metro';
+  const grid = OUTSIDE_EVENTS.find(e => e.id === 'EV_GRID_FREEZE')!;
+  const text = resolveOutsideEvent(s, grid);
+  assert(/OUTSIDE|GRID/i.test(text), 'grid outside flavor');
+  assert(s.eventsFired['EV_GRID_FREEZE'] === true, 'grid once');
+  // Fair is soft positive
+  const s2 = createNewState({ seed: 12, contacts: 10, nameID: 2 });
+  s2.stage = 'primary';
+  const fair = OUTSIDE_EVENTS.find(e => e.id === 'EV_COUNTY_FAIR')!;
+  resolveOutsideEvent(s2, fair);
+  assert(s2.contacts > 10 && s2.nameID > 2, 'fair soft boost');
+  console.log('PASSED: Outside pack #2 sample resolves');
 }
 
 // Session special session event
