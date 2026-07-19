@@ -10,14 +10,35 @@ or discovered in the codebase.
 
 ## How to read this doc
 
-- **Phase 0** is done — this session's maintenance pass. Listed for context.
-- **Phases 1–3** are the highest-value next work: they finish systems that
-  are already half-built (real bugs and inert scaffolding), not new ideas.
+- **Phase 0** is done — foundation / maintenance pass. Listed for context.
+- **Phase 1** is done — ground-centered campaign model (see below).
+- **Phases 2–3** are the highest-value next work: allies/assets/reps port
+  and debt surface, finishing systems that are already half-built.
 - **Phases 4–6** are larger, legitimately new feature/content investments.
 - **Phase 7–8** are the project's own stated end goals (v0.1, Swift/iOS).
 - Each item lists its evidence so a future reader (human or agent) doesn't
   have to re-derive "why does this matter."
 
+---
+
+## ✅ Phase 1 — Ground-centered campaign model (DONE 2026-07-17, re-verified)
+
+**Goal:** make *where* you work a visible decision; show zero-sum opposition
+without yet giving it odds teeth; measure ground distribution. No RNG covenant
+changes; no card-set redesign.
+
+| Requirement | Status | Evidence |
+|---|---|---|
+| Ground picker on field plays (one ground / play, remember last) | **Done** | UI `#ground-picker` (`src/ui/main.ts`); CLI `chooseGround` (`src/cli/play.ts`); `state.lastGround` |
+| Same ground 2+/week: +odds, −50% rapport | **Done** | `getGroundPenalty` in `src/engine/calendar.ts`; applied in `executePlay` via `groundPlays` / `groundRapMult` |
+| Rival presence 5–40/week, logged + shown, **no odds bite** | **Done** | `advanceRivalGrounds` + `Ground.rivalRap`; picker meters; harness rival-avoidance Δ ≈ noise |
+| `allyWarmAtGround` for field-ops allies | **Done** | `reputation.ts`; AL09 localized on PL21B/PL39 grant; PL01/PL19 bonuses use it. *(PL08 Kitchen-Table not field-based in archive — ground gate deferred to Phase 2, not a Phase 1 redesign.)* |
+| `checkBallotThreshold` sketch, **unwired** | **Done** | `src/engine/career.ts` — measurement only; live elections still `calendar.ts` |
+| `npm run harness:grounds` | **Done** | 50× labor/money × focus/spread; spread contests ~2.8 grounds (target ~3); sketch met **0%** (rapport economy short of 60 home — Phase 2 input) |
+
+**Not in Phase 1 (correctly deferred):** rival odds modulation; `Ground.aff` / `gated` mechanics; rebalancing rapport to meet the sketch thresholds; PL08 redesign as a field card.
+
+Detail also under Phase 0 item 3 and `docs/SRD-NOTES.md` § "Ground selection is part of play execution".
 ---
 
 ## ✅ GitHub Pages source fixed (was the one manual action; done 2026-07-17)

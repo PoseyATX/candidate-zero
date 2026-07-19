@@ -30,15 +30,17 @@ export function createDefaultAttrs(): Attrs {
 }
 
 export function createDefaultGrounds(): Ground[] {
+  // rivalRap starts at 0; advanceRivalGrounds (calendar onWeekAdvance) banks
+  // 5–40 cosmetic opposition each week for the ground picker / logs.
   return [
-    { id: 'GR01', n: 'Courthouse Square', pool: 120, pool0: 120, prop: 0.9, aff: 'O,G', rapport: 0, gotv: 0 },
-    { id: 'GR02', n: 'The FM Roads', pool: 420, pool0: 420, prop: 0.7, aff: 'G,T', rapport: 0, gotv: 0 },
-    { id: 'GR03', n: 'The New Subdivisions', pool: 460, pool0: 460, prop: 0.28, aff: 'F,P', rapport: 0, gotv: 0 },
-    { id: 'GR04', n: 'Church Corridor', pool: 260, pool0: 260, prop: 0.72, aff: 'T,G', rapport: 0, gotv: 0, gated: true },
-    { id: 'GR05', n: 'The Plant Gate', pool: 240, pool0: 240, prop: 0.5, aff: 'T,O', rapport: 0, gotv: 0 },
-    { id: 'GR06', n: 'VFW & Legion Halls', pool: 110, pool0: 110, prop: 0.92, aff: 'G,T', rapport: 0, gotv: 0 },
-    { id: 'GR07', n: 'Lake Country', pool: 230, pool0: 230, prop: 0.55, aff: 'L,G', rapport: 0, gotv: 0 },
-    { id: 'GR08', n: 'The Barrio Blocks', pool: 430, pool0: 430, prop: 0.3, aff: 'T,F', rapport: 0, gotv: 0 }
+    { id: 'GR01', n: 'Courthouse Square', pool: 120, pool0: 120, prop: 0.9, aff: 'O,G', rapport: 0, gotv: 0, rivalRap: 0 },
+    { id: 'GR02', n: 'The FM Roads', pool: 420, pool0: 420, prop: 0.7, aff: 'G,T', rapport: 0, gotv: 0, rivalRap: 0 },
+    { id: 'GR03', n: 'The New Subdivisions', pool: 460, pool0: 460, prop: 0.28, aff: 'F,P', rapport: 0, gotv: 0, rivalRap: 0 },
+    { id: 'GR04', n: 'Church Corridor', pool: 260, pool0: 260, prop: 0.72, aff: 'T,G', rapport: 0, gotv: 0, gated: true, rivalRap: 0 },
+    { id: 'GR05', n: 'The Plant Gate', pool: 240, pool0: 240, prop: 0.5, aff: 'T,O', rapport: 0, gotv: 0, rivalRap: 0 },
+    { id: 'GR06', n: 'VFW & Legion Halls', pool: 110, pool0: 110, prop: 0.92, aff: 'G,T', rapport: 0, gotv: 0, rivalRap: 0 },
+    { id: 'GR07', n: 'Lake Country', pool: 230, pool0: 230, prop: 0.55, aff: 'L,G', rapport: 0, gotv: 0, rivalRap: 0 },
+    { id: 'GR08', n: 'The Barrio Blocks', pool: 430, pool0: 430, prop: 0.3, aff: 'T,F', rapport: 0, gotv: 0, rivalRap: 0 }
   ];
 }
 
