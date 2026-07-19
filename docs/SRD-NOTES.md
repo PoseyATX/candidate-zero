@@ -145,7 +145,7 @@ branching state machine, starting from Candidate-Zero.
 | Filing fee (expensive door) | **Implemented** — `PL05_PayFilingFee` |
 | Block walking | Implemented as a card, but see "Standing Actions" below — this was explicitly supposed to move off the deck |
 | Wrong-party-district trap | **Implemented, and fixed 2026-07-17** — this was mechanically backwards (easier, not harder) until this session; see `docs/BALANCE-NOTES.md` |
-| Self-funding-into-debt trap | Card exists (`PL21_SelfFundCredit`, honestly labeled) but the debt it records has **no mechanical consequence** — see `docs/ROADMAP.md` Phase 3 |
+| Self-funding-into-debt trap | **Phase 3 (2026-07-18):** real lever, not an odds tax — see § "Debt as leveraged optionality" below |
 | Early money/endorsement that forecloses coalitions | Card exists (`PL20_PacCheck`, honestly labeled, records an obligation) but the obligation has **no mechanical consequence** — same gap |
 | Indifference → notice → targeted resistance conflict shape | Partially implemented: `state.tier` now escalates disaster risk across pre-ballot/on-ballot/general (fixed 2026-07-17), but there's no explicit "you got noticed" event/spike — it's a smooth curve, not a phase-change moment |
 | Respectable-loss branches (Perennial Candidate / Advocate / Staffer) | **Not implemented.** Current terminal outcomes are only `missed_filing` / `lost_primary` / `won_general` / `lost_general` — no secondary paths exist at all |
@@ -339,6 +339,28 @@ now fire. R10 still uses modular `disasterLog.length` (stable AC1).
 
 **Harnesses:** `npm run harness:dead-refs`, `harness:shop`,
 `harness:obligations` — all green; full suite green.
+
+## Debt as leveraged optionality (Phase 3, 2026-07-18)
+
+**Wrong draft rejected:** flat debt→odds penalty. Mid-race donors and voters
+do not mark you down for net position; that design also made leverage
+strictly bad. **`resolve.ts` never reads `debt`.**
+
+**Model** (`src/engine/debt.ts`):
+
+| Branch | Behavior | Hooks reused |
+|---|---|---|
+| **Spend-now** | PL21 `applySelfLoan`: +$3000 cash, principal×1.4 on books, `addObl(OB2)` weekly −$150. Real optionality for fee/assets/field. | `obligations.ts` OB2; `canAfford` |
+| **Win — self** | `retireDebtOnWin`: token fee ≤$200, clear debt + OB2, **no** Session gate | — |
+| **Win — PAC bridge** | PL20 under open debt → `maybePacBridge`: PAC owns share of note; win clears cash but keeps **OB1** + `sessionFlags.pac_lender_claim` (Phase 4 committee/vote) | `addObl(OB1)`, `sessionFlags` |
+| **Loss** | `mergeDebtIntoCarry` / `debtCarryFromLoss`: principal ×1.15 into `LegacyCarry.debt`; next run `applyLegacyDebt` re-applies OB2 | `recordRun`, `applyLegacy` |
+| **Affordability** | `availableCash` reserves 8¢/$ over $2000 debt; `canAfford` uses it for $ costs only | `play.ts canAfford` |
+| **Crisis (≥$5000)** | Interim paths: perennial + home only; PL20 early via `pacCheckAvailable` as relief valve (no new fund card) | `buildPaths`, PL20 `show` |
+
+**Harness evidence** (`npm run harness:debt`, n=40): debt-leverage strategy
+**45%** general wins vs conservative money **35%** (+10pp). Leverage is a
+real win-rate case, not pure downside. Loss-branch compound verified
+(debt does not vanish; next cycle tighter cash without soft-lock).
 
 ## Registry integrity checker (prior art for a roadmap item)
 

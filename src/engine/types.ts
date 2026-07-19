@@ -125,7 +125,20 @@ export interface GameState {
   apMax: number;
   fieldAp: number;
   money: number;
+  /**
+   * Outstanding campaign debt principal (self-loan + any unretired bridge).
+   * Phase 3: NEVER read by resolve() odds — consequence is win/loss branch
+   * only (see src/engine/debt.ts). Loss compounds via LegacyCarry; win
+   * retires cheaply via retireDebtOnWin.
+   */
   debt: number;
+  /**
+   * Portion of `debt` that is PAC-bridged (PL20 under pressure). Win clears
+   * cash but leaves sessionFlags.pac_lender_claim + OB1. Loss compounds both.
+   */
+  pacBridgeDebt?: number;
+  /** True after PL21 self-loan this run (once-per-campaign show gate). */
+  selfLoanTaken?: boolean;
   contacts: number;
   nameID: number;
   volPool: number;
@@ -358,6 +371,14 @@ export interface LegacyRun {
 export interface LegacyCarry {
   contacts?: number;
   nameID?: number;
+  /**
+   * Phase 3 loss-branch: unretired debt compounds into the next cycle
+   * (see debt.ts DEBT_CYCLE_COMPOUND). Win path zeros this.
+   */
+  debt?: number;
+  pacBridgeDebt?: number;
+  /** Obligation ids that ride with the note (OB1/OB2/OB3). */
+  debtObls?: string[];
 }
 
 /**

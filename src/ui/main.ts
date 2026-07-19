@@ -598,10 +598,20 @@ function renderTerminalOutcome(): void {
   };
   const epithet = buildEpithet(state, terminalKind, terminalShare);
   const growth = buildGrowthLine(state);
-  const debtNote =
-    terminalKind !== 'won_general' && (state.debt || state.obls.length)
-      ? '<p class="debt-note">The bank still wants its money. Losing does not cancel the note.</p>'
-      : '';
+  // Phase 3: debt is a win/loss branch split, not an odds tax.
+  let debtNote = '';
+  if (terminalKind === 'won_general' && (state.debt || state.pacBridgeDebt || state.obls.includes('OB1'))) {
+    debtNote =
+      state.pacBridgeDebt || state.obls.includes('OB1')
+        ? `<p class="debt-note">Notes retire cheap on a win — but the PAC still holds a Session claim (OB1). Committee work will not be free.</p>`
+        : `<p class="debt-note">Self-loan retires cheap at the swearing-in (token fee). Homestead risk is paid; no Session leash.</p>`;
+  } else if (terminalKind !== 'won_general' && (state.debt || state.obls.length)) {
+    const crisis =
+      (state.debt || 0) >= 5000
+        ? ' Crisis territory: keep running with worse economics, or go home — the PAC Check is the structured relief valve next cycle.'
+        : '';
+    debtNote = `<p class="debt-note">The bank still wants its money ($${state.debt || 0}). Losing does not cancel the note — it compounds into the next cycle.${crisis}</p>`;
+  }
   const nextHint =
     terminalKind === 'won_general'
       ? 'Ahead: the swearing-in and the next filing period. Stand again, or rest on the win.'

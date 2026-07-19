@@ -89,11 +89,52 @@ export const hybridStrategy: Chooser = (playable, state) => {
   return pickByPriority(playable, ['PL01', 'PL06', 'PL08', 'PL13', 'PL16', 'PL10']);
 };
 
+/**
+ * Phase 3 harness strategy: take the self-loan (PL21) as soon as it is
+ * playable, then run a money path — spend-now leverage for fee/assets/field.
+ * Win-rate case vs conservative money is what harness:debt measures.
+ */
+export const debtLeverageStrategy: Chooser = (playable, state) => {
+  if (!state.selfLoanTaken) {
+    const loan = playable.find(p => p.card.id === 'PL21');
+    if (loan) return loan.index;
+  }
+  // Shop buys that unlock field power (A02 → A01) when cash is hot.
+  if (state.money >= 800 && !state.assets.includes('A02')) {
+    const a02 = playable.find(p => p.card.id === 'BUYA02');
+    if (a02) return a02.index;
+  }
+  if (state.assets.includes('A02') && !state.assets.includes('A01')) {
+    const a01 = playable.find(p => p.card.id === 'BUYA01');
+    if (a01) return a01.index;
+  }
+  if (state.stage === 'general') {
+    return pickByPriority(playable, [
+      'PL19', 'PL13', 'PL01', 'PL09', 'PL22', 'PL07', 'PL10', 'PL16'
+    ]);
+  }
+  if (!state.ballot) {
+    if (state.money >= 1250) {
+      return pickByPriority(playable, ['PL05', 'PL13', 'PL01', 'PL10']);
+    }
+    return pickByPriority(playable, ['PL13', 'PL01', 'PL02', 'PL10', 'PL03']);
+  }
+  return pickByPriority(playable, ['PL39', 'PL01', 'PL13', 'PL06', 'PL08', 'PL10', 'PL16']);
+};
+
+/** Money path that never self-loans — control for harness:debt. */
+export const conservativeMoneyStrategy: Chooser = (playable, state) => {
+  const noLoan = playable.filter(p => p.card.id !== 'PL21');
+  return moneyBallotStrategy(noLoan, state);
+};
+
 export const STRATEGIES: Record<string, Chooser> = {
   labor: laborBallotStrategy,
   money: moneyBallotStrategy,
   grind: grindFirstStrategy,
-  hybrid: hybridStrategy
+  hybrid: hybridStrategy,
+  debt: debtLeverageStrategy,
+  'money-safe': conservativeMoneyStrategy
 };
 
 export function describeStrategy(_name: string, state: GameState): string {

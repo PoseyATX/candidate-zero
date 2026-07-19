@@ -17,6 +17,7 @@
 import type { CampaignOutcome, GameState, LegacyState, TraitId } from './types.js';
 import { hasRep } from './reputation.js';
 import { generalWinProbability, primaryWinProbability } from './calendar.js';
+import { applyLegacyDebt, isDebtCrisis, mergeDebtIntoCarry } from './debt.js';
 
 const STORAGE_KEY = 'cz_legacy_v1';
 
@@ -84,21 +85,27 @@ export interface InterimPath {
 
 export function buildPaths(state: GameState, share: number): InterimPath[] {
   const respectable = share > 28 && state.hitPieces < 3;
+  const crisis = isDebtCrisis(state);
   const paths: (InterimPath & { gate: boolean })[] = [
     {
       id: 'perennial',
-      n: 'The Perennial Candidate',
-      d: 'Keep the list warm. Keep showing up. The county learns your face by the third try.',
+      n: crisis ? 'The Perennial Candidate (and the Note)' : 'The Perennial Candidate',
+      d: crisis
+        ? `Keep running with $${state.debt} still on the books. Worse economics next cycle — interest compounds. Or take the PAC Check as relief next time.`
+        : 'Keep the list warm. Keep showing up. The county learns your face by the third try.',
       traits: ['T_LIST', 'T_KNOWN'],
       gate: true,
-      interim: 'Two years of fish fries and funerals, list warm.'
+      interim: crisis
+        ? 'Two years of fish fries, funerals, and a bank note that does not sleep.'
+        : 'Two years of fish fries and funerals, list warm.'
     },
     {
       id: 'advocate',
       n: 'The Advocate',
       d: `The candidate lost; the issue didn’t. Build the organization "${state.issue ?? 'the cause'}" deserved.`,
       traits: ['T_CRED', 'T_NORTH'],
-      gate: true,
+      // Phase 3: crisis debt closes the soft paths — run again or go home.
+      gate: !crisis,
       interim: `Two years building the ${state.issue ?? 'issue'} organization.`
     },
     {
@@ -106,16 +113,20 @@ export function buildPaths(state: GameState, share: number): InterimPath[] {
       n: 'The Staffer',
       d: 'Someone in Austin noticed you. Two years inside the building, learning where the levers are.',
       traits: ['T_NERD', 'T_WHIP'],
-      gate: respectable || state.endorsePts > 2,
+      gate: !crisis && (respectable || state.endorsePts > 2),
       interim: 'Two years carrying a badge in the Capitol, learning the levers.'
     },
     {
       id: 'home',
       n: 'Go Home a While',
-      d: 'Fix the fence. Coach the team. Let the county forget the mailers before it remembers your name.',
+      d: crisis
+        ? 'Stop the bleeding. Fix the fence. The note still compounds, but you are not on the trail.'
+        : 'Fix the fence. Coach the team. Let the county forget the mailers before it remembers your name.',
       traits: ['T_REST', 'T_PERSP'],
       gate: true,
-      interim: 'Two years of fences and Friday games.'
+      interim: crisis
+        ? 'Two years of fences, Friday games, and interest.'
+        : 'Two years of fences and Friday games.'
     }
   ];
   return paths.filter(p => p.gate);
@@ -149,6 +160,9 @@ export function applyLegacy(state: GameState, legacy: LegacyState): void {
     state.faces.P += 8;
     state.faces.O += 8;
   }
+  // Phase 3: loss-branch debt compounds into the next cycle (affordability,
+  // not odds). Reuses applyCarriedDebt → addObl OB2 (debt.ts / obligations.ts).
+  applyLegacyDebt(state, legacy);
 }
 
 /**
@@ -194,6 +208,13 @@ export function buildEpithet(state: GameState, kind: CampaignOutcome, share: num
   if (hasRep(state, 'R08')) marks.push('the establishment’s pick');
   if (state.shFired.F2 || state.shFired.T2) marks.push('undone partly by their own shadow');
   if (state.obls.length >= 3) marks.push(`carrying ${state.obls.length} obligations like stones`);
+  if ((state.debt || 0) > 0) {
+    marks.push(
+      kind === 'won_general'
+        ? `a note on the books ($${state.debt}) heading into Session`
+        : `$${state.debt} still owed — the bank does not care who lost`
+    );
+  }
   if (hasRep(state, 'R01')) marks.push('nobody outworked them');
 
   return `${who} ${core} in ${d}${marks.length ? ' — ' + marks.join('; ') : ''}.`;
@@ -216,7 +237,10 @@ export function buildGrowthLine(state: GameState): string | null {
 /** Push this run into the Chronicle and bank its carry-forward stats. */
 export function recordRun(legacy: LegacyState, state: GameState, kind: CampaignOutcome, share: number): void {
   legacy.runs.push({ epithet: buildEpithet(state, kind, share), kind });
-  legacy.carry = { contacts: state.contacts, nameID: state.nameID };
+  const base = { contacts: state.contacts, nameID: state.nameID };
+  // Phase 3: loss compounds debt into carry; win zeros debt carry
+  // (cash retirement happens in retireDebtOnWin on reelect / Session).
+  legacy.carry = mergeDebtIntoCarry(base, state, kind);
 }
 
 export function setInterim(legacy: LegacyState, interim: string): void {

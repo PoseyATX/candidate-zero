@@ -29,6 +29,7 @@ import {
 import { markWeekStart, buildWeekSummary, type WeekSummary } from './feedback.js';
 import { repCheck } from './reputation.js';
 import { applyLegacy } from './legacy.js';
+import { retireDebtOnWin } from './debt.js';
 import {
   applySetup,
   HARNESS_DEFAULT_SETUP,
@@ -151,15 +152,15 @@ export function createCampaign(overrides: CreateCampaignOptions = {}): Campaign 
  * carrying a discounted share of what the last term built (archive's
  * exact carry-forward formulas below) rather than resetting to zero.
  *
- * Reputations/obligations aren't carried 1:1 the way the archive does it
- * (it filters to a specific archive-only id set, most of which this engine
- * hasn't ported — see reputation.ts's documented gaps): reps carry forward
- * as-is (this engine's rep set is already the "durable" curated subset),
- * obligations reset (modular obls are free-text, not the archive's
- * structured {n,drag} registry yet — Phase 2 item 4 — so there's no way to
- * tell which ones "follow you" without that restructure).
+ * Phase 3: win-branch debt retirement runs on the *old* state first
+ * (retireDebtOnWin) — self-loan clears cheap; PAC bridge leaves OB1 +
+ * sessionFlags.pac_lender_claim on the carried sessionFlags/reps path.
+ * Loss-path debt is applied via applyLegacy → applyLegacyDebt, not here.
  */
 export function createIncumbentCampaign(old: Campaign, legacy: LegacyState): Campaign {
+  // Settle the last race's notes before the wheel turns (win branch).
+  const retirement = retireDebtOnWin(old.state);
+
   const next = createCampaign({ setup: old.setup });
   const s = next.state;
   const o = old.state;
@@ -174,6 +175,16 @@ export function createIncumbentCampaign(old: Campaign, legacy: LegacyState): Cam
   s.reps = [...o.reps];
   s.incumbentRun = true;
   s.tier = 1;
+  // Win path: books cleared (debt 0). PAC Session claim may persist.
+  s.debt = 0;
+  s.pacBridgeDebt = 0;
+  s.selfLoanTaken = false;
+  s.sessionFlags = { ...(o.sessionFlags || {}) };
+  if (retirement.sessionClaim) {
+    s.sessionFlags.pac_lender_claim = true;
+    // Carry OB1 only (Session leash) — not the full free-text/obls dump.
+    if (!s.obls.includes('OB1')) s.obls.push('OB1');
+  }
 
   // Incumbency reads as a favorable seat (few serious primary challengers,
   // a friendlier general) rather than modular's `district.incumbent` flag,
@@ -199,6 +210,21 @@ export function createIncumbentCampaign(old: Campaign, legacy: LegacyState): Cam
       'incumbent line is yours. You skip the petition table and begin KNOWN: ' +
       'name recognition, a donor list, a record. That record is also a target.'
   });
+  if (retirement.sessionClaim) {
+    s.log.push({
+      week: s.week,
+      kind: 'note',
+      text:
+        'THE THIRD HOUSE REMEMBERS — notes retired, but OB1 (PAC String) ' +
+        'rides into Session. Committee assignment and a future vote are not free.'
+    });
+  } else if (retirement.selfRetired > 0) {
+    s.log.push({
+      week: s.week,
+      kind: 'note',
+      text: `SELF-LOAN CLEARED — paid $${retirement.feePaid} to close the bank note. No Session leash.`
+    });
+  }
   next.state.lastPhase = getPhase(next.state);
   return next;
 }

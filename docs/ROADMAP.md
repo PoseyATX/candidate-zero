@@ -13,7 +13,7 @@ or discovered in the codebase.
 - **Phase 0** is done — foundation / maintenance pass. Listed for context.
 - **Phase 1** is done — ground-centered campaign model (see below).
 - **Phase 2** is done — allies/assets/obligations port (see below).
-- **Phase 3** is the highest-value next small bite: debt surface on terminal.
+- **Phase 3** is done — debt as leveraged optionality (not an odds tax).
 - **Phases 4–6** are larger, legitimately new feature/content investments.
 - **Phase 7–8** are the project's own stated end goals (v0.1, Swift/iOS).
 - Each item lists its evidence so a future reader (human or agent) doesn't
@@ -241,19 +241,29 @@ reputation grants. No resolve/RNG covenant changes; no ground-picker redesign.
 
 Detail: `docs/SRD-NOTES.md` § "Shadow consequences + reputation grants" (updated Phase 2 closeout).
 
-## Phase 3 — Debt has no consequence (small; rescoped 2026-07-17)
+## ✅ Phase 3 — Debt as leveraged optionality (DONE 2026-07-18)
 
-**Rescoped, smaller than originally estimated.** `state.debt`
-(`PL21_SelfFundCredit`) is still recorded but never read by any mechanic.
-Checking the archive for how debt "bites back" there: it doesn't tax any
-win probability or trigger a repayment mechanic — its only visible
-consequence is narrative, surfaced on the loss/terminal screen ("The bank
-still wants its money. Losing does not cancel the note.",
-`archive/prototype-single-file.html:1746`). So the honest, low-risk fix
-here is much smaller than a new mechanic: surface `state.debt` (and held
-obligations) in the terminal outcome text when a run ends, the way the
-archive does, rather than building a debt-collection system that the
-source material doesn't actually call for.
+**Correction:** a prior draft floated a flat debt→odds penalty. That was
+wrong on theme (mid-campaign voters/donors don't mark you down for a bank
+note) and wrong on game theory (makes debt strictly bad). **Debt has zero
+in-campaign resolve() odds effect.** Consequence is deferred and asymmetric.
+
+| Requirement | Status | Evidence |
+|---|---|---|
+| No resolve()/band debt tax | **Done** | `resolve.ts` has no `debt` ref; harness pairwise seed equality debt=0 vs 99999 |
+| Spend-now lever (PL21 self-loan + OB2) | **Done** | `applySelfLoan` in `src/engine/debt.ts`; +$3000 cash unlocks fee/assets; `harness:debt` |
+| Win: self-loan retires cheap, no Session gate | **Done** | `retireDebtOnWin` token fee ≤$200; clears OB2; no `pac_lender_claim` |
+| Win: PAC bridge retires cash + Session claim | **Done** | `maybePacBridge` on PL20 under open debt; keeps OB1 + `sessionFlags.pac_lender_claim` for Phase 4 |
+| Loss: compounds into next cycle | **Done** | `LegacyCarry.debt` × `DEBT_CYCLE_COMPOUND` (1.15); `applyLegacyDebt` re-adds OB2 drag |
+| Loss: affordability gate, not odds | **Done** | `availableCash` / `canAfford` reserve; never touches resolve |
+| Crisis path pressure | **Done** | `DEBT_CRISIS_THRESHOLD` 5000 → perennial/home only; PL20 early via `pacCheckAvailable` |
+| Leverage win-rate case | **Done** | `harness:debt` n=40: debt leverage **45%** gen wins vs conservative money **35%** (+10pp) |
+
+Hooks reused (no parallel systems): `addObl`/`OB1`/`OB2` (`obligations.ts`),
+`sessionFlags`, `LegacyCarry`/`applyLegacy`/`recordRun`, `canAfford` →
+`availableCash`. UI terminal copy + epithet surface the branch split.
+
+Detail: `docs/SRD-NOTES.md` § debt / Phase 3.
 
 ## Phase 4 — Build the Session stage
 

@@ -7,6 +7,7 @@
 import { random } from '../engine/rng.js';
 import { addAlly, findAlly, warm } from '../engine/reputation.js';
 import { addObl } from './obligations.js';
+import { applySelfLoan, maybePacBridge, pacCheckAvailable } from '../engine/debt.js';
 import type { PlayCard } from '../engine/types.js';
 
 function clamp(v: number, lo: number, hi: number): number {
@@ -58,8 +59,10 @@ export const PL20_PacCheck: PlayCard = {
   attrs: ['CRA', 'DIP'],
   kind: 'bargain',
   trap: true,
-  d: 'A man in a good suit admires your race. The check is real. So is the string tied to it.',
-  show: (s) => s.tier >= 1,
+  d: 'A man in a good suit admires your race. The check is real. So is the string tied to it. Under a heavy note, this is also the bridge — and Session will remember.',
+  // Phase 3: debt crisis opens the PAC Check early as the structured relief valve
+  // (debt.ts pacCheckAvailable) — no new desperate-fundraising card.
+  show: (s) => pacCheckAvailable(s),
   odds: () => 0.9,
   run: (s, o) => {
     if (o.tier === 3) {
@@ -71,7 +74,12 @@ export const PL20_PacCheck: PlayCard = {
     s.faces.L -= 12;
     // Phase 2: structured OB1 (archive PAC String), not free-text
     addObl(s, 'OB1');
-    return `+$${m}. The Third House has opened an account in your name. (PAC String recorded — L and exposure drag weekly.)`;
+    // Phase 3: if a bank note is open, PAC may bridge it (session claim on win)
+    const bridge = maybePacBridge(s, m);
+    return (
+      `+$${m}. The Third House has opened an account in your name. ` +
+      `(PAC String OB1 — L and exposure drag weekly.)${bridge}`
+    );
   }
 };
 
@@ -80,17 +88,11 @@ export const PL21_SelfFundCredit: PlayCard = {
   attrs: ['CRA'],
   kind: 'bargain',
   trap: true,
-  d: "The bank will lend against the homestead. Campaigns have eaten better men's farms.",
+  d: "The bank will lend against the homestead. Campaigns have eaten better men's farms. Spend it now — the bill lands on the win/loss branch, not your odds.",
+  // Phase 3: once-per-run spend-now lever (debt.ts applySelfLoan)
+  show: (s) => !s.selfLoanTaken,
   odds: () => 0.95,
-  run: (s) => {
-    const m = 3000;
-    s.money += m;
-    s.debt += Math.floor(m * 1.4);
-    s.faces.G -= 8;
-    // Phase 2: Bank Note obligation (weekly −$150) — structured OB2
-    addObl(s, 'OB2');
-    return `+$${m} now; $${Math.floor(m * 1.4)} owed later, win or lose. (Bank Note recorded — interest drags weekly.)`;
-  }
+  run: (s) => applySelfLoan(s, 3000)
 };
 
 export const PL22_ContrastMail: PlayCard = {

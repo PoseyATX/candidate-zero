@@ -9,6 +9,7 @@ import { getPhase } from './state.js';
 import { getGroundPenalty } from './calendar.js';
 import { buildPlayFeedback } from './feedback.js';
 import { repCheck, shadowCheck } from './reputation.js';
+import { canAffordCash } from './debt.js';
 import type { AttrId, GameState, Ground, PlayCard, PlayOutcome, RollResult } from './types.js';
 
 export function canAfford(state: GameState, card: PlayCard): boolean {
@@ -16,7 +17,9 @@ export function canAfford(state: GameState, card: PlayCard): boolean {
   const apCost = c.a ?? 0;
   const apCovered = apCost <= state.ap || (apCost > 0 && !!card.field && state.fieldAp > 0);
   if (!apCovered) return false;
-  if ((c.$ ?? 0) > state.money) return false;
+  // Phase 3: $ costs use availableCash (debt reserves a service cushion).
+  // Never an odds tax — pure affordability gate (src/engine/debt.ts).
+  if (!canAffordCash(state, c.$ ?? 0)) return false;
   if ((c.vp ?? 0) > state.volPool) return false;
   if ((c.m ?? 0) > state.momentum) return false;
   if ((c.fav ?? 0) > state.favors) return false;
