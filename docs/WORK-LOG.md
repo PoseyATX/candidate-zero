@@ -378,7 +378,20 @@ Pilot: 2× warm AL01 (or endorse+AL01) → ORBIT OPEN log → MV01 camp offer �
 | Finding | Open/east labor mean win 20.3% (6.7–33.3%); no soft-lock/free win |
 | Fix | Wrong-party genBase + November tax (GOTV gravity had made traps soft) |
 | Identity | High-cash money path (heir/wheeler/feed-store) documented, not nerfed |
-| Next | Starmap ≥3 playable loops (#17/#18) |
+| Next | Starmap ≥3 playable loops |
 
 Issue #9 closed with evidence.
+
+---
+
+## Starmap 3 playable pilots (2026-07-19)
+
+| Pilot | Verb | Unlock |
+|---|---|---|
+| Precinct Chair | MV01 | 2× AL01 / endorse+AL01 |
+| Canvass Captain | MV02 | AL09 / name+vol pressure |
+| County Judge | MV03 | AL15 / endorse+name weight |
+
+Multi-pilot registry `pilots.ts`; simultaneous multi-orbit; camp −401+.  
+`harness:starmap` e2e. Issues **#17 / #18 closed**.
 
