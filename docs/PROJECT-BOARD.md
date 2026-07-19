@@ -2,6 +2,8 @@
 
 **Board:** [PoseyATX Project #2](https://github.com/users/PoseyATX/projects/2)  
 **Evidence log:** [`docs/ROADMAP.md`](./ROADMAP.md) (what shipped + harness proof)  
+**Workstream log:** [`docs/WORK-LOG.md`](./WORK-LOG.md) · issue #16  
+**Player flow:** [`docs/GAME-FLOW.md`](./GAME-FLOW.md)  
 **Live alpha:** https://poseyatx.github.io/candidate-zero/  
 **Snapshot date:** 2026-07-19 (board hygiene pass)
 

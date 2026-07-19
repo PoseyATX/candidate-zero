@@ -4,7 +4,9 @@
 
 - **Board:** https://github.com/users/PoseyATX/projects/2  
 - **Mirror + hygiene:** [`docs/PROJECT-BOARD.md`](./PROJECT-BOARD.md)  
-- **Issues:** #4–#15 (phases, meta, deploy bug, AC1 remainder)
+- **Full workstream log:** [`docs/WORK-LOG.md`](./WORK-LOG.md) · issue [#16](https://github.com/PoseyATX/candidate-zero/issues/16)  
+- **Player flow:** [`docs/GAME-FLOW.md`](./GAME-FLOW.md)  
+- **Issues:** #4–#16 (phases, meta, deploy bug, AC1 remainder, work-log pin)
 
 This document is the **evidence log**: what shipped, with paths and harness
 proof. Board columns / issue titles are the **to-do queue**. When they disagree,
