@@ -1,23 +1,26 @@
 # Roadmap
 
-Status snapshot and prioritized forward plan, written after a full
-routine-maintenance pass (2026-07-17). Grounded entirely in evidence found
-in this repo — code paths that are dead, fields that are written but never
-read, and the project's own prior documentation (`TICKET-v0.1-modular-baseline.md`,
-`ARCHITECTURE.md`, `AC1-NOTES.md`, `BALANCE-NOTES.md`). Nothing here is
-invented scope; every item traces to something already scaffolded, flagged,
-or discovered in the codebase.
+**Operating plan lives on GitHub Projects** — not only this file:
+
+- **Board:** https://github.com/users/PoseyATX/projects/2  
+- **Mirror + hygiene:** [`docs/PROJECT-BOARD.md`](./PROJECT-BOARD.md)  
+- **Issues:** #4–#15 (phases, meta, deploy bug, AC1 remainder)
+
+This document is the **evidence log**: what shipped, with paths and harness
+proof. Board columns / issue titles are the **to-do queue**. When they disagree,
+**code + harnesses win**, then update both.
+
+Grounded in repo evidence (`TICKET-v0.1-modular-baseline.md`, `ARCHITECTURE.md`,
+`AC1-NOTES.md`, `BALANCE-NOTES.md`). Nothing invented as “done” without a file.
 
 ## How to read this doc
 
-- **Phase 0** is done — foundation / maintenance pass. Listed for context.
-- **Phase 1** is done — ground-centered campaign model (see below).
-- **Phase 2** is done — allies/assets/obligations port (see below).
-- **Phase 3** is done — debt as leveraged optionality (not an odds tax).
-- **Phases 4–6** are larger, legitimately new feature/content investments.
-- **Phase 7–8** are the project's own stated end goals (v0.1, Swift/iOS).
-- Each item lists its evidence so a future reader (human or agent) doesn't
-  have to re-derive "why does this matter."
+- **Phase 0–3** done (issues #4–#7 closed 2026-07-19).
+- **Phase 4 NEXT** — Session stage (issue #8). Claude’s “thin done” claim was false.
+- **Phases 5–7** — balance, mobile polish, honest v0.1.
+- **Phase 8** — ship path: **TS pure engine → Unity presentation → iOS / App Store**
+  (issue #12). Unity is not a second rules engine.
+- Each item lists evidence so agents don’t re-derive status from vibes.
 
 ---
 
@@ -393,18 +396,18 @@ hardened the audit tooling's honesty; Phase 1 item 1 (reachability
 checking) is the natural way to make AC2 evidence trustworthy going
 forward rather than re-discovered by accident.
 
-## Phase 8 — Swift / iOS port
+## Phase 8 — Ship path: TS engine → Unity presentation → iOS / App Store
 
-The stated long-term shipping target (`ARCHITECTURE.md`: "Long-term
-shipping target remains native Swift / iOS"; `AGENTS.md`: "Do not
-implement a second rules engine in Unity; TS (then Swift) owns mechanics").
-Not started, and shouldn't be until the engine is stable enough that a port
-isn't chasing a moving target — i.e., realistically after Phases 1–4 land,
-since Phase 2–4 all touch `GameState`'s shape. One concrete thing Phase 0
-already did in this direction: tightening `district`/`genOpp`/`rivals`/`log`
-from `any` to real interfaces. A cleanly-typed TS `GameState` maps far more
-directly onto Swift structs/enums than one full of `any` — worth continuing
-that discipline as new fields are added (Phase 2–4 will add several).
+**Owner direction (2026-07-19):** ship through Unity as presentation shell
+over the pure TypeScript engine, then iOS / App Store. Issue
+[#12](https://github.com/PoseyATX/candidate-zero/issues/12).
+
+Non-negotiable: Unity does **not** reimplement resolve/odds/yields. Prep
+work (keep `GameState` clean, freeze engine API, seed contract) can start
+while Phase 4–7 run; full vertical slice waits for Session shape to settle.
+
+Swift-native remains a possible *future* rewrite of the same pure engine —
+not the near-term store path.
 
 ---
 

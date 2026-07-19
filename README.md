@@ -4,29 +4,22 @@
 
 High-complexity, single-player (PvE) roguelike deckbuilder set inside the machinery of the Texas Legislature.
 
-This repository contains the modular TypeScript baseline for the durable, testable core. The pure Engine layer is designed for clean eventual porting to Swift / iOS.
+Modular TypeScript baseline: pure engine is the rules authority. Ship path
+is **TS engine → Unity presentation → iOS / App Store** (not a second rules
+engine in C#). Ops roadmap: [Project #2](https://github.com/users/PoseyATX/projects/2)
++ [`docs/PROJECT-BOARD.md`](docs/PROJECT-BOARD.md). Evidence log: [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
-## Current Status (v0.1 baseline **in progress** — not declared)
+**Play the alpha:** https://poseyatx.github.io/candidate-zero/
 
-- Pure resolution engine (four-tier brutal RNG) extracted and verified
-- SAFE cards provably cannot produce DISASTER
-- **22 Play cards** in pure, explicit-state form (waves 1–4), root-attr tagged
-- Petition Drive / Filing Fee balance-tuned (labor vs. money ballot-access paths)
-- Minimal hand + draw + play + week loop live (seeded end-to-end)
-- Attribute synergy (`cardAttrMod`) active; personas/regions tilt attrs
-- Difficulty (resistance tier) escalates pre-ballot → on-ballot → general
-- Primary **8 weeks** + General **6 weeks** with filing + elections
-- Setup binds (persona / issue / district / region) in CLI + UI; district
-  partisan lean (`align`/`trap`/`incumbent`) actually affects odds
-- Phase-turn 3-card drafts on ballot and general entry
-- Thin Vite UI shell + CLI play shell
-- Harnesses (all `.ts`, no hand-duplicated engine logic): resolve, smoke,
-  ballot, loop, strategies, ac1, ac1-parity, audit, calendar, setup, yields,
-  full-campaign, dopamine
-- CI (`.github/workflows/ci.yml`): typecheck + full harness + build on every push/PR
-- **Open for honest v0.1 — see `docs/ROADMAP.md`:** archive yield-table
-  compare, allies/assets/reps acquisition system, shadow consequences
-  (debt/obligations), the Session stage, UI polish
+## Current Status (v0.0.x — Phases 0–3 done; not v0.1)
+
+- Phases **0–3 done:** foundation, grounds, allies/shop/obligations, debt leverage
+- Pure resolution engine (four-tier brutal RNG); SAFE never DISASTER
+- Primary **8** + General **6**; ballot labor/money paths; setup binds
+- Ground picker, asset shop, structured obligations, debt as optionality
+- Vite UI + CLI + full harness suite + CI
+- **Next:** Phase 4 Session ([#8](https://github.com/PoseyATX/candidate-zero/issues/8))
+- **Then:** balance matrix → mobile polish → honest v0.1 → Unity/iOS ship
 
 ## Architecture
 
