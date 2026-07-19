@@ -25,7 +25,8 @@ interface Row {
 
 function audit(card: PlayCard): Row {
   const issues: string[] = [];
-  if (!card.id || !/^PL\d{2}[A-Z]?$/.test(card.id)) issues.push('bad id');
+  // PL## campaign, MV## starmap movement verbs
+  if (!card.id || !(/^(PL\d{2}[A-Z]?|MV\d{2})$/.test(card.id))) issues.push('bad id');
   if (!card.n) issues.push('missing name');
   if (!RISKS.has(card.risk)) issues.push(`bad risk ${card.risk}`);
   if (!card.ph?.length) issues.push('no phases');

@@ -18,10 +18,12 @@ Grounded in repo evidence (`TICKET-v0.1-modular-baseline.md`, `ARCHITECTURE.md`,
 ## How to read this doc
 
 - **Phase 0–4** done (issues #4–#8; Session shipped 2026-07-19).
-- **Phase 5 NEXT** — balance breadth (issue #9).
+- **Starmap v0** started — entity/orbit/loop cartography + Precinct Chair pilot (#17/#18).
+- **Phase 5** — balance breadth (issue #9); still valid for campaign math.
 - **Phases 6–7** — mobile polish, honest v0.1.
 - **Phase 8** — ship path: **TS pure engine → Unity presentation → iOS / App Store**
   (issue #12). Unity is not a second rules engine.
+- **North star:** career graph / no true game over — see `docs/STARMAP.md`.
 - Each item lists evidence so agents don’t re-derive status from vibes.
 
 ---
@@ -287,6 +289,23 @@ Port of archive Session (prototype ~917–1075). General win **enters Session**
 
 Files: `src/engine/session.ts`, `src/data/session-plays.ts`, UI/strategy wires.
 `resolve.ts` untouched.
+
+## ✅ Starmap v0 — Career graph cartography + pilot (STARTED 2026-07-19)
+
+**Design law:** [#17](https://github.com/PoseyATX/candidate-zero/issues/17), [#18](https://github.com/PoseyATX/candidate-zero/issues/18).  
+**Map index:** [`docs/STARMAP.md`](./STARMAP.md).
+
+| Deliverable | Status | Evidence |
+|---|---|---|
+| Full ENT_* catalog (tiers 0–8) | **Done** | `src/data/starmap/entities.ts` (~90+ entities) |
+| Orbits, no orphans | **Done** | `orbits.ts` + `harness:starmap` |
+| Loops registry (waiting/elected/templates/T0–2) | **Done** | `loops.ts` |
+| Declarative conditions + helpers | **Done** | `types-entities.ts`, `entities.ts` |
+| AL* bridges | **Done** | `bridges.ts` |
+| Pilot Precinct Chair + MV01 | **Done** | advancement → orbit open → MV01 yield |
+| `npm run harness:starmap` | **Done** | inventory + pilot e2e |
+
+**Not in v0:** multi-entity playable loops, movement UI modal, waiting-loop stage rewrite.
 
 ## Phase 5 — Sweep balance breadth beyond labor/money
 

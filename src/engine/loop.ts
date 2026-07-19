@@ -31,6 +31,8 @@ import { markWeekStart, buildWeekSummary, type WeekSummary } from './feedback.js
 import { repCheck } from './reputation.js';
 import { applyLegacy } from './legacy.js';
 import { availableCash, retireDebtOnWin } from './debt.js';
+import { isPilotMovementAvailable, syncMovementFlags } from './entities.js';
+import { PILOT_VERB_PLAY_ID } from '../data/starmap/pilot-precinct.js';
 import {
   applySetup,
   HARNESS_DEFAULT_SETUP,
@@ -305,6 +307,8 @@ export const CAMP_FILING_FEE = -105;
 export const CAMP_SHOP_BASE = -200;
 /** Session play synthetic index base: -300 - i. */
 export const CAMP_SESSION_BASE = -300;
+/** Starmap movement verb camp index. */
+export const CAMP_STARMAP_MV01 = -401;
 
 export function listPlayableHand(campaign: Campaign): { index: number; card: PlayCard }[] {
   const out: { index: number; card: PlayCard }[] = [];
@@ -353,6 +357,13 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
       shopI++;
     }
   }
+  // Starmap pilot: MV01 as camp action when orbit open (not deck-dependent).
+  if (isPilotMovementAvailable(campaign.state)) {
+    const mv = campaign.catalog.get(PILOT_VERB_PLAY_ID);
+    if (mv && isPlayable(campaign.state, mv)) {
+      out.push({ index: CAMP_STARMAP_MV01, card: mv });
+    }
+  }
   return out;
 }
 
@@ -363,6 +374,7 @@ export function campIndexToCardId(
 ): string | null {
   if (handIndex === CAMP_PETITION) return 'PL04';
   if (handIndex === CAMP_FILING_FEE) return 'PL05';
+  if (handIndex === CAMP_STARMAP_MV01) return PILOT_VERB_PLAY_ID;
   if (handIndex <= CAMP_SESSION_BASE) {
     const sessionCards = SESSION_PLAYS.filter(c => isPlayable(campaign.state, c));
     const i = CAMP_SESSION_BASE - handIndex;
@@ -486,6 +498,7 @@ export function endWeekInPlace(campaign: Campaign): StageTransition {
   // with no plays; play-triggered thresholds are already checked in
   // executePlay. See src/engine/reputation.ts.
   repCheck(campaign.state);
+  syncMovementFlags(campaign.state);
   return transition;
 }
 

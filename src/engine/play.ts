@@ -10,6 +10,7 @@ import { getGroundPenalty } from './calendar.js';
 import { buildPlayFeedback } from './feedback.js';
 import { repCheck, shadowCheck } from './reputation.js';
 import { canAffordCash } from './debt.js';
+import { syncMovementFlags } from './entities.js';
 import type { AttrId, GameState, Ground, PlayCard, PlayOutcome, RollResult } from './types.js';
 
 export function canAfford(state: GameState, card: PlayCard): boolean {
@@ -183,6 +184,8 @@ export function executePlay(
   // Shadow consequences on Faces (see src/engine/reputation.ts).
   shadowCheck(state);
   repCheck(state);
+  // Starmap v0: open pilot movement when advancement conditions met.
+  syncMovementFlags(state);
 
   return {
     ok: true,

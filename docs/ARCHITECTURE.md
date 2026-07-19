@@ -5,7 +5,8 @@
 | Layer | Path | Rule |
 |-------|------|------|
 | Data | `src/data/` | Cards and content — single source of truth |
-| Engine | `src/engine/` | Pure functions only — portable toward Swift |
+| Engine | `src/engine/` | Pure functions only — portable toward Unity host / future ports |
+| Starmap | `src/data/starmap/` + `engine/entities.ts` | Career graph data (entities/orbits/loops); pilot movement overlay — not a second rules engine |
 | UI | `src/ui/` | Thin Vite shell (setup → play → draft → outcome) |
 | Harness | `src/harness/` | Balance and regression tests |
 | CLI | `src/cli/` | Interactive + auto strategies |

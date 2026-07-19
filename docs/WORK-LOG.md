@@ -292,3 +292,23 @@ Owner added two high-priority design issues from a separate chat. **Read fully b
 ### Scheduling note (agent)
 This is **not** Phase 5 balance matrix and **not** a cookie-clicker tint pass. It is the long-game career graph. Do not half-implement mid-Session without owner sequence. Prefer: ceremony/act delineation + thin entity scaffold when scheduled; full graph is multi-phase.
 
+---
+
+## Starmap v0 land (2026-07-19) — A++ cartography + pilot
+
+**Choice:** full entity/orbit/loop map + one playable pilot (Precinct Chair).
+
+| Artifact | Path |
+|---|---|
+| Types | `src/engine/types-entities.ts` |
+| Helpers | `src/engine/entities.ts` |
+| Catalog | `src/data/starmap/entities.ts` (~90+ ENT_*) |
+| Orbits | `src/data/starmap/orbits.ts` (~100+ edges, no orphans) |
+| Loops | `src/data/starmap/loops.ts` |
+| Bridges | `src/data/starmap/bridges.ts` |
+| Pilot verb | `src/data/plays-starmap.ts` MV01 |
+| Harness | `npm run harness:starmap` |
+| Docs | `docs/STARMAP.md` |
+
+Pilot: 2× warm AL01 (or endorse+AL01) → ORBIT OPEN log → MV01 camp offer → yields + entityHistory.
+

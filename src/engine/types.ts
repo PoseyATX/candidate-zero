@@ -266,6 +266,14 @@ export interface GameState {
   funeralWeek?: number;
   /** Billboard name-ID halved after rival buys next door (archive billboardHalved). */
   billboardHalved?: boolean;
+  /**
+   * Starmap v0 (issues #17/#18) — optional career-graph fields.
+   * Default empty; pilot movement overlays campaign without requiring entity mode.
+   */
+  currentEntityId?: string;
+  entityHistory?: string[];
+  orbitWarmth?: Record<string, number>;
+  pendingMovement?: import('./types-entities.js').MovementOpportunity;
 }
 
 /**

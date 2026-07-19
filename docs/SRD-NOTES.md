@@ -340,6 +340,18 @@ now fire. R10 still uses modular `disasterLog.length` (stable AC1).
 **Harnesses:** `npm run harness:dead-refs`, `harness:shop`,
 `harness:obligations` — all green; full suite green.
 
+## Career graph / Starmap (design law — v0 cartography 2026-07-19)
+
+**Issues:** [#17](https://github.com/PoseyATX/candidate-zero/issues/17) exhaustive actors;  
+[#18](https://github.com/PoseyATX/candidate-zero/issues/18) orbits, loops, advancement/setback, movement.
+
+**Core:** No true loss — only redirection into a new orbit. Entity registry + orbit web +
+loop/subloop cycles. Implementation starts as **data cartography** (`docs/STARMAP.md`,
+`src/data/starmap/`) with one **pilot road**: Precinct Chair (`ENT_PRECINCT_CHAIR` /
+AL01) → advancement conditions → **MV01** movement verb.
+
+Does not replace allies, session pipeline, or resolve RNG. Bridges map ENT↔AL.
+
 ## Debt as leveraged optionality (Phase 3, 2026-07-18)
 
 **Wrong draft rejected:** flat debt→odds penalty. Mid-race donors and voters
