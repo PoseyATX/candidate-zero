@@ -11,8 +11,9 @@
 
 import type { GameState, Ground, RollResult, PlayCard } from '../engine/types.js';
 import { random } from '../engine/rng.js';
-import { warm, allyWarmAtGround } from '../engine/reputation.js';
+import { addAlly, warm, allyWarmAtGround } from '../engine/reputation.js';
 import { WAVE4_PLAYS } from './plays-wave4.js';
+import { allShopPlayTemplates } from './assets.js';
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
@@ -35,8 +36,10 @@ export const PL01_BlockWalk: PlayCard = {
     if (!g) return 'No ground selected.'; s.walkCount++;
     // Phase 1: the Field Director (AL09) boosts the turf they actually work.
     const mult = (s.assets.includes('A01')?1.5:1) * (allyWarmAtGround(s,'AL09',g.id)?1.2:1);
-    if (o.tier === 0) { const c = Math.min(g.pool, Math.round((55+random()*30)*mult)); g.pool-=c; s.contacts+=c; rapGain(g,6,s); s.volPool+=1; s.nameID+=2; return `A church picnic adopts you whole. +${c} contacts, a volunteer, and rapport at ${g.n}.`; }
-    if (o.tier === 1) { const c = Math.min(g.pool, Math.round((22+random()*16)*mult)); g.pool-=c; s.contacts+=c; s.volPool+=1; rapGain(g,3,s); return `Doors open. +${c} contacts, +1 volunteer at ${g.n}`; }
+    // archive:547–548 — A11 Push Cards add +1 name ID on successful walks
+    const push = s.assets.includes('A11') ? 1 : 0;
+    if (o.tier === 0) { const c = Math.min(g.pool, Math.round((55+random()*30)*mult)); g.pool-=c; s.contacts+=c; rapGain(g,6,s); s.volPool+=1; s.nameID+=2+push; return `A church picnic adopts you whole. +${c} contacts, a volunteer, and rapport at ${g.n}.`; }
+    if (o.tier === 1) { const c = Math.min(g.pool, Math.round((22+random()*16)*mult)); g.pool-=c; s.contacts+=c; s.volPool+=1; rapGain(g,3,s); s.nameID+=push; return `Doors open. +${c} contacts, +1 volunteer at ${g.n}`; }
     const c = Math.min(g.pool,6); g.pool-=c; s.contacts+=c; return 'Heat, dogs, closed blinds. +'+c+' contacts and one ruined pair of boots.';
   }
 };
@@ -110,16 +113,52 @@ export const PL07_CandidateForum: PlayCard = {
   }
 };
 
+/**
+ * Kitchen-Table Meeting — archive PL08 (lines 581–582).
+ *
+ * Ally grant: AL01 on tier 0/1; AL02 when chairs(s) >= 3.
+ * Archive chairs() = warm AL01 count + chairCount — NOT ground-scoped.
+ * Phase 1 considered gating on allyWarmAtGround(AL01, ground); archive
+ * allies are roster-wide, so PL08 stays roster-wide (no ground gate).
+ * allyWarmAtGround remains the field-ops tool (AL09 on PL01/PL19/PL21B/PL39).
+ */
 export const PL08_KitchenTable: PlayCard = {
   id: 'PL08', n: 'Kitchen-Table Meeting', cost: { a:1 }, risk: 'STD', ph: [1,2,3], tag: 'pie is not optional',
   attrs: ['DIP'],
   d: "A chair's kitchen, her rules. Bring pie; leave with a precinct or nothing.",
-  odds: (s) => { const chairs = s.allies.filter(a => a.id==='AL01' && a.warm>0).length; return clamp(0.4 + chairs*0.03 + s.faces.O*0.003 + s.faces.G*0.003 - (s.allyMalus||0) - (s.estabPenalty?0.08:0), 0, 0.9); },
+  odds: (s) => {
+    const chairs =
+      s.allies.filter(a => a.id === 'AL01' && a.warm > 0).length + (s.chairCount || 0);
+    return clamp(
+      0.4 + chairs * 0.03 + s.faces.O * 0.003 + s.faces.G * 0.003 -
+        (s.allyMalus || 0) - (s.estabPenalty ? 0.08 : 0),
+      0,
+      0.9
+    );
+  },
   run: (s, o) => {
-    if (o.tier === 0) { s.endorsePts+=1; return 'She comes over — and brings her club president\'s number.'; }
-    if (o.tier === 1) { s.endorsePts+=1; return 'A handshake on the porch. One chair, quietly banked.'; }
+    // archive chairs helper (line 389)
+    const chairsOf = () =>
+      s.allies.filter(a => a.id === 'AL01' && a.warm > 0).length + (s.chairCount || 0);
+    s.pieCount = (s.pieCount || 0) + 1;
+    if (o.tier === 0) {
+      // archive:581
+      addAlly(s, 'AL01', 3);
+      s.chairCount = (s.chairCount || 0) + 1;
+      s.endorsePts += 1;
+      if (chairsOf() >= 3) addAlly(s, 'AL02', 2);
+      return 'She comes over — and brings her club president\'s number.';
+    }
+    if (o.tier === 1) {
+      // archive:582
+      addAlly(s, 'AL01', 2);
+      s.endorsePts += 1;
+      if (chairsOf() >= 3) addAlly(s, 'AL02', 2);
+      return 'A handshake on the porch. One chair, quietly banked.';
+    }
     if (o.tier === 2) return 'Polite pie, no promises. "Come back after the forum."';
-    s.faces.O -= 3; return 'You push. Word of the pushing beats you back to your truck.';
+    s.faces.O -= 3;
+    return 'You push. Word of the pushing beats you back to your truck.';
   }
 };
 
@@ -141,7 +180,17 @@ export const PL10_PressRelease: PlayCard = {
   id: 'PL10', n: 'Press Release', cost: { a:1 }, risk: 'SAFE', ph: [1,2,3], tag: 'the on-ramp',
   attrs: ['CRA'],
   d: 'Nobody prints it. Everybody files it. The reporter learns your name spelling.', odds: () => 0.85,
-  run: (s) => { s.momentum+=1; s.nameID+=1; return 'Filed, noted, spelled right.'; }
+  // archive:595 — prCount===2 grants AL04 Beat Reporter
+  run: (s) => {
+    s.momentum += 1;
+    s.nameID += 1;
+    s.prCount = (s.prCount || 0) + 1;
+    if (s.prCount === 2) {
+      addAlly(s, 'AL04', 2);
+      return 'The beat reporter calls back to check a quote. That\'s a relationship now.';
+    }
+    return 'Filed, noted, spelled right.';
+  }
 };
 
 export const PL13_FishFry: PlayCard = {
@@ -164,7 +213,14 @@ export const PL14_CourtTheChairs: PlayCard = {
   d: 'The kitchen-table circuit at scale. Phase III chairs are already spoken for.',
   odds: (s) => clamp(0.34 + s.contacts*0.001 + s.faces.G*0.004 - (s.pieMalus||0) - (s.reps.includes('R07')?0.2:0) + (s.reps.includes('R05')?0.15:0), 0, 0.9),
   run: (s, o) => {
-    if (o.tier === 0) { s.endorsePts+=2; s.faces.O+=4; return 'Two chairs in one week; one brings her whole club.'; }
+    s.pieCount = (s.pieCount || 0) + 1;
+    // archive:619 — tier 0 grants AL01
+    if (o.tier === 0) {
+      s.endorsePts += 2;
+      s.faces.O += 4;
+      addAlly(s, 'AL01', 2);
+      return 'Two chairs in one week; one brings her whole club.';
+    }
     if (o.tier === 1) { s.endorsePts+=1; s.faces.O+=2; return 'One endorsement, quietly banked.'; }
     if (o.tier === 2) return 'Pie eaten, promises deferred.';
     s.faces.O -= 4; return 'Pushy travels fast on the chair circuit.';
@@ -179,7 +235,14 @@ export const PL11_StrawPoll: PlayCard = {
   req: (s) => s.backers.includes('B06') || warm(s, 'AL03'),
   odds: (s) => clamp(0.45 + (s.clubOdds||0) + (warm(s,'AL03')?0.12:0) + (s.strawBonus||0) + s.volPool*0.015, 0, 0.9),
   run: (s, o) => {
-    if (o.tier <= 1) { s.endorsePts += o.tier===0?2:1; s.momentum+=1; return 'You win the straw. The club president wants coffee — and new doors open.'; }
+    // archive:599 — win grants AL03 Club President + strawWins
+    if (o.tier <= 1) {
+      s.strawWins = (s.strawWins || 0) + 1;
+      s.endorsePts += o.tier === 0 ? 2 : 1;
+      s.momentum += 1;
+      addAlly(s, 'AL03', 2);
+      return 'You win the straw. The club president wants coffee — and new doors open.';
+    }
     if (o.tier === 2) return 'Second place. Nobody remembers second at a straw poll.';
     s.momentum = Math.max(0, s.momentum-1); return 'A rival packed it harder. Their mailer will mention it.';
   }
@@ -249,7 +312,13 @@ export const CORE_PLAYS: PlayCard[] = [
   PL11_StrawPoll, PL12_ClubSpeech, PL15_OppoResearch, PL17_DebatePrep, PL19_GOTVWeekend
 ];
 
-/** Full catalog: core + wave 4 force multipliers / traps. */
+/** Shop BUY* templates (catalog entries; live availability via show()). */
+export const SHOP_PLAYS: PlayCard[] = allShopPlayTemplates();
+
+/**
+ * Play catalog for SRD audit / draw pool (excludes BUY* shop items —
+ * those are camp actions, not deck plays; see SHOP_PLAYS + buildCatalog).
+ */
 export const ALL_PLAYS: PlayCard[] = [...CORE_PLAYS, ...WAVE4_PLAYS];
 
 /** Alias used by weekly-draw pool filters. */

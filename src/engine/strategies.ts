@@ -14,7 +14,11 @@ function pickByPriority(
     const hit = playable.find(p => p.card.id === id);
     if (hit) return hit.index;
   }
-  return playable[0]?.index ?? null;
+  // Never auto-buy shop assets as a fallback — BUY* cost 0 AP (archive
+  // assetPlays) so a naive first-of-list pick would drain money in a
+  // guard-limited spin without advancing the week.
+  const nonShop = playable.filter(p => !p.card.id.startsWith('BUY'));
+  return nonShop[0]?.index ?? null;
 }
 
 /** Primary labor path → general GOTV/name push. */

@@ -16,6 +16,7 @@ import {
   summarizeWeek,
   CAMP_PETITION,
   CAMP_FILING_FEE,
+  campIndexToCardId,
   type Campaign
 } from '../engine/loop.js';
 import { getPhase, stageLabel, stageWeek } from '../engine/state.js';
@@ -365,8 +366,8 @@ function renderPlayables(): void {
 /** Resolve the card at a hand/camp index (from `data-idx`) into a PlayCard. */
 function cardForIndex(index: number): PlayCard | undefined {
   if (!campaign) return undefined;
-  if (index === CAMP_PETITION) return campaign.catalog.get('PL04');
-  if (index === CAMP_FILING_FEE) return campaign.catalog.get('PL05');
+  const campId = campIndexToCardId(campaign, index);
+  if (campId) return campaign.catalog.get(campId);
   const id = campaign.deck.hand[index];
   return id ? campaign.catalog.get(id) : undefined;
 }

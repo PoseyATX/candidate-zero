@@ -6,7 +6,8 @@
  */
 
 import { random } from './rng.js';
-import { warm } from './reputation.js';
+import { addAlly, warm } from './reputation.js';
+import { applyOblDrag } from '../data/obligations.js';
 import type { CampaignOutcome, GameState, Ground } from './types.js';
 
 /** Primary campaign length (includes filing window). */
@@ -97,11 +98,87 @@ export function advanceRivalGrounds(state: GameState): void {
   });
 }
 
-/** Week-boundary housekeeping for the ground layer: fresh per-week play
- *  tally, then the opposition makes its weekly move. */
+/**
+ * Port of archive weekly passive ticks (prototype ~1593–1594): billboard
+ * name ID in phase 2+, Finance Chair stipend if AL10 warm.
+ * AL10 is an intentional stub (never granted in archive) — effect is ready
+ * if a future path warms them.
+ */
+function applyWeeklyAssetAllyTicks(state: GameState): void {
+  // archive:1593 — A12 passive name ID phase II–III
+  if (state.assets.includes('A12') && state.tier >= 1) {
+    state.nameID += state.billboardHalved ? 1 : 2;
+  }
+  // archive:1594
+  if (warm(state, 'AL10')) state.money += 300;
+}
+
+/**
+ * Lightweight week-boundary events that grant allies the archive only
+ * hands out via vignettes (AL06 funeral unlock, AL12 Old Bull, AL14 staffer).
+ * Uses the seeded RNG stream; fires at most one ally-event per advance so
+ * campaigns aren't flooded. Gated by eventsFired so each is once per run.
+ */
+function advanceAllyEvents(state: GameState): void {
+  const fired = state.eventsFired;
+  const roll = random();
+
+  // archive:883 — funeral available this week (unlocks PL29 / respect path → AL06)
+  if (!fired['EV_FUNERAL'] && roll < 0.12) {
+    fired['EV_FUNERAL'] = true;
+    state.funeralWeek = state.week;
+    state.log.push({
+      week: state.week,
+      kind: 'note',
+      text: 'A beloved retired judge has died. The funeral is Saturday. (Attend the Funeral is available this week.)'
+    });
+    return;
+  }
+
+  // archive:893 / 901 — Old Bull holds court → AL12
+  if (!fired['EV_OLD_BULL'] && !warm(state, 'AL12') && roll >= 0.12 && roll < 0.22) {
+    fired['EV_OLD_BULL'] = true;
+    addAlly(state, 'AL12', 2);
+    state.log.push({
+      week: state.week,
+      kind: 'note',
+      text: 'The Old Bull holds court at the diner, and there is one seat left. You take it. He talks for an hour about 1987 and it is all useful.'
+    });
+    return;
+  }
+
+  // archive:885 — rival staffer (simplified: no plant choice UI; 80% real → AL14)
+  if (!fired['EV_STAFFER'] && !warm(state, 'AL14') && roll >= 0.22 && roll < 0.30) {
+    fired['EV_STAFFER'] = true;
+    state.shadowPlays++;
+    if (random() < 0.2) {
+      state.exposure += 2;
+      state.hitPieces++;
+      state.log.push({
+        week: state.week,
+        kind: 'note',
+        text: 'THE STING — a "disgruntled staffer" was a plant. "CANDIDATE CAUGHT SOLICITING DIRT."'
+      });
+    } else {
+      state.oppoFile = true;
+      addAlly(state, 'AL14', 2);
+      state.log.push({
+        week: state.week,
+        kind: 'note',
+        text: "A rival's disgruntled staffer talks for two hours. A folder now exists. (Oppo File + ally.)"
+      });
+    }
+  }
+}
+
+/** Week-boundary housekeeping: grounds, obligations drag, passive ticks, events. */
 function onWeekAdvance(state: GameState): void {
   state.groundPlays = {};
   advanceRivalGrounds(state);
+  // Phase 2: structured obligations weekly drag (archive OBLS.drag)
+  applyOblDrag(state);
+  applyWeeklyAssetAllyTicks(state);
+  advanceAllyEvents(state);
 }
 
 /** Week within the current stage (1-based). */

@@ -259,9 +259,10 @@ own redundant double-call).
 
 This also finally makes several previously-dead references live:
 `resolve()`'s `hasRep(state,'R10')` disaster-band reduction and
-`warm(state,'AL11')` band reduction, `PL01`/`PL02`/`PL04`/`PL09`'s
-`warm(s,'AL09')` bonuses (once `AL09` is grantable — still not ported, see
-below), and `plays.ts`'s `rapGain()` already checking `state.rapStall`
+`warm(state,'AL11')` band reduction, `PL01`/`PL02`/`PL04`/`PL19`'s
+`warm(s,'AL09')` / `allyWarmAtGround` bonuses (AL09 grantable via PL21B/PL39
+as of 2026-07-17; full ally matrix 2026-07-18 — see Phase 2 closeout below),
+and `plays.ts`'s `rapGain()` already checking `state.rapStall`
 (now settable via the `F1` shadow threshold). One concrete bug fixed
 alongside this: `PL13_FishFry`'s BREAKTHROUGH-tier text says "the
 small-dollar list starts here" but the code never actually pushed `B05`
@@ -283,37 +284,61 @@ bonus). One archive persona effect dropped on port (`PA_CRA_DIP`'s
 See `docs/BALANCE-NOTES.md`, "Ported 20 personas + 12 issues from the
 archive," for full detail and verification.
 
-**Still not ported — larger than initially scoped, needs its own pass:**
-- **A structured obligations registry** (`OBLS`, archive line ~392+), not
-  the modular engine's free-text `state.obls: string[]`. Archive
-  obligations are `{n, drag}` records with an ongoing *weekly* drag effect
-  (e.g. `OB1` "PAC String": `faces.L -= 1; exposure += 0.15` every week
-  it's held) — a real, recurring cost, not a one-time flavor note. This is
-  a meaningfully bigger change than "port a function"; it changes what
-  `state.obls` *is* (a list of ids into a registry, not free strings) and
-  needs a weekly-tick call site.
-- **16 named allies** (`AL01`–`AL16`, archive line ~381–383), of which
-  only a handful have a confirmed grant path even in the archive itself
-  (`AL01` via Kitchen-Table-Meeting-equivalent and Court-the-Chairs-equivalent
-  BREAKTHROUGH/GAIN outcomes; `AL09` via two dedicated cards — see next).
-- **Two dedicated ally-granting cards not yet ported**: `PL21B` "Promote a
-  Canvass Captain" (`cost {a:1, vp:3}`, SAFE, grants `AL09` directly) and
-  `PL39` "Hire a Field Director" (`cost {a:1, $:2200}`, STD, alternate paid
-  path to the same ally). Porting these two specifically would make the
-  `warm(s,'AL09')` bonuses already written into `PL01`/`PL02`/`PL04`/`PL19`
-  finally reachable without touching anything else.
-- **A purchasable assets shop**: `A01` "The Walk List" (archive line 820,
-  cost $400, requires owning `A02`), `A09` "Phone Tree" (cost 0, `vcost:2`
-  — a volunteer cost, not money) and others — assets in the archive are
-  bought with real costs/requirements, not just narrative flags. Modular's
-  `state.assets: string[]` currently only ever receives `'BIO_*'`/`'ISSUE_*'`/
-  `'REGION_*'` tags from setup — there's no way to acquire `A01`/`A09` at all
-  right now, which is *why* they were dead references in the first place.
+### Phase 2 closeout (2026-07-18) — full ally/asset/obligation port
 
-Recommend treating this as its own scoped increment (`docs/ROADMAP.md`
-Phase 2, revised) rather than bundling further into ad hoc single-line
-fixes — the obligations-registry change in particular touches the shape of
-`GameState.obls`, not just its contents.
+Ported from `archive/prototype-single-file.html` with line citations in code:
+
+**Obligations** (`src/data/obligations.ts`, archive ~393–404):
+`state.obls` is now a list of registry ids (OB1–OB10). Weekly `drag` runs
+in `calendar.onWeekAdvance` via `applyOblDrag`. PL20 grants OB1 (PAC
+String); PL21 grants OB2 (Bank Note); shadow G2 grants OB8 (Cousin on the
+Payroll) instead of free-text. Empty-drag leashes (OB3/OB4/OB6/OB7/OB9/OB10)
+match archive.
+
+**Assets shop** (`src/data/assets.ts`, archive ~819–831): eight purchasable
+items (A01 Walk List, A02 Voter File, A03 Mail, A04 Website, A06 Flatbed,
+A09 Phone Tree, A11 Push Cards, A12 Billboard). Offered as 0-AP camp actions
+(`BUY*`) in `listPlayableHand`. A01 requires A02; A09 costs 2 volunteers.
+Closes the A01/A09 dead refs. A13 Church Directory remains a PL30 grant, not
+sold (archive parity).
+
+**Ally grants** (each cites archive function/line in code comments):
+
+| Ally | Grant path (archive) |
+|---|---|
+| AL01 Precinct Chair | PL08 t0/t1; PL14 t0; personas PA_DIP / PA_INK_DIP |
+| AL02 County Chairwoman | PL08 when chairs ≥ 3 (lines 581–582) |
+| AL03 Club President | PL11 straw win (599) |
+| AL04 Beat Reporter | PL10 prCount===2 (595); PL32 coffee t0 (723) |
+| AL06 Retired Judge | PL29 funeral respect path (1547) + week event unlock |
+| AL08 Pastor | PL30 pbCount≥2 && GR04.rapport≥30 (715) |
+| AL09 Canvass Captain | PL21B / PL39 (670, 747) — ground-localized |
+| AL11 Kitchen Cabinet | persona PA_CRA |
+| AL12 The Old Bull | week events (893, 901) |
+| AL14 Rival's Staffer | week event (885) |
+| AL15 County Judge | PL48 t0 (779) |
+| AL16 Slate-Maker | PL22B t≤1 + OB3 (673) |
+
+**Intentional stubs** (archive `warm()` refs, never `addAlly` — modular
+keeps the checks, documents in `INTENTIONAL_STUB_ALLIES`):
+AL05 Drive-Time Host, AL07 Feed-Store Regulars, AL10 Finance Chair
+(weekly +$300 effect ready), AL13 Lobbyist w/ a Conscience.
+
+**Kitchen-Table vs ground affinity:** archive allies are roster-wide
+(`addAlly` has no ground). Phase 1's `allyWarmAtGround` is a modular
+addition for *field* allies (AL09). PL08 is **not** gated on
+AL01-at-ground — that would invent mechanics the archive never had.
+Odds still scale on warm AL01 count + `chairCount`.
+
+**repCheck full matrix** (archive 512–524): R05 (pieCount≥6), R06
+(AL02|AL15), R08 (slate+R06), R09 (pledges+strawWins), R12 (AL12.warm≥3)
+now fire. R10 still uses modular `disasterLog.length` (stable AC1).
+
+**Bill/committee types** (`types.ts`): `Bill`, `Committee`, `VoteTally`,
+`BillStatus` — data shape only for Phase 4; no session mechanics.
+
+**Harnesses:** `npm run harness:dead-refs`, `harness:shop`,
+`harness:obligations` — all green; full suite green.
 
 ## Registry integrity checker (prior art for a roadmap item)
 

@@ -1,11 +1,12 @@
 /**
- * Wave 4 Plays — force multipliers + honest traps
+ * Wave 4 Plays — force multipliers + honest traps + Phase 2 ally grants
  * Grounded in archive prototype ACTIONS (volun, message, pac, selffund)
- * plus Contrast Mail (spends Oppo File).
+ * plus Contrast Mail, ally-grant ports (PL22B/PL30/PL32/PL48/PL29).
  */
 
 import { random } from '../engine/rng.js';
 import { addAlly, findAlly, warm } from '../engine/reputation.js';
+import { addObl } from './obligations.js';
 import type { PlayCard } from '../engine/types.js';
 
 function clamp(v: number, lo: number, hi: number): number {
@@ -14,10 +15,6 @@ function clamp(v: number, lo: number, hi: number): number {
 function R(n: number): number {
   return random() * n;
 }
-function pick<T>(arr: T[]): T {
-  return arr[Math.floor(random() * arr.length)]!;
-}
-
 export const PL16_RecruitVolunteers: PlayCard = {
   id: 'PL16', n: 'Recruit Volunteers', cost: { a: 1 }, risk: 'STD', ph: [1, 2, 3], tag: 'force multiplier',
   attrs: ['CLO', 'CHA'],
@@ -72,9 +69,9 @@ export const PL20_PacCheck: PlayCard = {
     const m = 2500 + Math.floor(R(2000));
     s.money += m;
     s.faces.L -= 12;
-    const topic = pick(['tort matters', 'land use', 'rate regulation', 'licensing']);
-    s.obls.push(`An association expects a friendly ear on ${topic}.`);
-    return `+$${m}. The Third House has opened an account in your name. (Obligation recorded. Shadow: Lobbyist → Bagman.)`;
+    // Phase 2: structured OB1 (archive PAC String), not free-text
+    addObl(s, 'OB1');
+    return `+$${m}. The Third House has opened an account in your name. (PAC String recorded — L and exposure drag weekly.)`;
   }
 };
 
@@ -90,7 +87,9 @@ export const PL21_SelfFundCredit: PlayCard = {
     s.money += m;
     s.debt += Math.floor(m * 1.4);
     s.faces.G -= 8;
-    return `+$${m} now; $${Math.floor(m * 1.4)} owed later, win or lose. (Debt recorded. Shadow: Good Ol' Boy → Boss — the homestead is leverage now.)`;
+    // Phase 2: Bank Note obligation (weekly −$150) — structured OB2
+    addObl(s, 'OB2');
+    return `+$${m} now; $${Math.floor(m * 1.4)} owed later, win or lose. (Bank Note recorded — interest drags weekly.)`;
   }
 };
 
@@ -98,6 +97,8 @@ export const PL22_ContrastMail: PlayCard = {
   id: 'PL22', n: 'Contrast Mail', cost: { a: 1, $: 800 }, risk: 'VOL', ph: [2, 3], tag: 'the folder spent',
   attrs: ['CRA', 'INK'],
   d: 'What the quiet man found, printed on cheap stock and mailed to every primary voter who votes.',
+  // archive:639 also requires A03 Mail Program — keep modular oppoFile primary;
+  // A03 is still a real shop unlock for parity / future tightening.
   req: (s) => s.oppoFile,
   odds: (s) => clamp(0.48 + s.faces.O * 0.003 - s.exposure * 0.04, 0, 0.9),
   run: (s, o) => {
@@ -154,6 +155,116 @@ export const PL39_HireFieldDirector: PlayCard = {
   }
 };
 
+/** archive:671–673 — See the Slate-Maker → AL16 + OB3 */
+export const PL22B_SeeSlateMaker: PlayCard = {
+  id: 'PL22B', n: 'See the Slate-Maker', cost: { a: 1, $: 1500 }, risk: 'STD', ph: [2, 3], tag: 'the printed word',
+  attrs: ['DIP', 'CRA'],
+  d: 'One man prints the card half the primary votes from. His price is never only money.',
+  show: (s) => warm(s, 'AL02') && !s.slate,
+  odds: () => 0.75,
+  run: (s, o) => {
+    if (o.tier <= 1) {
+      s.slate = true;
+      addAlly(s, 'AL16', 2);
+      addObl(s, 'OB3');
+      return "Your name goes on the card. So does his marker. (Slate-Maker's Price recorded — one future endorsement is his to spend.)";
+    }
+    return 'He takes the meeting, keeps the check in your hand. "Come back when the Chairwoman calls me herself."';
+  }
+};
+
+/** archive:712–715 — Prayer Breakfast → AL08 at threshold */
+export const PL30_PrayerBreakfast: PlayCard = {
+  id: 'PL30', n: 'Prayer Breakfast', cost: { a: 1 }, risk: 'SAFE', ph: [1, 2, 3], tag: 'the corridor opens',
+  attrs: ['CON', 'DIP'],
+  d: 'Biscuits at six-thirty. The Corridor watches who shows before sunrise.',
+  req: (s) => s.backers.includes('B02'),
+  odds: () => 0.85,
+  run: (s, o) => {
+    s.faces.T += 2;
+    s.faces.G += 2;
+    const g = s.groundsArr.find(x => x.id === 'GR04');
+    if (g) {
+      if (s.rapStall) {
+        g.rapport = Math.min(100, g.rapport + Math.ceil(4 / 2));
+      } else {
+        g.rapport = Math.min(100, g.rapport + Math.round(4 * (s.groundRapMult ?? 1)));
+      }
+    }
+    s.pbCount = (s.pbCount || 0) + 1;
+    // archive:715
+    if (s.pbCount >= 2 && (g?.rapport ?? 0) >= 30) {
+      addAlly(s, 'AL08', 3);
+      if (g) g.gated = false;
+      s.volPool += 2;
+      if (!s.assets.includes('A13')) s.assets.push('A13');
+      return 'The Pastor takes your hand in both of his. The Corridor — and its directory — open. +2 volunteers.';
+    }
+    void o;
+    return 'Biscuits, gravy, standing. The Corridor notes attendance.';
+  }
+};
+
+/** archive:720–723 — Coffee with the Editor → AL04 on tier 0 if not already */
+export const PL32_CoffeeEditor: PlayCard = {
+  id: 'PL32', n: 'Coffee with the Editor', cost: { a: 1 }, risk: 'STD', ph: [1, 2], tag: 'earned goodwill',
+  attrs: ['DIP'], w: 2,
+  d: 'Not for an endorsement — for a fair shake. The weekly decides who\'s "serious" long before the voters do.',
+  odds: (s) => clamp(0.5 + (warm(s, 'AL04') ? 0.15 : 0), 0, 0.9),
+  run: (s, o) => {
+    if (o.tier <= 1) {
+      s.nameID += 3;
+      if (!findAlly(s, 'AL04') && o.tier === 0) addAlly(s, 'AL04', 2);
+      return 'A cordial hour. You get the benefit of the doubt in print for a while.';
+    }
+    return "He's polite and noncommittal. Reporters usually are.";
+  }
+};
+
+/** archive:776–779 — Court the County Judge → AL15 on tier 0 */
+export const PL48_CourtCountyJudge: PlayCard = {
+  id: 'PL48', n: 'Court the County Judge', cost: { a: 1 }, risk: 'VOL', ph: [2, 3], tag: 'the heaviest name',
+  attrs: ['DIP'], w: 1,
+  d: 'The one endorsement that moves a whole county. He gives it to winners, so look like one.',
+  req: (s) => s.endorsePts >= 3,
+  odds: (s) => clamp(0.35 + s.endorsePts * 0.02 + s.faces.G * 0.003, 0, 0.8),
+  run: (s, o) => {
+    if (o.tier === 0) {
+      addAlly(s, 'AL15', 3);
+      s.endorsePts += 2;
+      s.nameID += 4;
+      return 'The County Judge is with you. In this county, that is very nearly the ballgame.';
+    }
+    if (o.tier === 1) {
+      s.endorsePts += 1;
+      return 'A warm word, short of a formal nod. Still worth having.';
+    }
+    if (o.tier === 2) return '"Let\'s talk after the primary." He backs winners, and isn\'t sure yet.';
+    s.faces.O -= 2;
+    return 'You overplayed it. He values his independence and just reasserted it.';
+  }
+};
+
+/**
+ * archive:708–711 / 1547 — Attend the Funeral (CHOICE simplified to SAFE respect path).
+ * Archive has a UI choice; modular grants AL06 on success (the respect path).
+ * show: funeralWeek === week (set by calendar advanceAllyEvents).
+ */
+export const PL29_AttendFuneral: PlayCard = {
+  id: 'PL29', n: 'Attend the Funeral', cost: { a: 1 }, risk: 'SAFE', ph: [1, 2, 3], tag: 'the morality lesson',
+  attrs: ['CHA'],
+  d: 'A beloved judge has died. You can be present, or you can be seen. Presence earns the living.',
+  show: (s) => s.funeralWeek === s.week,
+  odds: () => 0.95,
+  run: (s) => {
+    // archive fRespect path:1547 — G+=5, addAlly AL06
+    s.faces.G += 5;
+    addAlly(s, 'AL06', 2);
+    s.funeralWeek = -1;
+    return 'You sit in the back, sign the book, leave before the cameras. The living notice. (Retired Judge is with you.)';
+  }
+};
+
 export const WAVE4_PLAYS: PlayCard[] = [
   PL16_RecruitVolunteers,
   PL18_SharpenMessage,
@@ -161,5 +272,10 @@ export const WAVE4_PLAYS: PlayCard[] = [
   PL21_SelfFundCredit,
   PL22_ContrastMail,
   PL21B_PromoteCanvassCaptain,
-  PL39_HireFieldDirector
+  PL39_HireFieldDirector,
+  PL22B_SeeSlateMaker,
+  PL30_PrayerBreakfast,
+  PL32_CoffeeEditor,
+  PL48_CourtCountyJudge,
+  PL29_AttendFuneral
 ];

@@ -12,8 +12,8 @@ or discovered in the codebase.
 
 - **Phase 0** is done — foundation / maintenance pass. Listed for context.
 - **Phase 1** is done — ground-centered campaign model (see below).
-- **Phases 2–3** are the highest-value next work: allies/assets/reps port
-  and debt surface, finishing systems that are already half-built.
+- **Phase 2** is done — allies/assets/obligations port (see below).
+- **Phase 3** is the highest-value next small bite: debt surface on terminal.
 - **Phases 4–6** are larger, legitimately new feature/content investments.
 - **Phase 7–8** are the project's own stated end goals (v0.1, Swift/iOS).
 - Each item lists its evidence so a future reader (human or agent) doesn't
@@ -220,71 +220,26 @@ not new design.
    truth), but it's the one remaining unchecked box on AC1, which gates the
    v0.1 label (Phase 7).
 
-## Phase 2 — Allies / Assets / Reps acquisition system (rescoped 2026-07-17 — this is a port, not a design task)
+## ✅ Phase 2 — Allies / Assets / Reps acquisition system (DONE 2026-07-18 — port, not design)
 
-**Update:** the source design conversation shared 2026-07-17 turned out to
-contain the actual archive prototype this engine was extracted from
-(`archive/prototype-single-file.html`), which has a complete, working
-version of most of this. **The "open question" below has been answered:**
-this phase is now a porting task with an exact source to port from, not a
-from-scratch design task. Full detail: `docs/SRD-NOTES.md` ("Shadow
-consequences + reputation grants" section).
+**Goal:** finish the archive port of allies, assets, obligations, and
+reputation grants. No resolve/RNG covenant changes; no ground-picker redesign.
 
-**Already done (2026-07-17):** `src/engine/reputation.ts` ports
-`shadowCheck()` in full (Faces thresholds → real consequences — this was
-also TICKET's "Next: Shadow consequences on Faces", now satisfied) and the
-subset of `repCheck()` reachable with existing state (R01, R02, R04, R07,
-R10, R11). Also fixed one concrete bug found via the diff: `PL13_FishFry`'s
-text promised "the small-dollar list starts here" but never actually
-granted `B05` — now it does.
+| Requirement | Status | Evidence |
+|---|---|---|
+| Asset shop (archive 8 items: A01–A04, A06, A09, A11, A12) | **Done** | `src/data/assets.ts`; BUY* camp actions via `buildCatalog` + `listPlayableHand`; `npm run harness:shop` |
+| A01 / A09 dead refs closed | **Done** | Shop grants; dead-refs harness green |
+| Obligations registry OB1–OB8 (+ OB9/OB10) with weekly `drag` | **Done** | `src/data/obligations.ts`; `applyOblDrag` in `calendar.onWeekAdvance`; PL20→OB1, PL21→OB2, G2→OB8; `harness:obligations` |
+| Ally grant paths from archive | **Done** | PL08→AL01/AL02, PL10→AL04, PL11→AL03, PL14→AL01, PL21B/PL39→AL09, PL22B→AL16, PL30→AL08, PL32→AL04, PL48→AL15, PL29+events→AL06/AL12/AL14; personas AL01/AL11 |
+| Intentional stubs (archive never `addAlly`) | **Documented** | AL05, AL07, AL10, AL13 in `INTENTIONAL_STUB_ALLIES` — warm() kept for parity; `harness:dead-refs` |
+| Full `repCheck` (R01–R12) | **Done** | `reputation.ts` — R05/R06/R08/R09/R12 now reachable with counters + allies |
+| Kitchen-Table ground affinity | **Archive-faithful** | Archive allies are roster-wide; PL08 stays roster-wide. `allyWarmAtGround` remains for field AL09 (Phase 1). Documented in plays + SRD |
+| Bill / committee types (data only) | **Done** | `Bill`, `Committee`, `VoteTally`, `BillStatus` in `types.ts` — unwired for Phase 4 |
+| `harness:dead-refs` / `shop` / `obligations` | **Done** | package.json scripts; full `npm run harness` green |
 
-**Still open, now precisely scoped instead of open-ended:**
+**Already done earlier (2026-07-17):** `shadowCheck` full port; R01/R02/R04/R07/R10/R11 subset; PL21B/PL39 + fieldAp; 20 personas + issues; PL13→B05.
 
-1. **~~Two dedicated cards~~ Done (2026-07-17):** `PL21B` "Promote a
-   Canvass Captain" (`{a:1, vp:3}`, SAFE, grants `AL09`) and `PL39` "Hire a
-   Field Director" (`{a:1, $:2200}`, STD, alt. paid path to `AL09`) both
-   ported into `src/data/plays-wave4.ts`. This also required porting the
-   archive's `fieldAp` mechanic itself (a free weekly field-ops action,
-   `S.fieldAp`) which didn't exist in the modular engine at all —
-   `GameState.fieldAp` was declared but dead. Now: `canAfford`/`payCost`
-   (`src/engine/play.ts`) let a `card.field` play spend `state.fieldAp`
-   instead of `state.ap`, and `state.fieldAp` resets to `warm(s,'AL09') ? 1
-   : 0` at every week boundary (`src/engine/calendar.ts`, both the
-   primary→general transition and the normal weekly advance). Every
-   existing `warm(s,'AL09')` bonus in `PL01`/`PL02`/`PL04`/`PL19` is now
-   reachable. Adding these two cards to the deck pool nudged the
-   `harness:full` money-vs-labor guardrail from 2.3x to a documented 2.4x
-   (see `src/harness/full-campaign.ts` for the dated rationale) — both
-   routes to `AL09` are affordability/RNG-gated, not guaranteed, so this is
-   texture, not a landslide.
-2. **A purchasable assets shop:** the archive buys `A01`/`A09`/etc. with
-   real costs/requirements (`archive/prototype-single-file.html:820+`);
-   modular `state.assets` currently only ever receives setup-time tags.
-   Needs a UI surface (a "shop" panel) as well as engine support — bigger
-   than item 1.
-3. **~~6–21 more personas~~ Done (2026-07-17):** ported 20 of the archive's
-   21 attribute-linked personas (one skipped — name collision with the
-   existing `preacher`), plus all 12 remaining issues (18 total now). Pure
-   data, no new mechanics needed, so this no longer needed the "curated
-   subset vs. all 21" judgment call the note below used to raise — all of
-   it went in. What *is* still an open call: whether the resulting 24-persona
-   roster needs its own balance pass (see Phase 5's `smallbiz` note — "more
-   starting power" isn't automatically balance-neutral, and 20 new personas
-   is a lot of new starting-state surface that hasn't been through
-   `harness:full` individually).
-4. **Obligations registry restructure:** the archive's `OBLS` are
-   structured `{n, drag}` records with an ongoing *weekly* effect (e.g. a
-   PAC obligation taxes `faces.L` and `exposure` every week it's held) —
-   not modular's free-text `state.obls: string[]`. This changes what
-   `state.obls` *is*, not just what's in it, and needs a weekly-tick call
-   site. This is the mechanical "bite" for `PL20_PacCheck`'s obligation
-   that Phase 3 (below) originally called for — same fix, correctly
-   relocated here since it's part of the same registry-porting work as
-   allies/reps, not a standalone design problem.
-5. **12 more allies** (`AL02`–`AL08`, `AL10`, `AL12`–`AL16`) with no
-   confirmed grant path even in the archive for several of them — would
-   need either finding their grant sites (search wasn't exhaustive) or
-   deliberately deferring them.
+Detail: `docs/SRD-NOTES.md` § "Shadow consequences + reputation grants" (updated Phase 2 closeout).
 
 ## Phase 3 — Debt has no consequence (small; rescoped 2026-07-17)
 

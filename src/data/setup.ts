@@ -88,7 +88,14 @@ export const PERSONAS: PersonaDef[] = [
     id: 'preacher', n: 'The Preacher', tag: 'pulpit precinct',
     d: 'A pulpit is a precinct. Sundays are turnout.',
     attrs: { CHA: 3, CLO: 2, DIP: 1 },
-    apply: s => { s.volPool += 2; s.faces.F += 8; s.assets.push('BIO_PREACHER'); }
+    // archive PA_CON_CHA (line 357) pushed B02 Sunday Congregation — same intent
+    apply: s => {
+      s.volPool += 2;
+      s.faces.F += 8;
+      s.faces.T += 6;
+      s.assets.push('BIO_PREACHER');
+      if (!s.backers.includes('B02')) s.backers.push('B02');
+    }
   },
   {
     id: 'smallbiz', n: 'The Feed-Store Owner', tag: 'credit and favors',

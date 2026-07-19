@@ -4,7 +4,7 @@
  * Pure engine surface for harnesses and eventual UI/Swift ports.
  */
 
-import { ALL_PLAYS } from '../data/plays.js';
+import { ALL_PLAYS, SHOP_PLAYS } from '../data/plays.js';
 import {
   createDeckState,
   discardCard,
@@ -108,8 +108,12 @@ export function snapshot(state: GameState): LedgerSnapshot {
   };
 }
 
+/** Full runtime catalog: deck plays + shop BUY* camp actions. */
 export function buildCatalog(plays: PlayCard[] = ALL_PLAYS): Map<string, PlayCard> {
-  return new Map(plays.map(p => [p.id, p]));
+  const map = new Map(plays.map(p => [p.id, p]));
+  // Shop is always registered (archive assetPlays always available in menu).
+  for (const p of SHOP_PLAYS) map.set(p.id, p);
+  return map;
 }
 
 export function createCampaign(overrides: CreateCampaignOptions = {}): Campaign {
@@ -257,6 +261,8 @@ export function ensureGeneralTools(campaign: Campaign): void {
 
 export const CAMP_PETITION = -101;
 export const CAMP_FILING_FEE = -105;
+/** Camp-style shop index base: -200 - i for the i-th available BUY* play. */
+export const CAMP_SHOP_BASE = -200;
 
 export function listPlayableHand(campaign: Campaign): { index: number; card: PlayCard }[] {
   const out: { index: number; card: PlayCard }[] = [];
@@ -282,7 +288,34 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
       out.push({ index: CAMP_FILING_FEE, card: fee });
     }
   }
+  // Phase 2: asset shop — always-available BUY* plays (archive assetPlays).
+  // 0 AP; paid with $ or volunteers. Not drawn into hand.
+  let shopI = 0;
+  for (const [id, card] of campaign.catalog) {
+    if (!id.startsWith('BUY')) continue;
+    if (isPlayable(campaign.state, card)) {
+      out.push({ index: CAMP_SHOP_BASE - shopI, card });
+      shopI++;
+    }
+  }
   return out;
+}
+
+/** Resolve a camp / shop synthetic index to a catalog card id, or null. */
+export function campIndexToCardId(
+  campaign: Campaign,
+  handIndex: number
+): string | null {
+  if (handIndex === CAMP_PETITION) return 'PL04';
+  if (handIndex === CAMP_FILING_FEE) return 'PL05';
+  if (handIndex <= CAMP_SHOP_BASE) {
+    const shopCards = [...campaign.catalog.entries()]
+      .filter(([id, card]) => id.startsWith('BUY') && isPlayable(campaign.state, card))
+      .map(([id]) => id);
+    const i = CAMP_SHOP_BASE - handIndex;
+    return shopCards[i] ?? null;
+  }
+  return null;
 }
 
 export function ensureBallotAccessInHand(campaign: Campaign): string | null {
@@ -345,16 +378,17 @@ export function playFromHand(
   handIndex: number,
   ground?: Ground
 ): PlayOutcome {
-  if (handIndex === CAMP_PETITION || handIndex === CAMP_FILING_FEE) {
-    const id = handIndex === CAMP_PETITION ? 'PL04' : 'PL05';
-    const card = campaign.catalog.get(id);
-    if (!card) return { ok: false, reason: `Unknown camp card ${id}` };
-    if (campaign.state.ballot) {
-      return { ok: false, reason: 'Already on ballot', cardId: id, cardName: card.n };
+  const campId = campIndexToCardId(campaign, handIndex);
+  if (campId) {
+    const card = campaign.catalog.get(campId);
+    if (!card) return { ok: false, reason: `Unknown camp card ${campId}` };
+    if ((campId === 'PL04' || campId === 'PL05') && campaign.state.ballot) {
+      return { ok: false, reason: 'Already on ballot', cardId: campId, cardName: card.n };
     }
     if (!isPlayable(campaign.state, card)) {
       return { ok: false, reason: 'Not playable', cardId: card.id, cardName: card.n };
     }
+    // Shop / camp actions are not physical hand cards — no discard.
     return executePlay(campaign.state, card, ground);
   }
   const id = campaign.deck.hand[handIndex];

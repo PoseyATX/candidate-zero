@@ -186,8 +186,16 @@ export interface GameState {
   capital: number;
   favor: number;
   districtStanding: number;
-  bill: any;
-  committee: any;
+  /**
+   * Session-stage bill shape (Phase 2 data-only groundwork for Phase 4).
+   * Not wired to win conditions — typed so Phase 4 doesn't re-shape GameState.
+   */
+  bill: Bill | null;
+  /**
+   * Committee assignment for the player's bill / membership (Phase 4).
+   * Inert until session mechanics land.
+   */
+  committee: Committee | null;
   sessionFlags: Record<string, boolean>;
   wave: number;
   skippedTownHall: boolean;
@@ -227,6 +235,78 @@ export interface GameState {
   termNumber?: number;
   /** Dopamine / feedback loop state (presentation of truth; never alters RNG). */
   feedback?: import('./feedback.js').FeedbackState;
+  /**
+   * Archive counters used by ally/rep grant thresholds (Phase 2 port).
+   * Optional so createNewState stays lean; plays initialize on first use.
+   */
+  /** Kitchen-table / pie-circuit successes — R05 at >=6 (archive pieCount). */
+  pieCount?: number;
+  /** Press releases filed — AL04 grant at 2 (archive prCount). */
+  prCount?: number;
+  /** Precinct chairs banked beyond ally instances (archive chairCount). */
+  chairCount?: number;
+  /** Prayer Breakfasts attended — AL08 threshold (archive pbCount). */
+  pbCount?: number;
+  /** Straw poll wins — R09 with pledges (archive strawWins). */
+  strawWins?: number;
+  /** Week number when funeral is available (archive funeralWeek); -1 = spent. */
+  funeralWeek?: number;
+  /** Billboard name-ID halved after rival buys next door (archive billboardHalved). */
+  billboardHalved?: boolean;
+}
+
+/**
+ * Session bill — Phase 4 will wire lifecycle; Phase 2 only freezes the shape.
+ * Mirrors what a Texas House bill needs to be a game object: who sponsored it,
+ * which issue it serves, where it sits, and how the floor math looks.
+ */
+export interface Bill {
+  id: string;
+  /** Short title (e.g. issue-linked). */
+  title: string;
+  /** Issue id from setup (state.issue) this bill advances. */
+  issueId: string | null;
+  /** Sponsor display name (player or co-author). */
+  sponsor: string;
+  /** Committee currently holding the bill, if any. */
+  committeeId: string | null;
+  status: BillStatus;
+  /** Aye / nay / present tallies when a floor or committee vote is open. */
+  tally: VoteTally;
+  /** Calendar week the bill was filed (campaign or session clock). */
+  filedWeek?: number;
+}
+
+export type BillStatus =
+  | 'draft'
+  | 'filed'
+  | 'in_committee'
+  | 'reported'
+  | 'on_calendar'
+  | 'passed'
+  | 'failed'
+  | 'dead';
+
+export interface VoteTally {
+  aye: number;
+  nay: number;
+  present: number;
+  /** Seats that must vote for a win; 0 = unset until Phase 4. */
+  need?: number;
+}
+
+/**
+ * Legislative committee — membership + chair for session politics (Phase 4).
+ */
+export interface Committee {
+  id: string;
+  n: string;
+  /** Player is a member. */
+  member: boolean;
+  /** Player chairs (rare; power). */
+  chair: boolean;
+  /** Soft 0–100 standing with the chair / room. */
+  standing: number;
 }
 
 /** Runtime district binding (from data/setup.ts DISTRICTS, applied at setup). */
