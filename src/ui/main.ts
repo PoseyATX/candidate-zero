@@ -45,6 +45,7 @@ import {
   TRAITS,
   type InterimPath
 } from '../engine/legacy.js';
+import { enterWaiting, finishWaiting, WAITING_WEEKS } from '../engine/waiting.js';
 import type { CampaignOutcome, Ground, LegacyState, PlayCard, PlayOutcome, TraitId } from '../engine/types.js';
 import { emblemFor, emblem, kindMark, KIND_META } from './card-art.js';
 import './styles.css';
@@ -57,7 +58,7 @@ let terminalKind: CampaignOutcome | null = null;
 let terminalShare = 0;
 
 /** Ceremony shell — which act of the run the player is in. */
-type ActId = 'primary' | 'general' | 'session';
+type ActId = 'primary' | 'general' | 'session' | 'waiting';
 
 interface ActShellDef {
   id: ActId;
@@ -132,10 +133,27 @@ const ACT_SHELLS: Record<ActId, ActShellDef> = {
     logTitle: 'Chamber log',
     tag: 'Session',
     kitLabel: 'Session Special kit · not Main Deck'
+  },
+  waiting: {
+    id: 'waiting',
+    actNum: 'Act IV',
+    title: 'The Waiting Season',
+    bannerSub: 'Interim orbit · next filing',
+    splashBody:
+      'The race ended. The climb did not. Four compressed weeks — one action each. ' +
+      'What you bank rides into the next campaign. No true game over; only redirection.',
+    splashHint: 'Special waiting verbs only (WA*). Path-scoped kit. Then setup for the next filing.',
+    cta: 'Begin the interim',
+    endWeekLabel: 'End interim week',
+    actionsTitle: 'Interim orbit',
+    logTitle: 'Waiting log',
+    tag: 'Waiting',
+    kitLabel: 'Waiting Special kit · bank for next cycle'
   }
 };
 
 function actFromStage(stage: string | undefined): ActId {
+  if (stage === 'waiting') return 'waiting';
   if (stage === 'session') return 'session';
   if (stage === 'general') return 'general';
   return 'primary';
@@ -325,6 +343,11 @@ function renderLedger(): void {
   applyStageChrome();
   if (s.over) {
     $('week-hint').textContent = `Campaign over: ${s.outcome ?? 'ended'}.`;
+  } else if (s.stage === 'waiting') {
+    const bank = s.sessionFlags || {};
+    $('week-hint').textContent =
+      `ACT IV · WAITING W${s.week}/${WAITING_WEEKS} (${s.waitingPathId ?? 'orbit'}) — ` +
+      `banked +${Number(bank.waitBankContacts || 0)} contacts · +${Number(bank.waitBankName || 0)} name. One AP/week.`;
   } else if (s.stage === 'session') {
     const bill = s.bill
       ? `Bill: ${billStageLabelUi(s.bill)} (heat ${s.bill.heat}).`
@@ -543,6 +566,36 @@ function renderPlayables(): void {
         .map(({ index, card }) => {
           const free = (card.cost.a ?? 0) === 0;
           const locked = !free && apExhausted;
+          return cardHtml(card, index, {
+            camp: true,
+            locked,
+            lockReason: locked ? 'No AP left' : undefined
+          });
+        })
+        .join('');
+    grid.querySelectorAll<HTMLButtonElement>('.play-card:not(.locked)').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = Number(btn.dataset.idx);
+        if (Number.isNaN(idx)) return;
+        commitPlay(idx);
+      });
+    });
+    return;
+  }
+
+  // Waiting season: WA* path kit
+  if (state.stage === 'waiting') {
+    const kit = ACT_SHELLS.waiting.kitLabel;
+    const hintLine = apExhausted
+      ? `<p class="hint">Out of actions — end the interim week.</p>`
+      : !playable.length
+        ? `<p class="hint">Nothing legal — end week.</p>`
+        : `<p class="hint kit-label">${kit} · path: ${state.waitingPathId ?? '—'}</p>`;
+    grid.innerHTML =
+      hintLine +
+      playable
+        .map(({ index, card }) => {
+          const locked = apExhausted && (card.cost.a ?? 0) > 0;
           return cardHtml(card, index, {
             camp: true,
             locked,
@@ -987,12 +1040,27 @@ function renderTerminalTraits(path: InterimPath): void {
     btn.addEventListener('click', () => {
       const traitId = btn.dataset.trait as TraitId;
       addTrait(legacy, traitId);
-      // Chronicle → starmap waiting loop (no true game over)
+      // Chronicle → starmap waiting loop + playable interim season
       setInterimPath(legacy, path.id, path.interim);
       saveLegacy(legacy);
-      showSetup();
+      beginWaitingSeason(path.id);
     });
   });
+}
+
+/** After path+trait: enter playable waiting season (Act IV), not straight to setup. */
+function beginWaitingSeason(pathId: string): void {
+  if (!campaign) {
+    showSetup();
+    return;
+  }
+  // Revive the campaign object for interim play (outcome already recorded)
+  const { text } = enterWaiting(campaign.state, pathId);
+  weekPlays = [];
+  showGame();
+  applyStageChrome();
+  paint();
+  openActSplash('waiting', text);
 }
 
 function renderChronicle(): void {
@@ -1065,6 +1133,19 @@ function endWeek(): void {
   const transition = endWeekInPlace(campaign);
   if (transition.kind === 'enter_general') {
     maybeOfferPhaseDraft(campaign, false);
+  }
+  if (transition.kind === 'waiting_complete') {
+    const fin = finishWaiting(campaign.state, legacy);
+    saveLegacy(legacy);
+    campaign.state.log.push({
+      week: campaign.state.week,
+      kind: 'note',
+      text: fin.text
+    });
+    // Season done — next filing at setup (carry has waiting banks)
+    showSetup();
+    renderChronicle();
+    return;
   }
   if (campaign.state.over) {
     enterTerminal(campaign);

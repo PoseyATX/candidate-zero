@@ -601,6 +601,28 @@ h1 {
 #game.stage-session {
   box-shadow: inset 0 0 0 2px rgba(180, 140, 60, 0.45);
 }
+#game.stage-waiting {
+  box-shadow: inset 0 0 0 2px rgba(90, 120, 100, 0.5);
+}
+#game.stage-waiting .act-banner,
+.act-banner-waiting {
+  border-left-color: #6b8f71;
+  background: linear-gradient(90deg, rgba(90, 120, 100, 0.25), transparent 55%), var(--walnut-2);
+}
+.act-splash-waiting {
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 30%, rgba(90, 120, 100, 0.3), transparent 65%),
+    rgba(10, 8, 6, 0.92);
+}
+.chip-act-waiting {
+  border-color: #6b8f71;
+  color: #b8d4bc;
+}
+.alpha-tag.stage-tag-waiting {
+  background: #2a3d30;
+  border-color: #6b8f71;
+  color: #c5e0c9;
+}
 #game.stage-session .act-banner,
 .act-banner-session {
   border-left-color: var(--gold);

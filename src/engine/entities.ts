@@ -129,7 +129,7 @@ function pilotConsumed(state: GameState, pilot: PilotDef): boolean {
  * Overlay on campaign — does not leave primary/general.
  */
 export function checkMovementOptions(state: GameState): MovementOpportunity[] {
-  if (state.stage === 'session') return [];
+  if (state.stage === 'session' || state.stage === 'waiting') return [];
   const out: MovementOpportunity[] = [];
 
   for (const pilot of PLAYABLE_PILOTS) {

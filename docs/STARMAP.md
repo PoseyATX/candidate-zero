@@ -100,22 +100,24 @@ Outside (world) cards never live on entity kits. Full design:
 
 ---
 
-## Chronicle waiting bridge
+## Chronicle waiting bridge + playable season
 
-Interim paths map to starmap waiting loops (`PATH_TO_WAITING_LOOP` in `legacy.ts`):
+Interim paths map to starmap loops (`PATH_TO_WAITING_LOOP`):
 
-| Path | Loop |
-|---|---|
-| perennial | `LOOP_WAITING_PERENNIAL` |
-| advocate | `LOOP_WAITING_ADVOCATE` |
-| staffer | `LOOP_WAITING_STAFFER` |
-| home | `LOOP_WAITING_HOME` |
-| exmember | `LOOP_WAITING_EXMEMBER` |
+| Path | Loop | Season kit |
+|---|---|---|
+| perennial | `LOOP_WAITING_PERENNIAL` | WA01/04/06/07 |
+| advocate | `LOOP_WAITING_ADVOCATE` | WA01/02/06/08 |
+| staffer | `LOOP_WAITING_STAFFER` | WA01/03/06/08 |
+| home | `LOOP_WAITING_HOME` | WA01/04/06 |
+| exmember | `LOOP_WAITING_EXMEMBER` | WA05/06/07/09 |
+| senate | `LOOP_ELECTED_HIGHER_SENATE` | WA05/07/08/09 |
+| statewide | `LOOP_ELECTED_HIGHER_STATEWIDE` | WA05/07/08/09 |
 
-Next run: `applyLegacy` stamps entityHistory + `WAITING ORBIT` log. Not a full waiting stage yet — residue only.
+**Playable:** 4 weeks × 1 AP, WA* Special verbs, bank to `legacy.carry`, then next filing.  
+Harness: `npm run harness:waiting`.
 
 ## Next roads
 
-1. Full waiting-stage play (verbs while off-ballot)  
-2. Movement UI (orbit awareness) — Phase 6 adjacent  
-3. Higher-office forks (Senate / statewide)
+1. Movement UI (orbit awareness) — Phase 6 adjacent  
+2. Deeper higher-office campaigns (not just exploratory waiting)

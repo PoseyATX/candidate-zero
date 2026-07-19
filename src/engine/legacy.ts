@@ -140,6 +140,22 @@ export function buildPaths(state: GameState, share: number): InterimPath[] {
       traits: ['T_AUTHOR', 'T_LEVERS'],
       gate: wasSession,
       interim: 'Two years as a former member — doors still open, title still warm.'
+    },
+    {
+      id: 'senate',
+      n: 'Senate Exploratory',
+      d: 'Quiet calls about the other chamber. Bigger map, longer odds, same two years.',
+      traits: ['T_LEVERS', 'T_WHIP'],
+      gate: wasSession && (state.outcome === 'session_law' || (state.capital || 0) >= 6),
+      interim: 'Two years testing Senate waters — lunches, briefs, no announcement.'
+    },
+    {
+      id: 'statewide',
+      n: 'Statewide Exploratory',
+      d: "Governor's row is a different weather system. Test it without filing.",
+      traits: ['T_KNOWN', 'T_LEVERS'],
+      gate: wasSession && state.outcome === 'session_law' && (state.nameID || 0) >= 25,
+      interim: 'Two years on the statewide circuit — airports, rotary, no yard signs yet.'
     }
   ];
   return paths.filter(p => p.gate);
@@ -177,7 +193,7 @@ export function applyLegacy(state: GameState, legacy: LegacyState): void {
   // not odds). Reuses applyCarriedDebt → addObl OB2 (debt.ts / obligations.ts).
   applyLegacyDebt(state, legacy);
 
-  // Starmap waiting loop from last Chronicle path — residue, not a stage rewrite.
+  // Starmap waiting loop + banked waiting-season yields from last cycle.
   if (legacy.carry.waitingLoopId) {
     state.sessionFlags = state.sessionFlags || {};
     state.sessionFlags[`waiting_${legacy.carry.waitingLoopId}`] = true;
@@ -187,8 +203,42 @@ export function applyLegacy(state: GameState, legacy: LegacyState): void {
     state.log.push({
       week: state.week,
       kind: 'note',
-      text: `WAITING ORBIT — last cycle's path still colors this climb (${legacy.carry.waitingLoopId.replace('LOOP_WAITING_', '').toLowerCase()}). No true game over; only redirection.`
+      text: `WAITING ORBIT — last cycle's path still colors this climb (${legacy.carry.waitingLoopId.replace(/LOOP_WAITING_|LOOP_ELECTED_/g, '').toLowerCase()}). No true game over; only redirection.`
     });
+  }
+  if (legacy.carry.waitingContacts) {
+    state.contacts += legacy.carry.waitingContacts;
+  }
+  if (legacy.carry.waitingNameID) state.nameID += legacy.carry.waitingNameID;
+  if (legacy.carry.waitingMoney) state.money += legacy.carry.waitingMoney;
+  if (legacy.carry.waitingVols) state.volPool += legacy.carry.waitingVols;
+  if (legacy.carry.waitingFavors) state.favors += legacy.carry.waitingFavors;
+  if (legacy.carry.higherOfficeFork) {
+    state.sessionFlags = state.sessionFlags || {};
+    state.sessionFlags.higherOfficeFork =
+      legacy.carry.higherOfficeFork === 'senate' ? 1 : 2;
+    state.log.push({
+      week: state.week,
+      kind: 'note',
+      text: `HIGHER OFFICE RESIDUE — last cycle tested ${legacy.carry.higherOfficeFork} waters. The map is larger than one district.`
+    });
+  }
+  // One-shot waiting banks (don't double-dip every trait reload)
+  if (
+    legacy.carry.waitingContacts ||
+    legacy.carry.waitingNameID ||
+    legacy.carry.waitingMoney ||
+    legacy.carry.waitingVols ||
+    legacy.carry.waitingFavors
+  ) {
+    legacy.carry = {
+      ...legacy.carry,
+      waitingContacts: 0,
+      waitingNameID: 0,
+      waitingMoney: 0,
+      waitingVols: 0,
+      waitingFavors: 0
+    };
   }
 }
 
@@ -292,7 +342,9 @@ export const PATH_TO_WAITING_LOOP: Record<string, string> = {
   advocate: 'LOOP_WAITING_ADVOCATE',
   staffer: 'LOOP_WAITING_STAFFER',
   home: 'LOOP_WAITING_HOME',
-  exmember: 'LOOP_WAITING_EXMEMBER'
+  exmember: 'LOOP_WAITING_EXMEMBER',
+  senate: 'LOOP_ELECTED_HIGHER_SENATE',
+  statewide: 'LOOP_ELECTED_HIGHER_STATEWIDE'
 };
 
 /** Record interim flavor + bind waiting loop on carry for the next run. */

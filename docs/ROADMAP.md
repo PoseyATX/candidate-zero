@@ -347,6 +347,17 @@ Files: `src/engine/session.ts`, `src/data/session-plays.ts`, UI/strategy wires.
 | Win math favors GOTV over contact pad | **Done** | `generalWinProbability` weights |
 | Harness | **Done** | `harness:calendar` kit-gravity asserts |
 
+## ✅ Waiting season play + higher-office paths (DONE 2026-07-19)
+
+| Deliverable | Status | Evidence |
+|---|---|---|
+| `stage: 'waiting'` + 4w season | **Done** | `waiting.ts` |
+| WA01–09 path kit | **Done** | `waiting-plays.ts` |
+| UI Act IV + end → setup | **Done** | `main.ts` beginWaitingSeason |
+| Senate / statewide paths | **Done** | `buildPaths` gates |
+| Bank yields to legacy | **Done** | `finishWaiting` + `applyLegacy` |
+| `harness:waiting` | **Done** | green |
+
 ## ✅ RivalRap teeth + Chronicle waiting bridge (DONE 2026-07-19)
 
 | Deliverable | Status | Evidence |

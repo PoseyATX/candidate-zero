@@ -225,12 +225,20 @@ export interface GameState {
   issue: string | null;
   district: DistrictInfo | null;
   eventsFired: Record<string, boolean>;
-  stage: 'primary' | 'general' | 'session';
+  stage: 'primary' | 'general' | 'session' | 'waiting';
   genOpp: GeneralOpponent | null;
   genBase: number;
   over: boolean;
   /** Terminal outcome when `over` — pure campaign result label. */
   outcome?: CampaignOutcome;
+  /**
+   * Chronicle waiting season (post-loss / post-session interim play).
+   * Compressed weeks between cycles; Special WA* kit only.
+   */
+  waitingPathId?: string;
+  waitingLoopId?: string;
+  /** Weeks remaining in waiting season (countdown). */
+  waitingWeeksLeft?: number;
   /** True after winning the primary and entering general. */
   primaryWon?: boolean;
   log: LogEntry[];
@@ -449,6 +457,14 @@ export interface LegacyCarry {
    * Bridges "no true game over" career graph to next run.
    */
   waitingLoopId?: string;
+  /** Yields banked from playing the waiting season (contacts/name/etc.). */
+  waitingContacts?: number;
+  waitingNameID?: number;
+  waitingMoney?: number;
+  waitingVols?: number;
+  waitingFavors?: number;
+  /** Higher-office exploratory residue (senate / statewide). */
+  higherOfficeFork?: 'senate' | 'statewide';
 }
 
 /**

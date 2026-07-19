@@ -61,8 +61,11 @@ Setup (persona · issue · district · region · seed)
 
 session_law / session_survived terminal:
   · Stand for Reelection → NEW election cycle as incumbent
-    (skips petition; primary→general→session again)
-  · Close the book → setup / Chronicle
+  · Close the book → Chronicle path → **Act IV Waiting season** (4 weeks)
+    → setup with banked contacts/name/etc.
+
+Loss terminal:
+  · Chronicle path + trait → **Waiting season** (playable interim) → next filing
 ```
 
 ---

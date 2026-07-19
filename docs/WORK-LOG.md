@@ -188,6 +188,7 @@ Over this workstream we:
 | **DONE** | — | Session teeth (pressure, stall, freeze, challenger) |
 | **DONE** | — | Outside event deck v0 (10 world cards) |
 | **DONE** | — | RivalRap teeth + Chronicle→waiting loop bridge |
+| **DONE** | — | Waiting season play + higher-office paths |
 | PLANNED | #10 | Phase 6 — Mobile-first UI + a11y |
 | PLANNED | #11 | Phase 7 — Honest v0.1 label |
 | PLANNED | #12 | Phase 8 — TS → Unity → iOS / App Store |
@@ -424,4 +425,18 @@ Issue #9 closed with evidence.
 | Harness | `npm run harness:outside` |
 
 Boosters / full event UI still later.
+
+---
+
+## RivalRap teeth + Chronicle waiting bridge (2026-07-19)
+
+| Piece | Detail |
+|---|---|
+| Field odds | `rivalOddsPenalty` — up to −0.20 on contested turf |
+| Primary / general win | `meanRivalRapport` taxes win p |
+| Chronicle | `PATH_TO_WAITING_LOOP` + `setInterimPath` banks `carry.waitingLoopId` |
+| Next run | `applyLegacy` logs WAITING ORBIT residue + entityHistory tag |
+| Harness | `harness:grounds` teeth units · `harness:chronicle` |
+
+Opposition is no longer cosmetic. Loss still redirects (no true game over).
 

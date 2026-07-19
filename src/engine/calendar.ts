@@ -15,6 +15,7 @@ import {
   SESSION_WEEKS
 } from './session.js';
 import { tickOutsideDeck } from './outside.js';
+import { WAITING_WEEKS, onWaitingWeekAdvance } from './waiting.js';
 import type { CampaignOutcome, GameState, Ground } from './types.js';
 
 /** Primary campaign length (includes filing window). */
@@ -37,7 +38,8 @@ export type StageTransitionKind =
   | 'enter_session'
   | 'session_law'
   | 'session_survived'
-  | 'session_primaried';
+  | 'session_primaried'
+  | 'waiting_complete';
 
 export interface StageTransition {
   kind: StageTransitionKind;
@@ -57,6 +59,7 @@ function clamp(v: number, lo: number, hi: number): number {
  * - General → 3 (GOTV / contrast / general swing)
  */
 export function getPhase(state: GameState): 1 | 2 | 3 {
+  if (state.stage === 'waiting') return 1; // waiting verbs legal on ph 1–3
   if (state.stage === 'general') return 3;
   if (state.stage === 'session') return 3;
   if (!state.ballot) return 1;
@@ -64,6 +67,7 @@ export function getPhase(state: GameState): 1 | 2 | 3 {
 }
 
 export function stageLabel(state: GameState): string {
+  if (state.stage === 'waiting') return 'Waiting';
   if (state.stage === 'general') return 'General';
   if (state.stage === 'session') return 'Session';
   return 'Primary';
@@ -444,9 +448,22 @@ export function advanceCampaignWeek(state: GameState): StageTransition {
     return resolveSineDie(state);
   }
 
+  // Completing final waiting week → season ends (UI banks legacy)
+  if (state.stage === 'waiting' && state.week === WAITING_WEEKS) {
+    return {
+      kind: 'waiting_complete',
+      text: 'Waiting season complete. What you banked rides into the next filing.'
+    };
+  }
+
   state.week += 1;
   state.ap = state.apMax;
-  state.fieldAp = state.stage === 'session' ? 0 : warm(state, 'AL09') ? 1 : 0;
+  state.fieldAp =
+    state.stage === 'session' || state.stage === 'waiting'
+      ? 0
+      : warm(state, 'AL09')
+        ? 1
+        : 0;
   state.momentum = Math.max(0, state.momentum - 1);
   state.townHallThisWeek = false;
   if (state.stage === 'session') {
@@ -454,6 +471,9 @@ export function advanceCampaignWeek(state: GameState): StageTransition {
     // Rival ground growth is campaign-era; skip in session
     state.groundPlays = {};
     applyOblDrag(state);
+  } else if (state.stage === 'waiting') {
+    onWaitingWeekAdvance(state);
+    state.groundPlays = {};
   } else {
     onWeekAdvance(state);
   }
@@ -463,7 +483,9 @@ export function advanceCampaignWeek(state: GameState): StageTransition {
     text:
       state.stage === 'session'
         ? `SESSION WEEK ${state.week} — ${SESSION_WEEKS - state.week} to sine die. AP refreshed.`
-        : `${stageLabel(state)} week ${stageWeek(state)} (calendar W${state.week}) begins (phase ${getPhase(state)}). AP refreshed.`
+        : state.stage === 'waiting'
+          ? `WAITING WEEK ${state.week}/${WAITING_WEEKS} — interim orbit. AP refreshed.`
+          : `${stageLabel(state)} week ${stageWeek(state)} (calendar W${state.week}) begins (phase ${getPhase(state)}). AP refreshed.`
   });
   return { kind: 'none', text: '' };
 }

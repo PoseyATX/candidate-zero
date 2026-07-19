@@ -35,6 +35,7 @@ import {
   listAvailableMovementVerbIds,
   syncMovementFlags
 } from './entities.js';
+import { WAITING_PLAYS } from '../data/waiting-plays.js';
 import {
   applySetup,
   HARNESS_DEFAULT_SETUP,
@@ -132,6 +133,7 @@ export function buildCatalog(plays: PlayCard[] = ALL_PLAYS): Map<string, PlayCar
   for (const p of SHOP_PLAYS) map.set(p.id, p);
   // Phase 4: session pipeline + survival plays
   for (const p of SESSION_PLAYS) map.set(p.id, p);
+  for (const p of WAITING_PLAYS) map.set(p.id, p);
   return map;
 }
 
@@ -347,6 +349,8 @@ export const CAMP_FILING_FEE = -105;
 export const CAMP_SHOP_BASE = -200;
 /** Session play synthetic index base: -300 - i. */
 export const CAMP_SESSION_BASE = -300;
+/** Waiting-season play synthetic index base: -500 - i. */
+export const CAMP_WAITING_BASE = -500;
 /**
  * Starmap movement verb camp indices: -401, -402, … (one per open MV##).
  * Legacy alias CAMP_STARMAP_MV01 = first slot.
@@ -365,6 +369,18 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
     for (const card of SESSION_PLAYS) {
       if (isPlayable(campaign.state, card)) {
         out.push({ index: CAMP_SESSION_BASE - i, card });
+        i++;
+      }
+    }
+    return out;
+  }
+
+  // Waiting season: path-scoped WA* Special kit only
+  if (campaign.state.stage === 'waiting') {
+    let i = 0;
+    for (const card of WAITING_PLAYS) {
+      if (isPlayable(campaign.state, card)) {
+        out.push({ index: CAMP_WAITING_BASE - i, card });
         i++;
       }
     }
@@ -422,7 +438,12 @@ export function campIndexToCardId(
 ): string | null {
   if (handIndex === CAMP_PETITION) return 'PL04';
   if (handIndex === CAMP_FILING_FEE) return 'PL05';
-  // Index bands (most negative first): starmap ≤-401 · session ≤-300 · shop ≤-200
+  // Index bands: waiting ≤-500 · starmap ≤-401 · session ≤-300 · shop ≤-200
+  if (handIndex <= CAMP_WAITING_BASE) {
+    const waitingCards = WAITING_PLAYS.filter(c => isPlayable(campaign.state, c));
+    const i = CAMP_WAITING_BASE - handIndex;
+    return waitingCards[i]?.id ?? null;
+  }
   if (handIndex <= CAMP_STARMAP_BASE) {
     const openVerbs = listAvailableMovementVerbIds(campaign.state).filter(id => {
       const card = campaign.catalog.get(id);

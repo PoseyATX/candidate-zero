@@ -20,11 +20,15 @@ function assert(cond: boolean, msg: string): void {
 
 console.log('=== CANDIDATE ZERO — Chronicle / Waiting Loop Bridge ===\n');
 
-// Every path maps to a real waiting loop
+// Every path maps to a real starmap loop (waiting or higher_office exploratory)
 for (const [pathId, loopId] of Object.entries(PATH_TO_WAITING_LOOP)) {
   assert(!!LOOPS[loopId], `${pathId} → missing ${loopId}`);
-  assert(LOOPS[loopId]!.kind === 'waiting', `${loopId} kind waiting`);
-  console.log(`  ${pathId} → ${loopId}`);
+  const kind = LOOPS[loopId]!.kind;
+  assert(
+    kind === 'waiting' || kind === 'higher_office',
+    `${loopId} kind waiting|higher_office (got ${kind})`
+  );
+  console.log(`  ${pathId} → ${loopId} (${kind})`);
 }
 
 // setInterimPath banks waitingLoopId
