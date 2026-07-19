@@ -247,7 +247,11 @@ export interface GameState {
    * Inert until session mechanics land.
    */
   committee: Committee | null;
-  sessionFlags: Record<string, boolean>;
+  /**
+   * Session / campaign ephemeral gates. Boolean flags + small numeric
+   * counters (challenger heat, weeks at bill stage). Not a second ledger.
+   */
+  sessionFlags: Record<string, boolean | number>;
   wave: number;
   skippedTownHall: boolean;
   townHallThisWeek: boolean;
@@ -341,6 +345,8 @@ export interface Bill {
   pipelineStage: number;
   /** Political heat — raises disaster pressure on later motions (archive heat). */
   heat: number;
+  /** Weeks spent at current pipelineStage without advancing (stall heat). */
+  weeksAtStage?: number;
 }
 
 export type BillStatus =

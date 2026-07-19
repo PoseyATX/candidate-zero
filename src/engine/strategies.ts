@@ -129,11 +129,30 @@ export const conservativeMoneyStrategy: Chooser = (playable, state) => {
   return moneyBallotStrategy(noLoan, state);
 };
 
-/** Phase 4: advance the bill pipeline when legal, else casework / favor. */
-export const sessionPipelineStrategy: Chooser = (playable, _state) => {
+/**
+ * Phase 4 session: advance pipeline, but Session teeth force home fires.
+ * Casework when standing soft / challenger hot; errand under leadership freeze.
+ */
+export const sessionPipelineStrategy: Chooser = (playable, state) => {
+  const noRefuse = playable.filter(p => p.card.id !== 'SS_PAC');
+  const standing = state.districtStanding ?? 60;
+  const challenger = Number(state.sessionFlags?.challengerHeat || 0);
+  const freeze = Number(state.sessionFlags?.speakerFreeze || 0);
+  const didCase = !!state.sessionFlags?.caseworkThisWeek;
+
+  // Survival first when the seat is bleeding
+  if (!didCase && (standing < 58 || challenger >= 1)) {
+    const cw = noRefuse.find(p => p.card.id === 'SS08');
+    if (cw) return cw.index;
+  }
+  // Thaw fifth floor before calendar/floor dies
+  if (freeze >= 1 || state.favor < 40) {
+    const err = noRefuse.find(p => p.card.id === 'SS09');
+    if (err) return err.index;
+  }
+
   const order = [
     'SS01',
-    'SS_PAC', // refuse is optional; skip if we want auto-pay on referral
     'SS02',
     'SS03',
     'SS04',
@@ -146,8 +165,6 @@ export const sessionPipelineStrategy: Chooser = (playable, _state) => {
     'SS08',
     'SS12'
   ];
-  // Prefer pipeline; do not auto-refuse PAC (SS_PAC) — referral auto-pays.
-  const noRefuse = playable.filter(p => p.card.id !== 'SS_PAC');
   return pickByPriority(noRefuse, order);
 };
 

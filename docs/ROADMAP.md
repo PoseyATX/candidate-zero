@@ -347,6 +347,17 @@ Files: `src/engine/session.ts`, `src/data/session-plays.ts`, UI/strategy wires.
 | Win math favors GOTV over contact pad | **Done** | `generalWinProbability` weights |
 | Harness | **Done** | `harness:calendar` kit-gravity asserts |
 
+## ✅ Session teeth (DONE 2026-07-19)
+
+| Deliverable | Status | Evidence |
+|---|---|---|
+| Casework-or-bleed district drain | **Done** | `tickSessionPressure` |
+| Bill stall heat | **Done** | `weeksAtStage` / `applyBillStallHeat` |
+| Challenger heat → sine die | **Done** | `challengerHeat` on reelect |
+| Speaker freeze (calendar/floor) | **Done** | `sessionPipelineBlocked` SS05/SS06 |
+| Weekly chamber events | **Done** | lobby / emergency / errand demand / press |
+| Strategy + harness | **Done** | casework-aware strategy; `harness:session` |
+
 ## ✅ Phase 5 — Balance breadth (DONE 2026-07-19, [#9](https://github.com/PoseyATX/candidate-zero/issues/9))
 
 **Goal:** setup matrix is brutal-but-winnable — no soft-locks, no free wins.

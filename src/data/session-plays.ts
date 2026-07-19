@@ -11,6 +11,7 @@ import {
   applyPacClaimOnReferral,
   billOdds,
   refusePacClaim,
+  sessionPipelineBlocked,
   setBillStage
 } from '../engine/session.js';
 
@@ -185,7 +186,8 @@ export const SS05_CalendarSlot: PlayCard = {
     !!s.bill &&
     s.bill.pipelineStage === 4 &&
     s.week >= 9 &&
-    !s.sessionFlags?.pipelineUsed,
+    !s.sessionFlags?.pipelineUsed &&
+    !sessionPipelineBlocked(s, 'SS05'),
   odds: s => billOdds(s, 0.3) + (s.favor > 65 ? 0.15 : 0),
   run: (s, o) => {
     s.sessionFlags = s.sessionFlags || {};
@@ -218,7 +220,8 @@ export const SS06_FloorFight: PlayCard = {
     !!s.bill &&
     s.bill.pipelineStage === 5 &&
     s.week >= 11 &&
-    !s.sessionFlags?.pipelineUsed,
+    !s.sessionFlags?.pipelineUsed &&
+    !sessionPipelineBlocked(s, 'SS06'),
   odds: s => billOdds(s, 0.5) + s.capital * 0.02,
   run: (s, o) => {
     s.sessionFlags = s.sessionFlags || {};
@@ -294,13 +297,22 @@ export const SS08_Casework: PlayCard = {
   show: s => s.stage === 'session',
   odds: () => 0.85,
   run: (s, o) => {
+    s.sessionFlags = s.sessionFlags || {};
+    s.sessionFlags.caseworkThisWeek = true;
     const bonus = s.sessionFlags?.caseworkBonus ? 1 : 0;
+    // Session teeth: casework is the only full answer to weekly home-fire drain
     const g =
-      (s.districtStanding > 75 ? (o.tier === 0 ? 3 : 2) : o.tier === 0 ? 6 : 4) + bonus;
+      (s.districtStanding > 75 ? (o.tier === 0 ? 4 : 3) : o.tier === 0 ? 7 : 5) + bonus;
     s.districtStanding = clamp(s.districtStanding + g, 0, 100);
+    // Soften challenger if you show up at home
+    const ch = Number(s.sessionFlags.challengerHeat || 0);
+    if (ch > 0 && o.tier <= 1) {
+      s.sessionFlags.challengerHeat = Math.max(0, ch - 1);
+    }
     return (
       'Calls returned, problems chased. The district remembers who answers.' +
-      (s.districtStanding > 75 ? ' (High standing: gains diminish.)' : '')
+      (s.districtStanding > 75 ? ' (High standing: gains diminish.)' : '') +
+      (ch > 0 && o.tier <= 1 ? ' Challenger heat eases one notch.' : '')
     );
   }
 };
@@ -318,10 +330,18 @@ export const SS09_SpeakerErrand: PlayCard = {
   show: s => s.stage === 'session',
   odds: () => 0.75,
   run: (s, o) => {
+    s.sessionFlags = s.sessionFlags || {};
     if (o.tier <= 1) {
       s.favor += 8;
       s.districtStanding = clamp(s.districtStanding - 2, 0, 100);
-      return 'Done quietly. The fifth floor notes it. The district would not love the details.';
+      // Session teeth: errands thaw freeze / clear demand
+      const fz = Number(s.sessionFlags.speakerFreeze || 0);
+      if (fz > 0) s.sessionFlags.speakerFreeze = Math.max(0, fz - 1);
+      s.sessionFlags.errandDemand = false;
+      return (
+        'Done quietly. The fifth floor notes it. The district would not love the details.' +
+        (fz > 0 ? ' (Leadership freeze eases.)' : '')
+      );
     }
     return 'The errand goes sideways and you own a little of it. Nothing gained.';
   }

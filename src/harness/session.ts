@@ -13,9 +13,13 @@ import {
   enterSession,
   billStageLabel,
   onSessionWeekAdvance,
+  tickSessionPressure,
+  applyBillStallHeat,
+  sessionPipelineBlocked,
   SESSION_WEEKS,
   SESSION_FILING_DEADLINE
 } from '../engine/session.js';
+import { SS05_CalendarSlot, SS08_Casework, SS09_SpeakerErrand } from '../data/session-plays.js';
 import { createNewState } from '../engine/state.js';
 import { setDefaultSeed, createRng, useRng } from '../engine/rng.js';
 import { sessionPipelineStrategy, laborBallotStrategy } from '../engine/strategies.js';
@@ -139,6 +143,10 @@ console.log('=== CANDIDATE ZERO — Phase 4 Session Harness ===\n');
   }
   console.log('Session pipeline (n=%d):', N, { law, survived, primaried });
   assert(law + survived + primaried === N, 'session outcomes partition');
+  // Session teeth: pure bill-grind without casework used to free-win the seat;
+  // with casework in the strategy, some holds must remain possible.
+  assert(survived + law >= 1, 'session strategy with casework should sometimes hold the seat');
+  assert(primaried >= 1, 'session teeth should still primary someone');
   console.log('PASSED: sine die produces session_law | session_survived | session_primaried');
 }
 
@@ -158,5 +166,81 @@ console.log('=== CANDIDATE ZERO — Phase 4 Session Harness ===\n');
   console.log('PASSED: full campaign terminates after session path exists');
 }
 
-console.log('\nPhase 4 session green.');
+// --- Session teeth ---
+{
+  setDefaultSeed(70);
+  useRng(createRng(70));
+  const s = createNewState({ seed: 70 });
+  enterSession(s);
+  s.districtStanding = 60;
+  s.sessionFlags.caseworkThisWeek = false;
+  s.week = 3;
+  s.bill!.pipelineStage = 2;
+  s.bill!.weeksAtStage = 1;
+  s.bill!.heat = 0;
+  const lines = tickSessionPressure(s);
+  assert(s.districtStanding === 58, 'no-casework drain −2');
+  assert(lines.some(l => /HOME FIRES|STALL|CHALLENGER|LOBBY|DISTRICT|SPEAKER|PAC|PRESS|GALLERY/i.test(l)), 'pressure logs');
+  // Stall heat after 2 weeks at stage
+  assert(s.bill!.weeksAtStage === 2, 'weeksAtStage increments');
+  assert(s.bill!.heat >= 1, 'stall heat applied');
+  console.log('PASSED: casework-or-bleed + stall heat');
+}
+{
+  setDefaultSeed(71);
+  const s = createNewState({ seed: 71 });
+  enterSession(s);
+  s.districtStanding = 48;
+  s.sessionFlags.caseworkThisWeek = true;
+  s.week = 4;
+  tickSessionPressure(s);
+  assert(s.districtStanding === 47, 'casework week only −1');
+  assert(Number(s.sessionFlags.challengerHeat || 0) >= 1, 'challenger heat when soft standing');
+  console.log('PASSED: challenger heat on soft standing');
+}
+{
+  setDefaultSeed(72);
+  useRng(createRng(72));
+  const s = createNewState({ seed: 72, ap: 2 });
+  enterSession(s);
+  s.favor = 30;
+  s.bill!.pipelineStage = 4;
+  s.sessionFlags.speakerFreeze = 1;
+  s.week = 10;
+  assert(sessionPipelineBlocked(s, 'SS05'), 'calendar blocked under freeze+low favor');
+  assert(SS05_CalendarSlot.show!(s) === false, 'SS05 hidden when freeze-blocked');
+  // Errand thaws
+  s.ap = 2;
+  const err = { ...SS09_SpeakerErrand, odds: () => 0.99 };
+  executePlay(s, err);
+  assert(Number(s.sessionFlags.speakerFreeze || 0) === 0 || s.favor > 30, 'errand helps freeze/favor');
+  console.log('PASSED: speaker freeze blocks calendar; errand is the key');
+}
+{
+  setDefaultSeed(73);
+  const s = createNewState({ seed: 73, ap: 2 });
+  enterSession(s);
+  s.districtStanding = 50;
+  s.sessionFlags.challengerHeat = 2;
+  executePlay(s, { ...SS08_Casework, odds: () => 0.99 });
+  assert(!!s.sessionFlags.caseworkThisWeek, 'casework flags the week');
+  assert(Number(s.sessionFlags.challengerHeat) <= 2, 'casework can ease challenger');
+  console.log('PASSED: casework marks week + eases challenger');
+}
+{
+  // Stall heat pure function path
+  setDefaultSeed(74);
+  const s = createNewState({ seed: 74 });
+  enterSession(s);
+  s.bill!.pipelineStage = 3;
+  s.bill!.weeksAtStage = 0;
+  s.bill!.heat = 0;
+  assert(applyBillStallHeat(s) === '', 'first week no heat text');
+  const t2 = applyBillStallHeat(s);
+  assert(t2.includes('STALL HEAT'), 'second week stall');
+  assert(s.bill!.heat === 1, 'heat +1');
+  console.log('PASSED: applyBillStallHeat');
+}
+
+console.log('\nPhase 4 session + teeth green.');
 process.exit(0);

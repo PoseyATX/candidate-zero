@@ -185,6 +185,7 @@ Over this workstream we:
 |---|---|---|
 | **DONE** | #9 | Phase 5 — Balance breadth (matrix + wrong retune) |
 | **DONE** | #17/#18 | Starmap — 8 entity templates (MV01–08 + Slate) |
+| **DONE** | — | Session teeth (pressure, stall, freeze, challenger) |
 | PLANNED | #10 | Phase 6 — Mobile-first UI + a11y |
 | PLANNED | #11 | Phase 7 — Honest v0.1 label |
 | PLANNED | #12 | Phase 8 — TS → Unity → iOS / App Store |

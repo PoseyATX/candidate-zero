@@ -46,13 +46,12 @@ Setup (persona · issue · district · region · seed)
 
 ┌─────────────────── SESSION (weeks 1–14 sine die) ─────────┐
 │  Still THIS run · legislative motions (SS*), not campaign  │
-│  Signature bill on your issue · Speaker’s committee        │
-│  Pipeline (1 motion/week): file → referral → chair →       │
-│    testimony → calendar → floor → senate → governor        │
-│  PAC string (OB1): bites on Seek Referral (−district)      │
-│  Casework / Speaker errands / whip trades fill other AP    │
-│  Filing deadline W6: unfiled bill dies                     │
-│  Sine die W14: reelection outlook roll                     │
+│  Signature bill · Speaker’s committee · 1 pipeline/week    │
+│  TEETH: casework or district bleeds −2 · stall heat if bill│
+│    sits · challenger heat if standing soft · speaker freeze│
+│    blocks calendar/floor when favor low · weekly events    │
+│  PAC string (OB1): bites on Seek Referral                  │
+│  Filing deadline W6 · sine die W14 reelection roll         │
 └────────────┬──────────────────┬────────────────┬───────────┘
              │                  │                │
              ▼                  ▼                ▼
