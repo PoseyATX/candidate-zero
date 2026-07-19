@@ -59,26 +59,29 @@ export const PL20_PacCheck: PlayCard = {
   attrs: ['CRA', 'DIP'],
   kind: 'bargain',
   trap: true,
-  d: 'A man in a good suit admires your race. The check is real. So is the string tied to it. Under a heavy note, this is also the bridge — and Session will remember.',
-  // Phase 3: debt crisis opens the PAC Check early as the structured relief valve
-  // (debt.ts pacCheckAvailable) — no new desperate-fundraising card.
-  show: (s) => pacCheckAvailable(s),
+  d: 'A man in a good suit admires your race. The check is real. So is the string tied to it. Once. Session will collect.',
+  // Once per campaign — never a free-money ATM. Crisis may open early (debt.ts).
+  show: (s) =>
+    pacCheckAvailable(s) &&
+    !s.sessionFlags?.pacCheckTaken &&
+    !s.obls.includes('OB1'),
   odds: () => 0.9,
   run: (s, o) => {
+    s.sessionFlags = s.sessionFlags || {};
+    s.sessionFlags.pacCheckTaken = true;
     if (o.tier === 3) {
       s.hitPieces++;
-      return 'The check bounces into the news instead of your account. "WHO IS FUNDING CANDIDATE?"';
+      return 'The check bounces into the news instead of your account. "WHO IS FUNDING CANDIDATE?" (The Third House will not offer again.)';
     }
-    const m = 2500 + Math.floor(R(2000));
+    // Tuned down from 2500–4500 — still real money, not a landslide
+    const m = 1400 + Math.floor(R(900));
     s.money += m;
     s.faces.L -= 12;
-    // Phase 2: structured OB1 (archive PAC String), not free-text
     addObl(s, 'OB1');
-    // Phase 3: if a bank note is open, PAC may bridge it (session claim on win)
     const bridge = maybePacBridge(s, m);
     return (
       `+$${m}. The Third House has opened an account in your name. ` +
-      `(PAC String OB1 — L and exposure drag weekly.)${bridge}`
+      `(PAC String OB1 — L and exposure drag every week. Session referral will not be free.)${bridge}`
     );
   }
 };

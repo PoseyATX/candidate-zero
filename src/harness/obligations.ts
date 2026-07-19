@@ -30,13 +30,17 @@ function main(): void {
   const s = createNewState({ seed: 11, money: 1000, ap: 2, tier: 1 });
   s.ballot = true; // tier path for PAC
 
-  // PAC check grants OB1 (not free-text)
+  // PAC check grants OB1 (not free-text); once-only
   const pac = { ...PL20_PacCheck, odds: () => 0.99 };
   s.ap = 2;
   s.tier = 1;
   executePlay(s, pac);
   assert(s.obls.includes('OB1'), 'PL20 should grant OB1, got: ' + JSON.stringify(s.obls));
+  assert(!!s.sessionFlags?.pacCheckTaken, 'pacCheckTaken set');
   assert(!s.obls.some(o => o.includes('association')), 'no free-text PAC obl');
+  // Second take must be blocked by show
+  s.ap = 2;
+  assert(PL20_PacCheck.show ? !PL20_PacCheck.show(s) : false, 'PL20 show false after take');
 
   // Bank note from self-fund
   const bank = { ...PL21_SelfFundCredit, odds: () => 0.99 };

@@ -300,11 +300,12 @@ export function debtCrisisPathIds(state: GameState): string[] | null {
 }
 
 /**
- * PL20 visibility under crisis: always offer PAC Check when debt is
- * critical (even pre-tier), so relief is reachable. Normal show still
- * uses tier>=1; this is an OR gate.
+ * PL20 visibility: once ballot (tier≥1) or debt crisis. Callers also gate
+ * on !pacCheckTaken / !OB1 so it cannot spam free money.
  */
 export function pacCheckAvailable(state: GameState): boolean {
+  if (state.sessionFlags?.pacCheckTaken) return false;
+  if (state.obls.includes('OB1')) return false;
   if (isDebtCrisis(state) && (state.debt || 0) > 0) return true;
   return (state.tier ?? 0) >= 1;
 }

@@ -120,6 +120,10 @@ function renderHud(): void {
     snap.debt > 0
       ? `<span class="chip chip-debt" title="Debt does not tax odds — win/loss branch only">−$${snap.debt}</span>`
       : '';
+  const oblChip =
+    snap.oblsCount > 0
+      ? `<span class="chip chip-debt" title="Obligations drag weekly (e.g. PAC String)">OB×${snap.oblsCount}</span>`
+      : '';
   const weekPct = Math.round((snap.week / s.weeksTotal) * 100);
   const ballotBit = snap.ballot
     ? '<span class="chip chip-on">BALLOT ON</span>'
@@ -132,7 +136,7 @@ function renderHud(): void {
       : '';
   $('hud').innerHTML = `
     <span class="hud-item"><span class="k">AP</span> <span class="pips">${pips}</span>${fieldChip}</span>
-    <span class="hud-item"><span class="k">$</span>${snap.money}${debtChip}</span>
+    <span class="hud-item"><span class="k">$</span>${snap.money}${debtChip}${oblChip}</span>
     ${spendNote}
     <span class="hud-item"><span class="k">W${snap.week}</span>
       <span class="hud-meter hud-meter-week"><i style="width:${weekPct}%"></i></span>
@@ -226,11 +230,15 @@ function renderLedger(): void {
       ${s.over && s.outcome ? `<div><span class="k">Outcome</span> ${s.outcome}</div>` : ''}
     </div>
   `;
+  applyStageChrome();
   if (s.over) {
     $('week-hint').textContent = `Campaign over: ${s.outcome ?? 'ended'}.`;
   } else if (s.stage === 'session') {
+    const bill = s.bill
+      ? `Bill: ${billStageLabelUi(s.bill)} (heat ${s.bill.heat}).`
+      : 'No bill.';
     $('week-hint').textContent =
-      'THE SESSION — one motion on the bill per week. Casework keeps the seat; the clock is the first antagonist.';
+      `THE SESSION W${s.week}/${s.weeksTotal} — ${bill} One pipeline motion per week. Casework keeps the seat. This is still THIS run.`;
   } else if (s.stage === 'general') {
     $('week-hint').textContent = 'General election — GOTV and contrast. Six weeks to November.';
   } else if (s.ballot) {
@@ -763,21 +771,32 @@ function renderTerminalOutcome(): void {
   }
   const sessionWin =
     terminalKind === 'session_law' || terminalKind === 'session_survived';
+  const billLine =
+    state.bill
+      ? `<p class="bill-epitaph"><b>Signature bill:</b> ${state.bill.title} — ${state.bill.status} (stage ${state.bill.pipelineStage}).</p>`
+      : '';
   const nextHint = sessionWin
-    ? 'The gavel fell. Stand for reelection as the incumbent, or rest on the term.'
-    : terminalKind === 'won_general'
-      ? 'Ahead: the session (live) or reelection path — Session now starts on general win in-engine.'
-      : 'Two years until the next filing deadline. How do you spend them?';
+    ? 'Sine die. You finished Session on this run. Reelection starts a NEW election cycle (incumbent primary) — not a Session skip.'
+    : terminalKind === 'session_primaried'
+      ? 'The gavel fell and the seat broke. Two years until you can file again.'
+      : terminalKind === 'won_general'
+        ? 'Bug: general win should enter Session in-engine. Report if you see this screen without Session.'
+        : 'Two years until the next filing deadline. How do you spend them?';
 
   $('terminal-head').innerHTML = `
     <h2>${titles[terminalKind]}</h2>
     <p class="epithet">${epithet}</p>
+    ${billLine}
     ${debtNote}
     ${growth ? `<p class="growth">${growth}</p>` : ''}
     <p class="hint">${nextHint}</p>
   `;
 
-  if (sessionWin || terminalKind === 'won_general') {
+  // won_general should never terminal (engine enters Session). If it does, force setup.
+  if (sessionWin) {
+    renderTerminalWinChoices();
+  } else if (terminalKind === 'won_general') {
+    // Safety: never offer "new campaign" as if Session was skipped without notice
     renderTerminalWinChoices();
   } else {
     renderTerminalPaths();
@@ -791,13 +810,13 @@ function renderTerminalWinChoices(): void {
       <span class="name">Stand for Reelection</span>
       <span class="orn"><i></i>&#10022;<i></i></span>
       <span class="card-art">${emblem('star')}</span>
-      <span class="desc">The wheel turns. File again for the same seat — this time you're the incumbent.</span>
+      <span class="desc">Next election cycle as incumbent — new primary (you skip petition). Session already finished.</span>
     </button>
     <button type="button" class="play-card choice-card" data-choice="rest">
-      <span class="name">Rest on the Win</span>
+      <span class="name">Close the book on this term</span>
       <span class="orn"><i></i>&#10022;<i></i></span>
       <span class="card-art">${emblem('cup')}</span>
-      <span class="desc">Start a new run, a new ballad entry. The Chronicle keeps this one.</span>
+      <span class="desc">Back to setup. Chronicle keeps this ballad entry. Not a soft-reset mid-Session.</span>
     </button>
   `;
   grid.querySelector('[data-choice="reelect"]')?.addEventListener('click', () => {
@@ -943,12 +962,9 @@ function endWeek(): void {
     maybeOfferPhaseDraft(campaign, false);
   }
   if (transition.kind === 'enter_session') {
-    // Phase 4: general win continues into Session — no terminal yet.
-    campaign.state.log.push({
-      week: campaign.state.week,
-      kind: 'note',
-      text: transition.text
-    });
+    // Phase 4: general win continues into Session — no terminal, no new run.
+    // Hard banner so it cannot be mistaken for "another campaign."
+    openSessionSplash(transition.text);
   }
   if (campaign.state.over) {
     enterTerminal(campaign);
@@ -957,7 +973,62 @@ function endWeek(): void {
   if (!campaign.state.pendingDraft) {
     startWeek(campaign);
   }
+  // Session chrome (title, end-week label, bill strip)
+  applyStageChrome();
   paint();
+}
+
+/** Full-screen handoff so Session cannot be missed or feel like a reset. */
+function openSessionSplash(detail: string): void {
+  let root = document.getElementById('session-splash');
+  if (!root) {
+    root = document.createElement('div');
+    root.id = 'session-splash';
+    root.className = 'session-splash';
+    root.setAttribute('role', 'dialog');
+    root.setAttribute('aria-modal', 'true');
+    root.innerHTML = `
+      <div class="session-splash-panel">
+        <p class="eyebrow">Third act</p>
+        <h2>You are sworn in</h2>
+        <p class="session-splash-body"></p>
+        <p class="hint">This is still the same run — not a new campaign. File your bill. The clock ends at sine die.</p>
+        <button type="button" class="btn btn-gold" id="session-splash-ok">Enter the chamber</button>
+      </div>`;
+    document.getElementById('game')?.appendChild(root);
+  }
+  const body = root.querySelector('.session-splash-body');
+  if (body) body.textContent = detail;
+  root.classList.remove('hidden');
+  const ok = root.querySelector('#session-splash-ok') as HTMLButtonElement | null;
+  if (ok) {
+    ok.onclick = () => {
+      root!.classList.add('hidden');
+      paint();
+    };
+  }
+}
+
+function applyStageChrome(): void {
+  if (!campaign) return;
+  const s = campaign.state;
+  const endBtn = document.getElementById('btn-end');
+  const h1 = document.querySelector('#topbar h1');
+  if (s.stage === 'session') {
+    if (endBtn) endBtn.textContent = 'End legislative week';
+    document.getElementById('game')?.classList.add('stage-session');
+    if (h1 && !h1.querySelector('.session-tag')) {
+      const tag = document.createElement('span');
+      tag.className = 'alpha-tag session-tag';
+      tag.textContent = 'Session';
+      h1.appendChild(document.createTextNode(' '));
+      h1.appendChild(tag);
+    }
+  } else {
+    if (endBtn) endBtn.textContent = 'End week';
+    document.getElementById('game')?.classList.remove('stage-session');
+    document.querySelector('#topbar .session-tag')?.remove();
+  }
 }
 
 function boot(): void {
