@@ -324,6 +324,17 @@ Files: `src/engine/session.ts`, `src/data/session-plays.ts`, UI/strategy wires.
 
 **Not in this pass:** event deck, boosters/draft, auto-strip on scandal, Unity kit UI.
 
+## ✅ Ceremony shells — three-act stage chrome (DONE 2026-07-19)
+
+| Deliverable | Status | Evidence |
+|---|---|---|
+| Shared act splash (I/II/III) | **Done** | `openActSplash` in `src/ui/main.ts` |
+| Persistent act banner + frame tints | **Done** | `#act-banner`, `.stage-primary/general/session` |
+| Distinct verbs (end week, panel titles, HUD chip) | **Done** | `ACT_SHELLS` + `applyStageChrome` |
+| Tutorial + GAME-FLOW | **Done** | `index.html`, `docs/GAME-FLOW.md` |
+
+**Presentation only** — `enter_general` / `enter_session` engine paths unchanged.
+
 ## Phase 5 — Sweep balance breadth beyond labor/money
 
 Phase 0 fixed the two headline strategies and one systemic district bug,

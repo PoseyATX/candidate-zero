@@ -56,6 +56,91 @@ let legacy: LegacyState = loadLegacy();
 let terminalKind: CampaignOutcome | null = null;
 let terminalShare = 0;
 
+/** Ceremony shell — which act of the run the player is in. */
+type ActId = 'primary' | 'general' | 'session';
+
+interface ActShellDef {
+  id: ActId;
+  actNum: string;
+  title: string;
+  /** Short line on persistent banner */
+  bannerSub: string;
+  /** Static splash body (detail line appended when engine provides text) */
+  splashBody: string;
+  splashHint: string;
+  cta: string;
+  endWeekLabel: string;
+  actionsTitle: string;
+  logTitle: string;
+  tag: string;
+  /** Hand / motions section label inside playables */
+  kitLabel: string;
+}
+
+/**
+ * Presentation-only act shells. Rules stay in the engine; this is the
+ * unmistakable stage boundary the player asked for (not a soft re-skin).
+ */
+const ACT_SHELLS: Record<ActId, ActShellDef> = {
+  primary: {
+    id: 'primary',
+    actNum: 'Act I',
+    title: 'The Primary',
+    bannerSub: 'Ballot · doors · force',
+    splashBody:
+      'Eight weeks. Make the ballot or the primary goes on without you. ' +
+      'Petition labor or filing fee — pick a door. Field work needs a ground.',
+    splashHint:
+      'Main Deck campaign verbs. Shop is 0 AP. Once: Self-Fund · Once: PAC Check (Session will collect).',
+    cta: 'File the papers',
+    endWeekLabel: 'End campaign week',
+    actionsTitle: 'Campaign hand',
+    logTitle: 'Campaign log',
+    tag: 'Primary',
+    kitLabel: 'Campaign plays'
+  },
+  general: {
+    id: 'general',
+    actNum: 'Act II',
+    title: 'The General',
+    bannerSub: 'GOTV · contrast · November',
+    splashBody:
+      'You survived the primary. Same run — new clock. Six weeks to November. ' +
+      'Rapport was a promise; turnout is the promise kept.',
+    splashHint:
+      'GOTV Weekend and Recruit Volunteers enter the deck. Contrast mail if you have the file. Still campaign verbs — not Session yet.',
+    cta: 'Take the field',
+    endWeekLabel: 'End general week',
+    actionsTitle: 'General field',
+    logTitle: 'Campaign log',
+    tag: 'General',
+    kitLabel: 'Campaign plays · general phase'
+  },
+  session: {
+    id: 'session',
+    actNum: 'Act III',
+    title: 'You are sworn in',
+    bannerSub: 'Bill pipeline · sine die',
+    splashBody:
+      'The general is won. You are a member now — still THIS run, not a new campaign. ' +
+      'Campaign cards leave the table. Legislative motions (Special kit) only.',
+    splashHint:
+      'File your bill. One pipeline motion per week. Casework keeps the seat. Clock ends at sine die — then reelection is a NEW cycle.',
+    cta: 'Enter the chamber',
+    endWeekLabel: 'End legislative week',
+    actionsTitle: 'Legislative motions',
+    logTitle: 'Chamber log',
+    tag: 'Session',
+    kitLabel: 'Session Special kit · not Main Deck'
+  }
+};
+
+function actFromStage(stage: string | undefined): ActId {
+  if (stage === 'session') return 'session';
+  if (stage === 'general') return 'general';
+  return 'primary';
+}
+
 function $(id: string): HTMLElement {
   const el = document.getElementById(id);
   if (!el) throw new Error(`#${id} missing`);
@@ -134,14 +219,21 @@ function renderHud(): void {
     snap.debt > 0 && snap.availableCash < snap.money
       ? `<span class="hud-item" title="Service reserve — elevated debt tightens spend, not odds"><span class="k">Spend</span>$${snap.availableCash}</span>`
       : '';
+  const act = ACT_SHELLS[actFromStage(s.stage)];
+  const actChip = `<span class="chip chip-act chip-act-${act.id}" title="${act.actNum}: ${act.title}">${act.tag}</span>`;
+  const ballotHud =
+    s.stage === 'session'
+      ? `<span class="chip chip-on" title="Sworn member">SEAT</span>`
+      : ballotBit;
   $('hud').innerHTML = `
+    <span class="hud-item">${actChip}</span>
     <span class="hud-item"><span class="k">AP</span> <span class="pips">${pips}</span>${fieldChip}</span>
     <span class="hud-item"><span class="k">$</span>${snap.money}${debtChip}${oblChip}</span>
     ${spendNote}
     <span class="hud-item"><span class="k">W${snap.week}</span>
       <span class="hud-meter hud-meter-week"><i style="width:${weekPct}%"></i></span>
     </span>
-    <span class="hud-item">${ballotBit}</span>
+    <span class="hud-item">${ballotHud}</span>
   `;
 }
 
@@ -238,15 +330,16 @@ function renderLedger(): void {
       ? `Bill: ${billStageLabelUi(s.bill)} (heat ${s.bill.heat}).`
       : 'No bill.';
     $('week-hint').textContent =
-      `THE SESSION W${s.week}/${s.weeksTotal} — ${bill} One pipeline motion per week. Casework keeps the seat. This is still THIS run.`;
+      `ACT III · SESSION W${s.week}/${s.weeksTotal} — ${bill} Special kit only. One pipeline motion/week. Same run — not a new campaign.`;
   } else if (s.stage === 'general') {
-    $('week-hint').textContent = 'General election — GOTV and contrast. Six weeks to November.';
+    $('week-hint').textContent =
+      'ACT II · GENERAL — GOTV and contrast. Six weeks to November. Same run as the primary you just won.';
   } else if (s.ballot) {
     $('week-hint').textContent =
-      'On the primary ballot. Build force before the week-8 primary. Shop buys are free actions (0 AP).';
+      'ACT I · PRIMARY — On the ballot. Build force before week 8. Shop buys are free actions (0 AP).';
   } else {
     $('week-hint').textContent =
-      'Not on ballot — Petition / Filing Fee / Shop are always available. Deadline: end of week 8.';
+      'ACT I · PRIMARY — Not on ballot. Petition / Filing Fee / Shop always available. Deadline: end of week 8.';
   }
 }
 
@@ -438,11 +531,12 @@ function renderPlayables(): void {
   // Phase 4: session is all synthetic SS* plays (no hand / shop)
   if (state.stage === 'session') {
     const sessionCards = playable;
+    const kit = ACT_SHELLS.session.kitLabel;
     const hintLine = apExhausted
-      ? `<p class="hint">Out of actions — end the week (or play free motions if any).</p>`
+      ? `<p class="hint">Out of actions — end the legislative week (or play free motions if any).</p>`
       : !sessionCards.length
         ? `<p class="hint">Nothing legal this week — end week (pipeline already used, or wait for calendar).</p>`
-        : `<p class="hint session-hint">Legislative motions · one pipeline play per week</p>`;
+        : `<p class="hint session-hint kit-label">${kit} · one pipeline motion per week</p>`;
     grid.innerHTML =
       hintLine +
       sessionCards
@@ -468,13 +562,14 @@ function renderPlayables(): void {
 
   const campCards = playable.filter(p => p.index < 0 && !p.card.id.startsWith('BUY'));
   const shopCards = playable.filter(p => p.card.id.startsWith('BUY'));
+  const act = ACT_SHELLS[actFromStage(state.stage)];
 
   // Shop is 0-AP — still available when AP is gone (spend-now lever visibility).
   const hintLine = apExhausted
     ? `<p class="hint">Out of actions — shop buys (0 AP) still work, or end the week.</p>`
     : !playable.length && !handCards.length
       ? `<p class="hint">Nothing playable. End week.</p>`
-      : '';
+      : `<p class="hint kit-label">${act.kitLabel}</p>`;
 
   grid.innerHTML =
     hintLine +
@@ -489,7 +584,7 @@ function renderPlayables(): void {
       .join('') +
     campCards.map(({ index, card }) => cardHtml(card, index, { camp: true })).join('') +
     (shopCards.length
-      ? `<p class="hint shop-hint">Campaign shop — 0 AP · money or volunteers</p>` +
+      ? `<p class="hint shop-hint">Campaign shop — 0 AP · money or volunteers · Main unlocks</p>` +
         shopCards
           .map(({ index, card }) => {
             const locked = !playableIdx.has(index);
@@ -720,7 +815,10 @@ function startRun(): void {
   weekPlays = [];
   startWeek(campaign);
   showGame();
+  applyStageChrome();
   paint();
+  // Act I ceremony — unmistakable start of the climb
+  openActSplash('primary');
 }
 
 /**
@@ -825,7 +923,13 @@ function renderTerminalWinChoices(): void {
     weekPlays = [];
     startWeek(campaign);
     showGame();
+    applyStageChrome();
     paint();
+    // New cycle as incumbent — still Act I primary shell, not Session
+    openActSplash(
+      'primary',
+      'Incumbent cycle. You skip petition — but the primary still wants a fight. Session is behind you until you win November again.'
+    );
   });
   grid.querySelector('[data-choice="rest"]')?.addEventListener('click', () => {
     showSetup();
@@ -961,11 +1065,6 @@ function endWeek(): void {
   if (transition.kind === 'enter_general') {
     maybeOfferPhaseDraft(campaign, false);
   }
-  if (transition.kind === 'enter_session') {
-    // Phase 4: general win continues into Session — no terminal, no new run.
-    // Hard banner so it cannot be mistaken for "another campaign."
-    openSessionSplash(transition.text);
-  }
   if (campaign.state.over) {
     enterTerminal(campaign);
     return;
@@ -973,34 +1072,57 @@ function endWeek(): void {
   if (!campaign.state.pendingDraft) {
     startWeek(campaign);
   }
-  // Session chrome (title, end-week label, bill strip)
   applyStageChrome();
   paint();
+  // Full-screen act handoffs — after paint so chrome is already correct under the splash
+  if (transition.kind === 'enter_general') {
+    openActSplash('general', transition.text);
+  } else if (transition.kind === 'enter_session') {
+    // Phase 4: general win continues into Session — no terminal, no new run.
+    openActSplash('session', transition.text);
+  }
 }
 
-/** Full-screen handoff so Session cannot be missed or feel like a reset. */
-function openSessionSplash(detail: string): void {
-  let root = document.getElementById('session-splash');
+/**
+ * Full-screen act handoff. Primary / General / Session all use this shell
+ * so stage changes cannot be missed or mistaken for a soft reset.
+ */
+function openActSplash(actId: ActId, engineDetail?: string): void {
+  const act = ACT_SHELLS[actId];
+  let root = document.getElementById('act-splash');
   if (!root) {
     root = document.createElement('div');
-    root.id = 'session-splash';
-    root.className = 'session-splash';
+    root.id = 'act-splash';
+    root.className = 'act-splash';
     root.setAttribute('role', 'dialog');
     root.setAttribute('aria-modal', 'true');
     root.innerHTML = `
-      <div class="session-splash-panel">
-        <p class="eyebrow">Third act</p>
-        <h2>You are sworn in</h2>
-        <p class="session-splash-body"></p>
-        <p class="hint">This is still the same run — not a new campaign. File your bill. The clock ends at sine die.</p>
-        <button type="button" class="btn btn-gold" id="session-splash-ok">Enter the chamber</button>
+      <div class="act-splash-panel">
+        <p class="eyebrow act-splash-num"></p>
+        <h2 class="act-splash-title"></h2>
+        <p class="act-splash-body"></p>
+        <p class="hint act-splash-hint"></p>
+        <button type="button" class="btn btn-gold" id="act-splash-ok">Continue</button>
       </div>`;
     document.getElementById('game')?.appendChild(root);
   }
-  const body = root.querySelector('.session-splash-body');
-  if (body) body.textContent = detail;
+  root.dataset.act = actId;
+  root.className = `act-splash act-splash-${actId}`;
+  const num = root.querySelector('.act-splash-num');
+  const title = root.querySelector('.act-splash-title');
+  const body = root.querySelector('.act-splash-body');
+  const hint = root.querySelector('.act-splash-hint');
+  const ok = root.querySelector('#act-splash-ok') as HTMLButtonElement | null;
+  if (num) num.textContent = act.actNum;
+  if (title) title.textContent = act.title;
+  if (body) {
+    body.textContent = engineDetail?.trim()
+      ? `${engineDetail.trim()}\n\n${act.splashBody}`
+      : act.splashBody;
+  }
+  if (hint) hint.textContent = act.splashHint;
+  if (ok) ok.textContent = act.cta;
   root.classList.remove('hidden');
-  const ok = root.querySelector('#session-splash-ok') as HTMLButtonElement | null;
   if (ok) {
     ok.onclick = () => {
       root!.classList.add('hidden');
@@ -1009,25 +1131,56 @@ function openSessionSplash(detail: string): void {
   }
 }
 
+/** Persistent stage chrome: banner, tint, verbs, panel titles, masthead tag. */
 function applyStageChrome(): void {
   if (!campaign) return;
   const s = campaign.state;
+  const act = ACT_SHELLS[actFromStage(s.stage)];
+  const game = document.getElementById('game');
+  if (game) {
+    game.classList.remove('stage-primary', 'stage-general', 'stage-session');
+    game.classList.add(`stage-${act.id}`);
+  }
+
   const endBtn = document.getElementById('btn-end');
-  const h1 = document.querySelector('#topbar h1');
-  if (s.stage === 'session') {
-    if (endBtn) endBtn.textContent = 'End legislative week';
-    document.getElementById('game')?.classList.add('stage-session');
-    if (h1 && !h1.querySelector('.session-tag')) {
-      const tag = document.createElement('span');
-      tag.className = 'alpha-tag session-tag';
-      tag.textContent = 'Session';
-      h1.appendChild(document.createTextNode(' '));
-      h1.appendChild(tag);
+  if (endBtn) endBtn.textContent = act.endWeekLabel;
+
+  const actionsH = document.getElementById('actions-heading');
+  if (actionsH) actionsH.textContent = act.actionsTitle;
+  const logH = document.getElementById('log-heading');
+  if (logH) logH.textContent = act.logTitle;
+
+  // Persistent act banner
+  const banner = document.getElementById('act-banner');
+  if (banner) {
+    banner.hidden = false;
+    banner.dataset.act = act.id;
+    banner.className = `act-banner act-banner-${act.id}`;
+    const num = banner.querySelector('.act-banner-num');
+    const title = banner.querySelector('.act-banner-title');
+    const sub = banner.querySelector('.act-banner-sub');
+    if (num) num.textContent = act.actNum;
+    if (title) title.textContent = act.tag;
+    if (sub) {
+      const weekBit =
+        s.stage === 'session'
+          ? ` · W${s.week}/${s.weeksTotal} sine die`
+          : ` · W${stageWeek(s)} · cal ${s.week}/${s.weeksTotal}`;
+      sub.textContent = `${act.bannerSub}${weekBit}`;
     }
-  } else {
-    if (endBtn) endBtn.textContent = 'End week';
-    document.getElementById('game')?.classList.remove('stage-session');
+  }
+
+  // Masthead stage tag (single, always current)
+  const h1 = document.querySelector('#topbar h1');
+  if (h1) {
+    document.querySelector('#topbar .stage-tag')?.remove();
+    // legacy session-tag cleanup
     document.querySelector('#topbar .session-tag')?.remove();
+    const tag = document.createElement('span');
+    tag.className = `alpha-tag stage-tag stage-tag-${act.id}`;
+    tag.textContent = act.tag;
+    h1.appendChild(document.createTextNode(' '));
+    h1.appendChild(tag);
   }
 }
 

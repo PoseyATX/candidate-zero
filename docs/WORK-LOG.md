@@ -333,3 +333,19 @@ Pilot: 2× warm AL01 (or endorse+AL01) → ORBIT OPEN log → MV01 camp offer �
 
 **Design calls logged:** templates not unique decks; show-gate ≠ residency; event-triggered player verbs (funeral) stay Main; Outside never enters player hand.
 
+---
+
+## Ceremony shells (2026-07-19) — three acts
+
+**Owner ask:** stage transitions unmistakable; Session must not feel like another campaign loop.
+
+| Piece | Detail |
+|---|---|
+| Shared splash | `openActSplash` — Primary / General / Session (replaces session-only splash) |
+| Persistent chrome | `#act-banner`, stage frame tints, masthead/HUD act tags, end-week labels, panel titles |
+| Kit copy | Campaign hand vs General field vs Legislative motions (Special) |
+| Hooks | `startRun`, `enter_general`, `enter_session`, reelect → Act I again |
+| Docs | `GAME-FLOW.md` ceremony table; tutorial “Three Acts” |
+
+**Presentation only** — engine transitions unchanged. Honest note: General chrome is still mostly Main kit (correct fiction); Session is the hard kit swap. Ceremony without Session’s Special package would be empty theater — we already had the package.
+

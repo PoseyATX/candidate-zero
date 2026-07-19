@@ -545,45 +545,189 @@ h1 {
 .play-card .stamp-camp { color: #7d6018; }
 .play-card .stamp-shop { color: #3d5a32; }
 
-/* --- Session stage chrome --- */
-#game.stage-session {
-  box-shadow: inset 0 0 0 2px rgba(180, 140, 60, 0.35);
+/* --- Ceremony shells: three acts (Primary / General / Session) --- */
+
+/* Persistent act banner under HUD */
+.act-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.45rem 0.85rem;
+  margin: 0 0 0.85rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--line);
+  border-left-width: 4px;
+  background: var(--walnut-2);
+  font-size: 0.82rem;
 }
-#game.stage-session .session-hint {
+.act-banner[hidden] { display: none !important; }
+.act-banner-num {
+  font-family: Cinzel, serif;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.68rem;
+  color: var(--gold);
+}
+.act-banner-title {
+  font-family: Cinzel, serif;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--parchment);
+}
+.act-banner-sub {
+  color: var(--parchment-dim);
+  font-size: 0.78rem;
+  flex: 1 1 12rem;
+}
+
+/* Stage frame tints — unmistakable at a glance */
+#game.stage-primary {
+  box-shadow: inset 0 0 0 2px rgba(138, 47, 38, 0.45);
+}
+#game.stage-primary .act-banner,
+.act-banner-primary {
+  border-left-color: var(--oxblood-bright);
+  background: linear-gradient(90deg, rgba(138, 47, 38, 0.18), transparent 55%), var(--walnut-2);
+}
+#game.stage-general {
+  box-shadow: inset 0 0 0 2px rgba(63, 95, 122, 0.55);
+}
+#game.stage-general .act-banner,
+.act-banner-general {
+  border-left-color: #5a8ab0;
+  background: linear-gradient(90deg, rgba(63, 95, 122, 0.28), transparent 55%), var(--walnut-2);
+}
+#game.stage-session {
+  box-shadow: inset 0 0 0 2px rgba(180, 140, 60, 0.45);
+}
+#game.stage-session .act-banner,
+.act-banner-session {
+  border-left-color: var(--gold);
+  background: linear-gradient(90deg, rgba(176, 141, 62, 0.22), transparent 55%), var(--walnut-2);
+}
+#game.stage-session .session-hint,
+#game.stage-session .kit-label {
   color: var(--gold);
   font-family: Cinzel, serif;
   letter-spacing: 0.06em;
 }
-.session-splash {
+#game.stage-general .kit-label {
+  color: #9bb8d0;
+  font-family: Cinzel, serif;
+  letter-spacing: 0.05em;
+}
+#game.stage-primary .kit-label {
+  color: #d4a89a;
+  font-family: Cinzel, serif;
+  letter-spacing: 0.04em;
+}
+#game.stage-session .panel-actions {
+  border-color: rgba(176, 141, 62, 0.45);
+}
+#game.stage-general .panel-actions {
+  border-color: rgba(90, 138, 176, 0.4);
+}
+#game.stage-primary .panel-actions {
+  border-color: rgba(177, 60, 47, 0.35);
+}
+
+/* Full-screen act handoff (shared by all three acts) */
+.act-splash {
   position: fixed;
   inset: 0;
   z-index: 80;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(10, 8, 6, 0.88);
+  background: rgba(10, 8, 6, 0.9);
   padding: 1.25rem;
 }
-.session-splash.hidden { display: none; }
-.session-splash-panel {
-  max-width: 28rem;
+.act-splash.hidden { display: none; }
+.act-splash-primary {
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 30%, rgba(138, 47, 38, 0.28), transparent 65%),
+    rgba(10, 8, 6, 0.92);
+}
+.act-splash-general {
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 30%, rgba(63, 95, 122, 0.35), transparent 65%),
+    rgba(8, 10, 14, 0.93);
+}
+.act-splash-session {
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 30%, rgba(176, 141, 62, 0.28), transparent 65%),
+    rgba(10, 8, 6, 0.92);
+}
+.act-splash-panel {
+  max-width: 30rem;
   background: var(--walnut-2);
   border: 1px solid var(--gold-dim);
   padding: 1.5rem 1.35rem;
   text-align: center;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
 }
-.session-splash-panel h2 {
+.act-splash-primary .act-splash-panel { border-color: rgba(177, 60, 47, 0.65); }
+.act-splash-general .act-splash-panel { border-color: rgba(90, 138, 176, 0.7); }
+.act-splash-session .act-splash-panel { border-color: var(--gold-dim); }
+.act-splash-panel h2,
+.act-splash-title {
   font-family: Cinzel, serif;
   color: var(--gold);
   margin: 0.35rem 0 0.75rem;
+  font-size: 1.45rem;
 }
-.session-splash-body {
+.act-splash-general .act-splash-title { color: #9bb8d0; }
+.act-splash-primary .act-splash-title { color: #e8b4a8; }
+.act-splash-body {
   font-size: 0.92rem;
-  line-height: 1.45;
+  line-height: 1.5;
   color: var(--parchment);
   text-align: left;
   margin-bottom: 0.75rem;
+  white-space: pre-wrap;
 }
+.act-splash-hint {
+  text-align: left;
+  margin-bottom: 1rem;
+}
+
+/* HUD / masthead stage chips */
+.chip-act {
+  font-weight: 700;
+}
+.chip-act-primary {
+  border-color: var(--oxblood-bright);
+  color: #e8b4a8;
+}
+.chip-act-general {
+  border-color: #5a8ab0;
+  color: #9bb8d0;
+}
+.chip-act-session {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.alpha-tag.stage-tag {
+  font-size: 0.55rem;
+  vertical-align: middle;
+}
+.alpha-tag.stage-tag-primary {
+  background: var(--oxblood);
+  border-color: var(--oxblood-bright);
+}
+.alpha-tag.stage-tag-general {
+  background: #2a3d52;
+  border-color: #5a8ab0;
+  color: #c5d8e8;
+}
+.alpha-tag.stage-tag-session {
+  background: var(--oxblood);
+  border-color: var(--gold);
+}
+
+/* Back-compat: old session-splash class names (if any linger) */
+.session-splash { /* alias */ }
 .bill-epitaph {
   color: var(--gold);
   font-size: 0.95rem;

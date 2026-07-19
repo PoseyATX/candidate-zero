@@ -102,11 +102,26 @@ Field AP (Canvass Captain / Field Director) is campaign-era only; Session uses l
 
 ---
 
+## Ceremony shells (three acts, same run)
+
+Presentation layer (`src/ui/main.ts` + `styles.css`). Engine still owns transitions
+(`enter_general`, `enter_session`); the shell makes them **unmistakable**.
+
+| Act | Stage | Splash CTA | Persistent chrome | Kit feel |
+|---|---|---|---|---|
+| **I** | Primary | “File the papers” | Oxblood frame · banner · masthead **Primary** | Campaign hand + shop (Main) |
+| **II** | General | “Take the field” | Slate/blue frame · **General** | Same Main kit + GOTV inject |
+| **III** | Session | “Enter the chamber” | Gold frame · **Session** | Legislative SS* only (Special) |
+
+- Full-screen splash on: run start, primary win → general, general win → session, reelection start.  
+- Banner + end-week label + panel titles change with the act.  
+- Session is still **this run**. Reelection after sine die is a **new cycle** (Act I again).
+
 ## How to *see* Session as a player
 
 1. Clear primary (fee or petition) by week 8.  
-2. Survive primary roll; play general with GOTV.  
-3. Win general → **splash** “You are sworn in” → header tag **Session**.  
+2. Survive primary roll → **Act II splash** → play general with GOTV.  
+3. Win general → **Act III splash** “You are sworn in” → header/banner **Session**.  
 4. Play **File the Bill**, then week-gated pipeline; or casework.  
 5. Sine die shows bill epitaph + seat hold/break — *then* reelection is a new cycle.
 
