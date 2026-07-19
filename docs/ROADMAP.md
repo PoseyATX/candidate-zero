@@ -268,20 +268,19 @@ Hooks reused (no parallel systems): `addObl`/`OB1`/`OB2` (`obligations.ts`),
 
 Detail: `docs/SRD-NOTES.md` § debt / Phase 3.
 
-## Phase 4 — Build the Session stage
+## Phase 4 — Build the Session stage — **NEXT** ([#8](https://github.com/PoseyATX/candidate-zero/issues/8))
 
-`GameState.stage` already includes `'session'`, `getPhase()` already maps
-it to phase 3, and a real chunk of state exists solely for it: `capital`,
-`favor`, `districtStanding`, `bill`, `committee`, `sessionFlags` — all
-initialized, all completely unread by any current mechanic.
-`ARCHITECTURE.md` already says the quiet part: "Session | later | 3 | Not
-yet simulated." This is the game's third act (after winning the general,
-you're a legislator trying to move something related to your chosen
-`issue`) and is very likely the single largest remaining systems
-investment in the project. **Recommend a dedicated design pass before
-implementation** — this shouldn't be improvised card-by-card the way Wave
-4 was; it's a new stage with its own win/loss shape, not a new wave of
-cards in the existing loop.
+`GameState.stage` includes `'session'`; scaffold fields `capital`, `favor`,
+`districtStanding`, `bill`, `committee`, `sessionFlags` exist; Phase 2 typed
+`Bill` / `Committee` / `VoteTally`. **Nothing simulates Session yet**
+(`ARCHITECTURE.md`: "Not yet simulated"). Claude’s project issue claimed
+`session-plays.ts` and sine die were already done — **false**, cleaned up
+2026-07-19.
+
+This is the third act (post–general win, legislator on your **issue**). Also
+honor Phase 3’s `sessionFlags.pac_lender_claim` / OB1. Do not improvise a
+second GameState shape — extend the Phase 2 types. Full acceptance criteria
+on issue #8.
 
 ## Phase 5 — Sweep balance breadth beyond labor/money
 
