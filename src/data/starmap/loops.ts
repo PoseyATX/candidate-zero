@@ -138,9 +138,91 @@ function entLoop(suffix: string, name: string, description: string, entityId: st
   return stub(`LOOP_ENT_${suffix}`, name, 'entity_primary', description, { entityId });
 }
 
+/** Pilot 2: Canvass Captain — real advancement (AL09 / MV02). */
+const PILOT_CAPTAIN: LoopDef = {
+  id: 'LOOP_ENT_CANVASS_CAPTAIN',
+  name: 'Canvass Captain field',
+  kind: 'entity_primary',
+  entityId: 'ENT_CANVASS_CAPTAIN',
+  description:
+    'Promote or hire a field spine (AL09). Advancement opens MV02 — run the turf plan.',
+  advancement: [
+    {
+      id: 'ADV_CAPTAIN_WARM',
+      type: 'advancement',
+      description: 'Warm Canvass Captain / Field Director ally (AL09).',
+      kind: 'has_ally',
+      params: { allyId: 'AL09' },
+      movementTarget: 'ENT_CANVASS_CAPTAIN'
+    },
+    {
+      id: 'ADV_CAPTAIN_VOL_FIELD',
+      type: 'advancement',
+      description: 'volPool ≥ 3 and nameID ≥ 8 (field is real enough to need a plan).',
+      kind: 'name_id_gte',
+      params: { n: 8, requireVol: 3 },
+      movementTarget: 'ENT_CANVASS_CAPTAIN'
+    }
+  ],
+  setback: [
+    {
+      id: 'SET_CAPTAIN_FLAKE',
+      type: 'setback',
+      description: 'Field collapses under hit pieces.',
+      kind: 'hit_pieces_gte',
+      params: { n: 4 },
+      residue: ['scar_field_flake']
+    }
+  ],
+  exampleVerbs: ['Promote captain', 'Hire field director', 'Execute the turf plan'],
+  exampleNouns: ['Route book', 'Walk list', 'Field AP', 'Turf map']
+};
+
+/** Pilot 3: County Judge — real advancement (AL15 / MV03). */
+const PILOT_JUDGE: LoopDef = {
+  id: 'LOOP_ENT_COUNTY_JUDGE',
+  name: 'County Judge courthouse',
+  kind: 'entity_primary',
+  entityId: 'ENT_COUNTY_JUDGE',
+  description:
+    'Heaviest local nod. Court the judge (PL48) or bank enough weight to open the orbit. MV03 spends the nod.',
+  advancement: [
+    {
+      id: 'ADV_JUDGE_ALLY',
+      type: 'advancement',
+      description: 'Warm County Judge ally (AL15).',
+      kind: 'has_ally',
+      params: { allyId: 'AL15' },
+      movementTarget: 'ENT_COUNTY_JUDGE'
+    },
+    {
+      id: 'ADV_JUDGE_WEIGHT',
+      type: 'advancement',
+      description: 'endorsePts ≥ 4 and nameID ≥ 16 (look like a winner before the nod).',
+      kind: 'endorse_gte',
+      params: { n: 4, requireName: 16 },
+      movementTarget: 'ENT_COUNTY_JUDGE'
+    }
+  ],
+  setback: [
+    {
+      id: 'SET_JUDGE_INDEPENDENCE',
+      type: 'setback',
+      description: 'Overplay the courthouse; independence reasserted.',
+      kind: 'hit_pieces_gte',
+      params: { n: 3 },
+      residue: ['scar_judge_cold']
+    }
+  ],
+  exampleVerbs: ['Court the County Judge', 'Spend the courthouse nod', 'Look like a winner'],
+  exampleNouns: ['Courthouse', 'County nod', 'War chest optics']
+};
+
 const T0_T2_NAMED: LoopDef[] = [
   PILOT_PRECINCT,
   ...PILOT_SUB,
+  PILOT_CAPTAIN,
+  PILOT_JUDGE,
   entLoop('SOUTH_STEPS_ACTIVIST', 'South Steps rant', 'Presence, grievance, viral clip risk.', 'ENT_SOUTH_STEPS_ACTIVIST'),
   entLoop('BLOCK_WALKER', 'Block walker', 'Doors, heat, dogs, clipboards.', 'ENT_BLOCK_WALKER'),
   entLoop('CONSTITUENT', 'Disgruntled constituent', 'Casework demand, town hall ambush.', 'ENT_CONSTITUENT'),
@@ -155,7 +237,7 @@ const T0_T2_NAMED: LoopDef[] = [
   entLoop('SOCIAL_TROLL', 'Anonymous influencer', 'Reach without name.', 'ENT_SOCIAL_TROLL'),
   entLoop('INTERN', 'Intern', 'Coffee, clips, future staffer seed.', 'ENT_INTERN'),
   entLoop('VOL_COORD', 'Volunteer coordinator', 'Lists, no-shows, logistics.', 'ENT_VOL_COORD'),
-  entLoop('CANVASS_CAPTAIN', 'Canvass captain', 'Route book, field AP.', 'ENT_CANVASS_CAPTAIN'),
+  // CANVASS_CAPTAIN + COUNTY_JUDGE: real pilot loops above (not stubs)
   entLoop('FIELD_ORGANIZER', 'Field organizer', 'Turf, metrics.', 'ENT_FIELD_ORGANIZER'),
   entLoop('SMALL_DONOR', 'Small-dollar donor', 'List compound, fish-fry money.', 'ENT_SMALL_DONOR'),
   entLoop('COUNTY_PARTY_EXEC', 'County party exec', 'Committee, rules, endorsement math.', 'ENT_COUNTY_PARTY_EXEC'),
@@ -164,7 +246,6 @@ const T0_T2_NAMED: LoopDef[] = [
   entLoop('CAMPAIGN_STAFFER', 'Campaign staffer', 'Clipboard, burnout, loyalty.', 'ENT_CAMPAIGN_STAFFER'),
   entLoop('LOCAL_BLOGGER', 'Local blog / newsletter', 'Reach without filter.', 'ENT_LOCAL_BLOGGER'),
   entLoop('CITY_COUNCIL', 'City council / mayor', 'Local ordinance, name heat.', 'ENT_CITY_COUNCIL'),
-  entLoop('COUNTY_JUDGE', 'County commissioner / judge', 'Heaviest local nod.', 'ENT_COUNTY_JUDGE'),
   entLoop('SCHOOL_BOARD', 'School board / superintendent', 'Parents, bonds, culture.', 'ENT_SCHOOL_BOARD'),
   entLoop('LOCAL_BIZ_PAC', 'Local business PAC', 'Checks and expectations.', 'ENT_LOCAL_BIZ_PAC'),
   entLoop('UNION_LOCAL_PRES', 'Union local president', 'Endorsement, volunteers.', 'ENT_UNION_LOCAL_PRES'),

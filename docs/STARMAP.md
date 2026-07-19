@@ -56,18 +56,20 @@ src/data/plays-starmap.ts      # MV01 verb card
 
 ---
 
-## Pilot: Precinct Chair
+## Playable pilots (≥3 — acceptance met)
 
-| Piece | Detail |
-|---|---|
-| Entity | `ENT_PRECINCT_CHAIR` → ally `AL01` |
-| Loop | `LOOP_ENT_PRECINCT_CHAIR` |
-| Advancement | 2× warm AL01 **or** endorsePts ≥ 2 + warm AL01 |
-| Verb | **MV01** “Call in the Precinct Chair network” |
-| Yield | +2 endorse, +40 contacts, +1 vol; `entityHistory`; `orbit_precinct_power` |
-| Wire | `syncMovementFlags` after each play / week advance; camp-style offer when open |
+Registry: `src/data/starmap/pilots.ts` · verbs: `src/data/plays-starmap.ts`  
+Harness: `npm run harness:starmap` (all three e2e).
 
-Does **not** leave primary/general — overlay on existing campaign.
+| # | Entity | Ally | Verb | Advancement | Yield (once) |
+|---|---|---|---|---|---|
+| 1 | `ENT_PRECINCT_CHAIR` | AL01 | **MV01** Call in precinct network | 2× warm AL01 **or** endorse≥2+AL01 | +2 endorse, +40 contacts, +1 vol · `orbit_precinct_power` |
+| 2 | `ENT_CANVASS_CAPTAIN` | AL09 | **MV02** Execute the field plan | warm AL09 **or** name≥8+vol≥3 | +1 field AP, +2 vol, +25 contacts, GOTV on turf · `orbit_field_spine` |
+| 3 | `ENT_COUNTY_JUDGE` | AL15 | **MV03** Spend the courthouse nod | warm AL15 **or** endorse≥4+name≥16 | +3 endorse, +8 name, +2 mom, +30 contacts · `orbit_courthouse_nod` |
+
+- Special residency + `entityScope`; camp offers when orbit open (multi-orbit OK).  
+- Does **not** leave primary/general — overlay on campaign.  
+- Wire: `syncMovementFlags` after plays / week advance.
 
 ---
 
@@ -77,17 +79,16 @@ Does **not** leave primary/general — overlay on existing campaign.
 |---|---|
 | Full entity catalog | Higher-tier deep subloops |
 | Full orbit skeleton | Timing/attr-gated orbit filtering (basic only) |
-| Loop IDs for waiting/elected/templates | Most advancement conditions `manual_todo` |
-| Pilot MV01 e2e | Multi-entity playable loops |
-| Bridges to AL* | Waiting loops replacing Chronicle UI |
+| Loop IDs for waiting/elected/templates | Most non-pilot advancement still `manual_todo` |
+| **3 playable pilots** (MV01–03) | Waiting loops replacing Chronicle UI |
+| Bridges to AL* | Movement UI modal (Phase 6 adjacent) |
 
 ---
 
 ## Card residency (entity kits)
 
 Entity/loop verbs are **Special** cards (`residency: 'special'`), not Main.
-Pilot MV01 carries `entityScope: ['ENT_PRECINCT_CHAIR']`. Session SS* are
-the elected-member Special package (`ENT_FRESHMAN_MEMBER` / `ENT_STATE_REP`).
+MV01–03 carry `entityScope`. Session SS* are the elected-member Special package.
 
 **Law:** do not invent 93 unique decks — use **role templates + deltas**.
 Outside (world) cards never live on entity kits. Full design:
@@ -95,10 +96,9 @@ Outside (world) cards never live on entity kits. Full design:
 
 ---
 
-## Next roads (not this v0)
+## Next roads
 
-1. Ceremony / act delineation (feel of transitions)  
-2. Second pilot: Canvass Captain / County Judge  
-3. Waiting loops absorb Chronicle paths  
-4. Movement UI (orbit awareness) — Phase 6 adjacent  
-5. Entity Special packages beyond MV01 (template-first)
+1. Waiting loops absorb Chronicle paths  
+2. Movement UI (orbit awareness) — Phase 6 adjacent  
+3. More pilots by template (County Party, Faith Leader, …) — not unique decks  
+4. Higher-office forks (Senate / statewide)

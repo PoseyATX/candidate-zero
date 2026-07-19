@@ -184,7 +184,7 @@ Over this workstream we:
 | Status | Issue | Title |
 |---|---|---|
 | **DONE** | #9 | Phase 5 — Balance breadth (matrix + wrong retune) |
-| **NEXT** | #17/#18 | Starmap — second/third playable entity loops |
+| **DONE** | #17/#18 | Starmap — 3 playable pilots (MV01–03) |
 | PLANNED | #10 | Phase 6 — Mobile-first UI + a11y |
 | PLANNED | #11 | Phase 7 — Honest v0.1 label |
 | PLANNED | #12 | Phase 8 — TS → Unity → iOS / App Store |

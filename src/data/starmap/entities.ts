@@ -56,7 +56,10 @@ const TIER0: EntityDef[] = [
 const TIER1: EntityDef[] = [
   e('ENT_INTERN', 'Intern (campaign or legislative)', 1, 'grassroots', 'Coffee, clips, future staffer seed.', 'LOOP_ENT_INTERN'),
   e('ENT_VOL_COORD', 'Volunteer coordinator', 1, 'grassroots', 'Lists, no-shows, logistics.', 'LOOP_ENT_VOL_COORD'),
-  e('ENT_CANVASS_CAPTAIN', 'Canvass captain', 1, 'grassroots', 'Route book, field AP, map opinions.', 'LOOP_ENT_CANVASS_CAPTAIN', { allyId: 'AL09' }),
+  e('ENT_CANVASS_CAPTAIN', 'Canvass captain', 1, 'grassroots', 'Route book, field AP, map opinions.', 'LOOP_ENT_CANVASS_CAPTAIN', {
+    allyId: 'AL09',
+    tags: ['pilot']
+  }),
   e('ENT_FIELD_ORGANIZER', 'Field organizer', 1, 'grassroots', 'Turf, turf wars, metrics.', 'LOOP_ENT_FIELD_ORGANIZER'),
   e('ENT_SMALL_DONOR', 'Small-dollar donor', 1, 'grassroots', 'List compound; fish-fry money.', 'LOOP_ENT_SMALL_DONOR'),
   e('ENT_PRECINCT_CHAIR', 'Precinct Chair', 1, 'grassroots', 'Key gatekeeper. Kitchen tables. Club numbers.', 'LOOP_ENT_PRECINCT_CHAIR', {
@@ -73,7 +76,10 @@ const TIER1: EntityDef[] = [
 
 const TIER2: EntityDef[] = [
   e('ENT_CITY_COUNCIL', 'City Council member / Mayor', 2, 'local', 'Local ordinance power; name heat.', 'LOOP_ENT_CITY_COUNCIL'),
-  e('ENT_COUNTY_JUDGE', 'County Commissioner / County Judge', 2, 'local', 'Heaviest local nod in many counties.', 'LOOP_ENT_COUNTY_JUDGE', { allyId: 'AL15' }),
+  e('ENT_COUNTY_JUDGE', 'County Commissioner / County Judge', 2, 'local', 'Heaviest local nod in many counties.', 'LOOP_ENT_COUNTY_JUDGE', {
+    allyId: 'AL15',
+    tags: ['pilot']
+  }),
   e('ENT_SCHOOL_BOARD', 'School Board / Superintendent', 2, 'local', 'Parents, bonds, culture fights.', 'LOOP_ENT_SCHOOL_BOARD'),
   e('ENT_LOCAL_BIZ_PAC', 'Local business PAC', 2, 'local', 'Checks, expectations, rate talk.', 'LOOP_ENT_LOCAL_BIZ_PAC'),
   e('ENT_UNION_LOCAL_PRES', 'Union local president', 2, 'local', 'Endorsement, volunteers, plant gate.', 'LOOP_ENT_UNION_LOCAL_PRES'),

@@ -18,7 +18,7 @@ Grounded in repo evidence (`TICKET-v0.1-modular-baseline.md`, `ARCHITECTURE.md`,
 ## How to read this doc
 
 - **Phase 0–4** done (issues #4–#8; Session shipped 2026-07-19).
-- **Starmap v0** started — entity/orbit/loop cartography + Precinct Chair pilot (#17/#18).
+- **Starmap** — full catalog + **3 playable pilots** MV01–03 (#17/#18 DONE).
 - **Card residency law** — Main / Special / Outside + control channel
   (`docs/CARD-RESIDENCY.md`); schema + catalog tags; no boosters/event deck yet.
 - **Phase 5** — balance breadth (issue #9) **DONE** 2026-07-19.
@@ -292,22 +292,24 @@ Port of archive Session (prototype ~917–1075). General win **enters Session**
 Files: `src/engine/session.ts`, `src/data/session-plays.ts`, UI/strategy wires.
 `resolve.ts` untouched.
 
-## ✅ Starmap v0 — Career graph cartography + pilot (STARTED 2026-07-19)
+## ✅ Starmap — Catalog + ≥3 playable pilots (DONE 2026-07-19)
 
 **Design law:** [#17](https://github.com/PoseyATX/candidate-zero/issues/17), [#18](https://github.com/PoseyATX/candidate-zero/issues/18).  
 **Map index:** [`docs/STARMAP.md`](./STARMAP.md).
 
 | Deliverable | Status | Evidence |
 |---|---|---|
-| Full ENT_* catalog (tiers 0–8) | **Done** | `src/data/starmap/entities.ts` (~90+ entities) |
+| Full ENT_* catalog (tiers 0–8) | **Done** | `src/data/starmap/entities.ts` (~93 entities) |
 | Orbits, no orphans | **Done** | `orbits.ts` + `harness:starmap` |
-| Loops registry (waiting/elected/templates/T0–2) | **Done** | `loops.ts` |
-| Declarative conditions + helpers | **Done** | `types-entities.ts`, `entities.ts` |
-| AL* bridges | **Done** | `bridges.ts` |
-| Pilot Precinct Chair + MV01 | **Done** | advancement → orbit open → MV01 yield |
-| `npm run harness:starmap` | **Done** | inventory + pilot e2e |
+| Loops registry | **Done** | `loops.ts` |
+| Multi-pilot registry | **Done** | `pilots.ts` PLAYABLE_PILOTS |
+| MV01 Precinct Chair | **Done** | AL01 path |
+| MV02 Canvass Captain | **Done** | AL09 / name+vol path |
+| MV03 County Judge | **Done** | AL15 / endorse+name path |
+| Simultaneous multi-orbit | **Done** | harness asserts MV01+MV02 |
+| `npm run harness:starmap` | **Done** | inventory + 3-pilot e2e |
 
-**Not in v0:** multi-entity playable loops, movement UI modal, waiting-loop stage rewrite.
+**Not in this pass:** movement UI modal, waiting-loop stage rewrite, higher-office forks.
 
 ## ✅ Card residency — Main / Special / Outside (DONE 2026-07-19)
 

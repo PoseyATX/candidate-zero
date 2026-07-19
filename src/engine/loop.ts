@@ -31,8 +31,10 @@ import { markWeekStart, buildWeekSummary, type WeekSummary } from './feedback.js
 import { repCheck } from './reputation.js';
 import { applyLegacy } from './legacy.js';
 import { availableCash, retireDebtOnWin } from './debt.js';
-import { isPilotMovementAvailable, syncMovementFlags } from './entities.js';
-import { PILOT_VERB_PLAY_ID } from '../data/starmap/pilot-precinct.js';
+import {
+  listAvailableMovementVerbIds,
+  syncMovementFlags
+} from './entities.js';
 import {
   applySetup,
   HARNESS_DEFAULT_SETUP,
@@ -345,8 +347,13 @@ export const CAMP_FILING_FEE = -105;
 export const CAMP_SHOP_BASE = -200;
 /** Session play synthetic index base: -300 - i. */
 export const CAMP_SESSION_BASE = -300;
-/** Starmap movement verb camp index. */
-export const CAMP_STARMAP_MV01 = -401;
+/**
+ * Starmap movement verb camp indices: -401, -402, … (one per open MV##).
+ * Legacy alias CAMP_STARMAP_MV01 = first slot.
+ */
+export const CAMP_STARMAP_BASE = -401;
+/** @deprecated use CAMP_STARMAP_BASE — kept for any external refs */
+export const CAMP_STARMAP_MV01 = CAMP_STARMAP_BASE;
 
 export function listPlayableHand(campaign: Campaign): { index: number; card: PlayCard }[] {
   const out: { index: number; card: PlayCard }[] = [];
@@ -395,11 +402,14 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
       shopI++;
     }
   }
-  // Starmap pilot: MV01 as camp action when orbit open (not deck-dependent).
-  if (isPilotMovementAvailable(campaign.state)) {
-    const mv = campaign.catalog.get(PILOT_VERB_PLAY_ID);
+  // Starmap pilots: all open Special movement verbs as camp actions.
+  const openVerbs = listAvailableMovementVerbIds(campaign.state);
+  let mvI = 0;
+  for (const verbId of openVerbs) {
+    const mv = campaign.catalog.get(verbId);
     if (mv && isPlayable(campaign.state, mv)) {
-      out.push({ index: CAMP_STARMAP_MV01, card: mv });
+      out.push({ index: CAMP_STARMAP_BASE - mvI, card: mv });
+      mvI++;
     }
   }
   return out;
@@ -412,7 +422,15 @@ export function campIndexToCardId(
 ): string | null {
   if (handIndex === CAMP_PETITION) return 'PL04';
   if (handIndex === CAMP_FILING_FEE) return 'PL05';
-  if (handIndex === CAMP_STARMAP_MV01) return PILOT_VERB_PLAY_ID;
+  // Index bands (most negative first): starmap ≤-401 · session ≤-300 · shop ≤-200
+  if (handIndex <= CAMP_STARMAP_BASE) {
+    const openVerbs = listAvailableMovementVerbIds(campaign.state).filter(id => {
+      const card = campaign.catalog.get(id);
+      return card && isPlayable(campaign.state, card);
+    });
+    const i = CAMP_STARMAP_BASE - handIndex;
+    return openVerbs[i] ?? null;
+  }
   if (handIndex <= CAMP_SESSION_BASE) {
     const sessionCards = SESSION_PLAYS.filter(c => isPlayable(campaign.state, c));
     const i = CAMP_SESSION_BASE - handIndex;
