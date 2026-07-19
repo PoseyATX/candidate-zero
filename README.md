@@ -6,8 +6,14 @@ High-complexity, single-player (PvE) roguelike deckbuilder set inside the machin
 
 Modular TypeScript baseline: pure engine is the rules authority. Ship path
 is **TS engine → Unity presentation → iOS / App Store** (not a second rules
-engine in C#). Ops roadmap: [Project #2](https://github.com/users/PoseyATX/projects/2)
-+ [`docs/PROJECT-BOARD.md`](docs/PROJECT-BOARD.md). Evidence log: [`docs/ROADMAP.md`](docs/ROADMAP.md).
+engine in C#).
+
+| Doc | Role |
+|---|---|
+| [Project #2](https://github.com/users/PoseyATX/projects/2) + [`PROJECT-BOARD.md`](docs/PROJECT-BOARD.md) | Ops roadmap |
+| [`ROADMAP.md`](docs/ROADMAP.md) | Evidence of what shipped |
+| [`WORK-LOG.md`](docs/WORK-LOG.md) | Full workstream history (refer back here) |
+| [`GAME-FLOW.md`](docs/GAME-FLOW.md) | How a run plays today |
 
 **Play the alpha:** https://poseyatx.github.io/candidate-zero/
 
