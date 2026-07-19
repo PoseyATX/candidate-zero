@@ -183,7 +183,8 @@ Over this workstream we:
 
 | Status | Issue | Title |
 |---|---|---|
-| **NEXT** | #9 | Phase 5 — Balance breadth (personas × districts × regions) |
+| **DONE** | #9 | Phase 5 — Balance breadth (matrix + wrong retune) |
+| **NEXT** | #17/#18 | Starmap — second/third playable entity loops |
 | PLANNED | #10 | Phase 6 — Mobile-first UI + a11y |
 | PLANNED | #11 | Phase 7 — Honest v0.1 label |
 | PLANNED | #12 | Phase 8 — TS → Unity → iOS / App Store |
@@ -366,4 +367,18 @@ Pilot: 2× warm AL01 (or endorse+AL01) → ORBIT OPEN log → MV01 camp offer �
 | Proof | `harness:calendar` kit-gravity block; strategies prioritize PL19/PL23 |
 
 **Recommendation logged:** this path over new entity kits first — General was the weak act.
+
+---
+
+## Phase 5 — Balance breadth (2026-07-19)
+
+| Piece | Detail |
+|---|---|
+| Harness | `npm run harness:matrix` · structured 93-cell sample |
+| Finding | Open/east labor mean win 20.3% (6.7–33.3%); no soft-lock/free win |
+| Fix | Wrong-party genBase + November tax (GOTV gravity had made traps soft) |
+| Identity | High-cash money path (heir/wheeler/feed-store) documented, not nerfed |
+| Next | Starmap ≥3 playable loops (#17/#18) |
+
+Issue #9 closed with evidence.
 

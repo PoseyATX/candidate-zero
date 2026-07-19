@@ -236,8 +236,10 @@ export function primaryWinProbability(state: GameState): number {
  */
 function genBaseForDistrict(district: GameState['district']): number {
   const align = district?.align as 'safe' | 'competitive' | 'wrong' | undefined;
-  const base = align === 'safe' ? 0.28 : align === 'wrong' ? 0.72 : 0.45;
-  const trapTax = district?.trap ? 0.08 : 0;
+  // Phase 5 (2026-07-19): wrong-party was too soft after GOTV kit gravity —
+  // trap districts must stay souls-like in November (easy primary, hard general).
+  const base = align === 'safe' ? 0.28 : align === 'wrong' ? 0.84 : 0.45;
+  const trapTax = district?.trap ? 0.1 : 0;
   return base + trapTax;
 }
 
@@ -246,6 +248,8 @@ function genBaseForDistrict(district: GameState['district']): number {
  * GOTV is the lever — without it, skilled primary still can lose November.
  * 2026-07-19 kit gravity: heavier GOTV weight, lighter raw contacts
  * (primary contact pad is not a November substitute).
+ * Phase 5: wrong/trap districts take an extra November tax so GOTV does
+ * not erase partisan reality.
  */
 export function generalWinProbability(state: GameState): number {
   const rapport =
@@ -253,6 +257,8 @@ export function generalWinProbability(state: GameState): number {
     Math.max(1, state.groundsArr.length);
   const gotv = state.groundsArr.reduce((s, g) => s + (g.gotv || 0), 0);
   const opp = state.genBase || 0.45;
+  const wrongTax =
+    state.district?.align === 'wrong' || state.district?.trap ? 0.1 : 0;
   const p =
     0.16 +
     state.nameID * 0.01 +
@@ -262,7 +268,8 @@ export function generalWinProbability(state: GameState): number {
     gotv * 0.18 + // GOTV is the general lever (kit gravity)
     state.momentum * 0.018 -
     state.hitPieces * 0.05 -
-    opp * 0.28;
+    opp * 0.28 -
+    wrongTax;
   return clamp(p, 0.06, 0.92);
 }
 

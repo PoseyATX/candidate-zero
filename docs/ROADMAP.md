@@ -21,7 +21,7 @@ Grounded in repo evidence (`TICKET-v0.1-modular-baseline.md`, `ARCHITECTURE.md`,
 - **Starmap v0** started — entity/orbit/loop cartography + Precinct Chair pilot (#17/#18).
 - **Card residency law** — Main / Special / Outside + control channel
   (`docs/CARD-RESIDENCY.md`); schema + catalog tags; no boosters/event deck yet.
-- **Phase 5** — balance breadth (issue #9); still valid for campaign math.
+- **Phase 5** — balance breadth (issue #9) **DONE** 2026-07-19.
 - **Phases 6–7** — mobile polish, honest v0.1.
 - **Phase 8** — ship path: **TS pure engine → Unity presentation → iOS / App Store**
   (issue #12). Unity is not a second rules engine.
@@ -346,17 +346,28 @@ Files: `src/engine/session.ts`, `src/data/session-plays.ts`, UI/strategy wires.
 | Win math favors GOTV over contact pad | **Done** | `generalWinProbability` weights |
 | Harness | **Done** | `harness:calendar` kit-gravity asserts |
 
-## Phase 5 — Sweep balance breadth beyond labor/money
+## ✅ Phase 5 — Balance breadth (DONE 2026-07-19, [#9](https://github.com/PoseyATX/candidate-zero/issues/9))
+
+**Goal:** setup matrix is brutal-but-winnable — no soft-locks, no free wins.
+
+| Deliverable | Status | Evidence |
+|---|---|---|
+| `harness:matrix` structured sample | **Done** | `src/harness/matrix.ts` · 93 cells × N=30 |
+| All 24 personas open/east labor | **Done** | mean win 20.3% · band 6.7–33.3% |
+| Wrong-party stress | **Done** | mean ~12%; retuned genBase + wrong tax |
+| Money identity documented | **Done** | smallbiz / PA_CRA_DIP / PA_DIP_CHA |
+| Labor/money ratio guardrail | **Done** | teacher ~1.8x (cap 3.5x) |
+| Notes | **Done** | `docs/BALANCE-NOTES.md` 2026-07-19 Phase 5 |
+
+**Not in Phase 5:** full 12k issue grid (issues are flavor for win math); boosters; starmap multi-loop.
+
+### Prior backlog note (superseded by evidence above)
 
 Phase 0 fixed the two headline strategies and one systemic district bug,
 but the full setup matrix — now 24 personas × 4 districts × 7 regions × 18
 issues = 12,096 combinations (was 672 before the 2026-07-17 persona/issue
-port) — has only ever been spot-checked (`harness:setup` covers
-teacher/open/east and veteran/gulf; `harness:full` only runs the default
-setup, and none of the 20 newly-ported personas have been through it at
-all). This matrix just got substantially bigger without a corresponding
-increase in balance coverage — worth flagging as higher priority than it
-was this morning. Things worth checking:
+port) — had only been spot-checked. Phase 5 closed the persona×district×region
+axes via structured sampling.
 
 - **The 20 newly-ported personas**: verified mechanically correct (apply()
   effects fire, `harness` suite green) but not balance-checked individually

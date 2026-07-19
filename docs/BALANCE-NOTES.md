@@ -97,6 +97,54 @@ in the draw pile, November math still too kind to raw contact padding.
 ### Intent
 November is turnout arithmetic. Primary ground work *pays off* (seed) but you still must
 run GOTV. Club pie is a primary sport. Ceremony shell now matches mechanical kit.
+
+## 2026-07-19 — Phase 5 balance breadth matrix
+
+### Harness
+`npm run harness:matrix` (`src/harness/matrix.ts`)
+
+- Structured sample (default): 24 personas × open+wrong east labor; teacher × all
+  districts × all regions; high-cash money path × districts; labor/money head-to-head;
+  region petition stress. **93 cells × N=30** (~0.8s).
+- Full grid: `CZ_MATRIX_FULL=1` (24×4×7 labor + money subset).
+- Flags soft-locks / free wins / wrong-too-easy / incumb-too-easy.
+- Issues fixed to `taxes` (issue id is flavor for win math today).
+
+### Results (N=30, post wrong-district retune)
+
+| Slice | Finding |
+|---|---|
+| **24 personas open/east labor** | Mean overall win **20.3%** · min **6.7%** (PA_CRA_INK) · max **33.3%** (PA_CLO) — no free win, no soft-lock |
+| **Wrong-party labor (east)** | Mean overall win **~12%** · every persona sometimes wins at N=30 · not impossible, not easy |
+| **Teacher × district × region** | Ballot always ≥90%; win band ~3–30%; incumb+metro softest primary reach |
+| **Labor vs money (teacher)** | Money/labor win ratio **~1.8x** (inside 3.5x guardrail) |
+| **High-cash money identity** | PA_CRA_DIP / PA_DIP_CHA / smallbiz win more on money path (up to ~67% open) — **accepted identity**, not FREE_WIN |
+
+### Retune (evidence-driven only)
+
+After kit gravity, **wrong-party generals were too soft** (PA_CLO labor ~47% win on wrong).
+
+| Knob | Before | After |
+|---|---|---|
+| `genBase` wrong align | 0.72 | **0.84** |
+| trap tax | 0.08 | **0.10** |
+| wrong/trap November tax in `generalWinProbability` | 0 | **−0.10** |
+
+Labor open/east persona band unchanged (~20% mean). Wrong mean ~12%.
+
+### Accepted identities (not bugs)
+
+1. **Labor ballot ~100%** — Phase 0 petition path intentionally clears filing often; degeneracy is *win rate*, not ballot rate.
+2. **smallbiz / PA_CRA_DIP / PA_DIP_CHA on money path** — start rich; higher general win is the fantasy of cash. Flagged INCUMB/WRONG_TOO_EASY only as notes when overall &lt; 70%.
+3. **smallbiz labor weak (~10%)** — CRA-tilted feed-store underperforms pure door labor; texture, not soft-lock (ballot 100%).
+
+### Guardrails enforced in harness
+
+- Every persona on open/east labor and wrong/east labor
+- Wrong mean win ∈ (2%, 22%)
+- Open labor persona overall win ≤ 90%, ballot ≥ 40%
+- Teacher money/labor ratio ≤ 3.5x
+- No unexplained SOFTLOCK / FREE_WIN / WRONG_TOO_EASY / INCUMB_TOO_EASY
 - Overall win rates remain souls-like (most runs still lose).
 - Money path is stronger into November (more contacts/name from fry economy); acceptable texture; re-check when obligations/hit pieces matter more.
 
