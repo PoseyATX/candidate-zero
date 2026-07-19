@@ -123,3 +123,58 @@ export function emblemFor(cardId: string): string {
 export function emblem(name: keyof typeof EMBLEMS | string): string {
   return WRAP_OPEN + (EMBLEMS[name] ?? EMBLEMS.star) + WRAP_CLOSE;
 }
+
+/* ======================= CARD-KIND RECOGNITION =======================
+   The tint/glyph language for card families (see engine/types.ts CardKind
+   and docs/CARD-TAXONOMY.md). Each non-action kind carries a small corner
+   "seal" — a distinct silhouette (colorblind-safe, not color-only) — plus
+   a paper wash and accent applied in CSS via the .kind-<id> class. `label`
+   is the diegetic category name, surfaced only in title/aria (discoverable
+   and accessible), never as a blaring on-card stamp: the point is subtle
+   recognizability, not spoiling the hook. */
+
+const MARK_OPEN =
+  "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.7' " +
+  "stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'>";
+
+const KIND_MARK: Record<string, string> = {
+  // fishhook — "there's a hook in it"
+  bargain:
+    "<circle cx='13' cy='3.6' r='1.1'/><path d='M13 4.6v8a4 4 0 1 1-4-4'/>" +
+    "<path d='M9 8.6l-1.7 1M9 8.6l1 1.7'/>",
+  // head-and-shoulders bust
+  ally: "<circle cx='12' cy='7.5' r='3.1'/><path d='M5.5 20c0-3.7 2.9-6.3 6.5-6.3S18.5 16.3 18.5 20'/>",
+  // solid-cut diamond
+  item: "<path d='M12 3l6.5 9-6.5 9-6.5-9z'/><path d='M6 12h12'/>",
+  // map pin
+  location: "<path d='M12 21c4.2-5.2 6.2-8.3 6.2-11.4A6.2 6.2 0 1 0 5.8 9.6C5.8 12.7 7.8 15.8 12 21z'/><circle cx='12' cy='9.6' r='2.2'/>",
+  // chain link (a weight you carry)
+  liability:
+    "<rect x='3.5' y='9' width='8.5' height='6' rx='3'/>" +
+    "<rect x='12' y='9' width='8.5' height='6' rx='3'/>",
+  // sealed envelope
+  blackmail: "<rect x='3.5' y='6' width='17' height='12' rx='1'/><path d='M3.5 7.2l8.5 6 8.5-6'/>"
+};
+
+export interface KindMeta {
+  /** Diegetic category name — title/aria only, never an on-card stamp. */
+  label: string;
+  /** One-line description for the title tooltip and the taxonomy doc. */
+  blurb: string;
+}
+
+export const KIND_META: Record<string, KindMeta> = {
+  action: { label: 'Action', blurb: 'A play you make.' },
+  bargain: { label: 'Bargain', blurb: 'A deal with strings — the benefit is real, and so are they.' },
+  ally: { label: 'Ally', blurb: 'A person who joins your machine.' },
+  item: { label: 'Item', blurb: 'An asset you hold.' },
+  location: { label: 'Location', blurb: 'A place with its own rules.' },
+  liability: { label: 'Liability', blurb: 'A weight you carry, win or lose.' },
+  blackmail: { label: 'Blackmail', blurb: 'Leverage — held on you, or by you.' }
+};
+
+/** Corner-seal mark SVG for a card kind, or '' for the unmarked default. */
+export function kindMark(kind: string | undefined): string {
+  if (!kind || kind === 'action' || !KIND_MARK[kind]) return '';
+  return MARK_OPEN + KIND_MARK[kind] + WRAP_CLOSE;
+}

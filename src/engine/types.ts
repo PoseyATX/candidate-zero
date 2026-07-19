@@ -44,6 +44,28 @@ export interface CardCost {
 
 export type RiskClass = 'SAFE' | 'STD' | 'VOL' | 'CHOICE';
 
+/**
+ * Card family — WHAT a card is in the fiction, not whether it's good for
+ * you. This is the tint/recognizability channel (see src/ui/card-art.ts
+ * KIND_META and docs/CARD-TAXONOMY.md). Deliberately distinct from risk:
+ * a card can be a volatile Bargain, a safe Ally, etc. `action` is the
+ * unmarked default — the plain play. The rest carry a subtle paper wash,
+ * an accent frame, and a corner seal glyph so a returning player reads
+ * the frame the way they'd read a suit, WITHOUT a verdict label spoiling
+ * the hook the way "TRAP" did.
+ *
+ * Most kinds are forward-looking scaffolding for the 1000-card goal —
+ * only `action` and `bargain` are used by cards that exist today.
+ */
+export type CardKind =
+  | 'action'
+  | 'bargain'
+  | 'ally'
+  | 'item'
+  | 'location'
+  | 'liability'
+  | 'blackmail';
+
 /** Root character attributes that modify play odds via cardAttrMod. */
 export type AttrId = 'CLO' | 'CON' | 'CRA' | 'INK' | 'DIP' | 'CHA';
 
@@ -59,7 +81,16 @@ export interface PlayCard {
   tag: string;
   d: string;
   attrs?: AttrId[]; // Root attributes: CLO, CON, CRA, INK, DIP, CHA
-  trap?: boolean; // Honestly labeled trap plays (PAC check, self-fund, etc.)
+  /** Card family for tint/recognizability (default 'action'). See CardKind. */
+  kind?: CardKind;
+  /**
+   * Devil's-bargain flag — drives balance/audit tooling only. The
+   * player-facing tell is now the `kind: 'bargain'` frame, NOT a label
+   * (the "TRAP" stamp was retired). Kept separate from `kind` because a
+   * future non-bargain card could still want the balance flag, and vice
+   * versa.
+   */
+  trap?: boolean;
   odds?: (state: GameState, ground?: Ground) => number;
   run?: (state: GameState, result: RollResult, ground?: Ground) => string;
   show?: (state: GameState) => boolean;

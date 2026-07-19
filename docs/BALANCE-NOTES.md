@@ -772,3 +772,36 @@ present, eyebrow/topbar/footer updated, wrong-party district blurb
 TRAP-free, and the built bundle greps clean for "TRAP" and the stamp
 class. Harness (12/12 after the audit-rule update), typecheck, build
 pass.
+
+## 2026-07-17 — Card-kind taxonomy (tint/glyph recognizability system)
+
+Groundwork for the 1000+ unique-card goal and the coming non-play card
+families (ally/item/location/liability/blackmail). The retired TRAP stamp
+was a *verdict* printed on the card (spoiled the hook); this replaces it
+with a *family* channel that says what a card IS, not whether it's good
+for you — recognizable like a suit, not a spoiler.
+
+- `CardKind` enum + `PlayCard.kind` (`src/engine/types.ts`); `trap` flag
+  kept but demoted to balance/audit tooling only.
+- Two orthogonal channels: risk stays the left edge; kind gets a subtle
+  paper wash + accent-colored frame brackets (via new `--wash`/`--accent`
+  CSS vars) + a top-left corner "kind seal" glyph mirroring the cost seal.
+- Six family marks (`src/ui/card-art.ts` `KIND_MARK`), distinct
+  silhouettes not color-only (colorblind-safe at ~15px): fishhook
+  (bargain), bust (ally), diamond (item), pin (location), chain
+  (liability), envelope (blackmail). `action` is the unmarked default.
+- Category name lives in the seal's `title`/`aria-label` only — never an
+  on-card stamp. `PL20`/`PL21` mapped to `kind: 'bargain'`.
+- Spec doc: `docs/CARD-TAXONOMY.md` (the rule, the two channels, the
+  family table, how to add cards/families). Tutorial "Reading a Card"
+  gained a families line.
+- Only `action`/`bargain` are used by real cards today; the other four
+  families are scaffolded (enum/wash/accent/glyph/doc) so future cards
+  drop into a finished language.
+
+Verified: typecheck clean, harness 12/12, and a Playwright gallery
+screenshot of all six families confirming each is distinguishable by
+wash + silhouette with `action` plain.
+
+### Harness
+`npm run harness` (12/12), `npm run typecheck`, `npm run build` all pass.

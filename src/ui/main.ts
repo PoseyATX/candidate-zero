@@ -45,7 +45,7 @@ import {
   type InterimPath
 } from '../engine/legacy.js';
 import type { CampaignOutcome, LegacyState, PlayCard, PlayOutcome, TraitId } from '../engine/types.js';
-import { emblemFor, emblem } from './card-art.js';
+import { emblemFor, emblem, kindMark, KIND_META } from './card-art.js';
 import './styles.css';
 
 let campaign: Campaign | null = null;
@@ -229,11 +229,18 @@ function cardInner(
       : '';
   const attr = card.attrs?.length ? card.attrs.join(' · ') : '';
   const { seal, subs } = costParts(card);
-  // Devil's-bargain cards deliberately carry no visual tell — the label
-  // was removed by design decision (alpha): the string is in the card
-  // text, and reading it is the skill.
   const stamp = opts.camp ? '<span class="stamp stamp-camp">Camp</span>' : '';
+  // Kind seal (top-left, mirroring the cost seal): a subtle corner glyph
+  // marking the card's family. No verdict text — the category name lives
+  // in title/aria only. `action` cards carry no mark (unmarked default).
+  const kind = card.kind ?? 'action';
+  const mark = kindMark(kind);
+  const meta = KIND_META[kind];
+  const kindSeal = mark
+    ? `<span class="kind-seal" role="img" title="${meta?.label ?? ''} — ${meta?.blurb ?? ''}" aria-label="${meta?.label ?? ''}">${mark}</span>`
+    : '';
   return `
+    ${kindSeal}
     <span class="name">${card.n}</span>
     <span class="orn"><i></i>&#10022;<i></i></span>
     <span class="card-art">${emblemFor(card.id)}${stamp}</span>
@@ -255,9 +262,11 @@ function cardClasses(
   card: PlayCard,
   opts: { camp?: boolean; locked?: boolean } = {}
 ): string {
+  const kind = card.kind ?? 'action';
   return [
     'play-card',
     `risk-${card.risk.toLowerCase()}`,
+    kind !== 'action' ? `kind-${kind}` : '',
     opts.camp ? 'camp' : '',
     opts.locked ? 'locked' : ''
   ]
