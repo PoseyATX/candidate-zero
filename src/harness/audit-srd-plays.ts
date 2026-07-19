@@ -6,6 +6,8 @@
 
 import { ALL_PLAYS, PLAY_COUNT, SHOP_PLAYS } from '../data/plays.js';
 import { SESSION_PLAYS } from '../data/session-plays.js';
+import { WAITING_PLAYS } from '../data/waiting-plays.js';
+import { OUTSIDE_EVENTS } from '../data/outside-events.js';
 import type { AttrId, CardControl, CardResidency, PlayCard, RiskClass } from '../engine/types.js';
 
 const ATTRS = new Set<AttrId>(['CLO', 'CON', 'CRA', 'INK', 'DIP', 'CHA']);
@@ -151,20 +153,34 @@ for (const r of rows) {
   );
 }
 
-// Residency tallies (ALL_PLAYS + SESSION + shop templates)
+// Residency tallies — full architecture surface
 const resTally: Record<string, number> = { main: 0, special: 0, outside: 0 };
-for (const c of [...ALL_PLAYS, ...SESSION_PLAYS, ...SHOP_PLAYS]) {
+for (const c of [...ALL_PLAYS, ...SESSION_PLAYS, ...SHOP_PLAYS, ...WAITING_PLAYS]) {
   const r = c.residency ?? 'main';
   resTally[r] = (resTally[r] ?? 0) + 1;
 }
-console.log(
-  `\nResidency tally (plays+session+shop): main=${resTally.main} special=${resTally.special} outside=${resTally.outside}`
-);
-const specials = [...ALL_PLAYS, ...SESSION_PLAYS].filter(c => (c.residency ?? 'main') === 'special');
-console.log(`Special ids: ${specials.map(c => c.id).join(', ') || '(none)'}`);
-if (resTally.outside > 0) {
-  console.log('Outside ids present (event deck — must be control:world).');
+for (const e of OUTSIDE_EVENTS) {
+  resTally.outside = (resTally.outside ?? 0) + 1;
+  if (e.residency !== 'outside' || e.control !== 'world') {
+    console.error(`FAIL outside catalog ${e.id}`);
+    process.exitCode = 1;
+  }
 }
+// Waiting kit must be special
+for (const w of WAITING_PLAYS) {
+  if ((w.residency ?? 'main') !== 'special') {
+    console.error(`FAIL waiting ${w.id} not special`);
+    process.exitCode = 1;
+  }
+}
+console.log(
+  `\nResidency tally (plays+session+shop+waiting+outside): main=${resTally.main} special=${resTally.special} outside=${resTally.outside}`
+);
+const specials = [...ALL_PLAYS, ...SESSION_PLAYS, ...WAITING_PLAYS].filter(
+  c => (c.residency ?? 'main') === 'special'
+);
+console.log(`Special ids: ${specials.map(c => c.id).join(', ') || '(none)'}`);
+console.log(`Outside ids: ${OUTSIDE_EVENTS.map(e => e.id).join(', ')}`);
 
 // Uniqueness
 const ids = ALL_PLAYS.map(p => p.id);

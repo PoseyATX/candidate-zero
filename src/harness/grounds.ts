@@ -177,7 +177,7 @@ assert(laborSpread.avgContested + 0.01 >= laborFocus.avgContested, 'spread shoul
 // Teeth unit tests (not smoke-win-rate — N=50 is noisy)
 {
   const g = { id: 'x', n: 't', pool: 1, pool0: 1, prop: 0.5, aff: 'G', rapport: 0, gotv: 0, rivalRap: 50 };
-  assert(rivalOddsPenalty(g) >= 0.1 && rivalOddsPenalty(g) <= 0.2, 'rival odds penalty mid band');
+  assert(rivalOddsPenalty(g) >= 0.08 && rivalOddsPenalty(g) <= 0.18, 'rival odds penalty mid band');
   assert(rivalOddsPenalty({ ...g, rivalRap: 0 }) === 0, 'no rival no penalty');
   const s = createNewState({ seed: 1 });
   for (const gr of s.groundsArr) gr.rivalRap = 0;

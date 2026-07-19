@@ -64,12 +64,13 @@ export function resolveOutsideEvent(state: GameState, event: OutsideEvent): stri
 
 /**
  * Week-boundary Outside draw.
- * ~28% campaign weeks, ~22% session weeks (session already has teeth ticks).
+ * ~18% campaign weeks, ~15% session weeks (session already has teeth ticks).
+ * Hygiene 2026-07-19: first cut was too stormy when stacked with rival teeth.
  * At most one Outside card per advance.
  */
 export function tickOutsideDeck(state: GameState): string | null {
   if (state.over) return null;
-  const p = state.stage === 'session' ? 0.22 : 0.28;
+  const p = state.stage === 'session' ? 0.15 : 0.18;
   if (random() >= p) return null;
   const ev = drawOutsideEvent(state);
   if (!ev) return null;

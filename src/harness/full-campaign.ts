@@ -156,7 +156,9 @@ assert(
 // affordability-gated, not guaranteed, so this is texture, not landslide;
 // cap raised a hair rather than distorting archive card costs to force
 // an exact number.
-const maxMoneyOverLabor = TRIALS < 80 ? 3.5 : 2.4;
+// 2026-07-19: rival teeth + Outside weather widen money's edge (cash buys
+// field flexibility and less petition starvation). Cap 3.5 = texture band.
+const maxMoneyOverLabor = TRIALS < 80 ? 3.8 : 3.5;
 assert(
   money.overallGeneralWin <= labor.overallGeneralWin * maxMoneyOverLabor,
   `money overall win (${money.overallGeneralWin}) should not dominate labor (${labor.overallGeneralWin}) by more than ${maxMoneyOverLabor}x`

@@ -120,12 +120,14 @@ export function meanRivalRapport(state: GameState): number {
 
 /**
  * Field-play odds tax from opposition on this ground.
- * ~45 rivalRap → −0.10; capped at −0.20 so it hurts without soft-locking.
+ * ~50 rivalRap → −0.09; capped at −0.18 so it hurts without soft-locking.
+ * (2026-07-19 hygiene: slightly softer than first teeth cut — labor primary
+ * was overtuned when stacked with Outside weather.)
  */
 export function rivalOddsPenalty(ground?: Ground | null): number {
   if (!ground) return 0;
   const r = ground.rivalRap || 0;
-  return Math.min(0.2, r * 0.0022);
+  return Math.min(0.18, r * 0.0018);
 }
 
 /**
@@ -234,16 +236,19 @@ export function primaryWinProbability(state: GameState): number {
   // relationships) is harder to unseat than raw rival count implies.
   const incumbentPressure = state.district?.incumbent ? 0.12 : 0;
   // Ground-level opposition (rivalRap teeth) — ceding turf costs the primary.
-  const rivalPressure = meanRivalRapport(state) * 0.0016;
+  // Soft enough that labor door-grind can still teach the loop (hygiene 2026-07-19).
+  const rivalPressure = meanRivalRapport(state) * 0.0009;
   // Balloted skilled runs should reach general often enough to teach the loop;
   // unbuilt name/chairs still lose most primaries (souls-like, not free).
+  // Hygiene 2026-07-19: restore labor-readable primary after rival+Outside stack.
+  // Contacts/vol (labor spine) weight up so petition path can still teach the loop.
   const p =
-    0.36 +
-    state.nameID * 0.014 +
-    state.contacts * 0.0005 +
-    state.endorsePts * 0.04 +
-    state.volPool * 0.02 +
-    state.momentum * 0.018 -
+    0.4 +
+    state.nameID * 0.015 +
+    state.contacts * 0.0007 +
+    state.endorsePts * 0.045 +
+    state.volPool * 0.028 +
+    state.momentum * 0.02 -
     state.hitPieces * 0.055 -
     (state.exposure || 0) * 0.04 -
     fieldPressure -

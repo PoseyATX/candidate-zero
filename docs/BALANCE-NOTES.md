@@ -145,6 +145,42 @@ Labor open/east persona band unchanged (~20% mean). Wrong mean ~12%.
 - Open labor persona overall win ≤ 90%, ballot ≥ 40%
 - Teacher money/labor ratio ≤ 3.5x
 - No unexplained SOFTLOCK / FREE_WIN / WRONG_TOO_EASY / INCUMB_TOO_EASY
+
+## 2026-07-19 — Post-feature hygiene (balance + debug)
+
+After waiting season, Outside deck, rival teeth, session teeth, starmap templates —
+full suite audit and retune. **No new features.**
+
+### Bugs fixed
+| Issue | Fix |
+|---|---|
+| Waiting season grew campaign deck | `startWeek` skips draw for `waiting` (like session) |
+| Audit ignored WA* / Outside | Residency tally includes waiting + outside catalogs |
+| Outside fire too stormy | Campaign 28%→18%, session 22%→15% |
+
+### Balance retunes (evidence)
+| Knob | Change | Why |
+|---|---|---|
+| Petition PL04 | odds ~0.57; yields mid-band; vol0 miss ~5% | Deadline had gone toothless (~98%) |
+| Rival field penalty | 0.0018/rap, cap 0.18 | First teeth cut stacked too hard with Outside |
+| Rival primary tax | 0.0009 × mean rival | Labor primary readable again |
+| Primary win base | 0.40 + contacts/vol weight up | Labor door-grind teaches the loop |
+| Block Walk GAIN | +1 name ID | Labor name heat was starve (avg ~5) |
+| Money/labor ratio cap | 3.5× | Cash edge after feature stack is texture, not free |
+
+### Snapshot (`harness:full` N=200, post-hygiene)
+| Strategy | Ballot | Reach gen | Overall win | Notes |
+|---|---|---|---|---|
+| labor | ~96% | ~35% | ~15% | petition tension + primary teachable |
+| money | ~85% | ~50%+ | ~30–44% | still stronger; under 3.5× labor |
+| hybrid | ~87% | ~30% | ~12–15% | middle |
+| grind | ~3% | ~2% | ~1% | control |
+
+### Still intentional (not bugs)
+- Money > labor overall (texture)
+- Session pure pipeline without casework gets primaried (teeth)
+- Outside never in hand
+- High-cash personas on money path
 - Overall win rates remain souls-like (most runs still lose).
 - Money path is stronger into November (more contacts/name from fry economy); acceptable texture; re-check when obligations/hit pieces matter more.
 

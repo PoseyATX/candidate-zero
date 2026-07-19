@@ -189,6 +189,7 @@ Over this workstream we:
 | **DONE** | — | Outside event deck v0 (10 world cards) |
 | **DONE** | — | RivalRap teeth + Chronicle→waiting loop bridge |
 | **DONE** | — | Waiting season play + higher-office paths |
+| **DONE** | — | Post-feature balance/debug hygiene |
 | PLANNED | #10 | Phase 6 — Mobile-first UI + a11y |
 | PLANNED | #11 | Phase 7 — Honest v0.1 label |
 | PLANNED | #12 | Phase 8 — TS → Unity → iOS / App Store |
@@ -439,4 +440,37 @@ Boosters / full event UI still later.
 | Harness | `harness:grounds` teeth units · `harness:chronicle` |
 
 Opposition is no longer cosmetic. Loss still redirects (no true game over).
+
+---
+
+## Waiting season + higher-office forks (2026-07-19)
+
+| Piece | Detail |
+|---|---|
+| Stage | `stage: 'waiting'` · 4 weeks · 1 AP |
+| Kit | WA01–WA09 path-scoped Specials |
+| Flow | Path+trait → Act IV play → bank carry → setup |
+| Higher office | Senate / statewide paths after strong Session |
+| Engine | `waiting.ts`, `waiting-plays.ts`, calendar `waiting_complete` |
+| Harness | `harness:waiting` |
+
+No true game over: you *play* the two years, not only pick a trait.
+
+---
+
+## Post-feature hygiene (2026-07-19)
+
+Full harness green after waiting/Outside/rival/session stack.
+
+| Fix | Detail |
+|---|---|
+| Waiting no deck growth | `startWeek` session-style skip |
+| Outside rate | 18% campaign / 15% session |
+| Petition deadline | ~5% miss @vol0 |
+| Labor primary | base + contacts/vol + walk name on GAIN |
+| Rival soft | still teeth, not soft-lock |
+| Money/labor cap | 3.5× documented texture |
+| Audit | WA* + Outside in residency tally |
+
+Evidence: `docs/BALANCE-NOTES.md` 2026-07-19 hygiene section.
 

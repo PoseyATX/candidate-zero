@@ -51,7 +51,9 @@ export const PL01_BlockWalk: PlayCard = {
     }
     if (o.tier === 1) {
       const c = Math.min(g.pool, Math.round((22+random()*16)*mult));
-      g.pool-=c; s.contacts+=c; s.volPool+=1; rapGain(g, gen ? 1 : 3, s); s.nameID+=push;
+      g.pool-=c; s.contacts+=c; s.volPool+=1; rapGain(g, gen ? 1 : 3, s);
+      // Hygiene: labor spine needs name heat on ordinary GAINS, not only breakthroughs
+      s.nameID += 1 + push;
       if (gen) {
         g.gotv += 0.1;
         return `Turnout walk at ${g.n}: +${c} contacts, +10% GOTV. The list is a vote plan now.`;
@@ -101,16 +103,13 @@ export const PL04_PetitionDrive: PlayCard = {
   attrs: ['CLO'],
   d: 'Signatures instead of a fee. Labor is the currency you were born holding.',
   show: (s) => !s.ballot,
-  odds: (s) => clamp(0.60 + s.volPool*0.035 + (warm(s,'AL09')?0.08:0), 0, 0.95),
+  // 2026-07-19 hygiene: pure petition had drifted to ~98% ballot@vol0.
+  // Odds + yields restore ~5–10% miss at vol0 without starving labor primary force.
+  odds: (s) => clamp(0.57 + s.volPool * 0.033 + (warm(s, 'AL09') ? 0.08 : 0), 0, 0.95),
   run: (s, o) => {
     if (o.tier <= 1) {
-      // 2026-07-17 re-tune: labor path was costing ~5.5-6 of 8 primary weeks
-      // (nearly all AP) to clear sigNeed, starving nameID/contacts/endorsePts
-      // versus the money path's ~1.5-2 week fee grind. Raised yields (not
-      // odds) so labor stays the zero-dollar door without eating the primary.
-      // src/harness/ballot-qualification.ts imports this card directly, so
-      // there is nothing to keep in sync by hand anymore.
-      const g = o.tier === 0 ? 95 + Math.floor(random()*40) : 55 + Math.floor(random()*30);
+      // Yields: breakthrough ~85–120, gain ~50–75 (mid between free-ballot and starve).
+      const g = o.tier === 0 ? 85 + Math.floor(random() * 36) : 50 + Math.floor(random() * 26);
       s.signatures += g;
       if (s.signatures >= s.sigNeed && !s.ballot) { s.ballot = true; return `+${g} signatures — threshold cleared. On the ballot, free but not cheap.`; }
       return `+${g} valid signatures (${s.signatures}/${s.sigNeed}).`;

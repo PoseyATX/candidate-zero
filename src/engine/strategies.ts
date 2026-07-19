@@ -31,11 +31,19 @@ export const laborBallotStrategy: Chooser = (playable, state) => {
   if (!state.ballot) {
     return pickByPriority(playable, ['PL04', 'PL01', 'PL02', 'PL06', 'PL10']);
   }
-  // PL21B is labor's answer to PL39: a volunteer-pool-funded route to the
-  // same AL09 field-ops ally, so the labor path isn't locked out of the
-  // bonus money's PL39 grants. Prioritized above PL01/PL02 so it actually
-  // fires once affordable — it's a one-time grab (show gates it off after).
-  return pickByPriority(playable, ['PL21B', 'PL01', 'PL02', 'PL06', 'PL08', 'PL16', 'PL10', 'PL03']);
+  // PL21B is labor's answer to PL39. Doors first (name/contacts spine), then
+  // chairs/vols so petition-path primary force is real (hygiene 2026-07-19).
+  return pickByPriority(playable, [
+    'PL21B',
+    'PL01',
+    'PL02',
+    'PL16',
+    'PL08',
+    'PL14',
+    'PL06',
+    'PL10',
+    'PL03'
+  ]);
 };
 
 /** Bank fee early, then paid media / fish fry texture into general. */

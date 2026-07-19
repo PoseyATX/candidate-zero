@@ -497,12 +497,20 @@ export function startWeek(campaign: Campaign): string[] {
   }
   markWeekStart(campaign.state);
 
-  // Phase 4: session does not grow the campaign deck (archive: capital/writs)
+  // Session / waiting: no campaign deck growth (different kits)
   if (campaign.state.stage === 'session') {
     campaign.state.log.push({
       week: campaign.state.week,
       kind: 'week',
       text: `Session week ${campaign.state.week} — the building moves at the building's pace.`
+    });
+    return [];
+  }
+  if (campaign.state.stage === 'waiting') {
+    campaign.state.log.push({
+      week: campaign.state.week,
+      kind: 'week',
+      text: `Waiting week ${campaign.state.week} — interim orbit. No campaign draw.`
     });
     return [];
   }
