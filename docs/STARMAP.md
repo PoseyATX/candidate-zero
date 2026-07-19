@@ -56,20 +56,23 @@ src/data/plays-starmap.ts      # MV01 verb card
 
 ---
 
-## Playable pilots (≥3 — acceptance met)
+## Playable entity templates (7)
 
 Registry: `src/data/starmap/pilots.ts` · verbs: `src/data/plays-starmap.ts`  
-Harness: `npm run harness:starmap` (all three e2e).
+Harness: `npm run harness:starmap` (all e2e). **Templates + deltas only** — not 93 decks.
 
 | # | Entity | Ally | Verb | Advancement | Yield (once) |
 |---|---|---|---|---|---|
-| 1 | `ENT_PRECINCT_CHAIR` | AL01 | **MV01** Call in precinct network | 2× warm AL01 **or** endorse≥2+AL01 | +2 endorse, +40 contacts, +1 vol · `orbit_precinct_power` |
-| 2 | `ENT_CANVASS_CAPTAIN` | AL09 | **MV02** Execute the field plan | warm AL09 **or** name≥8+vol≥3 | +1 field AP, +2 vol, +25 contacts, GOTV on turf · `orbit_field_spine` |
-| 3 | `ENT_COUNTY_JUDGE` | AL15 | **MV03** Spend the courthouse nod | warm AL15 **or** endorse≥4+name≥16 | +3 endorse, +8 name, +2 mom, +30 contacts · `orbit_courthouse_nod` |
+| 1 | Precinct Chair | AL01 | **MV01** | 2× AL01 / endorse+AL01 | +2 endorse, +40 contacts, +1 vol |
+| 2 | Canvass Captain | AL09 | **MV02** | AL09 / name≥8+vol≥3 | field AP, vols, GOTV on turf |
+| 3 | County Judge | AL15 | **MV03** | AL15 / endorse≥4+name≥16 | +3 endorse, +8 name, +2 mom |
+| 4 | County Party | AL02 | **MV04** | AL02 / 3× AL01 | +2 endorse, +2 vol, +50 contacts, $400 |
+| 5 | Club Leader | AL03 | **MV05** | AL03 / endorse≥3 | +1 endorse, +60 contacts, +1 vol |
+| 6 | Local Editor | AL04 | **MV06** | AL04 / name≥14 | +10 name, +2 mom, Faces F |
+| 7 | Faith Leader | AL08 | **MV07** | AL08 / B02+name≥10 | +3 vol, corridor open, A13 directory |
 
-- Special residency + `entityScope`; camp offers when orbit open (multi-orbit OK).  
-- Does **not** leave primary/general — overlay on campaign.  
-- Wire: `syncMovementFlags` after plays / week advance.
+- Special residency + `entityScope`; multi-orbit camp offers (−401+).  
+- Overlay on primary/general — not a stage leave.
 
 ---
 
@@ -80,7 +83,7 @@ Harness: `npm run harness:starmap` (all three e2e).
 | Full entity catalog | Higher-tier deep subloops |
 | Full orbit skeleton | Timing/attr-gated orbit filtering (basic only) |
 | Loop IDs for waiting/elected/templates | Most non-pilot advancement still `manual_todo` |
-| **3 playable pilots** (MV01–03) | Waiting loops replacing Chronicle UI |
+| **7 playable templates** (MV01–07) | Waiting loops replacing Chronicle UI |
 | Bridges to AL* | Movement UI modal (Phase 6 adjacent) |
 
 ---

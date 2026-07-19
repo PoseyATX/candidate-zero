@@ -184,7 +184,7 @@ Over this workstream we:
 | Status | Issue | Title |
 |---|---|---|
 | **DONE** | #9 | Phase 5 — Balance breadth (matrix + wrong retune) |
-| **DONE** | #17/#18 | Starmap — 3 playable pilots (MV01–03) |
+| **DONE** | #17/#18 | Starmap — 7 entity templates (MV01–07) |
 | PLANNED | #10 | Phase 6 — Mobile-first UI + a11y |
 | PLANNED | #11 | Phase 7 — Honest v0.1 label |
 | PLANNED | #12 | Phase 8 — TS → Unity → iOS / App Store |
@@ -384,14 +384,12 @@ Issue #9 closed with evidence.
 
 ---
 
-## Starmap 3 playable pilots (2026-07-19)
+## Starmap entity templates (2026-07-19)
 
-| Pilot | Verb | Unlock |
+| Wave | Verbs | Entities |
 |---|---|---|
-| Precinct Chair | MV01 | 2× AL01 / endorse+AL01 |
-| Canvass Captain | MV02 | AL09 / name+vol pressure |
-| County Judge | MV03 | AL15 / endorse+name weight |
+| 1 | MV01–03 | Precinct, Captain, Judge |
+| 2 | MV04–07 | County Party, Club, Editor, Faith |
 
-Multi-pilot registry `pilots.ts`; simultaneous multi-orbit; camp −401+.  
-`harness:starmap` e2e. Issues **#17 / #18 closed**.
+7 templates total; registry `pilots.ts`; harness e2e all paths. Issues **#17 / #18 closed**.
 

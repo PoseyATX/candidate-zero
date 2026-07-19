@@ -78,9 +78,13 @@ export function evaluateCondition(state: GameState, spec: ConditionSpec): boolea
       return state.obls.includes(String(p.oblId ?? ''));
     case 'name_id_gte': {
       if (state.nameID < Number(p.n ?? 0)) return false;
-      // Optional compound: requireVol for captain field-pressure path
+      // Optional compounds for template paths
       if (p.requireVol !== undefined && (state.volPool ?? 0) < Number(p.requireVol)) {
         return false;
+      }
+      if (p.requireBacker !== undefined) {
+        const b = String(p.requireBacker);
+        if (!state.backers?.includes(b)) return false;
       }
       return true;
     }
@@ -174,9 +178,11 @@ export function syncMovementFlags(state: GameState): void {
       });
     }
   }
-  // Prefer highest-tier open (judge > captain > precinct) for pending hint
-  const rank = (id: string) =>
-    id === 'MV03' ? 3 : id === 'MV02' ? 2 : id === 'MV01' ? 1 : 0;
+  // Prefer higher MV numbers (heavier orbits) for pending hint
+  const rank = (id: string) => {
+    const m = /^MV(\d+)$/.exec(id);
+    return m ? Number(m[1]) : 0;
+  };
   const best = [...opts].sort(
     (a, b) => rank(b.verbPlayId ?? '') - rank(a.verbPlayId ?? '')
   )[0]!;

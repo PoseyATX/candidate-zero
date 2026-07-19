@@ -22,7 +22,11 @@ import { executePlay } from '../engine/play.js';
 import {
   MV01_PrecinctNetwork,
   MV02_FieldPlan,
-  MV03_CourthouseNod
+  MV03_CourthouseNod,
+  MV04_PartyApparatus,
+  MV05_ClubRoster,
+  MV06_NewsroomNod,
+  MV07_CorridorBlessing
 } from '../data/plays-starmap.js';
 import { ALL_PLAYS } from '../data/plays.js';
 import type { PlayCard } from '../engine/types.js';
@@ -36,11 +40,11 @@ function playVerb(s: ReturnType<typeof createNewState>, card: PlayCard): void {
   assert(r.ok, `${card.id} play ok: ${r.reason}`);
 }
 
-console.log('=== CANDIDATE ZERO — Starmap (3 playable pilots) ===\n');
+console.log('=== CANDIDATE ZERO — Starmap (entity templates) ===\n');
 
 const counts = starmapCounts();
 console.log('Counts:', counts);
-assert(counts.playablePilots >= 3, 'need ≥3 playable pilots');
+assert(counts.playablePilots >= 7, `need ≥7 playable pilots, got ${counts.playablePilots}`);
 
 // Unique entities
 assert(ALL_ENTITY_IDS.length === new Set(ALL_ENTITY_IDS).size, 'duplicate entity ids');
@@ -202,6 +206,84 @@ for (const p of PLAYABLE_PILOTS) {
   console.log('PASSED: multi-orbit simultaneous open');
 }
 
+// --- Wave 2 templates MV04–07 ---
+{
+  const s = createNewState({ seed: 8, endorsePts: 0, contacts: 0, money: 200, ap: 4 });
+  s.ballot = true;
+  s.stage = 'primary';
+  addAlly(s, 'AL02', 2);
+  syncMovementFlags(s);
+  assert(isMovementVerbAvailable(s, 'MV04'), 'MV04 open');
+  playVerb(s, MV04_PartyApparatus);
+  assert(!!s.sessionFlags?.mv04Consumed && !!s.sessionFlags?.orbit_party_apparatus, 'MV04 residue');
+  console.log('PASSED: MV04 County Party e2e');
+}
+{
+  const s = createNewState({ seed: 9, endorsePts: 0, contacts: 0, ap: 2 });
+  s.ballot = true;
+  s.stage = 'primary';
+  addAlly(s, 'AL03', 2);
+  syncMovementFlags(s);
+  assert(isMovementVerbAvailable(s, 'MV05'), 'MV05 open');
+  playVerb(s, MV05_ClubRoster);
+  assert(!!s.sessionFlags?.mv05Consumed, 'MV05 consumed');
+  console.log('PASSED: MV05 Club Leader e2e');
+}
+{
+  const s = createNewState({ seed: 10, nameID: 5, momentum: 0, ap: 2 });
+  s.ballot = true;
+  s.stage = 'primary';
+  addAlly(s, 'AL04', 2);
+  syncMovementFlags(s);
+  assert(isMovementVerbAvailable(s, 'MV06'), 'MV06 open');
+  const n0 = s.nameID;
+  playVerb(s, MV06_NewsroomNod);
+  assert(s.nameID === n0 + 10, 'MV06 name +10');
+  assert(!!s.sessionFlags?.orbit_newsroom_nod, 'MV06 residue');
+  console.log('PASSED: MV06 Local Editor e2e');
+}
+{
+  const s = createNewState({ seed: 11, volPool: 0, contacts: 0, ap: 2 });
+  s.ballot = true;
+  s.stage = 'primary';
+  s.groundsArr.find(g => g.id === 'GR04')!.gated = true;
+  addAlly(s, 'AL08', 3);
+  syncMovementFlags(s);
+  assert(isMovementVerbAvailable(s, 'MV07'), 'MV07 open');
+  playVerb(s, MV07_CorridorBlessing);
+  assert(s.volPool >= 3, 'MV07 vols');
+  assert(s.assets.includes('A13'), 'MV07 directory A13');
+  assert(!s.groundsArr.find(g => g.id === 'GR04')!.gated, 'corridor ungated');
+  assert(!!s.sessionFlags?.orbit_corridor_blessing, 'MV07 residue');
+  console.log('PASSED: MV07 Faith Leader e2e');
+}
+// Alternate paths
+{
+  const s = createNewState({ seed: 12, nameID: 14, ap: 1 });
+  s.ballot = true;
+  s.stage = 'primary';
+  syncMovementFlags(s);
+  assert(isMovementVerbAvailable(s, 'MV06'), 'MV06 via name path');
+  console.log('PASSED: MV06 alternate (nameID)');
+}
+{
+  const s = createNewState({ seed: 13, nameID: 12, ap: 1 });
+  s.ballot = true;
+  s.stage = 'primary';
+  s.backers = ['B02'];
+  syncMovementFlags(s);
+  assert(isMovementVerbAvailable(s, 'MV07'), 'MV07 via B02+name');
+  console.log('PASSED: MV07 alternate (backer+name)');
+}
+{
+  const s = createNewState({ seed: 14, endorsePts: 3, ap: 1 });
+  s.ballot = true;
+  s.stage = 'primary';
+  syncMovementFlags(s);
+  assert(isMovementVerbAvailable(s, 'MV05'), 'MV05 via endorse path');
+  console.log('PASSED: MV05 alternate (endorse)');
+}
+
 // Condition smoke
 {
   const s = createNewState({ seed: 1 });
@@ -217,7 +299,7 @@ for (const p of PLAYABLE_PILOTS) {
   );
 }
 
-console.log('Loops:', ALL_LOOP_IDS.length, 'Orbits:', ORBITS.length);
-console.log('PASSED: inventory, graph integrity, bridges, 3-pilot e2e');
-console.log('\nStarmap playable loops green.');
+console.log('Loops:', ALL_LOOP_IDS.length, 'Orbits:', ORBITS.length, 'Pilots:', PLAYABLE_PILOTS.length);
+console.log('PASSED: inventory, graph integrity, bridges, 7-template e2e');
+console.log('\nStarmap entity templates green.');
 process.exit(0);

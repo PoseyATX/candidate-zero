@@ -1,13 +1,17 @@
 /**
- * Starmap movement verbs — Special residency entity kits (issues #17/#18).
- * Pilots: MV01 Precinct Chair · MV02 Canvass Captain · MV03 County Judge.
+ * Starmap movement verbs — Special residency entity kits (templates).
+ * MV01–03 original pilots · MV04–07 County Party / Club / Editor / Faith.
  */
 
 import type { PlayCard } from '../engine/types.js';
 import { isMovementVerbAvailable } from '../engine/entities.js';
 import {
   PILOT_CAPTAIN,
+  PILOT_CLUB,
+  PILOT_EDITOR,
+  PILOT_FAITH,
   PILOT_JUDGE,
+  PILOT_PARTY,
   PILOT_PRECINCT
 } from './starmap/pilots.js';
 
@@ -146,8 +150,146 @@ export const MV03_CourthouseNod: PlayCard = {
   }
 };
 
+/**
+ * MV04 — Activate the County Party apparatus (AL02).
+ */
+export const MV04_PartyApparatus: PlayCard = {
+  id: PILOT_PARTY.verbPlayId,
+  n: 'Activate the party apparatus',
+  cost: { a: 1 },
+  risk: 'SAFE',
+  ph: [1, 2, 3],
+  tag: 'orbit movement',
+  kind: 'ally',
+  residency: 'special',
+  control: 'player',
+  entityScope: [PILOT_PARTY.entityId],
+  attrs: ['DIP', 'CLO'],
+  d: 'The Chairwoman opens the file and the volunteer list. Special kit — County Party orbit.',
+  show: s => isMovementVerbAvailable(s, PILOT_PARTY.verbPlayId),
+  odds: () => 0.9,
+  run: s => {
+    s.endorsePts += 2;
+    s.volPool += 2;
+    s.contacts += 50;
+    s.money += 400;
+    markEntity(s, PILOT_PARTY.entityId);
+    consumePilot(s, PILOT_PARTY.consumeFlag, PILOT_PARTY.residueFlag);
+    return (
+      'County HQ moves. +2 endorsement, +2 volunteers, +50 contacts, +$400. ' +
+      '(Starmap: ENT_COUNTY_PARTY_EXEC. Residue: orbit_party_apparatus.)'
+    );
+  }
+};
+
+/**
+ * MV05 — Pull the club roster (AL03).
+ */
+export const MV05_ClubRoster: PlayCard = {
+  id: PILOT_CLUB.verbPlayId,
+  n: 'Pull the club roster',
+  cost: { a: 1 },
+  risk: 'SAFE',
+  ph: [1, 2],
+  tag: 'orbit movement',
+  kind: 'ally',
+  residency: 'special',
+  control: 'player',
+  entityScope: [PILOT_CLUB.entityId],
+  attrs: ['DIP', 'CHA'],
+  d: 'Every name that votes straw. Special kit — Club Leader orbit.',
+  show: s => isMovementVerbAvailable(s, PILOT_CLUB.verbPlayId),
+  odds: () => 0.92,
+  run: s => {
+    s.endorsePts += 1;
+    s.contacts += 60;
+    s.volPool += 1;
+    s.momentum += 1;
+    markEntity(s, PILOT_CLUB.entityId);
+    consumePilot(s, PILOT_CLUB.consumeFlag, PILOT_CLUB.residueFlag);
+    return (
+      'The roster lands on your kitchen table. +1 endorsement, +60 contacts, +1 volunteer, +1 momentum. ' +
+      '(Starmap: ENT_CLUB_LEADER. Residue: orbit_club_roster.)'
+    );
+  }
+};
+
+/**
+ * MV06 — Call in the newsroom fair shake (AL04).
+ */
+export const MV06_NewsroomNod: PlayCard = {
+  id: PILOT_EDITOR.verbPlayId,
+  n: 'Call in the fair shake',
+  cost: { a: 1 },
+  risk: 'SAFE',
+  ph: [1, 2, 3],
+  tag: 'orbit movement',
+  kind: 'ally',
+  residency: 'special',
+  control: 'player',
+  entityScope: [PILOT_EDITOR.entityId],
+  attrs: ['CHA', 'CRA'],
+  d: 'Not an endorsement — the benefit of the doubt in print. Special kit — Local Editor orbit.',
+  show: s => isMovementVerbAvailable(s, PILOT_EDITOR.verbPlayId),
+  odds: () => 0.88,
+  run: s => {
+    s.nameID += 10;
+    s.momentum += 2;
+    s.faces.F = Math.min(100, (s.faces.F || 0) + 6);
+    markEntity(s, PILOT_EDITOR.entityId);
+    consumePilot(s, PILOT_EDITOR.consumeFlag, PILOT_EDITOR.residueFlag);
+    return (
+      'The weekly gives you the clean write-up. +10 name ID, +2 momentum, Faces F up. ' +
+      '(Starmap: ENT_LOCAL_EDITOR. Residue: orbit_newsroom_nod.)'
+    );
+  }
+};
+
+/**
+ * MV07 — Corridor blessing (AL08).
+ */
+export const MV07_CorridorBlessing: PlayCard = {
+  id: PILOT_FAITH.verbPlayId,
+  n: 'Open the corridor',
+  cost: { a: 1 },
+  risk: 'SAFE',
+  ph: [1, 2, 3],
+  tag: 'orbit movement',
+  kind: 'ally',
+  residency: 'special',
+  control: 'player',
+  entityScope: [PILOT_FAITH.entityId],
+  attrs: ['CON', 'DIP'],
+  d: 'The Pastor\'s hand on both of yours. Directory and volunteers. Special kit — Faith Leader orbit.',
+  show: s => isMovementVerbAvailable(s, PILOT_FAITH.verbPlayId),
+  odds: () => 0.9,
+  run: s => {
+    s.volPool += 3;
+    s.faces.T = Math.min(100, (s.faces.T || 0) + 5);
+    s.faces.G = Math.min(100, (s.faces.G || 0) + 5);
+    s.contacts += 35;
+    // Corridor ground
+    const g = s.groundsArr.find(x => x.id === 'GR04');
+    if (g) {
+      g.rapport = Math.min(100, g.rapport + 8);
+      g.gated = false;
+    }
+    if (!s.assets.includes('A13')) s.assets.push('A13');
+    markEntity(s, PILOT_FAITH.entityId);
+    consumePilot(s, PILOT_FAITH.consumeFlag, PILOT_FAITH.residueFlag);
+    return (
+      'The Corridor opens. +3 volunteers, +35 contacts, Church Corridor rapport, directory (A13). ' +
+      '(Starmap: ENT_FAITH_LEADER. Residue: orbit_corridor_blessing.)'
+    );
+  }
+};
+
 export const STARMAP_PLAYS: PlayCard[] = [
   MV01_PrecinctNetwork,
   MV02_FieldPlan,
-  MV03_CourthouseNod
+  MV03_CourthouseNod,
+  MV04_PartyApparatus,
+  MV05_ClubRoster,
+  MV06_NewsroomNod,
+  MV07_CorridorBlessing
 ];

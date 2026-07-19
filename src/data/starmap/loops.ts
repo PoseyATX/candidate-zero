@@ -218,11 +218,168 @@ const PILOT_JUDGE: LoopDef = {
   exampleNouns: ['Courthouse', 'County nod', 'War chest optics']
 };
 
+/** Template pilots — County Party / Club / Editor / Faith (MV04–07). */
+const PILOT_PARTY: LoopDef = {
+  id: 'LOOP_ENT_COUNTY_PARTY_EXEC',
+  name: 'County Party apparatus',
+  kind: 'entity_primary',
+  entityId: 'ENT_COUNTY_PARTY_EXEC',
+  description: 'Chairwoman network and committee math. Opens MV04.',
+  advancement: [
+    {
+      id: 'ADV_PARTY_ALLY',
+      type: 'advancement',
+      description: 'Warm County Chairwoman ally (AL02).',
+      kind: 'has_ally',
+      params: { allyId: 'AL02' },
+      movementTarget: 'ENT_COUNTY_PARTY_EXEC'
+    },
+    {
+      id: 'ADV_PARTY_CHAIRS',
+      type: 'advancement',
+      description: 'Three warm Precinct Chairs (AL01 count ≥ 3) — party notices the graph.',
+      kind: 'warm_ally_gte',
+      params: { allyId: 'AL01', n: 3 },
+      movementTarget: 'ENT_COUNTY_PARTY_EXEC'
+    }
+  ],
+  setback: [
+    {
+      id: 'SET_PARTY_SCANDAL',
+      type: 'setback',
+      description: 'Hit pieces sour the apparatus.',
+      kind: 'hit_pieces_gte',
+      params: { n: 4 },
+      residue: ['scar_party_cold']
+    }
+  ],
+  exampleVerbs: ['Call the Chairwoman', 'Work the committee', 'Spend party apparatus'],
+  exampleNouns: ['County HQ', 'Voter file access', 'Endorsement slate']
+};
+
+const PILOT_CLUB: LoopDef = {
+  id: 'LOOP_ENT_CLUB_LEADER',
+  name: 'Club roster circuit',
+  kind: 'entity_primary',
+  entityId: 'ENT_CLUB_LEADER',
+  description: 'Straw polls, casseroles, club presidents. Opens MV05.',
+  advancement: [
+    {
+      id: 'ADV_CLUB_ALLY',
+      type: 'advancement',
+      description: 'Warm Club President ally (AL03).',
+      kind: 'has_ally',
+      params: { allyId: 'AL03' },
+      movementTarget: 'ENT_CLUB_LEADER'
+    },
+    {
+      id: 'ADV_CLUB_ENDORSE',
+      type: 'advancement',
+      description: 'endorsePts ≥ 3 (club circuit has already nodded).',
+      kind: 'endorse_gte',
+      params: { n: 3 },
+      movementTarget: 'ENT_CLUB_LEADER'
+    }
+  ],
+  setback: [
+    {
+      id: 'SET_CLUB_SNUB',
+      type: 'setback',
+      description: 'Too many hit pieces for the casserole table.',
+      kind: 'hit_pieces_gte',
+      params: { n: 3 },
+      residue: ['scar_club_snub']
+    }
+  ],
+  exampleVerbs: ['Pack the straw', 'Speak the club', 'Pull the roster'],
+  exampleNouns: ['Club list', 'Straw poll', 'Casserole']
+};
+
+const PILOT_EDITOR: LoopDef = {
+  id: 'LOOP_ENT_LOCAL_EDITOR',
+  name: 'Newsroom fair shake',
+  kind: 'entity_primary',
+  entityId: 'ENT_LOCAL_EDITOR',
+  description: 'Beat reporter / editor goodwill. Opens MV06.',
+  advancement: [
+    {
+      id: 'ADV_EDITOR_ALLY',
+      type: 'advancement',
+      description: 'Warm Beat Reporter ally (AL04).',
+      kind: 'has_ally',
+      params: { allyId: 'AL04' },
+      movementTarget: 'ENT_LOCAL_EDITOR'
+    },
+    {
+      id: 'ADV_EDITOR_NAME',
+      type: 'advancement',
+      description: 'nameID ≥ 14 (the paper already spells your name).',
+      kind: 'name_id_gte',
+      params: { n: 14 },
+      movementTarget: 'ENT_LOCAL_EDITOR'
+    }
+  ],
+  setback: [
+    {
+      id: 'SET_EDITOR_HIT',
+      type: 'setback',
+      description: 'Hit pieces become the only story.',
+      kind: 'hit_pieces_gte',
+      params: { n: 3 },
+      residue: ['scar_newsroom']
+    }
+  ],
+  exampleVerbs: ['Coffee with the editor', 'Press release grind', 'Call in the fair shake'],
+  exampleNouns: ['Page six', 'Above the fold', 'News peg']
+};
+
+const PILOT_FAITH: LoopDef = {
+  id: 'LOOP_ENT_FAITH_LEADER',
+  name: 'Corridor blessing',
+  kind: 'entity_primary',
+  entityId: 'ENT_FAITH_LEADER',
+  description: 'Pastor / mega-church corridor. Opens MV07.',
+  advancement: [
+    {
+      id: 'ADV_FAITH_ALLY',
+      type: 'advancement',
+      description: 'Warm Pastor ally (AL08).',
+      kind: 'has_ally',
+      params: { allyId: 'AL08' },
+      movementTarget: 'ENT_FAITH_LEADER'
+    },
+    {
+      id: 'ADV_FAITH_BACKER',
+      type: 'advancement',
+      description: 'B02 Sunday Congregation backer and nameID ≥ 10.',
+      kind: 'name_id_gte',
+      params: { n: 10, requireBacker: 'B02' },
+      movementTarget: 'ENT_FAITH_LEADER'
+    }
+  ],
+  setback: [
+    {
+      id: 'SET_FAITH_SCANDAL',
+      type: 'setback',
+      description: 'Scandal closes the corridor.',
+      kind: 'hit_pieces_gte',
+      params: { n: 3 },
+      residue: ['scar_corridor']
+    }
+  ],
+  exampleVerbs: ['Prayer breakfast', 'Open the corridor', 'Spend the blessing'],
+  exampleNouns: ['Directory', 'Corridor', 'First Church']
+};
+
 const T0_T2_NAMED: LoopDef[] = [
   PILOT_PRECINCT,
   ...PILOT_SUB,
   PILOT_CAPTAIN,
   PILOT_JUDGE,
+  PILOT_PARTY,
+  PILOT_CLUB,
+  PILOT_EDITOR,
+  PILOT_FAITH,
   entLoop('SOUTH_STEPS_ACTIVIST', 'South Steps rant', 'Presence, grievance, viral clip risk.', 'ENT_SOUTH_STEPS_ACTIVIST'),
   entLoop('BLOCK_WALKER', 'Block walker', 'Doors, heat, dogs, clipboards.', 'ENT_BLOCK_WALKER'),
   entLoop('CONSTITUENT', 'Disgruntled constituent', 'Casework demand, town hall ambush.', 'ENT_CONSTITUENT'),
@@ -240,8 +397,7 @@ const T0_T2_NAMED: LoopDef[] = [
   // CANVASS_CAPTAIN + COUNTY_JUDGE: real pilot loops above (not stubs)
   entLoop('FIELD_ORGANIZER', 'Field organizer', 'Turf, metrics.', 'ENT_FIELD_ORGANIZER'),
   entLoop('SMALL_DONOR', 'Small-dollar donor', 'List compound, fish-fry money.', 'ENT_SMALL_DONOR'),
-  entLoop('COUNTY_PARTY_EXEC', 'County party exec', 'Committee, rules, endorsement math.', 'ENT_COUNTY_PARTY_EXEC'),
-  entLoop('CLUB_LEADER', 'Activist club leader', 'Roster, straw, casserole.', 'ENT_CLUB_LEADER'),
+  // COUNTY_PARTY / CLUB / LOCAL_EDITOR / FAITH: real pilot loops above
   entLoop('PETITION_COLLECTOR', 'Petition collector', 'Sheets, challenges, rain.', 'ENT_PETITION_COLLECTOR'),
   entLoop('CAMPAIGN_STAFFER', 'Campaign staffer', 'Clipboard, burnout, loyalty.', 'ENT_CAMPAIGN_STAFFER'),
   entLoop('LOCAL_BLOGGER', 'Local blog / newsletter', 'Reach without filter.', 'ENT_LOCAL_BLOGGER'),
@@ -250,9 +406,7 @@ const T0_T2_NAMED: LoopDef[] = [
   entLoop('LOCAL_BIZ_PAC', 'Local business PAC', 'Checks and expectations.', 'ENT_LOCAL_BIZ_PAC'),
   entLoop('UNION_LOCAL_PRES', 'Union local president', 'Endorsement, volunteers.', 'ENT_UNION_LOCAL_PRES'),
   entLoop('CHAMBER_EXEC', 'Chamber executive', 'Rubber chicken, reliable voters.', 'ENT_CHAMBER_EXEC'),
-  entLoop('LOCAL_EDITOR', 'Local editor / reporter', 'Fair shake or page six.', 'ENT_LOCAL_EDITOR'),
   entLoop('RADIO_HOST', 'Radio talk host', 'Drive time, ambush.', 'ENT_RADIO_HOST'),
-  entLoop('FAITH_LEADER', 'Faith leader', 'Corridor, directory, moral weight.', 'ENT_FAITH_LEADER'),
   entLoop('COMMUNITY_ORG', 'Community organizer', 'Nonprofit, coalition.', 'ENT_COMMUNITY_ORG'),
   entLoop('PRIMARY_RIVAL', 'Primary rival', 'Same ballot, zero-sum.', 'ENT_PRIMARY_RIVAL')
 ];

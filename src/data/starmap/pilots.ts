@@ -53,8 +53,67 @@ export const PILOT_JUDGE: PilotDef = {
   logLabel: 'County Judge courthouse nod'
 };
 
-/** All playable entity loops (acceptance: ≥3). */
-export const PLAYABLE_PILOTS: PilotDef[] = [PILOT_PRECINCT, PILOT_CAPTAIN, PILOT_JUDGE];
+/** County Party Exec — apparatus (AL02 / MV04). */
+export const PILOT_PARTY: PilotDef = {
+  entityId: 'ENT_COUNTY_PARTY_EXEC',
+  loopId: 'LOOP_ENT_COUNTY_PARTY_EXEC',
+  verbPlayId: 'MV04',
+  movementId: 'MOVE_PARTY_APPARATUS',
+  consumeFlag: 'mv04Consumed',
+  announceFlag: 'mv04Announced',
+  residueFlag: 'orbit_party_apparatus',
+  logLabel: 'County Party apparatus'
+};
+
+/** Club Leader — roster / straw circuit (AL03 / MV05). */
+export const PILOT_CLUB: PilotDef = {
+  entityId: 'ENT_CLUB_LEADER',
+  loopId: 'LOOP_ENT_CLUB_LEADER',
+  verbPlayId: 'MV05',
+  movementId: 'MOVE_CLUB_ROSTER',
+  consumeFlag: 'mv05Consumed',
+  announceFlag: 'mv05Announced',
+  residueFlag: 'orbit_club_roster',
+  logLabel: 'Club roster circuit'
+};
+
+/** Local Editor — earned media (AL04 / MV06). */
+export const PILOT_EDITOR: PilotDef = {
+  entityId: 'ENT_LOCAL_EDITOR',
+  loopId: 'LOOP_ENT_LOCAL_EDITOR',
+  verbPlayId: 'MV06',
+  movementId: 'MOVE_NEWSROOM_NOD',
+  consumeFlag: 'mv06Consumed',
+  announceFlag: 'mv06Announced',
+  residueFlag: 'orbit_newsroom_nod',
+  logLabel: 'Newsroom fair shake'
+};
+
+/** Faith Leader — corridor / directory (AL08 / MV07). */
+export const PILOT_FAITH: PilotDef = {
+  entityId: 'ENT_FAITH_LEADER',
+  loopId: 'LOOP_ENT_FAITH_LEADER',
+  verbPlayId: 'MV07',
+  movementId: 'MOVE_CORRIDOR_BLESSING',
+  consumeFlag: 'mv07Consumed',
+  announceFlag: 'mv07Announced',
+  residueFlag: 'orbit_corridor_blessing',
+  logLabel: 'Corridor blessing'
+};
+
+/**
+ * All playable entity-template loops.
+ * Templates + deltas only — never one unique deck per ENT_*.
+ */
+export const PLAYABLE_PILOTS: PilotDef[] = [
+  PILOT_PRECINCT,
+  PILOT_CAPTAIN,
+  PILOT_JUDGE,
+  PILOT_PARTY,
+  PILOT_CLUB,
+  PILOT_EDITOR,
+  PILOT_FAITH
+];
 
 export function pilotByVerb(verbPlayId: string): PilotDef | undefined {
   return PLAYABLE_PILOTS.find(p => p.verbPlayId === verbPlayId);

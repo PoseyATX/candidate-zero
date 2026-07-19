@@ -67,8 +67,14 @@ const TIER1: EntityDef[] = [
     subloopIds: ['LOOP_SUB_PRECINCT_PORCH', 'LOOP_SUB_PRECINCT_CLUB'],
     tags: ['pilot']
   }),
-  e('ENT_COUNTY_PARTY_EXEC', 'County Party Executive Committee member', 1, 'grassroots', 'Rules, endorsements, county apparatus.', 'LOOP_ENT_COUNTY_PARTY_EXEC', { allyId: 'AL02' }),
-  e('ENT_CLUB_LEADER', 'Local activist club leader', 1, 'grassroots', 'Roster, straw polls, casseroles.', 'LOOP_ENT_CLUB_LEADER', { allyId: 'AL03' }),
+  e('ENT_COUNTY_PARTY_EXEC', 'County Party Executive Committee member', 1, 'grassroots', 'Rules, endorsements, county apparatus.', 'LOOP_ENT_COUNTY_PARTY_EXEC', {
+    allyId: 'AL02',
+    tags: ['pilot']
+  }),
+  e('ENT_CLUB_LEADER', 'Local activist club leader', 1, 'grassroots', 'Roster, straw polls, casseroles.', 'LOOP_ENT_CLUB_LEADER', {
+    allyId: 'AL03',
+    tags: ['pilot']
+  }),
   e('ENT_PETITION_COLLECTOR', 'Petition signature collector', 1, 'grassroots', 'Sheets, challenges, rain.', 'LOOP_ENT_PETITION_COLLECTOR'),
   e('ENT_CAMPAIGN_STAFFER', 'Low-level campaign staffer', 1, 'grassroots', 'Clipboard, burnout, loyalty.', 'LOOP_ENT_CAMPAIGN_STAFFER'),
   e('ENT_LOCAL_BLOGGER', 'Local blog / newsletter writer', 1, 'grassroots', 'Reach without a filter.', 'LOOP_ENT_LOCAL_BLOGGER')
@@ -84,9 +90,15 @@ const TIER2: EntityDef[] = [
   e('ENT_LOCAL_BIZ_PAC', 'Local business PAC', 2, 'local', 'Checks, expectations, rate talk.', 'LOOP_ENT_LOCAL_BIZ_PAC'),
   e('ENT_UNION_LOCAL_PRES', 'Union local president', 2, 'local', 'Endorsement, volunteers, plant gate.', 'LOOP_ENT_UNION_LOCAL_PRES'),
   e('ENT_CHAMBER_EXEC', 'Chamber of Commerce executive', 2, 'local', 'Rubber chicken; reliable voters.', 'LOOP_ENT_CHAMBER_EXEC'),
-  e('ENT_LOCAL_EDITOR', 'Local newspaper editor / reporter', 2, 'local', 'Fair shake or page six.', 'LOOP_ENT_LOCAL_EDITOR', { allyId: 'AL04' }),
+  e('ENT_LOCAL_EDITOR', 'Local newspaper editor / reporter', 2, 'local', 'Fair shake or page six.', 'LOOP_ENT_LOCAL_EDITOR', {
+    allyId: 'AL04',
+    tags: ['pilot']
+  }),
   e('ENT_RADIO_HOST', 'Radio talk show host', 2, 'local', 'Drive time; discount; ambush.', 'LOOP_ENT_RADIO_HOST', { allyId: 'AL05' }),
-  e('ENT_FAITH_LEADER', 'Faith leader (pastor / mega-church)', 2, 'local', 'Corridor, directory, moral weight.', 'LOOP_ENT_FAITH_LEADER', { allyId: 'AL08' }),
+  e('ENT_FAITH_LEADER', 'Faith leader (pastor / mega-church)', 2, 'local', 'Corridor, directory, moral weight.', 'LOOP_ENT_FAITH_LEADER', {
+    allyId: 'AL08',
+    tags: ['pilot']
+  }),
   e('ENT_COMMUNITY_ORG', 'Community organizer / nonprofit leader', 2, 'local', 'Coalition, grants, grassroots glue.', 'LOOP_ENT_COMMUNITY_ORG'),
   e('ENT_PRIMARY_RIVAL', 'Former opponent / primary rival', 2, 'local', 'Same ballot; zero-sum.', 'LOOP_ENT_PRIMARY_RIVAL')
 ];

@@ -28,7 +28,7 @@ become a second rules implementation.
 | **DONE** | [#7](https://github.com/PoseyATX/candidate-zero/issues/7) | Phase 3 — Debt as leveraged optionality |
 | **DONE** | [#8](https://github.com/PoseyATX/candidate-zero/issues/8) | Phase 4 — Session stage (bill lifecycle) |
 | **DONE** | [#9](https://github.com/PoseyATX/candidate-zero/issues/9) | Phase 5 — Balance breadth |
-| **DONE** | [#17](https://github.com/PoseyATX/candidate-zero/issues/17) / [#18](https://github.com/PoseyATX/candidate-zero/issues/18) | Starmap — catalog + ≥3 playable pilots (MV01–03) |
+| **DONE** | [#17](https://github.com/PoseyATX/candidate-zero/issues/17) / [#18](https://github.com/PoseyATX/candidate-zero/issues/18) | Starmap — catalog + 7 entity templates (MV01–07) |
 | **NEXT** | — | More starmap templates *or* Phase 6 mobile (owner call; aesthetics parked) |
 | PLANNED | [#10](https://github.com/PoseyATX/candidate-zero/issues/10) | Phase 6 — Mobile-first UI + a11y |
 | PLANNED | [#11](https://github.com/PoseyATX/candidate-zero/issues/11) | Phase 7 — Honest v0.1 label |
