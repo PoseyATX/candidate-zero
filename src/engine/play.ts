@@ -6,7 +6,7 @@
 
 import { resolve, STAMPS } from './resolve.js';
 import { getPhase } from './state.js';
-import { getGroundPenalty } from './calendar.js';
+import { getGroundPenalty, rivalOddsPenalty } from './calendar.js';
 import { buildPlayFeedback } from './feedback.js';
 import { repCheck, shadowCheck } from './reputation.js';
 import { canAffordCash } from './debt.js';
@@ -136,7 +136,9 @@ export function executePlay(
 
   // === ACTIVATE SYNERGY ===
   const attrMod = cardAttrMod(state, card);
-  p = Math.max(0.02, Math.min(0.95, p + attrMod + groundOddsBonus));
+  // Opposition presence on this ground taxes field odds (rivalRap teeth).
+  const rivalPen = card.field ? rivalOddsPenalty(g) : 0;
+  p = Math.max(0.02, Math.min(0.95, p + attrMod + groundOddsBonus - rivalPen));
 
   const roll: RollResult = resolve(p, card.risk, state);
 

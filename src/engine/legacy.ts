@@ -176,6 +176,20 @@ export function applyLegacy(state: GameState, legacy: LegacyState): void {
   // Phase 3: loss-branch debt compounds into the next cycle (affordability,
   // not odds). Reuses applyCarriedDebt → addObl OB2 (debt.ts / obligations.ts).
   applyLegacyDebt(state, legacy);
+
+  // Starmap waiting loop from last Chronicle path — residue, not a stage rewrite.
+  if (legacy.carry.waitingLoopId) {
+    state.sessionFlags = state.sessionFlags || {};
+    state.sessionFlags[`waiting_${legacy.carry.waitingLoopId}`] = true;
+    state.entityHistory = state.entityHistory ?? [];
+    const tag = `WAIT:${legacy.carry.waitingLoopId}`;
+    if (!state.entityHistory.includes(tag)) state.entityHistory.push(tag);
+    state.log.push({
+      week: state.week,
+      kind: 'note',
+      text: `WAITING ORBIT — last cycle's path still colors this climb (${legacy.carry.waitingLoopId.replace('LOOP_WAITING_', '').toLowerCase()}). No true game over; only redirection.`
+    });
+  }
 }
 
 /**
@@ -267,6 +281,28 @@ export function recordRun(legacy: LegacyState, state: GameState, kind: CampaignO
   // Phase 3: loss compounds debt into carry; win zeros debt carry
   // (cash retirement happens in retireDebtOnWin on reelect / Session).
   legacy.carry = mergeDebtIntoCarry(base, state, kind);
+}
+
+/**
+ * Chronicle interim path id → starmap waiting loop.
+ * "No true game over" — loss redirects into a named orbit for the next climb.
+ */
+export const PATH_TO_WAITING_LOOP: Record<string, string> = {
+  perennial: 'LOOP_WAITING_PERENNIAL',
+  advocate: 'LOOP_WAITING_ADVOCATE',
+  staffer: 'LOOP_WAITING_STAFFER',
+  home: 'LOOP_WAITING_HOME',
+  exmember: 'LOOP_WAITING_EXMEMBER'
+};
+
+/** Record interim flavor + bind waiting loop on carry for the next run. */
+export function setInterimPath(legacy: LegacyState, pathId: string, interim: string): void {
+  const last = legacy.runs[legacy.runs.length - 1];
+  if (last) last.interim = interim;
+  const loopId = PATH_TO_WAITING_LOOP[pathId];
+  if (loopId) {
+    legacy.carry = { ...legacy.carry, waitingLoopId: loopId };
+  }
 }
 
 export function setInterim(legacy: LegacyState, interim: string): void {

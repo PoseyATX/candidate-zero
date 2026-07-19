@@ -39,7 +39,7 @@ import {
   buildGrowthLine,
   computeShare,
   recordRun,
-  setInterim,
+  setInterimPath,
   addTrait,
   romanRun,
   TRAITS,
@@ -987,7 +987,8 @@ function renderTerminalTraits(path: InterimPath): void {
     btn.addEventListener('click', () => {
       const traitId = btn.dataset.trait as TraitId;
       addTrait(legacy, traitId);
-      setInterim(legacy, path.interim);
+      // Chronicle → starmap waiting loop (no true game over)
+      setInterimPath(legacy, path.id, path.interim);
       saveLegacy(legacy);
       showSetup();
     });

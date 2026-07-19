@@ -27,9 +27,9 @@ export interface Ground {
   gotv: number;
   gated?: boolean;
   /**
-   * Opposition presence at this ground (Phase 1: cosmetic — rivals build it
-   * over the campaign, it renders in logs and the ground picker, but does
-   * NOT yet affect your odds. Phase 2 wires it into win probability).
+   * Opposition presence at this ground. Rivals bank weekly (advanceRivalGrounds).
+   * Has teeth: field-play odds penalty + primary/general win pressure
+   * (see rivalOddsPenalty / meanRivalRapport in calendar.ts).
    */
   rivalRap?: number;
 }
@@ -444,6 +444,11 @@ export interface LegacyCarry {
   pacBridgeDebt?: number;
   /** Obligation ids that ride with the note (OB1/OB2/OB3). */
   debtObls?: string[];
+  /**
+   * Starmap waiting loop from Chronicle interim path (LOOP_WAITING_*).
+   * Bridges "no true game over" career graph to next run.
+   */
+  waitingLoopId?: string;
 }
 
 /**

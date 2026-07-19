@@ -91,11 +91,8 @@ export function getGroundPenalty(
 }
 
 /**
- * Phase 1 opposition presence (COSMETIC — measuring for Phase 2). Once per
- * week the opposition organizes a ground, banking 5–40 rapport there. It
- * renders in the log and the ground picker but does NOT affect the player's
- * odds yet. The harness uses the resulting distribution to ask whether
- * visible opposition would change play if it had teeth (Phase 2).
+ * Opposition organizers bank presence weekly (5–40 on a random ground).
+ * Has teeth: rivalOddsPenalty on field plays + win-math pressure.
  */
 export function advanceRivalGrounds(state: GameState): void {
   const grounds = state.groundsArr;
@@ -106,8 +103,25 @@ export function advanceRivalGrounds(state: GameState): void {
   state.log.push({
     week: state.week,
     kind: 'note',
-    text: `Opposition organizers worked ${g.n} — +${amt} (they hold ${g.rivalRap} there now).`
+    text: `Opposition organizers worked ${g.n} — +${amt} (they hold ${g.rivalRap} there now). Contested turf is harder.`
   });
+}
+
+/** Mean opposition presence across grounds (0 if none). */
+export function meanRivalRapport(state: GameState): number {
+  const gs = state.groundsArr;
+  if (!gs.length) return 0;
+  return gs.reduce((s, g) => s + (g.rivalRap || 0), 0) / gs.length;
+}
+
+/**
+ * Field-play odds tax from opposition on this ground.
+ * ~45 rivalRap → −0.10; capped at −0.20 so it hurts without soft-locking.
+ */
+export function rivalOddsPenalty(ground?: Ground | null): number {
+  if (!ground) return 0;
+  const r = ground.rivalRap || 0;
+  return Math.min(0.2, r * 0.0022);
 }
 
 /**
@@ -215,6 +229,8 @@ export function primaryWinProbability(state: GameState): number {
   // An entrenched incumbent (war chest, name recognition, twelve years of
   // relationships) is harder to unseat than raw rival count implies.
   const incumbentPressure = state.district?.incumbent ? 0.12 : 0;
+  // Ground-level opposition (rivalRap teeth) — ceding turf costs the primary.
+  const rivalPressure = meanRivalRapport(state) * 0.0016;
   // Balloted skilled runs should reach general often enough to teach the loop;
   // unbuilt name/chairs still lose most primaries (souls-like, not free).
   const p =
@@ -227,7 +243,8 @@ export function primaryWinProbability(state: GameState): number {
     state.hitPieces * 0.055 -
     (state.exposure || 0) * 0.04 -
     fieldPressure -
-    incumbentPressure;
+    incumbentPressure -
+    rivalPressure;
   return clamp(p, 0.1, 0.9);
 }
 
@@ -262,6 +279,8 @@ export function generalWinProbability(state: GameState): number {
   const opp = state.genBase || 0.45;
   const wrongTax =
     state.district?.align === 'wrong' || state.district?.trap ? 0.1 : 0;
+  // Opposition turf organization depresses November slightly (GOTV still king).
+  const rivalPressure = meanRivalRapport(state) * 0.0011;
   const p =
     0.16 +
     state.nameID * 0.01 +
@@ -272,7 +291,8 @@ export function generalWinProbability(state: GameState): number {
     state.momentum * 0.018 -
     state.hitPieces * 0.05 -
     opp * 0.28 -
-    wrongTax;
+    wrongTax -
+    rivalPressure;
   return clamp(p, 0.06, 0.92);
 }
 

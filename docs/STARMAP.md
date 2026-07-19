@@ -100,9 +100,22 @@ Outside (world) cards never live on entity kits. Full design:
 
 ---
 
+## Chronicle waiting bridge
+
+Interim paths map to starmap waiting loops (`PATH_TO_WAITING_LOOP` in `legacy.ts`):
+
+| Path | Loop |
+|---|---|
+| perennial | `LOOP_WAITING_PERENNIAL` |
+| advocate | `LOOP_WAITING_ADVOCATE` |
+| staffer | `LOOP_WAITING_STAFFER` |
+| home | `LOOP_WAITING_HOME` |
+| exmember | `LOOP_WAITING_EXMEMBER` |
+
+Next run: `applyLegacy` stamps entityHistory + `WAITING ORBIT` log. Not a full waiting stage yet — residue only.
+
 ## Next roads
 
-1. Waiting loops absorb Chronicle paths  
+1. Full waiting-stage play (verbs while off-ballot)  
 2. Movement UI (orbit awareness) — Phase 6 adjacent  
-3. More pilots by template (County Party, Faith Leader, …) — not unique decks  
-4. Higher-office forks (Senate / statewide)
+3. Higher-office forks (Senate / statewide)

@@ -81,6 +81,15 @@ report it. Engine path is `enter_session`, not `won_general` terminal.
 
 ---
 
+## Grounds & opposition (rivalRap teeth)
+
+Opposition organizers bank **rivalRap** weekly on a random ground. That presence now:
+
+- taxes **field-play odds** on contested turf (harder doors where they organized)
+- soft-taxes **primary / general win math** if you cede the map
+
+The ground picker shows you vs opp. Contested turf is no longer cosmetic.
+
 ## Outside weather (event deck v0)
 
 World cards the player **never plays**. ~28% of campaign weeks / ~22% of session weeks may draw one (`OUTSIDE —` in the log).

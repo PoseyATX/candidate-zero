@@ -9,9 +9,7 @@
  *   - win rate per combo
  *   - how many grounds the player actually contests (design target ~3, not 6)
  *   - how often the (unwired) ground win-condition sketch is met
- *   - does avoiding high-opposition grounds change outcomes? (Phase 1
- *     answer should be "no" — rivals are cosmetic until Phase 2 gives them
- *     teeth; this harness is how we'll know when that changes.)
+ *   - rivalRap teeth: field odds + win math; avoid-rival probe
  *
  * Drives its own play loop (not runWeek) so it can choose a ground per
  * field play and spend fieldAp.
@@ -21,6 +19,12 @@ import { createCampaign, listPlayableHand, playFromHand, startWeek, endWeekInPla
 import { autoResolvePhaseDraft } from '../engine/deck.js';
 import { STRATEGIES } from '../engine/strategies.js';
 import { checkBallotThreshold } from '../engine/career.js';
+import {
+  rivalOddsPenalty,
+  meanRivalRapport,
+  primaryWinProbability
+} from '../engine/calendar.js';
+import { createNewState } from '../engine/state.js';
 import { createRng, setDefaultSeed, useRng } from '../engine/rng.js';
 import type { GameState, Ground } from '../engine/types.js';
 
@@ -142,19 +146,19 @@ const combos: [string, GroundStrat][] = [
 const rows = combos.map(([c, g]) => summarize(c, g));
 for (const r of rows) console.log(r);
 
-// Rival-avoidance probe: does steering away from opposition grounds change
-// outcomes? Phase 1 = rivals cosmetic, so expect ~no difference.
+// Rival-avoidance probe — rivalRap has teeth; avoid should not be worse by a landslide.
 console.log('\n--- Rival-avoidance probe (money) ---');
 const avoid = summarize('money', 'avoid-rival');
 const ignore = summarize('money', 'ignore-rival');
-console.log({ 'avoid-rival': avoid.winPct, 'ignore-rival': ignore.winPct, deltaPP: +(avoid.winPct - ignore.winPct).toFixed(1) });
+const deltaPP = +(avoid.winPct - ignore.winPct).toFixed(1);
+console.log({ 'avoid-rival': avoid.winPct, 'ignore-rival': ignore.winPct, deltaPP });
 
 console.log('\nDesign read:');
 const laborSpread = rows.find(r => r.combo === 'labor/spread')!;
 const laborFocus = rows.find(r => r.combo === 'labor/focus')!;
 console.log(`- spread contests more ground than focus: ${laborSpread.avgContested} vs ${laborFocus.avgContested}`);
 console.log(`- players contest ~${laborSpread.avgContested} grounds under spread (target: a few, not all 8)`);
-console.log('- rival-avoidance delta ≈ 0 confirms opposition is cosmetic in Phase 1 (Phase 2 gives it teeth).');
+console.log(`- rival-avoidance deltaPP=${deltaPP} (teeth: contested turf is harder)`);
 
 // --- Assertions (robust across brutal RNG) ---
 function assert(cond: boolean, msg: string): void {
@@ -165,10 +169,26 @@ function assert(cond: boolean, msg: string): void {
   }
 }
 for (const r of rows) {
-  assert(Number.isFinite(r.avgContested) && r.avgContested >= 1 && r.avgContested <= 8, `${r.combo}: contested in range`);
+  assert(Number.isFinite(r.avgContested) && r.avgContested >= 0 && r.avgContested <= 8, `${r.combo}: contested in range`);
   assert(Number.isFinite(r.winPct), `${r.combo}: winPct finite`);
 }
-assert(laborSpread.avgContested >= laborFocus.avgContested, 'spread should contest >= focus');
-assert(Math.abs(avoid.winPct - ignore.winPct) <= 20, 'rival-avoidance should not swing win rate wildly in Phase 1');
+// Spread should touch at least as many grounds as focus (focus can starve under rival teeth)
+assert(laborSpread.avgContested + 0.01 >= laborFocus.avgContested, 'spread should contest >= focus');
+// Teeth unit tests (not smoke-win-rate — N=50 is noisy)
+{
+  const g = { id: 'x', n: 't', pool: 1, pool0: 1, prop: 0.5, aff: 'G', rapport: 0, gotv: 0, rivalRap: 50 };
+  assert(rivalOddsPenalty(g) >= 0.1 && rivalOddsPenalty(g) <= 0.2, 'rival odds penalty mid band');
+  assert(rivalOddsPenalty({ ...g, rivalRap: 0 }) === 0, 'no rival no penalty');
+  const s = createNewState({ seed: 1 });
+  for (const gr of s.groundsArr) gr.rivalRap = 0;
+  const p0 = primaryWinProbability(s);
+  for (const gr of s.groundsArr) gr.rivalRap = 40;
+  const p1 = primaryWinProbability(s);
+  assert(p1 < p0, 'mean rivalRap depresses primary win p');
+  assert(meanRivalRapport(s) === 40, 'mean rival');
+  console.log('PASSED: rivalRap teeth (odds penalty + primary win pressure)');
+}
+// Avoidance should not catastrophically underperform (noise band)
+assert(avoid.winPct + 25 >= ignore.winPct, 'avoid-rival should not crater vs ignore');
 
 console.log('\nHarness complete.');

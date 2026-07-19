@@ -347,6 +347,16 @@ Files: `src/engine/session.ts`, `src/data/session-plays.ts`, UI/strategy wires.
 | Win math favors GOTV over contact pad | **Done** | `generalWinProbability` weights |
 | Harness | **Done** | `harness:calendar` kit-gravity asserts |
 
+## ✅ RivalRap teeth + Chronicle waiting bridge (DONE 2026-07-19)
+
+| Deliverable | Status | Evidence |
+|---|---|---|
+| Field-play odds tax from rivalRap | **Done** | `rivalOddsPenalty` in `play.ts` |
+| Win math pressure | **Done** | `meanRivalRapport` in primary/general p |
+| Chronicle path → LOOP_WAITING_* | **Done** | `PATH_TO_WAITING_LOOP`, `setInterimPath` |
+| Next-run residue | **Done** | `applyLegacy` WAITING ORBIT log |
+| Harnesses | **Done** | `harness:grounds`, `harness:chronicle` |
+
 ## ✅ Outside event deck v0 (DONE 2026-07-19)
 
 | Deliverable | Status | Evidence |
