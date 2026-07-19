@@ -177,6 +177,37 @@ composition and draw math, so it needs a balance pass, not a blind swap).
 District Casework and the session bill-motion don't exist yet at all — see
 Session stage below.
 
+## Ground selection is part of play execution (Phase 1, 2026-07-17)
+
+Ground selection was formalized as a step of playing a field card, not a
+hidden auto-pick. When a field card resolves, the player chooses **one**
+ground for it (UI modal `#ground-picker`; CLI `chooseGround` prompt), and
+that choice feeds the card's `run()`/`odds()`. `pickDefaultGround` remains
+only as the fallback for the harness/auto path.
+
+Rules now live in the engine, not flavor text:
+
+- **Diminishing returns** — the same ground worked twice in one week bumps
+  odds slightly (familiarity) but banks half the rapport
+  (`getGroundPenalty` in `calendar.ts`; per-week `state.groundPlays`,
+  transient `state.groundRapMult`). Broad rapport requires spreading out.
+- **Ally-at-ground warmth** — an ally granted by a ground-based field play
+  (AL09 via Canvass Captain / Field Director) is localized to that ground
+  (`Ally.grounds`), and its field bonus only applies there
+  (`allyWarmAtGround`). Roster/persona grants stay warm everywhere.
+- **Opposition presence is VISIBLE but toothless in Phase 1** —
+  `Ground.rivalRap`, built 5–40/week by `advanceRivalGrounds`, renders in
+  the log and picker but does **not** affect the player's odds yet. Making
+  it bite is Phase 2. This is deliberate: Phase 1's job was to make the
+  choice *visible* and *measurable* (see `harness:grounds`), not to
+  rebalance around opposition before we could see the distribution.
+- **Win-condition sketch** — `career.ts checkBallotThreshold()` encodes the
+  intended rapport-distribution victory (primary 60% home + 40%×2; general
+  40% + 30%×2) for measurement only; it is not consulted by the live
+  election path. `harness:grounds` shows it is met 0% of the time under
+  current rapport tuning — the rapport economy is far short of it, which is
+  the headline Phase 2 balance input.
+
 ## Four card pools (only one exists in the modular engine)
 
 The archive prototype organizes cards into (at least) four pools:

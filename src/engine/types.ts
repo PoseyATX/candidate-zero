@@ -26,12 +26,25 @@ export interface Ground {
   rapport: number;
   gotv: number;
   gated?: boolean;
+  /**
+   * Opposition presence at this ground (Phase 1: cosmetic — rivals build it
+   * over the campaign, it renders in logs and the ground picker, but does
+   * NOT yet affect your odds. Phase 2 wires it into win probability).
+   */
+  rivalRap?: number;
 }
 
 export interface Ally {
   id: string;
   warm: number;
   age: number;
+  /**
+   * Grounds where this ally is actually working (Phase 1). An ally granted
+   * by a ground-based field play is localized to that ground; personas/
+   * roster grants with no ground leave this undefined (= warm everywhere,
+   * backward-compatible). See allyWarmAtGround() in reputation.ts.
+   */
+  grounds?: string[];
 }
 
 export interface CardCost {
@@ -136,6 +149,20 @@ export interface GameState {
   faces: Faces;
   shFired: Record<string, boolean>;
   groundsArr: Ground[];
+  /**
+   * Per-ground play tally for THE CURRENT WEEK — drives diminishing returns
+   * (getGroundPenalty). Reset at every week boundary. Keyed by ground id.
+   */
+  groundPlays?: Record<string, number>;
+  /**
+   * Transient rapport multiplier for the play in flight — set by
+   * executePlay from getGroundPenalty before the card's run() calls
+   * rapGain(), read there, then reset. 1 = full rapport, 0.5 = repeat-ground
+   * diminishing return. Never persisted meaningfully between plays.
+   */
+  groundRapMult?: number;
+  /** Last ground the player chose — UX default for the picker + CLI. */
+  lastGround?: string;
   allies: Ally[];
   backers: string[];
   assets: string[];

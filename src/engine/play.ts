@@ -6,6 +6,7 @@
 
 import { resolve, STAMPS } from './resolve.js';
 import { getPhase } from './state.js';
+import { getGroundPenalty } from './calendar.js';
 import { buildPlayFeedback } from './feedback.js';
 import { repCheck, shadowCheck } from './reputation.js';
 import type { AttrId, GameState, Ground, PlayCard, PlayOutcome, RollResult } from './types.js';
@@ -96,6 +97,22 @@ export function executePlay(
     return { ok: false, reason: 'No ground selected', cardId: card.id, cardName: card.n };
   }
 
+  // Ground diminishing returns (Phase 1): for a field play, look up how many
+  // times this ground was already worked this week, derive the odds bump /
+  // rapport multiplier, then tally this visit. groundRapMult is read by
+  // rapGain() inside the card's run(); default 1 for non-field plays.
+  state.groundRapMult = 1;
+  let groundOddsBonus = 0;
+  if (card.field && g) {
+    if (!state.groundPlays) state.groundPlays = {};
+    const priorVisits = state.groundPlays[g.id] ?? 0;
+    const pen = getGroundPenalty(state, g, priorVisits);
+    groundOddsBonus = pen.oddsBonus;
+    state.groundRapMult = pen.rapMult;
+    state.groundPlays[g.id] = priorVisits + 1;
+    state.lastGround = g.id;
+  }
+
   // Resistance tier escalates with the stakes (pre-ballot -> on-ballot -> general):
   // scrutiny/opposition organization grows as the race gets real. This widens
   // resolve()'s disaster band for STD/VOL plays and unlocks PL20 (show: tier>=1).
@@ -115,7 +132,7 @@ export function executePlay(
 
   // === ACTIVATE SYNERGY ===
   const attrMod = cardAttrMod(state, card);
-  p = Math.max(0.02, Math.min(0.95, p + attrMod));
+  p = Math.max(0.02, Math.min(0.95, p + attrMod + groundOddsBonus));
 
   const roll: RollResult = resolve(p, card.risk, state);
 

@@ -143,6 +143,16 @@
       </section>
       <section id="game" class="game hidden">
         <div id="hud" class="hud" aria-live="polite"></div>
+        <div id="ground-picker" class="ground-picker hidden" role="dialog" aria-modal="true" aria-label="Choose a ground">
+          <div class="gp-panel">
+            <div class="gp-head">
+              <h3 id="gp-title">Where do you work it?</h3>
+              <button type="button" id="gp-cancel" class="btn" aria-label="Cancel">Cancel</button>
+            </div>
+            <p class="hint" id="gp-sub">Pick the ground for this play. Rapport builds where you show up — and the same ground twice in a week banks less.</p>
+            <div id="gp-list" class="gp-list"></div>
+          </div>
+        </div>
         <section id="ledger" class="ledger"></section>
         <section class="panels">
           <div class="panel">

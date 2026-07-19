@@ -7,7 +7,7 @@
 
 import { random } from './rng.js';
 import { warm } from './reputation.js';
-import type { CampaignOutcome, GameState } from './types.js';
+import type { CampaignOutcome, GameState, Ground } from './types.js';
 
 /** Primary campaign length (includes filing window). */
 export const PRIMARY_WEEKS = 8;
@@ -54,6 +54,54 @@ export function stageLabel(state: GameState): string {
   if (state.stage === 'general') return 'General';
   if (state.stage === 'session') return 'Session';
   return 'Primary';
+}
+
+/**
+ * Phase 1 ground diminishing returns. Working the same ground repeatedly in
+ * one week gets easier (familiarity: a small odds bump) but yields less new
+ * rapport each time (you've met the people who were going to come around) —
+ * so spreading across grounds is the way to broad rapport, while grinding
+ * one ground is a reliable-but-shallow line. Pure: reads playCount, returns
+ * modifiers; the caller applies them.
+ *
+ * @param playCount how many times THIS ground was already worked this week,
+ *   BEFORE the current play (0 = first visit this week).
+ */
+export function getGroundPenalty(
+  _state: GameState,
+  _ground: Ground,
+  playCount: number
+): { oddsBonus: number; rapMult: number } {
+  if (playCount <= 0) return { oddsBonus: 0, rapMult: 1 };
+  // 2nd+ visit this week: familiarity nudge up on odds, half rapport gain.
+  return { oddsBonus: 0.05, rapMult: 0.5 };
+}
+
+/**
+ * Phase 1 opposition presence (COSMETIC — measuring for Phase 2). Once per
+ * week the opposition organizes a ground, banking 5–40 rapport there. It
+ * renders in the log and the ground picker but does NOT affect the player's
+ * odds yet. The harness uses the resulting distribution to ask whether
+ * visible opposition would change play if it had teeth (Phase 2).
+ */
+export function advanceRivalGrounds(state: GameState): void {
+  const grounds = state.groundsArr;
+  if (!grounds.length) return;
+  const g = grounds[Math.floor(random() * grounds.length)]!;
+  const amt = 5 + Math.floor(random() * 36); // 5–40
+  g.rivalRap = (g.rivalRap ?? 0) + amt;
+  state.log.push({
+    week: state.week,
+    kind: 'note',
+    text: `Opposition organizers worked ${g.n} — +${amt} (they hold ${g.rivalRap} there now).`
+  });
+}
+
+/** Week-boundary housekeeping for the ground layer: fresh per-week play
+ *  tally, then the opposition makes its weekly move. */
+function onWeekAdvance(state: GameState): void {
+  state.groundPlays = {};
+  advanceRivalGrounds(state);
 }
 
 /** Week within the current stage (1-based). */
@@ -160,6 +208,7 @@ export function resolvePrimaryConclusion(state: GameState): StageTransition {
     state.ap = state.apMax;
     state.fieldAp = warm(state, 'AL09') ? 1 : 0;
     state.momentum = Math.max(0, state.momentum - 1);
+    onWeekAdvance(state);
     state.townHallThisWeek = false;
     state.outcome = 'ongoing';
     // Opponent strength from district partisan lean (align/trap) + residual primary heat
@@ -241,6 +290,7 @@ export function advanceCampaignWeek(state: GameState): StageTransition {
   state.fieldAp = warm(state, 'AL09') ? 1 : 0;
   state.momentum = Math.max(0, state.momentum - 1);
   state.townHallThisWeek = false;
+  onWeekAdvance(state);
   state.log.push({
     week: state.week,
     kind: 'week',

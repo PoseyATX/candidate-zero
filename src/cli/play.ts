@@ -145,6 +145,26 @@ function buildMenu(campaign: Campaign): MenuEntry[] {
   }));
 }
 
+/** Prompt for a ground on a field play (CLI). Defaults to the last-worked
+ *  ground, else the first with pool. Shows your rapport vs opposition. */
+async function chooseGround(campaign: Campaign, rl: readline.Interface) {
+  const grounds = campaign.state.groundsArr;
+  const lastId = campaign.state.lastGround;
+  const defIdx = Math.max(0, grounds.findIndex(g => g.id === (lastId ?? grounds.find(x => x.pool > 0)?.id)));
+  console.log("  Ground:");
+  grounds.forEach((g, i) => {
+    const worked = (campaign.state.groundPlays?.[g.id] ?? 0) > 0 ? " (worked ½)" : "";
+    const last = g.id === lastId ? " [last]" : "";
+    console.log(
+      `    ${i + 1}. ${g.n} — you ${Math.round(g.rapport || 0)} / opp ${Math.round(g.rivalRap || 0)} · pool ${g.pool}${worked}${last}`
+    );
+  });
+  const ans = (await rl.question(`  where? (1-${grounds.length}, default ${defIdx + 1})> `)).trim();
+  let idx = ans ? Number(ans) - 1 : defIdx;
+  if (Number.isNaN(idx) || idx < 0 || idx >= grounds.length) idx = defIdx;
+  return grounds[idx];
+}
+
 function printMenu(entries: MenuEntry[], campaign: Campaign): void {
   if (!entries.length) {
     console.log("No playable cards. Press e to end week.");
@@ -160,7 +180,7 @@ function printMenu(entries: MenuEntry[], campaign: Campaign): void {
     const attrs = e.card.attrs?.length ? ` [${e.card.attrs.join("/")}]` : "";
     console.log(
       `  ${e.key}. ${e.card.n} (${e.card.risk}, ${costLabel(e.card)})${odds}${attrs}` +
-        `${e.camp ? " [CAMP]" : ""}${e.card.trap ? " TRAP" : ""}`
+        `${e.camp ? " [CAMP]" : ""}${e.card.field ? " [field]" : ""}`
     );
   }
   console.log("  e. End week   l. Ledger   h. Help   q. Quit");
@@ -196,7 +216,8 @@ async function interactiveWeek(campaign: Campaign, rl: readline.Interface): Prom
       continue;
     }
     const wasBallot = campaign.state.ballot;
-    const outcome = playFromHand(campaign, entry.handIndex);
+    const ground = entry.card.field ? await chooseGround(campaign, rl) : undefined;
+    const outcome = playFromHand(campaign, entry.handIndex, ground);
     if (!outcome.ok) {
       console.log(outcome.reason);
       continue;

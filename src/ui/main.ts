@@ -44,7 +44,7 @@ import {
   TRAITS,
   type InterimPath
 } from '../engine/legacy.js';
-import type { CampaignOutcome, LegacyState, PlayCard, PlayOutcome, TraitId } from '../engine/types.js';
+import type { CampaignOutcome, Ground, LegacyState, PlayCard, PlayOutcome, TraitId } from '../engine/types.js';
 import { emblemFor, emblem, kindMark, KIND_META } from './card-art.js';
 import './styles.css';
 
@@ -350,24 +350,105 @@ function renderPlayables(): void {
   grid.querySelectorAll<HTMLButtonElement>('.play-card:not(.locked)').forEach(btn => {
     btn.addEventListener('click', () => {
       if (!campaign) return;
-      const wasBallot = campaign.state.ballot;
-      const outcome = playFromHand(campaign, Number(btn.dataset.idx));
-      if (!outcome.ok) {
-        campaign.state.log.push({
-          week: campaign.state.week,
-          kind: 'note',
-          text: outcome.reason ?? 'Play failed'
-        });
+      const index = Number(btn.dataset.idx);
+      const card = cardForIndex(index);
+      // Field plays open the ground picker; everything else resolves now.
+      if (card?.field) {
+        openGroundPicker(index, card);
       } else {
-        weekPlays.push(outcome);
-        if (outcome.feedback) showJuice(outcome.feedback);
+        commitPlay(index);
       }
-      if (!wasBallot && campaign.state.ballot) {
-        maybeOfferPhaseDraft(campaign, false);
-      }
-      paint();
     });
   });
+}
+
+/** Resolve the card at a hand/camp index (from `data-idx`) into a PlayCard. */
+function cardForIndex(index: number): PlayCard | undefined {
+  if (!campaign) return undefined;
+  if (index === CAMP_PETITION) return campaign.catalog.get('PL04');
+  if (index === CAMP_FILING_FEE) return campaign.catalog.get('PL05');
+  const id = campaign.deck.hand[index];
+  return id ? campaign.catalog.get(id) : undefined;
+}
+
+/** Execute a play (optionally at a chosen ground) and fold in the result. */
+function commitPlay(index: number, ground?: Ground): void {
+  if (!campaign) return;
+  const wasBallot = campaign.state.ballot;
+  const outcome = playFromHand(campaign, index, ground);
+  if (!outcome.ok) {
+    campaign.state.log.push({
+      week: campaign.state.week,
+      kind: 'note',
+      text: outcome.reason ?? 'Play failed'
+    });
+  } else {
+    weekPlays.push(outcome);
+    if (outcome.feedback) showJuice(outcome.feedback);
+  }
+  if (!wasBallot && campaign.state.ballot) {
+    maybeOfferPhaseDraft(campaign, false);
+  }
+  paint();
+}
+
+let pendingGroundIndex: number | null = null;
+
+function openGroundPicker(index: number, card: PlayCard): void {
+  if (!campaign) return;
+  pendingGroundIndex = index;
+  $('gp-title').textContent = `${card.n} — where do you work it?`;
+  renderGroundPicker();
+  $('ground-picker').classList.remove('hidden');
+}
+
+function closeGroundPicker(): void {
+  pendingGroundIndex = null;
+  $('ground-picker').classList.add('hidden');
+}
+
+function renderGroundPicker(): void {
+  if (!campaign) return;
+  const s = campaign.state;
+  const last = s.lastGround;
+  $('gp-list').innerHTML = s.groundsArr
+    .map(g => {
+      const rap = Math.round(g.rapport || 0);
+      const rival = Math.round(g.rivalRap || 0);
+      const workedThisWeek = (s.groundPlays?.[g.id] ?? 0) > 0;
+      return `
+        <button type="button" class="gp-ground${g.id === last ? ' gp-last' : ''}" data-ground="${g.id}">
+          <span class="gp-name">${g.n}${g.id === last ? ' <span class="gp-tag">last</span>' : ''}</span>
+          <span class="gp-meters">
+            <span class="gp-meter" title="Your rapport">
+              <span class="gp-mlabel">you</span>
+              <span class="gp-bar"><i class="gp-you" style="width:${Math.min(100, rap)}%"></i></span>
+              <span class="gp-num">${rap}</span>
+            </span>
+            <span class="gp-meter" title="Opposition presence (does not affect odds yet)">
+              <span class="gp-mlabel">opp</span>
+              <span class="gp-bar"><i class="gp-opp" style="width:${Math.min(100, rival)}%"></i></span>
+              <span class="gp-num">${rival}</span>
+            </span>
+          </span>
+          <span class="gp-foot">
+            <span>pool ${g.pool}</span>
+            ${workedThisWeek ? '<span class="gp-worked">worked · ½ rapport</span>' : ''}
+          </span>
+        </button>`;
+    })
+    .join('');
+  $('gp-list')
+    .querySelectorAll<HTMLButtonElement>('.gp-ground')
+    .forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (!campaign || pendingGroundIndex === null) return;
+        const ground = campaign.state.groundsArr.find(g => g.id === btn.dataset.ground);
+        const index = pendingGroundIndex;
+        closeGroundPicker();
+        commitPlay(index, ground);
+      });
+    });
 }
 
 function showJuice(fb: PlayFeedback): void {
@@ -721,6 +802,7 @@ function boot(): void {
   $('btn-start').addEventListener('click', () => startRun());
   $('btn-new').addEventListener('click', () => requestNewRun());
   $('btn-end').addEventListener('click', () => endWeek());
+  $('gp-cancel').addEventListener('click', () => closeGroundPicker());
   showTitle();
 }
 

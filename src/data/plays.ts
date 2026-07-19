@@ -11,7 +11,7 @@
 
 import type { GameState, Ground, RollResult, PlayCard } from '../engine/types.js';
 import { random } from '../engine/rng.js';
-import { warm } from '../engine/reputation.js';
+import { warm, allyWarmAtGround } from '../engine/reputation.js';
 import { WAVE4_PLAYS } from './plays-wave4.js';
 
 function clamp(v: number, lo: number, hi: number): number {
@@ -19,6 +19,9 @@ function clamp(v: number, lo: number, hi: number): number {
 }
 function rapGain(g: Ground, amt: number, state: GameState) {
   if (state.rapStall) amt = Math.ceil(amt / 2);
+  // Phase 1 diminishing returns: repeat-ground plays this week bank less
+  // new rapport (multiplier set by executePlay from getGroundPenalty).
+  amt = Math.round(amt * (state.groundRapMult ?? 1));
   g.rapport = clamp(g.rapport + amt, 0, 100);
 }
 
@@ -30,7 +33,8 @@ export const PL01_BlockWalk: PlayCard = {
   odds: (s) => clamp(0.62 + s.volPool*0.02 + (s.assets.includes('A01')?0.12:0) + (s.messageSharp?0.05:0), 0, 0.95),
   run: (s, o, g) => {
     if (!g) return 'No ground selected.'; s.walkCount++;
-    const mult = (s.assets.includes('A01')?1.5:1) * (warm(s,'AL09')?1.2:1);
+    // Phase 1: the Field Director (AL09) boosts the turf they actually work.
+    const mult = (s.assets.includes('A01')?1.5:1) * (allyWarmAtGround(s,'AL09',g.id)?1.2:1);
     if (o.tier === 0) { const c = Math.min(g.pool, Math.round((55+random()*30)*mult)); g.pool-=c; s.contacts+=c; rapGain(g,6,s); s.volPool+=1; s.nameID+=2; return `A church picnic adopts you whole. +${c} contacts, a volunteer, and rapport at ${g.n}.`; }
     if (o.tier === 1) { const c = Math.min(g.pool, Math.round((22+random()*16)*mult)); g.pool-=c; s.contacts+=c; s.volPool+=1; rapGain(g,3,s); return `Doors open. +${c} contacts, +1 volunteer at ${g.n}`; }
     const c = Math.min(g.pool,6); g.pool-=c; s.contacts+=c; return 'Heat, dogs, closed blinds. +'+c+' contacts and one ruined pair of boots.';
@@ -218,7 +222,7 @@ export const PL19_GOTVWeekend: PlayCard = {
   id: 'PL19', n: 'GOTV Weekend', cost: { a:1, vp:1 }, risk: 'STD', ph: [3], field: true, tag: 'the point of it all',
   attrs: ['CLO'],
   d: 'Rapport is a promise. Turnout is the promise kept. One volunteer and a weekend.',
-  odds: (s) => clamp(0.58 + s.volPool*0.025 + (warm(s,'AL09')?0.1:0) + s.faces.T*0.002, 0, 0.95),
+  odds: (s, g) => clamp(0.58 + s.volPool*0.025 + (allyWarmAtGround(s,'AL09',g?.id)?0.1:0) + s.faces.T*0.002, 0, 0.95),
   run: (s, o, g) => {
     if (!g) return 'No ground selected.';
     // GOTV banks conversion; also a little name heat for the general

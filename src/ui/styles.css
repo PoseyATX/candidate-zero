@@ -691,6 +691,110 @@ h1 {
 
 .hidden { display: none !important; }
 
+/* ========================= GROUND PICKER =========================
+   Modal shown when a field play needs a ground. Reads your rapport vs the
+   opposition's presence per ground, marks the last-worked one, and warns
+   where you've already worked this week (½ rapport). */
+.ground-picker {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(10, 7, 4, 0.72);
+  backdrop-filter: blur(2px);
+}
+.gp-panel {
+  width: min(560px, 100%);
+  max-height: 88vh;
+  overflow-y: auto;
+  background: var(--walnut-2);
+  border: 1px solid var(--gold-dim);
+  border-top: 3px double var(--gold);
+  padding: 1rem 1.1rem 1.2rem;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+}
+.gp-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.gp-head h3 {
+  font-family: Cinzel, serif;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  color: var(--gold);
+  margin: 0;
+}
+.gp-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.6rem;
+}
+.gp-ground {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  padding: 0.6rem 0.65rem;
+  color: var(--parchment);
+  background: var(--walnut-3);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  transition: border-color 0.14s ease, transform 0.14s ease;
+}
+.gp-ground:hover { border-color: var(--gold); transform: translateY(-2px); }
+.gp-ground:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.gp-last { border-color: var(--gold-dim); }
+.gp-name {
+  font-family: Cinzel, serif;
+  font-size: 0.8rem;
+  color: var(--parchment);
+}
+.gp-tag {
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  border: 1px solid var(--gold-dim);
+  border-radius: 2px;
+  padding: 0 0.25rem;
+  vertical-align: 0.1em;
+}
+.gp-meters { display: flex; flex-direction: column; gap: 0.28rem; }
+.gp-meter { display: grid; grid-template-columns: 1.7rem 1fr 1.6rem; align-items: center; gap: 0.35rem; }
+.gp-mlabel {
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--parchment-dim);
+}
+.gp-bar {
+  height: 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.3);
+}
+.gp-bar i { display: block; height: 100%; }
+.gp-you { background: var(--gold); }
+.gp-opp { background: var(--oxblood-bright); }
+.gp-num { font-size: 0.72rem; font-variant-numeric: tabular-nums; color: var(--parchment-dim); text-align: right; }
+.gp-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.66rem;
+  color: var(--parchment-dim);
+}
+.gp-worked { color: var(--oxblood-bright); }
+
 /* ============================ TITLE SCREEN ============================
    Deco nameplate: eyebrow, double rules, giant Cinzel wordmark, engraved
    star, tag quote, two big actions. Sunburst glow rises from the bottom

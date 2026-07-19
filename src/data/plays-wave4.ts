@@ -127,10 +127,12 @@ export const PL21B_PromoteCanvassCaptain: PlayCard = {
   d: 'One volunteer stops showing up as a volunteer and starts showing up as staff.',
   show: (s) => !findAlly(s, 'AL09'),
   odds: () => 0.95,
-  run: (s) => {
-    addAlly(s, 'AL09', 3);
+  run: (s, _o, g) => {
+    // Phase 1: the captain is localized to the ground she's promoted at.
+    addAlly(s, 'AL09', 3, g?.id);
     s.fieldAp = 1;
-    return 'She has a route book, a phone tree, and opinions about your map. The field has a spine now.';
+    const where = g ? ` at ${g.n}` : '';
+    return `She has a route book, a phone tree, and opinions about your map. The field has a spine now${where}.`;
   }
 };
 
@@ -140,11 +142,13 @@ export const PL39_HireFieldDirector: PlayCard = {
   d: "A professional who has run four of these before. Money buys what volunteers can't always deliver on schedule.",
   req: (s) => !warm(s, 'AL09'),
   odds: () => 0.8,
-  run: (s, o) => {
+  run: (s, o, g) => {
     if (o.tier <= 1) {
-      addAlly(s, 'AL09', 3);
+      // Phase 1: hired onto a specific ground; that's the turf she runs.
+      addAlly(s, 'AL09', 3, g?.id);
       s.fieldAp = 1;
-      return 'She has run four of these and lost only one. The field has a professional now.';
+      const where = g ? ` at ${g.n}` : '';
+      return `She has run four of these and lost only one. The field has a professional now${where}.`;
     }
     return 'The good ones are all hired. You get a resume stack and a headache.';
   }

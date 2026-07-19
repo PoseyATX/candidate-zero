@@ -805,3 +805,40 @@ wash + silhouette with `action` plain.
 
 ### Harness
 `npm run harness` (12/12), `npm run typecheck`, `npm run build` all pass.
+
+## 2026-07-17 — Ground-centered campaign model (Phase 1)
+
+Made ground selection a real, visible decision on every field play, added
+opposition presence and diminishing returns, and built measurement scaffold
+for a future rapport-distribution win condition. Scope discipline: no card
+set / persona / resolution-engine redesign, RNG covenants untouched,
+opposition is cosmetic (measuring for Phase 2), win condition NOT wired.
+
+Engine:
+- `getGroundPenalty(state, ground, playCount)` (`calendar.ts`): 2nd+ visit to
+  a ground in one week → +0.05 odds, ×0.5 rapport. Per-week `groundPlays`
+  tally + transient `groundRapMult` (read by `rapGain`).
+- `allyWarmAtGround`/`hasAllyWarm` + `addAlly(…, groundId)` (`reputation.ts`):
+  ground-localized ally warmth. AL09 (Canvass Captain/Field Director)
+  localizes to the ground hired; its bonus on PL01/PL19 is now ground-aware.
+- `advanceRivalGrounds` + `Ground.rivalRap` (`calendar.ts`): opposition banks
+  5–40 rapport/week at a random ground, logged. Does NOT affect odds (P1).
+- `career.ts checkBallotThreshold()`: win-condition sketch (primary
+  60%+40%×2, general 40%+30%×2), measurement only, unwired.
+
+UI/CLI:
+- Ground picker modal (field plays) showing your rapport vs opposition,
+  pool, last-worked marker, and a "worked · ½ rapport" warning. CLI gets an
+  equivalent `chooseGround` prompt. `lastGround` remembered.
+
+Harness `npm run harness:grounds` (50 trials/combo):
+- spread play contests ~2.8–3 grounds, focus ~1 (target "a few, not 8" ✓).
+- rival-avoidance win-rate delta ≈ 4pp (noise) → opposition confirmed
+  cosmetic in Phase 1.
+- **ground win-condition sketch met 0%** under current tuning (avg top-ground
+  rapport ~5–25 vs 60 home threshold) — the load-bearing Phase 2 finding:
+  rapport yields are an order of magnitude short of the sketch.
+
+### Harness
+`npm run harness` (13 harnesses now, all green), `npm run typecheck`,
+`npm run build` all pass.

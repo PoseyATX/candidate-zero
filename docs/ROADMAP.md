@@ -142,19 +142,55 @@ not new design.
    condition that can structurally never fire — so it's worth a permanent
    guardrail, not just a one-time cleanup.
 
-3. **Grounds subsystem is half-built.** `Ground.aff` (affinity tags like
-   `"O,G"`) and `Ground.gated` (only `GR04 Church Corridor` is `gated: true`)
-   are populated in `createDefaultGrounds()` (`src/engine/state.ts`) but
-   never read by any mechanic — no card checks affinity, nothing ever
-   un-gates a gated ground. Additionally, **there is no ground-selection UI
-   anywhere** (CLI or web): `pickDefaultGround` always auto-picks the first
-   ground with `pool > 0`, so the 8 named grounds with distinct pool sizes
-   and affinities are decorative flavor text, not a real strategic choice,
-   despite the data model clearly being designed for one. Either build the
-   selection UI + affinity mechanic, or (if it's genuinely out of scope for
-   now) simplify the data model so it stops implying a choice that doesn't
-   exist — leaving it half-wired is the same "looks real, isn't" problem
-   Phase 0 fixed twice already.
+3. **Grounds subsystem is half-built.** ~~There is no ground-selection UI
+   anywhere; `pickDefaultGround` always auto-picks.~~ **Substantially
+   addressed 2026-07-17 (Ground-centered campaign model, Phase 1 order).**
+   Ground selection is now a real, visible decision on every field play:
+
+   - **Ground picker** (UI modal + CLI prompt): playing a field card opens a
+     selector showing each ground's name, your rapport, the opposition's
+     presence, and pool; remembers the last-worked ground. `pickDefaultGround`
+     is now only the fallback when no ground is passed (harness/auto).
+   - **Diminishing returns** (`getGroundPenalty`, `src/engine/calendar.ts`):
+     working the same ground twice in a week gives a small familiarity odds
+     bump but half the rapport — so broad rapport means spreading out. A
+     per-week `state.groundPlays` tally drives it; `state.groundRapMult`
+     carries the multiplier into `rapGain`.
+   - **Ally-at-ground affinity** (`allyWarmAtGround`/`hasAllyWarm`,
+     `src/engine/reputation.ts`): allies granted by a ground-based field play
+     (Canvass Captain / Field Director → AL09) are now *localized* to that
+     ground, and the AL09 field bonus on Block Walk / GOTV only applies on the
+     turf the director actually works. Roster/persona grants stay warm
+     everywhere (backward-compatible). NOTE: the spec also asked to gate
+     Kitchen-Table (PL08) on AL01-at-ground, but PL08 is not a ground-based
+     card and making it one is a card redesign (explicitly out of the Phase 1
+     scope), so that specific gate is deferred to Phase 2 — the helper it
+     needs is built and exercised on the AL09 case.
+   - **Opposition presence** (`Ground.rivalRap`, `advanceRivalGrounds`):
+     the opposition banks 5–40 rapport at a random ground each week, logged
+     and shown in the picker. **Cosmetic in Phase 1** — it does not touch
+     your odds yet (that's Phase 2). The `harness:grounds` rival-avoidance
+     probe confirms it: steering toward vs. away from opposition grounds
+     moves the win rate only within noise (≈4pp at N=50).
+   - **Win-condition sketch** (`checkBallotThreshold`, new
+     `src/engine/career.ts`): the intended rapport-distribution win condition
+     (primary 60% home + 40%×2; general 40% + 30%×2) is implemented for
+     measurement only and **deliberately not wired** — the live election
+     still runs on `calendar.ts` probabilities.
+   - **Harness** (`npm run harness:grounds`, 50 labor/money campaigns ×
+     ground strategies): measured findings — a "spread" player contests
+     **~2.8–3 grounds**, a "focus" player **1** (design target "a few, not
+     all 8" ✓); and critically **the ground win-condition sketch is met 0%
+     of the time** under current tuning (avg top-ground rapport ~5–25 vs a
+     60 home threshold). That last number is the load-bearing Phase 2 input:
+     the rapport economy is an order of magnitude short of the sketched
+     condition, so Phase 2 must either rebalance rapport yields upward or
+     lower the thresholds before this can become the real win condition.
+
+   Still genuinely open (Phase 2): `Ground.aff` affinity tags and
+   `Ground.gated` are still unread by any mechanic; opposition presence has
+   no teeth; the rapport economy needs rebalancing against the win sketch;
+   PL08's ground gate.
 
 4. **Archive-prototype yield parity is still open.** `docs/AC1-NOTES.md`:
    "Action yield-table full compare for archive ACTIONS (walk/fund/chairs)"

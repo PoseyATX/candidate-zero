@@ -34,14 +34,44 @@ export function warm(state: GameState, id: string): boolean {
   return !!(a && a.warm > 0);
 }
 
+/**
+ * Phase 1 ground-affinity check: is this ally warm AND working the given
+ * ground? An ally with no `grounds` list (persona/roster grant, no ground)
+ * counts as warm everywhere — backward-compatible. An ally localized to
+ * specific grounds (granted by a ground-based field play) only counts at
+ * those grounds. `groundId` omitted falls back to the roster-wide `warm`.
+ * Spec named this `allyWarmAtGround`; `hasAllyWarm` is an alias.
+ */
+export function allyWarmAtGround(state: GameState, id: string, groundId?: string): boolean {
+  const a = findAlly(state, id);
+  if (!a || a.warm <= 0) return false;
+  if (!groundId) return true;
+  if (!a.grounds || a.grounds.length === 0) return true;
+  return a.grounds.includes(groundId);
+}
+export const hasAllyWarm = allyWarmAtGround;
+
 export function addRep(state: GameState, id: string): void {
   if (!state.reps.includes(id)) state.reps.push(id);
 }
 
-/** Matches archive semantics: grants once: does not re-warm an existing ally. */
-export function addAlly(state: GameState, id: string, warmAmt = 2): boolean {
-  if (findAlly(state, id)) return false;
-  state.allies.push({ id, warm: warmAmt, age: 0 });
+/**
+ * Matches archive semantics: grants once; does not re-warm an existing ally.
+ * Phase 1: pass `groundId` to localize the ally to a ground (field plays);
+ * omit it for a roster-wide grant (personas). If the ally already exists,
+ * a `groundId` still extends its working grounds (a field director hired
+ * at a second ground now works both).
+ */
+export function addAlly(state: GameState, id: string, warmAmt = 2, groundId?: string): boolean {
+  const existing = findAlly(state, id);
+  if (existing) {
+    if (groundId) {
+      existing.grounds = existing.grounds ?? [];
+      if (!existing.grounds.includes(groundId)) existing.grounds.push(groundId);
+    }
+    return false;
+  }
+  state.allies.push({ id, warm: warmAmt, age: 0, grounds: groundId ? [groundId] : undefined });
   return true;
 }
 
