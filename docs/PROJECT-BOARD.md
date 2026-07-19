@@ -34,6 +34,9 @@ become a second rules implementation.
 | META | [#13](https://github.com/PoseyATX/candidate-zero/issues/13) | Board hygiene rules |
 | BUG | [#14](https://github.com/PoseyATX/candidate-zero/issues/14) | Pages deploy auto-fire / workflow scope |
 | PLANNED | [#15](https://github.com/PoseyATX/candidate-zero/issues/15) | AC1 archive yield-table full compare |
+| **DESIGN LAW** | [#17](https://github.com/PoseyATX/candidate-zero/issues/17) | Entity registry (exhaustive actors + loops) |
+| **DESIGN LAW** | [#18](https://github.com/PoseyATX/candidate-zero/issues/18) | Orbits / advancement / setback / movement graph |
+| REF | [#16](https://github.com/PoseyATX/candidate-zero/issues/16) | Work log pin |
 
 ---
 

@@ -251,3 +251,44 @@ When design locks, next engineering candidates:
 - **Rehydrate a new agent:** read this file + `GAME-FLOW.md` + open issues.  
 - **Argue status:** prefer harness output and this log over chat memory.  
 - **Update rule:** after each phase or major debug pass, append a dated section here and bump “Last updated.”
+
+---
+
+## Design law dump — Entity / Orbit / Loop graph (2026-07-19)
+
+Owner added two high-priority design issues from a separate chat. **Read fully before implementing.**
+
+| Issue | Title | Role |
+|---|---|---|
+| [#17](https://github.com/PoseyATX/candidate-zero/issues/17) | Entity Registry: Exhaustive Political Actors & Loops (House → Senate → Higher Office + Waiting/Elected Subloops) | Exhaustive tiered actor list (Tiers 0–7+), loops intent, acceptance notes |
+| [#18](https://github.com/PoseyATX/candidate-zero/issues/18) | Entity Registry, Orbits, Loops, Advancement/Setback & Movement System — Political Career Graph | Canonical data model: Entity, Orbit, Condition, movement verbs; no true game over |
+
+### Core philosophy (#18)
+- **No true loss — only redirection into a new orbit.**
+- Persistent branching political career (House Candidate Zero upward).
+- **Orbits** = influence webs; **Advancement/Setback** conditions unlock contextual **movement** verbs.
+- Target: DF / Campaign for North Africa systemic depth; still one-handed mobile.
+
+### What already exists (fragments, not the graph)
+- Allies AL01–AL16, faces, obligations, grounds, session bill pipeline
+- Chronicle waiting paths (perennial / advocate / staffer / home / ex-member)
+- Debt/PAC residue, shadow consequences
+
+### What does not exist yet
+- `src/data/entities.ts` registry
+- Orbit graph + strength/timing gates
+- Advancement/setback condition engine
+- Movement opportunity surface in loop/calendar
+- Full waiting/elected subloops as first-class play cycles
+- Higher-office forks (Senate, statewide, federal)
+
+### Acceptance (from issues, condensed)
+- Registry + types; helpers in `entities.ts`
+- Movement wired into calendar/loop
+- ≥3 complete entity loops playable + harness
+- SRD/ROADMAP/ARCHITECTURE updated
+- Prioritize Tier 0–2 for early/v0.1 slice; scale upward
+
+### Scheduling note (agent)
+This is **not** Phase 5 balance matrix and **not** a cookie-clicker tint pass. It is the long-game career graph. Do not half-implement mid-Session without owner sequence. Prefer: ceremony/act delineation + thin entity scaffold when scheduled; full graph is multi-phase.
+
