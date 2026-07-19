@@ -93,10 +93,14 @@ export function evaluateCondition(state: GameState, spec: ConditionSpec): boolea
       if (state.endorsePts < need) return false;
       const reqAlly = p.requireAlly;
       if (reqAlly !== undefined && reqAlly !== '') {
-        return warm(state, String(reqAlly));
+        if (!warm(state, String(reqAlly))) return false;
       }
       // Optional name floor (judge weight path)
       if (p.requireName !== undefined && state.nameID < Number(p.requireName)) {
+        return false;
+      }
+      // Optional cash floor (slate-ready path)
+      if (p.requireCash !== undefined && state.money < Number(p.requireCash)) {
         return false;
       }
       return true;

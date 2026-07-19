@@ -101,6 +101,18 @@ export const PILOT_FAITH: PilotDef = {
   logLabel: 'Corridor blessing'
 };
 
+/** Slate-Maker — printed-card politics (AL16 / MV08). */
+export const PILOT_SLATE: PilotDef = {
+  entityId: 'ENT_SLATE_MAKER',
+  loopId: 'LOOP_ENT_SLATE_MAKER',
+  verbPlayId: 'MV08',
+  movementId: 'MOVE_SLATE_CARD',
+  consumeFlag: 'mv08Consumed',
+  announceFlag: 'mv08Announced',
+  residueFlag: 'orbit_slate_card',
+  logLabel: 'Slate card print run'
+};
+
 /**
  * All playable entity-template loops.
  * Templates + deltas only — never one unique deck per ENT_*.
@@ -112,7 +124,8 @@ export const PLAYABLE_PILOTS: PilotDef[] = [
   PILOT_PARTY,
   PILOT_CLUB,
   PILOT_EDITOR,
-  PILOT_FAITH
+  PILOT_FAITH,
+  PILOT_SLATE
 ];
 
 export function pilotByVerb(verbPlayId: string): PilotDef | undefined {

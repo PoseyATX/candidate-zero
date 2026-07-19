@@ -26,8 +26,10 @@ import {
   MV04_PartyApparatus,
   MV05_ClubRoster,
   MV06_NewsroomNod,
-  MV07_CorridorBlessing
+  MV07_CorridorBlessing,
+  MV08_SlateCard
 } from '../data/plays-starmap.js';
+import { addObl } from '../data/obligations.js';
 import { ALL_PLAYS } from '../data/plays.js';
 import type { PlayCard } from '../engine/types.js';
 
@@ -44,7 +46,7 @@ console.log('=== CANDIDATE ZERO — Starmap (entity templates) ===\n');
 
 const counts = starmapCounts();
 console.log('Counts:', counts);
-assert(counts.playablePilots >= 7, `need ≥7 playable pilots, got ${counts.playablePilots}`);
+assert(counts.playablePilots >= 8, `need ≥8 playable pilots, got ${counts.playablePilots}`);
 
 // Unique entities
 assert(ALL_ENTITY_IDS.length === new Set(ALL_ENTITY_IDS).size, 'duplicate entity ids');
@@ -284,6 +286,45 @@ for (const p of PLAYABLE_PILOTS) {
   console.log('PASSED: MV05 alternate (endorse)');
 }
 
+// --- Slate-Maker MV08 ---
+{
+  const s = createNewState({ seed: 15, endorsePts: 1, nameID: 5, contacts: 0, momentum: 0, ap: 2 });
+  s.ballot = true;
+  s.stage = 'primary';
+  addAlly(s, 'AL16', 2);
+  s.slate = true;
+  syncMovementFlags(s);
+  assert(isMovementVerbAvailable(s, 'MV08'), 'MV08 open via AL16');
+  const n0 = s.nameID;
+  const e0 = s.endorsePts;
+  playVerb(s, MV08_SlateCard);
+  assert(s.nameID === n0 + 12, 'MV08 name +12');
+  assert(s.endorsePts === e0 + 3, 'MV08 endorse +3');
+  assert(!!s.sessionFlags?.mv08Consumed && !!s.sessionFlags?.orbit_slate_card, 'MV08 residue');
+  assert(!!s.entityHistory?.includes('ENT_SLATE_MAKER'), 'slate history');
+  console.log('PASSED: MV08 Slate-Maker e2e');
+}
+{
+  const s = createNewState({ seed: 16, ap: 1 });
+  s.ballot = true;
+  s.stage = 'primary';
+  addObl(s, 'OB3');
+  syncMovementFlags(s);
+  assert(isMovementVerbAvailable(s, 'MV08'), 'MV08 open via OB3 price');
+  console.log('PASSED: MV08 alternate (OB3)');
+}
+{
+  const s = createNewState({ seed: 17, endorsePts: 2, money: 1500, ap: 1 });
+  s.ballot = true;
+  s.stage = 'primary';
+  addAlly(s, 'AL02', 2);
+  syncMovementFlags(s);
+  assert(isMovementVerbAvailable(s, 'MV08'), 'MV08 open via Chairwoman+cash+endorse');
+  console.log('PASSED: MV08 alternate (AL02+cash+endorse)');
+}
+assert(getEntity('ENT_SLATE_MAKER')?.allyId === 'AL16', 'slate → AL16');
+assert(getEntity('ENT_SLATE_MAKER')?.primaryLoopId === 'LOOP_ENT_SLATE_MAKER', 'slate own loop');
+
 // Condition smoke
 {
   const s = createNewState({ seed: 1 });
@@ -300,6 +341,6 @@ for (const p of PLAYABLE_PILOTS) {
 }
 
 console.log('Loops:', ALL_LOOP_IDS.length, 'Orbits:', ORBITS.length, 'Pilots:', PLAYABLE_PILOTS.length);
-console.log('PASSED: inventory, graph integrity, bridges, 7-template e2e');
+console.log('PASSED: inventory, graph integrity, bridges, 8-template e2e');
 console.log('\nStarmap entity templates green.');
 process.exit(0);

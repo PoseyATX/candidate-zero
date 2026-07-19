@@ -12,7 +12,8 @@ import {
   PILOT_FAITH,
   PILOT_JUDGE,
   PILOT_PARTY,
-  PILOT_PRECINCT
+  PILOT_PRECINCT,
+  PILOT_SLATE
 } from './starmap/pilots.js';
 
 function markEntity(s: { entityHistory?: string[] }, entityId: string): void {
@@ -284,6 +285,42 @@ export const MV07_CorridorBlessing: PlayCard = {
   }
 };
 
+/**
+ * MV08 — Run the slate hard (AL16 / printed card).
+ * Unlocks after See the Slate-Maker (AL16/OB3) or Chairwoman+cash+endorse path.
+ */
+export const MV08_SlateCard: PlayCard = {
+  id: PILOT_SLATE.verbPlayId,
+  n: 'Run the slate hard',
+  cost: { a: 1 },
+  risk: 'SAFE',
+  ph: [2, 3],
+  tag: 'orbit movement',
+  kind: 'ally',
+  residency: 'special',
+  control: 'player',
+  entityScope: [PILOT_SLATE.entityId],
+  attrs: ['CRA', 'DIP'],
+  d: 'Half the primary votes from a printed card. Special kit — Slate-Maker orbit. His marker was already on it.',
+  show: s => isMovementVerbAvailable(s, PILOT_SLATE.verbPlayId),
+  odds: () => 0.9,
+  run: s => {
+    s.slate = true;
+    s.endorsePts += 3;
+    s.nameID += 12;
+    s.momentum += 2;
+    s.contacts += 40;
+    // Primary heat — the card is the room
+    s.faces.F = Math.min(100, (s.faces.F || 0) + 4);
+    markEntity(s, PILOT_SLATE.entityId);
+    consumePilot(s, PILOT_SLATE.consumeFlag, PILOT_SLATE.residueFlag);
+    return (
+      'The card hits every kitchen table that votes. +3 endorsement, +12 name ID, +2 momentum, +40 contacts. ' +
+      '(Starmap: ENT_SLATE_MAKER. Residue: orbit_slate_card. His marker still rides.)'
+    );
+  }
+};
+
 export const STARMAP_PLAYS: PlayCard[] = [
   MV01_PrecinctNetwork,
   MV02_FieldPlan,
@@ -291,5 +328,6 @@ export const STARMAP_PLAYS: PlayCard[] = [
   MV04_PartyApparatus,
   MV05_ClubRoster,
   MV06_NewsroomNod,
-  MV07_CorridorBlessing
+  MV07_CorridorBlessing,
+  MV08_SlateCard
 ];

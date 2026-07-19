@@ -160,7 +160,10 @@ const TIER7: EntityDef[] = [
   e('ENT_JUDGE', 'Judge / prosecutor / regent', 7, 'federal', 'Adjacent power with different clocks.', 'LOOP_TMPL_FEDERAL', { allyId: 'AL06' }),
   e('ENT_CAPITOL_JANITOR', 'Capitol janitor (wildcard)', 7, 'federal', 'Sees the building after hours.', 'LOOP_TMPL_FEDERAL', { tags: ['wildcard'] }),
   e('ENT_SCANDAL_EXMEMBER', 'Scandal-plagued ex-member (wildcard)', 7, 'federal', 'Cautionary tale; oppo raw material.', 'LOOP_TMPL_FEDERAL', { tags: ['wildcard'] }),
-  e('ENT_SLATE_MAKER', 'The Slate-Maker', 7, 'federal', 'Prints the card half the primary votes from.', 'LOOP_TMPL_FEDERAL', { allyId: 'AL16' }),
+  e('ENT_SLATE_MAKER', 'The Slate-Maker', 7, 'federal', 'Prints the card half the primary votes from.', 'LOOP_ENT_SLATE_MAKER', {
+    allyId: 'AL16',
+    tags: ['pilot']
+  }),
   e('ENT_KITCHEN_CABINET', 'Kitchen Cabinet', 7, 'federal', 'Inner circle; extra draws; debate prep.', 'LOOP_TMPL_FEDERAL', { allyId: 'AL11' }),
   e('ENT_FINANCE_CHAIR', 'Finance Chair', 7, 'federal', 'Weekly money when warm (stub grant path).', 'LOOP_TMPL_FEDERAL', { allyId: 'AL10' }),
   e('ENT_FEED_STORE', 'Feed-Store Regulars', 7, 'federal', 'Unofficial senate on the bench.', 'LOOP_TMPL_FEDERAL', { allyId: 'AL07' }),

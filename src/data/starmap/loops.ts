@@ -371,6 +371,54 @@ const PILOT_FAITH: LoopDef = {
   exampleNouns: ['Directory', 'Corridor', 'First Church']
 };
 
+/** Slate-Maker — printed card half the primary votes from (AL16 / MV08). */
+const PILOT_SLATE: LoopDef = {
+  id: 'LOOP_ENT_SLATE_MAKER',
+  name: 'Slate card print run',
+  kind: 'entity_primary',
+  entityId: 'ENT_SLATE_MAKER',
+  description:
+    'One man prints the card half the primary votes from. See him (PL22B) then spend the slate (MV08).',
+  advancement: [
+    {
+      id: 'ADV_SLATE_ALLY',
+      type: 'advancement',
+      description: 'Warm Slate-Maker ally (AL16).',
+      kind: 'has_ally',
+      params: { allyId: 'AL16' },
+      movementTarget: 'ENT_SLATE_MAKER'
+    },
+    {
+      id: 'ADV_SLATE_PRICE',
+      type: 'advancement',
+      description: 'Slate-Maker\'s Price (OB3) already on the books.',
+      kind: 'has_obl',
+      params: { oblId: 'OB3' },
+      movementTarget: 'ENT_SLATE_MAKER'
+    },
+    {
+      id: 'ADV_SLATE_READY',
+      type: 'advancement',
+      description: 'Warm AL02 + endorse ≥ 2 + $≥1200 (Chairwoman path to the print shop).',
+      kind: 'endorse_gte',
+      params: { n: 2, requireAlly: 'AL02', requireCash: 1200 },
+      movementTarget: 'ENT_SLATE_MAKER'
+    }
+  ],
+  setback: [
+    {
+      id: 'SET_SLATE_SCANDAL',
+      type: 'setback',
+      description: 'Hit pieces make the printed card a liability.',
+      kind: 'hit_pieces_gte',
+      params: { n: 3 },
+      residue: ['scar_slate_reversed']
+    }
+  ],
+  exampleVerbs: ['See the Slate-Maker', 'Print the card', 'Spend the slate'],
+  exampleNouns: ['Printed card', 'Marker', "Chairwoman's call"]
+};
+
 const T0_T2_NAMED: LoopDef[] = [
   PILOT_PRECINCT,
   ...PILOT_SUB,
@@ -380,6 +428,7 @@ const T0_T2_NAMED: LoopDef[] = [
   PILOT_CLUB,
   PILOT_EDITOR,
   PILOT_FAITH,
+  PILOT_SLATE,
   entLoop('SOUTH_STEPS_ACTIVIST', 'South Steps rant', 'Presence, grievance, viral clip risk.', 'ENT_SOUTH_STEPS_ACTIVIST'),
   entLoop('BLOCK_WALKER', 'Block walker', 'Doors, heat, dogs, clipboards.', 'ENT_BLOCK_WALKER'),
   entLoop('CONSTITUENT', 'Disgruntled constituent', 'Casework demand, town hall ambush.', 'ENT_CONSTITUENT'),

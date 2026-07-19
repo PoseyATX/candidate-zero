@@ -56,7 +56,7 @@ src/data/plays-starmap.ts      # MV01 verb card
 
 ---
 
-## Playable entity templates (7)
+## Playable entity templates (8)
 
 Registry: `src/data/starmap/pilots.ts` · verbs: `src/data/plays-starmap.ts`  
 Harness: `npm run harness:starmap` (all e2e). **Templates + deltas only** — not 93 decks.
@@ -70,6 +70,7 @@ Harness: `npm run harness:starmap` (all e2e). **Templates + deltas only** — no
 | 5 | Club Leader | AL03 | **MV05** | AL03 / endorse≥3 | +1 endorse, +60 contacts, +1 vol |
 | 6 | Local Editor | AL04 | **MV06** | AL04 / name≥14 | +10 name, +2 mom, Faces F |
 | 7 | Faith Leader | AL08 | **MV07** | AL08 / B02+name≥10 | +3 vol, corridor open, A13 directory |
+| 8 | Slate-Maker | AL16 | **MV08** | AL16 / OB3 / AL02+$+endorse | +3 endorse, +12 name, +2 mom, +40 contacts |
 
 - Special residency + `entityScope`; multi-orbit camp offers (−401+).  
 - Overlay on primary/general — not a stage leave.
@@ -83,7 +84,7 @@ Harness: `npm run harness:starmap` (all e2e). **Templates + deltas only** — no
 | Full entity catalog | Higher-tier deep subloops |
 | Full orbit skeleton | Timing/attr-gated orbit filtering (basic only) |
 | Loop IDs for waiting/elected/templates | Most non-pilot advancement still `manual_todo` |
-| **7 playable templates** (MV01–07) | Waiting loops replacing Chronicle UI |
+| **8 playable templates** (MV01–08) | Waiting loops replacing Chronicle UI |
 | Bridges to AL* | Movement UI modal (Phase 6 adjacent) |
 
 ---
