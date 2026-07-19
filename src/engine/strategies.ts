@@ -17,8 +17,16 @@ function pickByPriority(
   // Never auto-buy shop assets as a fallback — BUY* cost 0 AP (archive
   // assetPlays) so a naive first-of-list pick would drain money in a
   // guard-limited spin without advancing the week.
-  const nonShop = playable.filter(p => !p.card.id.startsWith('BUY'));
-  return nonShop[0]?.index ?? null;
+  // Never auto-spend starmap Specials (MV*) either — open orbits show as
+  // camp actions; a naive first-of-list would free-farm every new template
+  // and break money/labor matrix identity (pack #3 hygiene).
+  const spine = playable.filter(
+    p =>
+      !p.card.id.startsWith('BUY') &&
+      p.card.residency !== 'special' &&
+      !p.card.id.startsWith('MV')
+  );
+  return spine[0]?.index ?? null;
 }
 
 /** Primary labor path → general GOTV/name push. */

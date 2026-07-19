@@ -419,6 +419,131 @@ const PILOT_SLATE: LoopDef = {
   exampleNouns: ['Printed card', 'Marker', "Chairwoman's call"]
 };
 
+/** Finance Chair — call the book (AL10 / MV09). */
+const PILOT_FINANCE: LoopDef = {
+  id: 'LOOP_ENT_FINANCE_CHAIR',
+  name: 'Finance Chair call sheet',
+  kind: 'entity_primary',
+  entityId: 'ENT_FINANCE_CHAIR',
+  description: 'Someone who can dial money on a schedule. Opens MV09.',
+  advancement: [
+    {
+      id: 'ADV_FINANCE_ALLY',
+      type: 'advancement',
+      description: 'Warm Finance Chair ally (AL10).',
+      kind: 'has_ally',
+      params: { allyId: 'AL10' },
+      movementTarget: 'ENT_FINANCE_CHAIR'
+    },
+    {
+      id: 'ADV_FINANCE_WAR_CHEST',
+      type: 'advancement',
+      description: 'endorse ≥ 1 + $≥1000 (war chest ready for a real finance chair).',
+      kind: 'endorse_gte',
+      params: { n: 1, requireCash: 1000 },
+      movementTarget: 'ENT_FINANCE_CHAIR'
+    }
+  ],
+  setback: [
+    {
+      id: 'SET_FINANCE_HIT',
+      type: 'setback',
+      description: 'Hit pieces dry the phones.',
+      kind: 'hit_pieces_gte',
+      params: { n: 3 },
+      residue: ['scar_finance_cold']
+    }
+  ],
+  exampleVerbs: ['Hire the Finance Chair', 'Call the book', 'Spend the list'],
+  exampleNouns: ['Call sheet', 'Max-out', 'Bundler lunch']
+};
+
+/** Radio Host — drive-time (AL05 / MV10). */
+const PILOT_RADIO: LoopDef = {
+  id: 'LOOP_ENT_RADIO_HOST',
+  name: 'Drive-time slot',
+  kind: 'entity_primary',
+  entityId: 'ENT_RADIO_HOST',
+  description: 'Open mic between farm reports and the noon news. Opens MV10.',
+  advancement: [
+    {
+      id: 'ADV_RADIO_ALLY',
+      type: 'advancement',
+      description: 'Warm Drive-Time Host ally (AL05).',
+      kind: 'has_ally',
+      params: { allyId: 'AL05' },
+      movementTarget: 'ENT_RADIO_HOST'
+    },
+    {
+      id: 'ADV_RADIO_NAME',
+      type: 'advancement',
+      description: 'nameID ≥ 12 (already loud enough to book).',
+      kind: 'name_id_gte',
+      params: { n: 12 },
+      movementTarget: 'ENT_RADIO_HOST'
+    }
+  ],
+  setback: [
+    {
+      id: 'SET_RADIO_HIT',
+      type: 'setback',
+      description: 'Too many hit pieces for live radio.',
+      kind: 'hit_pieces_gte',
+      params: { n: 3 },
+      residue: ['scar_radio_cold']
+    }
+  ],
+  exampleVerbs: ['Book drive time', 'Take the call', 'Spend the slot'],
+  exampleNouns: ['Open mic', 'Call screener', 'Farm report']
+};
+
+/** Junior Lobbyist — conscience + access (AL13 / MV11). */
+const PILOT_LOBBY: LoopDef = {
+  id: 'LOOP_ENT_JUNIOR_LOBBYIST',
+  name: 'Lobbyist access map',
+  kind: 'entity_primary',
+  entityId: 'ENT_JUNIOR_LOBBYIST',
+  description: 'Access on a budget — and a conscience that still works. Opens MV11.',
+  advancement: [
+    {
+      id: 'ADV_LOBBY_ALLY',
+      type: 'advancement',
+      description: "Warm Lobbyist w/ a Conscience (AL13).",
+      kind: 'has_ally',
+      params: { allyId: 'AL13' },
+      movementTarget: 'ENT_JUNIOR_LOBBYIST'
+    },
+    {
+      id: 'ADV_LOBBY_PAC_STRING',
+      type: 'advancement',
+      description: 'PAC String (OB1) already on the books — they know your number.',
+      kind: 'has_obl',
+      params: { oblId: 'OB1' },
+      movementTarget: 'ENT_JUNIOR_LOBBYIST'
+    },
+    {
+      id: 'ADV_LOBBY_CASH_NAME',
+      type: 'advancement',
+      description: 'endorse ≥ 2 + $≥800 (you look like a bill that might move).',
+      kind: 'endorse_gte',
+      params: { n: 2, requireCash: 800 },
+      movementTarget: 'ENT_JUNIOR_LOBBYIST'
+    }
+  ],
+  setback: [
+    {
+      id: 'SET_LOBBY_HIT',
+      type: 'setback',
+      description: 'Hit pieces make quiet access radioactive.',
+      kind: 'hit_pieces_gte',
+      params: { n: 4 },
+      residue: ['scar_lobby_cold']
+    }
+  ],
+  exampleVerbs: ['Take the coffee', 'Read the map', 'Spend the intro'],
+  exampleNouns: ['Access map', 'Retainer', 'Conscience']
+};
+
 const T0_T2_NAMED: LoopDef[] = [
   PILOT_PRECINCT,
   ...PILOT_SUB,
@@ -429,6 +554,9 @@ const T0_T2_NAMED: LoopDef[] = [
   PILOT_EDITOR,
   PILOT_FAITH,
   PILOT_SLATE,
+  PILOT_FINANCE,
+  PILOT_RADIO,
+  PILOT_LOBBY,
   entLoop('SOUTH_STEPS_ACTIVIST', 'South Steps rant', 'Presence, grievance, viral clip risk.', 'ENT_SOUTH_STEPS_ACTIVIST'),
   entLoop('BLOCK_WALKER', 'Block walker', 'Doors, heat, dogs, clipboards.', 'ENT_BLOCK_WALKER'),
   entLoop('CONSTITUENT', 'Disgruntled constituent', 'Casework demand, town hall ambush.', 'ENT_CONSTITUENT'),
@@ -455,9 +583,10 @@ const T0_T2_NAMED: LoopDef[] = [
   entLoop('LOCAL_BIZ_PAC', 'Local business PAC', 'Checks and expectations.', 'ENT_LOCAL_BIZ_PAC'),
   entLoop('UNION_LOCAL_PRES', 'Union local president', 'Endorsement, volunteers.', 'ENT_UNION_LOCAL_PRES'),
   entLoop('CHAMBER_EXEC', 'Chamber executive', 'Rubber chicken, reliable voters.', 'ENT_CHAMBER_EXEC'),
-  entLoop('RADIO_HOST', 'Radio talk host', 'Drive time, ambush.', 'ENT_RADIO_HOST'),
+  // RADIO_HOST: real pilot loop above (MV10)
   entLoop('COMMUNITY_ORG', 'Community organizer', 'Nonprofit, coalition.', 'ENT_COMMUNITY_ORG'),
   entLoop('PRIMARY_RIVAL', 'Primary rival', 'Same ballot, zero-sum.', 'ENT_PRIMARY_RIVAL')
+  // FINANCE_CHAIR / JUNIOR_LOBBYIST: real pilot loops above (MV09 / MV11)
 ];
 
 export const LOOPS: Record<string, LoopDef> = Object.fromEntries(

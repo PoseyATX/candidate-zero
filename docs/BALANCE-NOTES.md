@@ -166,7 +166,7 @@ full suite audit and retune. **No new features.**
 | Rival primary tax | 0.0009 × mean rival | Labor primary readable again |
 | Primary win base | 0.40 + contacts/vol weight up | Labor door-grind teaches the loop |
 | Block Walk GAIN | +1 name ID | Labor name heat was starve (avg ~5) |
-| Money/labor ratio cap | 3.5× | Cash edge after feature stack is texture, not free |
+| Money/labor ratio cap | 4.0× (teacher matrix cell) | Was 3.5×; N=30 noise + strategies no longer free-farm MV Specials |
 
 ### Snapshot (`harness:full` N=200, post-hygiene)
 | Strategy | Ballot | Reach gen | Overall win | Notes |

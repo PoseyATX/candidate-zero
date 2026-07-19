@@ -4,8 +4,9 @@
 **Evidence log:** [`docs/ROADMAP.md`](./ROADMAP.md) (what shipped + harness proof)  
 **Workstream log:** [`docs/WORK-LOG.md`](./WORK-LOG.md) · issue #16  
 **Player flow:** [`docs/GAME-FLOW.md`](./GAME-FLOW.md)  
+**UI / IA furniture:** [`docs/UI-IA.md`](./UI-IA.md) (what info, where, prominence — Phase 6 input)  
 **Live alpha:** https://poseyatx.github.io/candidate-zero/  
-**Snapshot date:** 2026-07-19 (board hygiene pass)
+**Snapshot date:** 2026-07-19 (UI/IA plan parked)
 
 This file is the agent-readable mirror of the GitHub Project. When project API
 scopes are missing, **update this file + the linked issues** so work stays
@@ -28,9 +29,9 @@ become a second rules implementation.
 | **DONE** | [#7](https://github.com/PoseyATX/candidate-zero/issues/7) | Phase 3 — Debt as leveraged optionality |
 | **DONE** | [#8](https://github.com/PoseyATX/candidate-zero/issues/8) | Phase 4 — Session stage (bill lifecycle) |
 | **DONE** | [#9](https://github.com/PoseyATX/candidate-zero/issues/9) | Phase 5 — Balance breadth |
-| **DONE** | [#17](https://github.com/PoseyATX/candidate-zero/issues/17) / [#18](https://github.com/PoseyATX/candidate-zero/issues/18) | Starmap — catalog + 7 entity templates (MV01–07) |
-| **NEXT** | — | More starmap templates *or* Phase 6 mobile (owner call; aesthetics parked) |
-| PLANNED | [#10](https://github.com/PoseyATX/candidate-zero/issues/10) | Phase 6 — Mobile-first UI + a11y |
+| **DONE** | [#17](https://github.com/PoseyATX/candidate-zero/issues/17) / [#18](https://github.com/PoseyATX/candidate-zero/issues/18) | Starmap — catalog + templates through MV11 |
+| **NEXT** | — | More templates *or* Phase 6 UI furniture (owner call; [`UI-IA.md`](./UI-IA.md) parked) |
+| PLANNED | [#10](https://github.com/PoseyATX/candidate-zero/issues/10) | Phase 6 — Mobile-first UI + a11y · IA brief in [`UI-IA.md`](./UI-IA.md) |
 | PLANNED | [#11](https://github.com/PoseyATX/candidate-zero/issues/11) | Phase 7 — Honest v0.1 label |
 | PLANNED | [#12](https://github.com/PoseyATX/candidate-zero/issues/12) | Phase 8 — TS → Unity → iOS / App Store |
 | META | [#13](https://github.com/PoseyATX/candidate-zero/issues/13) | Board hygiene rules |

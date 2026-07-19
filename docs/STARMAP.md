@@ -4,7 +4,7 @@
 **Harness:** `npm run harness:starmap`  
 **Philosophy:** Cartography first. Decade-scale. Done next to win and lose.
 
-There is **no true game over** — only redirection into a new orbit. This folder is the map of Texas political actors, their influence webs (orbits), and career cycles (loops). Most of it is **data not yet playable**. One **pilot road** is live: the Precinct Chair network (MV01).
+There is **no true game over** — only redirection into a new orbit. This folder is the map of Texas political actors, their influence webs (orbits), and career cycles (loops). Most of it is **data not yet playable**. **Eleven** entity templates are live (MV01–11).
 
 ---
 
@@ -41,7 +41,8 @@ src/data/starmap/
   loops.ts                     # LOOP_* registry
   bridges.ts                   # ENT_* ↔ AL*
   pilot-precinct.ts            # pilot constants
-src/data/plays-starmap.ts      # MV01 verb card
+src/data/plays-starmap.ts      # MV01–11 verb cards
+src/data/starmap/pilots.ts     # playable template registry
 ```
 
 ---
@@ -56,7 +57,7 @@ src/data/plays-starmap.ts      # MV01 verb card
 
 ---
 
-## Playable entity templates (8)
+## Playable entity templates (11)
 
 Registry: `src/data/starmap/pilots.ts` · verbs: `src/data/plays-starmap.ts`  
 Harness: `npm run harness:starmap` (all e2e). **Templates + deltas only** — not 93 decks.
@@ -71,6 +72,9 @@ Harness: `npm run harness:starmap` (all e2e). **Templates + deltas only** — no
 | 6 | Local Editor | AL04 | **MV06** | AL04 / name≥14 | +10 name, +2 mom, Faces F |
 | 7 | Faith Leader | AL08 | **MV07** | AL08 / B02+name≥10 | +3 vol, corridor open, A13 directory |
 | 8 | Slate-Maker | AL16 | **MV08** | AL16 / OB3 / AL02+$+endorse | +3 endorse, +12 name, +2 mom, +40 contacts |
+| 9 | Finance Chair | AL10 | **MV09** | AL10 / endorse≥1+$≥1000 | +$900, +20 contacts, +1 endorse |
+| 10 | Radio Host | AL05 | **MV10** | AL05 / name≥12 | +9 name, +2 mom, +25 contacts, Faces F |
+| 11 | Junior Lobbyist | AL13 | **MV11** | AL13 / OB1 / endorse≥2+$≥800 | +45 contacts, +1 endorse, +1 mom, +1 capital, favor |
 
 - Special residency + `entityScope`; multi-orbit camp offers (−401+).  
 - Overlay on primary/general — not a stage leave.
@@ -84,7 +88,7 @@ Harness: `npm run harness:starmap` (all e2e). **Templates + deltas only** — no
 | Full entity catalog | Higher-tier deep subloops |
 | Full orbit skeleton | Timing/attr-gated orbit filtering (basic only) |
 | Loop IDs for waiting/elected/templates | Most non-pilot advancement still `manual_todo` |
-| **8 playable templates** (MV01–08) | Waiting loops replacing Chronicle UI |
+| **11 playable templates** (MV01–11) | Deeper higher-office campaigns |
 | Bridges to AL* | Movement UI modal (Phase 6 adjacent) |
 
 ---
@@ -92,7 +96,7 @@ Harness: `npm run harness:starmap` (all e2e). **Templates + deltas only** — no
 ## Card residency (entity kits)
 
 Entity/loop verbs are **Special** cards (`residency: 'special'`), not Main.
-MV01–03 carry `entityScope`. Session SS* are the elected-member Special package.
+MV01–11 carry `entityScope`. Session SS* are the elected-member Special package.
 
 **Law:** do not invent 93 unique decks — use **role templates + deltas**.
 Outside (world) cards never live on entity kits. Full design:
@@ -119,5 +123,6 @@ Harness: `npm run harness:waiting`.
 
 ## Next roads
 
-1. Movement UI (orbit awareness) — Phase 6 adjacent  
-2. Deeper higher-office campaigns (not just exploratory waiting)
+1. More templates (union / chamber / feed-store / kitchen cabinet / old bull)  
+2. Movement UI (orbit awareness) — Phase 6 adjacent  
+3. Deeper higher-office campaigns (not just exploratory waiting)

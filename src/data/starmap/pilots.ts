@@ -113,6 +113,42 @@ export const PILOT_SLATE: PilotDef = {
   logLabel: 'Slate card print run'
 };
 
+/** Finance Chair — call sheet / war chest (AL10 / MV09). */
+export const PILOT_FINANCE: PilotDef = {
+  entityId: 'ENT_FINANCE_CHAIR',
+  loopId: 'LOOP_ENT_FINANCE_CHAIR',
+  verbPlayId: 'MV09',
+  movementId: 'MOVE_FINANCE_BOOK',
+  consumeFlag: 'mv09Consumed',
+  announceFlag: 'mv09Announced',
+  residueFlag: 'orbit_finance_book',
+  logLabel: 'Finance Chair call sheet'
+};
+
+/** Radio Host — drive-time (AL05 / MV10). */
+export const PILOT_RADIO: PilotDef = {
+  entityId: 'ENT_RADIO_HOST',
+  loopId: 'LOOP_ENT_RADIO_HOST',
+  verbPlayId: 'MV10',
+  movementId: 'MOVE_DRIVE_TIME',
+  consumeFlag: 'mv10Consumed',
+  announceFlag: 'mv10Announced',
+  residueFlag: 'orbit_drive_time',
+  logLabel: 'Drive-time radio slot'
+};
+
+/** Junior Lobbyist — access map (AL13 / MV11). */
+export const PILOT_LOBBY: PilotDef = {
+  entityId: 'ENT_JUNIOR_LOBBYIST',
+  loopId: 'LOOP_ENT_JUNIOR_LOBBYIST',
+  verbPlayId: 'MV11',
+  movementId: 'MOVE_LOBBY_MAP',
+  consumeFlag: 'mv11Consumed',
+  announceFlag: 'mv11Announced',
+  residueFlag: 'orbit_lobby_map',
+  logLabel: 'Lobbyist access map'
+};
+
 /**
  * All playable entity-template loops.
  * Templates + deltas only — never one unique deck per ENT_*.
@@ -125,7 +161,10 @@ export const PLAYABLE_PILOTS: PilotDef[] = [
   PILOT_CLUB,
   PILOT_EDITOR,
   PILOT_FAITH,
-  PILOT_SLATE
+  PILOT_SLATE,
+  PILOT_FINANCE,
+  PILOT_RADIO,
+  PILOT_LOBBY
 ];
 
 export function pilotByVerb(verbPlayId: string): PilotDef | undefined {

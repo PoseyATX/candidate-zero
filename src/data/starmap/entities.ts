@@ -94,7 +94,10 @@ const TIER2: EntityDef[] = [
     allyId: 'AL04',
     tags: ['pilot']
   }),
-  e('ENT_RADIO_HOST', 'Radio talk show host', 2, 'local', 'Drive time; discount; ambush.', 'LOOP_ENT_RADIO_HOST', { allyId: 'AL05' }),
+  e('ENT_RADIO_HOST', 'Radio talk show host', 2, 'local', 'Drive time; discount; ambush.', 'LOOP_ENT_RADIO_HOST', {
+    allyId: 'AL05',
+    tags: ['pilot']
+  }),
   e('ENT_FAITH_LEADER', 'Faith leader (pastor / mega-church)', 2, 'local', 'Corridor, directory, moral weight.', 'LOOP_ENT_FAITH_LEADER', {
     allyId: 'AL08',
     tags: ['pilot']
@@ -110,7 +113,10 @@ const TIER3: EntityDef[] = [
   e('ENT_SERGEANT_ARMS', 'Sergeant-at-Arms / Capitol security', 3, 'lege_staff', 'Doors, order, access.', 'LOOP_TMPL_LEGE_STAFF'),
   e('ENT_PARL_STAFF', "Parliamentarian's office staff", 3, 'lege_staff', 'Procedure without the title.', 'LOOP_TMPL_LEGE_STAFF'),
   e('ENT_BILL_DRAFTER', 'Bill drafter / Legislative Council attorney', 3, 'lege_staff', 'Words that become law.', 'LOOP_TMPL_LEGE_STAFF'),
-  e('ENT_JUNIOR_LOBBYIST', 'Junior lobbyist', 3, 'lege_staff', 'Access on a budget.', 'LOOP_TMPL_LEGE_STAFF', { allyId: 'AL13' }),
+  e('ENT_JUNIOR_LOBBYIST', 'Junior lobbyist', 3, 'lege_staff', 'Access on a budget.', 'LOOP_ENT_JUNIOR_LOBBYIST', {
+    allyId: 'AL13',
+    tags: ['pilot']
+  }),
   e('ENT_PRESS_SECRETARY', 'Press Secretary', 3, 'lege_staff', 'Message discipline or disaster.', 'LOOP_TMPL_LEGE_STAFF')
 ];
 
@@ -165,7 +171,10 @@ const TIER7: EntityDef[] = [
     tags: ['pilot']
   }),
   e('ENT_KITCHEN_CABINET', 'Kitchen Cabinet', 7, 'federal', 'Inner circle; extra draws; debate prep.', 'LOOP_TMPL_FEDERAL', { allyId: 'AL11' }),
-  e('ENT_FINANCE_CHAIR', 'Finance Chair', 7, 'federal', 'Weekly money when warm (stub grant path).', 'LOOP_TMPL_FEDERAL', { allyId: 'AL10' }),
+  e('ENT_FINANCE_CHAIR', 'Finance Chair', 7, 'federal', 'Weekly money when warm; call the book once.', 'LOOP_ENT_FINANCE_CHAIR', {
+    allyId: 'AL10',
+    tags: ['pilot']
+  }),
   e('ENT_FEED_STORE', 'Feed-Store Regulars', 7, 'federal', 'Unofficial senate on the bench.', 'LOOP_TMPL_FEDERAL', { allyId: 'AL07' }),
   e('ENT_RIVAL_STAFFER', "Rival's disgruntled staffer", 7, 'federal', 'Folder potential; plant risk.', 'LOOP_TMPL_FEDERAL', { allyId: 'AL14' })
 ];

@@ -6,7 +6,7 @@
 **Live alpha:** https://poseyatx.github.io/candidate-zero/  
 **Repo:** https://github.com/PoseyATX/candidate-zero  
 
-**Last updated:** 2026-07-19 (card residency)  
+**Last updated:** 2026-07-19 (UI/IA furniture plan)  
 
 Related docs:
 
@@ -15,6 +15,7 @@ Related docs:
 | [`PROJECT-BOARD.md`](./PROJECT-BOARD.md) | Ops roadmap mirror of Project #2 |
 | [`ROADMAP.md`](./ROADMAP.md) | Evidence log (what shipped + harness proof) |
 | [`GAME-FLOW.md`](./GAME-FLOW.md) | Current player-facing loop |
+| [`UI-IA.md`](./UI-IA.md) | Information architecture — what lives where (Phase 6) |
 | [`CARD-RESIDENCY.md`](./CARD-RESIDENCY.md) | Main / Special / Outside deck architecture law |
 | [`CARD-TAXONOMY.md`](./CARD-TAXONOMY.md) | Kind/risk visual channels (orthogonal to residency) |
 | [`SRD-NOTES.md`](./SRD-NOTES.md) | Design law recovered from archive |
@@ -184,7 +185,7 @@ Over this workstream we:
 | Status | Issue | Title |
 |---|---|---|
 | **DONE** | #9 | Phase 5 — Balance breadth (matrix + wrong retune) |
-| **DONE** | #17/#18 | Starmap — 8 entity templates (MV01–08 + Slate) |
+| **DONE** | #17/#18 | Starmap — 11 entity templates (MV01–11) |
 | **DONE** | — | Session teeth (pressure, stall, freeze, challenger) |
 | **DONE** | — | Outside event deck v0 (10 world cards) |
 | **DONE** | — | RivalRap teeth + Chronicle→waiting loop bridge |
@@ -473,4 +474,36 @@ Full harness green after waiting/Outside/rival/session stack.
 | Audit | WA* + Outside in residency tally |
 
 Evidence: `docs/BALANCE-NOTES.md` 2026-07-19 hygiene section.
+
+---
+
+## UI / IA furniture plan (2026-07-19)
+
+Owner play notes → durable plan only (**no UI code** this pass).
+
+| Note | Plan response |
+|---|---|
+| Title stark vs rest of game | Continuity of materials; ceremony vs density intentional |
+| Stats cluttery | Bands: identity → force/session → machine; kill equal grid weight |
+| Identity between ballot & attrs | Identity + Attributes **first** after act chrome |
+| Identity + Attrs more prominent | High-loudness character band; not another ledger cell |
+| `MONEY` before `$200` | Label diet; HUD `$N` convention wins |
+| What / where | Full inventory + zone map in `docs/UI-IA.md` |
+| Info bar above cards moves | **Toasts** OK (fixed overlay); don’t reflow card grid |
+
+Feeds Phase 6 (#10). Board + work-log index linked.
+
+---
+
+## Starmap pack #3 — Finance / Radio / Lobbyist (2026-07-19)
+
+| # | Entity | Verb | Ally | Notes |
+|---|---|---|---|---|
+| 9 | Finance Chair | **MV09** | AL10 | War-chest alternate (endorse+$); one-shot call sheet |
+| 10 | Radio Host | **MV10** | AL05 | Name path without ally; drive-time name heat |
+| 11 | Junior Lobbyist | **MV11** | AL13 | OB1 PAC String alternate; capital/favor seed |
+
+Own loops (`LOOP_ENT_*`), Special residency, harness e2e. **11** playable pilots.
+
+**Harness hygiene:** strategies no longer auto-pick `residency: special` / `MV*` on empty-hand fallback (prevents free-farming every new template). Teacher money/labor matrix cap **4.0×**.
 

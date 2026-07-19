@@ -1,6 +1,6 @@
 /**
  * Starmap movement verbs — Special residency entity kits (templates).
- * MV01–03 original pilots · MV04–07 County Party / Club / Editor / Faith.
+ * MV01–08 prior packs · MV09–11 Finance / Radio / Lobbyist.
  */
 
 import type { PlayCard } from '../engine/types.js';
@@ -10,9 +10,12 @@ import {
   PILOT_CLUB,
   PILOT_EDITOR,
   PILOT_FAITH,
+  PILOT_FINANCE,
   PILOT_JUDGE,
+  PILOT_LOBBY,
   PILOT_PARTY,
   PILOT_PRECINCT,
+  PILOT_RADIO,
   PILOT_SLATE
 } from './starmap/pilots.js';
 
@@ -321,6 +324,103 @@ export const MV08_SlateCard: PlayCard = {
   }
 };
 
+/**
+ * MV09 — Call the finance book (AL10).
+ */
+export const MV09_FinanceBook: PlayCard = {
+  id: PILOT_FINANCE.verbPlayId,
+  n: 'Call the finance book',
+  cost: { a: 1 },
+  risk: 'SAFE',
+  ph: [1, 2, 3],
+  tag: 'orbit movement',
+  kind: 'ally',
+  residency: 'special',
+  control: 'player',
+  entityScope: [PILOT_FINANCE.entityId],
+  attrs: ['CRA', 'CLO'],
+  d: 'The Finance Chair opens the call sheet. Special kit — money spine, not a free weekly drip forever.',
+  show: s => isMovementVerbAvailable(s, PILOT_FINANCE.verbPlayId),
+  odds: () => 0.92,
+  run: s => {
+    s.money += 900;
+    s.contacts += 20;
+    s.endorsePts += 1;
+    markEntity(s, PILOT_FINANCE.entityId);
+    consumePilot(s, PILOT_FINANCE.consumeFlag, PILOT_FINANCE.residueFlag);
+    return (
+      'The book answers. +$900, +20 contacts, +1 endorsement. ' +
+      '(Starmap: ENT_FINANCE_CHAIR. Residue: orbit_finance_book.)'
+    );
+  }
+};
+
+/**
+ * MV10 — Take the drive-time slot (AL05).
+ */
+export const MV10_DriveTime: PlayCard = {
+  id: PILOT_RADIO.verbPlayId,
+  n: 'Take the drive-time slot',
+  cost: { a: 1 },
+  risk: 'SAFE',
+  ph: [1, 2, 3],
+  tag: 'orbit movement',
+  kind: 'ally',
+  residency: 'special',
+  control: 'player',
+  entityScope: [PILOT_RADIO.entityId],
+  attrs: ['CHA', 'CRA'],
+  d: 'Open mic between farm reports and the noon news. Special kit — Radio Host orbit. Name heat, not an endorsement.',
+  show: s => isMovementVerbAvailable(s, PILOT_RADIO.verbPlayId),
+  odds: () => 0.9,
+  run: s => {
+    s.nameID += 9;
+    s.momentum += 2;
+    s.faces.F = Math.min(100, (s.faces.F || 0) + 5);
+    s.contacts += 25;
+    markEntity(s, PILOT_RADIO.entityId);
+    consumePilot(s, PILOT_RADIO.consumeFlag, PILOT_RADIO.residueFlag);
+    return (
+      'Drive time says your name clean. +9 name ID, +2 momentum, +25 contacts, Faces F up. ' +
+      '(Starmap: ENT_RADIO_HOST. Residue: orbit_drive_time.)'
+    );
+  }
+};
+
+/**
+ * MV11 — Spend the lobbyist access map (AL13).
+ */
+export const MV11_LobbyMap: PlayCard = {
+  id: PILOT_LOBBY.verbPlayId,
+  n: 'Spend the access map',
+  cost: { a: 1 },
+  risk: 'SAFE',
+  ph: [2, 3],
+  tag: 'orbit movement',
+  kind: 'ally',
+  residency: 'special',
+  control: 'player',
+  entityScope: [PILOT_LOBBY.entityId],
+  attrs: ['DIP', 'CRA'],
+  d: 'A junior lobbyist with a conscience walks you the side door. Special kit — access, not a vote.',
+  show: s => isMovementVerbAvailable(s, PILOT_LOBBY.verbPlayId),
+  odds: () => 0.88,
+  run: s => {
+    s.contacts += 45;
+    s.endorsePts += 1;
+    s.momentum += 1;
+    s.capital = (s.capital || 0) + 1;
+    // Soft session seed if ever seated later; harmless on campaign
+    s.favor = Math.min(100, (s.favor || 0) + 2);
+    markEntity(s, PILOT_LOBBY.entityId);
+    consumePilot(s, PILOT_LOBBY.consumeFlag, PILOT_LOBBY.residueFlag);
+    return (
+      'The map has three names that still take coffee. +45 contacts, +1 endorsement, +1 momentum, +1 capital, favor up. ' +
+      '(Starmap: ENT_JUNIOR_LOBBYIST. Residue: orbit_lobby_map.)'
+    );
+  }
+};
+
 export const STARMAP_PLAYS: PlayCard[] = [
   MV01_PrecinctNetwork,
   MV02_FieldPlan,
@@ -329,5 +429,8 @@ export const STARMAP_PLAYS: PlayCard[] = [
   MV05_ClubRoster,
   MV06_NewsroomNod,
   MV07_CorridorBlessing,
-  MV08_SlateCard
+  MV08_SlateCard,
+  MV09_FinanceBook,
+  MV10_DriveTime,
+  MV11_LobbyMap
 ];
