@@ -1,7 +1,8 @@
 # How Candidate Zero runs (current iteration)
 
-Snapshot: 2026-07-19 after Phase 4 Session + PAC/session debug pass.  
-Live: https://poseyatx.github.io/candidate-zero/
+Snapshot: 2026-07-19 **resting package** (Phase 6 UI + Outside weather + starmap MV01–14).  
+Live: https://poseyatx.github.io/candidate-zero/  
+Resting note: [`RESTING.md`](./RESTING.md)
 
 This is the **player-facing** loop. Evidence and phase history live in
 `docs/ROADMAP.md` / `docs/PROJECT-BOARD.md`.
@@ -93,9 +94,10 @@ Opposition organizers bank **rivalRap** weekly on a random ground. That presence
 
 The ground picker shows you vs opp. Contested turf is no longer cosmetic.
 
-## Outside weather (event deck v0)
+## Outside weather (event deck · 16 events)
 
-World cards the player **never plays**. ~28% of campaign weeks / ~22% of session weeks may draw one (`OUTSIDE —` in the log).
+World cards the player **never plays**. ~18% of campaign weeks / ~15% of session weeks may draw one.  
+UI: full-screen **weather** modal (`pendingOutside`) after End Week, plus `OUTSIDE —` in the log. Never hand.
 
 Examples: New World Screw Worm, mid-decade map rumor, ethics complaint, drought, energy boom, rival dump, flood, school-board war, special session, challenger ad.
 

@@ -6,21 +6,22 @@
 **Live alpha:** https://poseyatx.github.io/candidate-zero/  
 **Repo:** https://github.com/PoseyATX/candidate-zero  
 
-**Last updated:** 2026-07-19 (Outside pack #2 + GR08 rename)  
+**Last updated:** 2026-07-19 (**RESTING** — floors swept)  
 
 Related docs:
 
 | Doc | Role |
 |---|---|
+| [`RESTING.md`](./RESTING.md) | End-of-night package snapshot |
 | [`PROJECT-BOARD.md`](./PROJECT-BOARD.md) | Ops roadmap mirror of Project #2 |
 | [`ROADMAP.md`](./ROADMAP.md) | Evidence log (what shipped + harness proof) |
 | [`GAME-FLOW.md`](./GAME-FLOW.md) | Current player-facing loop |
-| [`UI-IA.md`](./UI-IA.md) | Information architecture — what lives where (Phase 6) |
+| [`UI-IA.md`](./UI-IA.md) | Information architecture — Phase 6 |
 | [`CARD-RESIDENCY.md`](./CARD-RESIDENCY.md) | Main / Special / Outside deck architecture law |
 | [`CARD-TAXONOMY.md`](./CARD-TAXONOMY.md) | Kind/risk visual channels (orthogonal to residency) |
 | [`SRD-NOTES.md`](./SRD-NOTES.md) | Design law recovered from archive |
 | [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Layers + ship path |
-| Issues #4–#15 | Phase tickets + meta/bugs |
+| Issues #4–#20 | Phase tickets + meta + Stupid Ideas park |
 
 ---
 
@@ -28,15 +29,16 @@ Related docs:
 
 Over this workstream we:
 
-1. **Verified Phase 1** (grounds) and **implemented Phase 2–4** (allies/shop/obligations → debt leverage → legislative Session).
+1. **Verified Phase 1** (grounds) and **implemented Phase 2–6 core** (allies → debt → Session → balance → UI hierarchy).
 2. **Rejected bad designs** (debt→odds tax; Claude’s false “session already thin-done”).
-3. **Cleaned GitHub issues** so Project #2 can be the operating roadmap (phases 0–4 closed with evidence; #9 NEXT).
-4. **Hardened Pages** deploy and UI firm-up (ledger, shop, debt, session chrome).
-5. **Debug pass** on Session feeling like a campaign loop + PAC Check free-money spam.
-6. **Documented** current flow and a clear split: **vanilla chat for complexity vision**, **Grok Build for enforcement**.
+3. **Starmap** to 14 playable templates; **Outside** to 16 events + weather UI.
+4. **Waiting season** + Chronicle bridge; rival teeth; residency law.
+5. **Hardened** harness suite, Pages path, and end-of-night resting package.
+6. **Documented** flow; **#20 Stupid Ideas** parks ADD without derailing NEXT.
 
 **Ship path (owner direction):** pure TypeScript engine → Unity presentation shell → iOS / App Store.  
-**Non-negotiable:** no second rules engine in C#/Unity.
+**Non-negotiable:** no second rules engine in C#/Unity.  
+**Package:** `0.0.1` — not v0.1 yet.
 
 ---
 
@@ -584,4 +586,19 @@ Still **outside / world** only. Original paraphrase, not copyrighted soundbites.
 | Law | Never hand; log line still written |
 
 Makes pack #1–2 readable without burying weather in the log only.
+
+---
+
+## End of night — floors swept (2026-07-19)
+
+| Check | Status |
+|---|---|
+| Working tree | Clean at wrap (then resting docs commit) |
+| Tip | `20e8f3c` + resting commit |
+| Harness | Full suite green |
+| Build | `tsc` + Vite production green |
+| Version | `0.0.1` honest — Phase 7 still open |
+| Package note | [`docs/RESTING.md`](./RESTING.md) |
+
+Dogs fed. County still there tomorrow.
 

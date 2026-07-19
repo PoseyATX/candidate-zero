@@ -1,7 +1,7 @@
 {
   "name": "candidate-zero",
   "version": "0.0.1",
-  "description": "CANDIDATE ZERO — A Hot Texas Primary (modular TypeScript baseline for eventual Swift/iOS)",
+  "description": "CANDIDATE ZERO — Texas Legislature roguelike deckbuilder. Pure TS engine → Unity → iOS. Package 0.0.1 (not v0.1).",
   "type": "module",
   "scripts": {
     "dev": "vite",

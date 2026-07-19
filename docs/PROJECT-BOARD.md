@@ -4,9 +4,10 @@
 **Evidence log:** [`docs/ROADMAP.md`](./ROADMAP.md) (what shipped + harness proof)  
 **Workstream log:** [`docs/WORK-LOG.md`](./WORK-LOG.md) · issue #16  
 **Player flow:** [`docs/GAME-FLOW.md`](./GAME-FLOW.md)  
-**UI / IA furniture:** [`docs/UI-IA.md`](./UI-IA.md) (what info, where, prominence — Phase 6 input)  
+**UI / IA:** [`docs/UI-IA.md`](./UI-IA.md) (Phase 6 core shipped)  
+**Resting package:** [`docs/RESTING.md`](./RESTING.md) — floors swept, tip `20e8f3c`  
 **Live alpha:** https://poseyatx.github.io/candidate-zero/  
-**Snapshot date:** 2026-07-19 (UI/IA plan parked)
+**Snapshot date:** 2026-07-19 (**RESTING** — end of night)
 
 This file is the agent-readable mirror of the GitHub Project. When project API
 scopes are missing, **update this file + the linked issues** so work stays
@@ -32,7 +33,7 @@ become a second rules implementation.
 | **DONE** | [#17](https://github.com/PoseyATX/candidate-zero/issues/17) / [#18](https://github.com/PoseyATX/candidate-zero/issues/18) | Starmap — catalog + templates through MV14 |
 | **DONE** | [#10](https://github.com/PoseyATX/candidate-zero/issues/10) | Phase 6 — UI hierarchy + toasts (core); a11y CI residual |
 | **DONE** | — | Outside weather UI surface (`pendingOutside`) |
-| **NEXT** | — | More templates *or* Phase 7 honesty prep |
+| **RESTING** | — | Package clean — see [`RESTING.md`](./RESTING.md); wake: templates *or* P7 prep *or* a11y residual |
 | PLANNED | [#11](https://github.com/PoseyATX/candidate-zero/issues/11) | Phase 7 — Honest v0.1 label |
 | PLANNED | [#12](https://github.com/PoseyATX/candidate-zero/issues/12) | Phase 8 — TS → Unity → iOS / App Store |
 | META | [#13](https://github.com/PoseyATX/candidate-zero/issues/13) | Board hygiene rules |
