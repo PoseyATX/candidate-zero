@@ -201,36 +201,196 @@ h1 {
   font-variant-numeric: tabular-nums;
 }
 
+/* Dossier ledger — Phase 6 bands (docs/UI-IA.md) */
 .ledger {
   background: var(--walnut-2);
   border: 1px solid var(--line);
-  padding: 0.85rem 1rem;
+  padding: 0;
   margin-bottom: 1rem;
+  overflow: hidden;
+}
+
+.ledger-dossier {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.ledger-band {
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--line);
+}
+.ledger-band:last-child {
+  border-bottom: none;
+}
+
+.ledger-band-label {
+  font-family: Cinzel, serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+  margin-bottom: 0.4rem;
+}
+
+/* Identity — first-class character chrome */
+.ledger-identity {
+  background:
+    linear-gradient(180deg, rgba(176, 141, 62, 0.08), transparent 70%),
+    var(--walnut-3);
+  border-bottom: 2px solid var(--gold-dim);
+  padding: 0.85rem 1rem 0.75rem;
+}
+.ledger-who {
+  font-family: Cinzel, serif;
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: 0.03em;
+  color: var(--parchment);
+  line-height: 1.2;
+}
+.ledger-issue {
+  font-size: 0.92rem;
+  color: var(--parchment-dim);
+  font-style: italic;
+  margin: 0.2rem 0 0.55rem;
+}
+
+.attr-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.attr-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.28rem;
+  border: 1px solid var(--gold-dim);
+  border-radius: 3px;
+  padding: 0.12rem 0.4rem 0.1rem;
+  background: rgba(0, 0, 0, 0.22);
+  font-variant-numeric: tabular-nums;
+}
+.attr-k {
+  font-family: Cinzel, serif;
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+.attr-v {
+  font-size: 0.88rem;
+  color: var(--parchment);
+  font-weight: 600;
+}
+
+.ledger-force {
+  background: var(--walnut-2);
+}
+.ledger-gate .k {
+  color: var(--oxblood-bright);
+}
+.ledger-secondary {
+  opacity: 0.88;
+}
+.ledger-cash {
+  font-family: Cinzel, serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+
+.ledger-machine {
+  background: rgba(0, 0, 0, 0.12);
+  font-size: 0.88rem;
+  color: var(--parchment-dim);
+}
+.ledger-machine .k {
+  color: var(--gold-dim);
 }
 
 .ledger-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 0.45rem 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.4rem 0.9rem;
   font-size: 0.95rem;
 }
 
-.ledger-grid .k {
+.ledger-cell .k,
+.ledger-grid .k,
+.ledger-wide .k {
   color: var(--gold);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   display: block;
 }
-.ledger-grid .ledger-wide {
+.ledger-wide {
   grid-column: 1 / -1;
   font-size: 0.88rem;
   line-height: 1.35;
+  margin-top: 0.15rem;
 }
 .ledger-grid .muted,
+.ledger-cell.muted,
 .muted {
   color: var(--ink-dim, #8a7a62);
   font-size: 0.82em;
+}
+
+/* Mobile: HUD has vitals — hide duplicate vitals band; sticky identity */
+@media (max-width: 800px) {
+  .ledger-vitals {
+    display: none;
+  }
+  .ledger-identity {
+    position: sticky;
+    top: 2.6rem; /* under sticky HUD */
+    z-index: 25;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  }
+  .ledger-who {
+    font-size: 1.02rem;
+  }
+  .attr-chip {
+    padding: 0.08rem 0.32rem;
+  }
+  .attr-v {
+    font-size: 0.8rem;
+  }
+}
+
+.hud-cash {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.hud-week {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.82rem;
+}
+.hud-who {
+  font-family: Cinzel, serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  color: var(--parchment-dim);
+  max-width: 5.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hud-sub {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gold-dim);
+  margin-left: 0.2rem;
+}
+
+/* Week guidance — reserved height so copy swaps don't shove cards */
+.week-hint {
+  min-height: 2.75em;
+  margin: 0 0 0.65rem;
+  line-height: 1.35;
 }
 .shop-hint {
   grid-column: 1 / -1;
@@ -1213,25 +1373,97 @@ h1 {
 /* .draft-card gets its card-shell styling from .play-card + a risk-* class
    (assigned in main.ts renderDraft) — no separate rule needed here. */
 
-/* Dopamine / feedback */
-.juice-banner {
-  margin: 0 0 0.75rem;
-  padding: 0.65rem 0.85rem;
-  border: 1px solid var(--gold-dim);
-  background: var(--walnut-3);
-  color: var(--parchment);
-  font-weight: 600;
-  animation: juice-in 0.35s ease-out;
+/* Fixed toast stack — Phase 6; never reflows card grids */
+.toast-host {
+  position: fixed;
+  left: 50%;
+  top: 12%;
+  transform: translateX(-50%);
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  width: min(420px, 92vw);
+  pointer-events: none;
 }
-.juice-banner.spark { background: #3a2c10; border-color: var(--gold); color: var(--gold); }
-.juice-banner.hit { background: #1e2e1c; border-color: var(--sage); color: #b9d1a9; }
-.juice-banner.thump { background: var(--walnut-3); border-color: var(--gold-dim); }
-.juice-banner.crash { background: #2e1210; border-color: var(--oxblood-bright); color: #e7a89f; }
-.juice-banner.whisper { background: #16232b; border-color: #3d5a68; color: #a9c4d1; }
+.toast {
+  width: 100%;
+  background: linear-gradient(175deg, #efe3c6, #e0cfa9);
+  color: var(--ink);
+  border: 1px solid var(--gold);
+  outline: 2px solid var(--gold-dim);
+  outline-offset: 2px;
+  padding: 0.7rem 1rem;
+  text-align: center;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+  animation: toast-in 0.35s ease-out both;
+  pointer-events: none;
+}
+.toast-stamp {
+  font-family: Cinzel, serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.15rem;
+  color: #4a3b24;
+}
+.toast-body {
+  font-size: 0.88rem;
+  line-height: 1.35;
+  color: #3a2e1c;
+}
+.toast-spark { outline-color: var(--gold); }
+.toast-hit { outline-color: var(--sage); }
+.toast-thump { outline-color: var(--gold-dim); }
+.toast-crash {
+  background: linear-gradient(175deg, #f0cfc8, #e0b0a6);
+  outline-color: var(--oxblood-bright);
+}
+.toast-whisper {
+  background: linear-gradient(175deg, #d4e0e8, #c0d0dc);
+  outline-color: #3d5a68;
+}
+.toast-out {
+  animation: toast-out 0.28s ease-in forwards;
+}
 
-@keyframes juice-in {
-  from { transform: translateY(-6px); opacity: 0; }
+@keyframes toast-in {
+  from { transform: translateY(-10px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
+}
+@keyframes toast-out {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-8px); }
+}
+
+/* Setup as nameplate fill — shared materials with title */
+.nameplate-panel {
+  max-width: 640px;
+  margin: 0 auto 1.5rem;
+  border-top: 3px double var(--gold);
+  border-bottom: 3px double var(--gold);
+  background:
+    radial-gradient(ellipse 80% 40% at 50% 0%, rgba(176, 141, 62, 0.08), transparent 55%),
+    var(--walnut-2);
+}
+.setup-eyebrow {
+  text-align: center;
+  margin-bottom: 0.35rem;
+}
+.setup-rule {
+  margin: 0.35rem auto 0.6rem;
+  width: min(280px, 70%);
+}
+.setup-title {
+  text-align: center;
+  font-family: Cinzel, serif;
+  letter-spacing: 0.04em;
+}
+.setup-lede {
+  text-align: center;
+  max-width: 28rem;
+  margin: 0.25rem auto 0.75rem;
 }
 
 .log-line.juice { color: var(--gold); font-style: italic; }

@@ -1,9 +1,9 @@
 # UI / information architecture plan
 
-**Status:** furniture only — plan, not implementation.  
-**Audience:** Phase 6 (#10) + any pre–Unity presentation pass.  
+**Status:** **Phase 6 implement shipped** (2026-07-19) — hierarchy, label diet, toasts, setup nameplate.  
+**Audience:** Phase 6 (#10) + Unity presentation later.  
 **Captured:** 2026-07-19 (owner play notes).  
-**Code today:** `index.html`, `src/ui/main.ts` (`renderHud`, `renderLedger`), `src/ui/styles.css`.
+**Code:** `index.html`, `src/ui/main.ts` (`renderHud`, `renderLedger`, `showJuice` toasts), `src/ui/styles.css`.
 
 > Goal: know **what** information the player needs, **where** it lives, and **how loud** it is — so layout work is rearranging furniture, not inventing rooms while guests are at the door.
 
@@ -252,16 +252,18 @@ When implementing (Phase 6 or a thin “ledger hierarchy” slice):
 
 ---
 
-## 8. Done when (for the eventual implement pass)
+## 8. Done when
 
-- [ ] Identity + Attributes are the first readable block after act chrome  
-- [ ] Ballot is not sandwiched between force stats and identity  
-- [ ] No bare `MONEY`/`Money` label in front of `$N`  
-- [ ] Title → setup → play shares materials; ceremony vs density is intentional, not accidental  
-- [ ] Mobile: persona/issue visible without hunting past inventory  
-- [ ] Stage-conditional chrome: primary force vs session bill vs waiting bank  
-- [ ] Transient juice does **not** reflow the card grid (toasts or reserved-height bar)  
-- [ ] This doc updated with “shipped” notes when code matches
+- [x] Identity + Attributes are the first readable block after act chrome  
+- [x] Ballot is not sandwiched between force stats and identity (sigs only if not ON)  
+- [x] No bare `MONEY`/`Money` label in front of `$N`  
+- [x] Title → setup → play shares materials (setup nameplate panel + double rules)  
+- [x] Mobile: sticky identity under HUD; persona chip on HUD  
+- [x] Stage-conditional chrome: force / chamber / waiting bank  
+- [x] Transient juice = fixed toasts; week-hint reserved height  
+- [x] This doc marked shipped  
+
+**Still open (polish / CI):** full WCAG audit pass, visual regression screenshot CI, 10-min mobile playtest sign-off.
 
 ---
 

@@ -30,8 +30,8 @@ become a second rules implementation.
 | **DONE** | [#8](https://github.com/PoseyATX/candidate-zero/issues/8) | Phase 4 — Session stage (bill lifecycle) |
 | **DONE** | [#9](https://github.com/PoseyATX/candidate-zero/issues/9) | Phase 5 — Balance breadth |
 | **DONE** | [#17](https://github.com/PoseyATX/candidate-zero/issues/17) / [#18](https://github.com/PoseyATX/candidate-zero/issues/18) | Starmap — catalog + templates through MV11 |
-| **NEXT** | — | More templates *or* Phase 6 UI furniture (owner call; [`UI-IA.md`](./UI-IA.md) parked) |
-| PLANNED | [#10](https://github.com/PoseyATX/candidate-zero/issues/10) | Phase 6 — Mobile-first UI + a11y · IA brief in [`UI-IA.md`](./UI-IA.md) |
+| **DONE** | [#10](https://github.com/PoseyATX/candidate-zero/issues/10) | Phase 6 — UI hierarchy + toasts (core); a11y CI residual |
+| **NEXT** | — | More starmap templates *or* Phase 7 honesty prep (owner call) |
 | PLANNED | [#11](https://github.com/PoseyATX/candidate-zero/issues/11) | Phase 7 — Honest v0.1 label |
 | PLANNED | [#12](https://github.com/PoseyATX/candidate-zero/issues/12) | Phase 8 — TS → Unity → iOS / App Store |
 | META | [#13](https://github.com/PoseyATX/candidate-zero/issues/13) | Board hygiene rules |

@@ -498,9 +498,13 @@ Concretely still open:
   cards and terminal/Chronicle choice cards share the same anatomy via
   one `cardInner()` renderer. Raster/painted art per card remains the
   eventual ceiling, but the typographic-only gap is closed.
-- The log panel is plain text; popular deckbuilders surface last-action
-  results as transient stacked toasts. The juice banner covers the
-  headline case; a fuller notification stack is future polish.
+- ~~The log panel is plain text; juice banner reflows cards~~ **2026-07-19
+  Phase 6 hierarchy pass:** fixed `#toast-host` stack (no layout thrash);
+  reserved-height week hint; ledger dossier bands (Identity + attrs first,
+  force/session/waiting conditional, vitals, machine); `$N` label diet;
+  setup nameplate continuity; sticky identity under mobile HUD. See
+  `docs/UI-IA.md`. Residual: WCAG AA audit, screenshot CI, formal phone
+  playtest sign-off.
 
 ## Phase 7 — v0.1 label
 

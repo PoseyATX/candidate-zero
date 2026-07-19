@@ -52,7 +52,24 @@ import './styles.css';
 
 let campaign: Campaign | null = null;
 let weekPlays: PlayOutcome[] = [];
-let juiceTimer: ReturnType<typeof setTimeout> | null = null;
+
+const ATTR_SHORT: Record<string, string> = {
+  CLO: 'Close',
+  CON: 'Conviction',
+  CRA: 'Craft',
+  INK: 'Ink',
+  DIP: 'Diplomacy',
+  CHA: 'Charm'
+};
+
+function attrChipsHtml(attrs: Record<string, number>): string {
+  return Object.entries(attrs)
+    .map(([k, v]) => {
+      const label = ATTR_SHORT[k] ?? k;
+      return `<span class="attr-chip" title="${label}"><span class="attr-k">${k}</span><span class="attr-v">${v}</span></span>`;
+    })
+    .join('');
+}
 let legacy: LegacyState = loadLegacy();
 let terminalKind: CampaignOutcome | null = null;
 let terminalShare = 0;
@@ -232,36 +249,41 @@ function renderHud(): void {
     ? '<span class="chip chip-on">BALLOT ON</span>'
     : `<span class="hud-meter" title="${snap.signatures}/${s.sigNeed} signatures">
          <i style="width:${Math.min(100, Math.round((snap.signatures / s.sigNeed) * 100))}%"></i>
-       </span><span class="hud-meter-label">${snap.signatures}/${s.sigNeed} sigs</span>`;
+       </span><span class="hud-meter-label">${snap.signatures}/${s.sigNeed}</span>`;
   const spendNote =
     snap.debt > 0 && snap.availableCash < snap.money
-      ? `<span class="hud-item" title="Service reserve — elevated debt tightens spend, not odds"><span class="k">Spend</span>$${snap.availableCash}</span>`
+      ? `<span class="hud-item" title="Service reserve — elevated debt tightens spend, not odds">$${snap.availableCash}<span class="hud-sub">spend</span></span>`
       : '';
   const act = ACT_SHELLS[actFromStage(s.stage)];
   const actChip = `<span class="chip chip-act chip-act-${act.id}" title="${act.actNum}: ${act.title}">${act.tag}</span>`;
   const ballotHud =
     s.stage === 'session'
       ? `<span class="chip chip-on" title="Sworn member">SEAT</span>`
-      : ballotBit;
+      : s.stage === 'waiting'
+        ? `<span class="chip chip-act chip-act-waiting" title="Waiting season">WAIT</span>`
+        : ballotBit;
+  const who = (s.persona ?? '—').split(' ')[0] ?? '—';
   $('hud').innerHTML = `
     <span class="hud-item">${actChip}</span>
-    <span class="hud-item"><span class="k">AP</span> <span class="pips">${pips}</span>${fieldChip}</span>
-    <span class="hud-item"><span class="k">$</span>${snap.money}${debtChip}${oblChip}</span>
+    <span class="hud-item"><span class="pips" title="Action points">${pips}</span>${fieldChip}</span>
+    <span class="hud-item hud-cash" title="Cash on hand">$${snap.money}${debtChip}${oblChip}</span>
     ${spendNote}
-    <span class="hud-item"><span class="k">W${snap.week}</span>
+    <span class="hud-item" title="Week ${snap.week} of ${s.weeksTotal}"><span class="hud-week">W${snap.week}/${s.weeksTotal}</span>
       <span class="hud-meter hud-meter-week"><i style="width:${weekPct}%"></i></span>
     </span>
     <span class="hud-item">${ballotHud}</span>
+    <span class="hud-item hud-who" title="${s.persona ?? ''} · ${s.issue ?? ''}">${who}</span>
   `;
 }
 
+/**
+ * Dossier ledger — Phase 6 hierarchy (docs/UI-IA.md):
+ * Identity band → force/session → vitals (desktop) → machine.
+ */
 function renderLedger(): void {
   if (!campaign) return;
   const s = campaign.state;
   const snap = snapshot(s);
-  const attrs = Object.entries(s.attrs)
-    .map(([k, v]) => `${k}${v}`)
-    .join(' ');
   const allyBits = s.allies
     .filter(a => a.warm > 0)
     .map(a => {
@@ -276,93 +298,128 @@ function renderLedger(): void {
     .join(' · ');
   const assetBits = s.assets.filter(a => /^A\d+/.test(a)).join(' · ');
   const oblBits = s.obls.join(' · ');
-  const spendLine =
+
+  const debtBits =
     snap.debt > 0
-      ? `<div><span class="k">Spendable</span> $${snap.availableCash}${
-          snap.availableCash < snap.money ? ' <span class="muted">(service reserve)</span>' : ''
-        }</div>`
+      ? `<div class="ledger-cell"><span class="k">Debt</span> $${snap.debt}${
+          s.pacBridgeDebt ? ` · PAC $${s.pacBridgeDebt}` : ''
+        } <span class="muted">no odds tax</span></div>
+        <div class="ledger-cell"><span class="k">Spendable</span> $${snap.availableCash}</div>`
       : '';
-  const debtLine =
-    snap.debt > 0
-      ? `<div><span class="k">Debt</span> $${snap.debt}${
-          s.pacBridgeDebt ? ` · PAC bridge $${s.pacBridgeDebt}` : ''
-        } <span class="muted">— no odds tax</span></div>`
+
+  let forceBand = '';
+  if (s.stage === 'session') {
+    forceBand = `
+      <div class="ledger-band ledger-force">
+        <div class="ledger-band-label">Chamber</div>
+        <div class="ledger-grid">
+          <div class="ledger-cell"><span class="k">Capital</span> ${s.capital}</div>
+          <div class="ledger-cell"><span class="k">Favor</span> ${Math.round(s.favor)}</div>
+          <div class="ledger-cell"><span class="k">District</span> ${Math.round(s.districtStanding)}</div>
+          <div class="ledger-wide"><span class="k">Committee</span> ${s.committee?.n ?? '—'}</div>
+          <div class="ledger-wide bill-status"><span class="k">Bill</span> ${
+            s.bill
+              ? `${s.bill.title} · <b>${s.bill.status}</b> (${billStageLabelUi(s.bill)}) · heat ${s.bill.heat}${
+                  s.bill.tally.aye || s.bill.tally.nay
+                    ? ` · tally ${s.bill.tally.aye}–${s.bill.tally.nay}`
+                    : ''
+                }`
+              : '—'
+          }</div>
+          ${
+            s.sessionFlags?.pac_lender_claim || s.obls.includes('OB1')
+              ? '<div class="ledger-wide muted">PAC claim rides — referral will collect.</div>'
+              : ''
+          }
+        </div>
+      </div>`;
+  } else if (s.stage === 'waiting') {
+    const bank = s.sessionFlags || {};
+    forceBand = `
+      <div class="ledger-band ledger-force">
+        <div class="ledger-band-label">Waiting bank</div>
+        <div class="ledger-grid">
+          <div class="ledger-cell"><span class="k">Path</span> ${s.waitingPathId ?? 'orbit'}</div>
+          <div class="ledger-cell"><span class="k">Banked contacts</span> +${Number(bank.waitBankContacts || 0)}</div>
+          <div class="ledger-cell"><span class="k">Banked name</span> +${Number(bank.waitBankName || 0)}</div>
+          <div class="ledger-cell"><span class="k">Week</span> ${s.week}/${WAITING_WEEKS}</div>
+        </div>
+      </div>`;
+  } else {
+    const ballotCell = !snap.ballot
+      ? `<div class="ledger-cell ledger-gate"><span class="k">Signatures</span> ${snap.signatures}/${s.sigNeed}</div>`
       : '';
-  const sessionBits =
-    s.stage === 'session'
-      ? `
-      <div><span class="k">Capital</span> ${s.capital}</div>
-      <div><span class="k">Favor</span> ${Math.round(s.favor)}</div>
-      <div><span class="k">District</span> ${Math.round(s.districtStanding)}</div>
-      <div class="ledger-wide"><span class="k">Committee</span> ${s.committee?.n ?? '—'}</div>
-      <div class="ledger-wide bill-status"><span class="k">Bill</span> ${
-        s.bill
-          ? `${s.bill.title} · <b>${s.bill.status}</b> (${billStageLabelUi(s.bill)}) · heat ${s.bill.heat}${
-              s.bill.tally.aye || s.bill.tally.nay
-                ? ` · tally ${s.bill.tally.aye}–${s.bill.tally.nay}`
-                : ''
-            }`
-          : '—'
-      }</div>
-      ${
-        s.sessionFlags?.pac_lender_claim || s.obls.includes('OB1')
-          ? '<div class="ledger-wide muted">PAC claim rides — referral will collect.</div>'
-          : ''
-      }`
-      : '';
+    forceBand = `
+      <div class="ledger-band ledger-force">
+        <div class="ledger-band-label">Force</div>
+        <div class="ledger-grid">
+          <div class="ledger-cell"><span class="k">Contacts</span> ${snap.contacts}</div>
+          <div class="ledger-cell"><span class="k">Name ID</span> ${snap.nameID}</div>
+          <div class="ledger-cell"><span class="k">Vols</span> ${snap.volPool}</div>
+          <div class="ledger-cell ledger-secondary"><span class="k">Momentum</span> ${snap.momentum}</div>
+          <div class="ledger-cell ledger-secondary"><span class="k">Endorse</span> ${snap.endorsePts}</div>
+          ${ballotCell}
+        </div>
+      </div>`;
+  }
+
+  // Desktop vitals (mobile reads these from sticky HUD)
+  const vitalsBand = `
+    <div class="ledger-band ledger-vitals">
+      <div class="ledger-band-label">Vitals</div>
+      <div class="ledger-grid">
+        <div class="ledger-cell ledger-cash" title="Cash on hand">$${snap.money}</div>
+        <div class="ledger-cell"><span class="k">AP</span> ${snap.ap}/${s.apMax}${
+          snap.fieldAp ? ` +${snap.fieldAp} field` : ''
+        }</div>
+        <div class="ledger-cell"><span class="k">Week</span> ${stageWeek(s)} · W${snap.week}/${s.weeksTotal}</div>
+        <div class="ledger-cell muted">${stageLabel(s)} · Ph ${getPhase(s)}</div>
+        ${debtBits}
+      </div>
+    </div>`;
+
   $('ledger').innerHTML = `
-    <div class="ledger-grid">
-      <div><span class="k">Stage</span> ${stageLabel(s)} · Phase ${getPhase(s)}</div>
-      <div><span class="k">Week</span> ${stageWeek(s)} (cal ${snap.week}/${s.weeksTotal})</div>
-      <div><span class="k">AP</span> ${snap.ap}/${s.apMax}${snap.fieldAp ? ` +${snap.fieldAp} field` : ''}</div>
-      <div><span class="k">Money</span> $${snap.money}</div>
-      ${spendLine}
-      ${debtLine}
-      ${
-        s.stage === 'session'
-          ? ''
-          : `
-      <div><span class="k">Contacts</span> ${snap.contacts}</div>
-      <div><span class="k">Name ID</span> ${snap.nameID}</div>
-      <div><span class="k">Vols</span> ${snap.volPool}</div>
-      <div><span class="k">Momentum</span> ${snap.momentum}</div>
-      <div><span class="k">Endorse</span> ${snap.endorsePts}</div>
-      <div><span class="k">Ballot</span> ${
-        snap.ballot ? 'ON' : `${snap.signatures}/${s.sigNeed} sigs`
-      }</div>`
-      }
-      <div><span class="k">Identity</span> ${s.persona ?? '—'} · ${s.issue ?? '—'}</div>
-      <div><span class="k">Attrs</span> ${attrs}</div>
-      ${sessionBits}
-      <div class="ledger-wide"><span class="k">Allies</span> ${allyBits || '—'}</div>
-      <div class="ledger-wide"><span class="k">Assets</span> ${assetBits || '—'}</div>
-      <div class="ledger-wide"><span class="k">Obligations</span> ${oblBits || '—'}</div>
-      ${s.over && s.outcome ? `<div><span class="k">Outcome</span> ${s.outcome}</div>` : ''}
+    <div class="ledger-dossier">
+      <div class="ledger-band ledger-identity">
+        <div class="ledger-who">${s.persona ?? '—'}</div>
+        <div class="ledger-issue">${s.issue ?? '—'}</div>
+        <div class="attr-chips" aria-label="Attributes">${attrChipsHtml(s.attrs)}</div>
+      </div>
+      ${forceBand}
+      ${vitalsBand}
+      <div class="ledger-band ledger-machine">
+        <div class="ledger-band-label">Machine</div>
+        <div class="ledger-wide"><span class="k">Allies</span> ${allyBits || '—'}</div>
+        <div class="ledger-wide"><span class="k">Assets</span> ${assetBits || '—'}</div>
+        <div class="ledger-wide"><span class="k">Obligations</span> ${oblBits || '—'}</div>
+        ${s.over && s.outcome ? `<div class="ledger-wide"><span class="k">Outcome</span> ${s.outcome}</div>` : ''}
+      </div>
     </div>
   `;
   applyStageChrome();
+  const hint = $('week-hint');
   if (s.over) {
-    $('week-hint').textContent = `Campaign over: ${s.outcome ?? 'ended'}.`;
+    hint.textContent = `Campaign over: ${s.outcome ?? 'ended'}.`;
   } else if (s.stage === 'waiting') {
     const bank = s.sessionFlags || {};
-    $('week-hint').textContent =
+    hint.textContent =
       `ACT IV · WAITING W${s.week}/${WAITING_WEEKS} (${s.waitingPathId ?? 'orbit'}) — ` +
       `banked +${Number(bank.waitBankContacts || 0)} contacts · +${Number(bank.waitBankName || 0)} name. One AP/week.`;
   } else if (s.stage === 'session') {
     const bill = s.bill
       ? `Bill: ${billStageLabelUi(s.bill)} (heat ${s.bill.heat}).`
       : 'No bill.';
-    $('week-hint').textContent =
-      `ACT III · SESSION W${s.week}/${s.weeksTotal} — ${bill} Special kit only. One pipeline motion/week. Same run — not a new campaign.`;
+    hint.textContent =
+      `ACT III · SESSION W${s.week}/${s.weeksTotal} — ${bill} Special kit only. One pipeline motion/week.`;
   } else if (s.stage === 'general') {
-    $('week-hint').textContent =
-      'ACT II · GENERAL — GOTV and contrast. Six weeks to November. Same run as the primary you just won.';
+    hint.textContent =
+      'ACT II · GENERAL — GOTV and contrast. Six weeks to November. Same run.';
   } else if (s.ballot) {
-    $('week-hint').textContent =
-      'ACT I · PRIMARY — On the ballot. Build force before week 8. Shop buys are free actions (0 AP).';
+    hint.textContent =
+      'ACT I · PRIMARY — On the ballot. Build force before week 8. Shop is 0 AP.';
   } else {
-    $('week-hint').textContent =
-      'ACT I · PRIMARY — Not on ballot. Petition / Filing Fee / Shop always available. Deadline: end of week 8.';
+    hint.textContent =
+      'ACT I · PRIMARY — Not on ballot. Petition / Fee / Shop available. Deadline: end of week 8.';
   }
 }
 
@@ -754,21 +811,40 @@ function renderGroundPicker(): void {
     });
 }
 
+/**
+ * Fixed overlay toasts — never reflow the card grid (Phase 6 / UI-IA).
+ * Replaces the old in-flow #juice banner above playables.
+ */
 function showJuice(fb: PlayFeedback): void {
-  const el = $('juice');
-  el.classList.remove('hidden', 'spark', 'hit', 'thump', 'crash', 'whisper');
-  el.classList.add(fb.beat);
+  const host = document.getElementById('toast-host');
+  if (!host) return;
   const streak =
     fb.streak && fb.streak.count >= 2
       ? fb.streak.kind === 'hot'
         ? ` · hot ×${fb.streak.count}`
         : ` · cold ×${fb.streak.count}`
       : '';
-  el.textContent = `${fb.stamp}${streak} — ${fb.juice}`;
-  if (juiceTimer) clearTimeout(juiceTimer);
-  juiceTimer = setTimeout(() => {
-    el.classList.add('hidden');
-  }, 3200);
+  const t = document.createElement('div');
+  t.className = `toast toast-${fb.beat}`;
+  t.setAttribute('role', 'status');
+  t.innerHTML = `<div class="toast-stamp">${fb.stamp}${streak}</div><div class="toast-body">${escapeHtml(fb.juice)}</div>`;
+  host.appendChild(t);
+  // Cap stack so spam doesn't cover the board
+  while (host.children.length > 3) {
+    host.firstElementChild?.remove();
+  }
+  window.setTimeout(() => {
+    t.classList.add('toast-out');
+    window.setTimeout(() => t.remove(), 280);
+  }, 2800);
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 function renderLog(): void {

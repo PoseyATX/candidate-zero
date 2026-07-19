@@ -6,7 +6,7 @@
 **Live alpha:** https://poseyatx.github.io/candidate-zero/  
 **Repo:** https://github.com/PoseyATX/candidate-zero  
 
-**Last updated:** 2026-07-19 (UI/IA furniture plan)  
+**Last updated:** 2026-07-19 (Phase 6 UI hierarchy)  
 
 Related docs:
 
@@ -191,7 +191,7 @@ Over this workstream we:
 | **DONE** | — | RivalRap teeth + Chronicle→waiting loop bridge |
 | **DONE** | — | Waiting season play + higher-office paths |
 | **DONE** | — | Post-feature balance/debug hygiene |
-| PLANNED | #10 | Phase 6 — Mobile-first UI + a11y |
+| **DONE** (core) | #10 | Phase 6 — UI hierarchy + toasts |
 | PLANNED | #11 | Phase 7 — Honest v0.1 label |
 | PLANNED | #12 | Phase 8 — TS → Unity → iOS / App Store |
 | META | #13 | Board hygiene rules |
@@ -506,4 +506,21 @@ Feeds Phase 6 (#10). Board + work-log index linked.
 Own loops (`LOOP_ENT_*`), Special residency, harness e2e. **11** playable pilots.
 
 **Harness hygiene:** strategies no longer auto-pick `residency: special` / `MV*` on empty-hand fallback (prevents free-farming every new template). Teacher money/labor matrix cap **4.0×**.
+
+---
+
+## Phase 6 — UI hierarchy + toasts (2026-07-19)
+
+| Slice | Detail |
+|---|---|
+| Ledger dossier | Identity band → Force/Chamber/Waiting → Vitals → Machine |
+| Identity + Attrs | First block; attr chips; sticky under HUD on mobile |
+| Label diet | `$N` not `Money $N`; HUD cash/week self-explanatory |
+| Toasts | Fixed `#toast-host`; juice no longer reflows cards |
+| Week hint | `min-height` reserved slot |
+| Setup | Nameplate panel (double gold rules, shared materials) |
+| Stage chrome | Ballot sigs only if not ON; session bill band; waiting bank |
+| Plan | `docs/UI-IA.md` marked shipped for core furniture |
+
+Residual: WCAG deep pass, screenshot CI, formal mobile playtest sign-off.
 

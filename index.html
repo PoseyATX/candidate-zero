@@ -14,7 +14,7 @@
       <header id="topbar" class="top">
         <div>
           <p class="eyebrow">A Texas Political Epic</p>
-          <h1>Candidate Zero <span class="alpha-tag" title="Phases 1–4 + ceremony shells">Alpha · P1–4</span></h1>
+          <h1>Candidate Zero <span class="alpha-tag" title="Phases 1–6 + UI hierarchy">Alpha · P6</span></h1>
         </div>
         <div class="top-actions">
           <button type="button" id="btn-howto" class="btn">How to Play</button>
@@ -141,8 +141,11 @@
         </div>
       </section>
 
-      <section id="setup" class="setup panel hidden">
-        <h2>Identity — choices bind</h2>
+      <section id="setup" class="setup panel nameplate-panel hidden">
+        <p class="eyebrow setup-eyebrow">File the nameplate</p>
+        <div class="title-rule setup-rule" aria-hidden="true"></div>
+        <h2 class="setup-title">Identity — choices bind</h2>
+        <p class="hint setup-lede">Who you are at the courthouse door. Persona and issue stay on the ledger all run.</p>
         <div class="setup-grid">
           <label>Persona
             <select id="sel-persona"></select>
@@ -182,12 +185,12 @@
             <div id="gp-list" class="gp-list"></div>
           </div>
         </div>
-        <section id="ledger" class="ledger"></section>
+        <section id="ledger" class="ledger" aria-label="Campaign dossier"></section>
         <section class="panels">
           <div class="panel panel-actions">
             <h2 id="actions-heading">Actions</h2>
-            <p id="week-hint" class="hint"></p>
-            <div id="juice" class="juice-banner hidden" aria-live="assertive"></div>
+            <!-- Reserved height so text swaps never shove the card grid -->
+            <p id="week-hint" class="hint week-hint" aria-live="polite"></p>
             <div id="draft" class="card-grid"></div>
             <div id="playables" class="card-grid"></div>
             <div class="row-actions">
@@ -200,6 +203,8 @@
           </div>
         </section>
       </section>
+      <!-- Fixed toasts — never reflow the play surface (Phase 6 / UI-IA) -->
+      <div id="toast-host" class="toast-host" aria-live="assertive" aria-atomic="false"></div>
       <section id="terminal" class="game hidden">
         <div id="terminal-head" class="panel"></div>
         <div id="terminal-choices" class="card-grid"></div>
