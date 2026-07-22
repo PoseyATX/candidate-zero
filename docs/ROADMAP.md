@@ -534,16 +534,24 @@ Concretely still open:
   `docs/UI-IA.md`. Residual: WCAG AA audit, screenshot CI, formal phone
   playtest sign-off.
 
-## Phase 7 — v0.1 label
+## ✅ Phase 7 — v0.1 label (DONE 2026-07-22)
 
 Per `AGENTS.md` Covenant 8 ("Honest versioning — no marketing labels
-without evidence") and TICKET's own AC6 ("Not v0.1 — package `0.0.1`"),
-this should only happen once AC1–AC5 have full recorded evidence *and*
-Phase 6 (UI polish) is done. Phase 0 closed one real AC1/AC2-relevant gap
-(PL20 was failing AC2's implicit "every catalog card is real" bar) and
-hardened the audit tooling's honesty; Phase 1 item 1 (reachability
-checking) is the natural way to make AC2 evidence trustworthy going
-forward rather than re-discovered by accident.
+without evidence") and TICKET's own AC6, this required AC1–AC5 with full
+recorded evidence *and* Phase 6 (UI polish) done. Both conditions are now
+met, so `package.json` is `0.1.0` and the in-app tag reads `Alpha · v0.1`.
+
+| AC | Evidence | Result |
+|----|----------|--------|
+| AC1 | `harness:ac1` + `harness:ac1-parity` | determinism PASS; STD≡prototypeRoll **2000/2000** |
+| AC2 | `harness:audit` | **44 plays clean** (attrs/ids/risk + residency) |
+| AC3 | engine import purity | engine imports **0** ui/cli/DOM refs |
+| AC4 | `smoke:ui` + `a11y` (CI gates) | full act flow, 0 console errors, **0 critical/serious** a11y |
+| AC5 | `harness` | **25-harness** chain green |
+
+Full bundle with reproduce steps + balance-matrix breadth (24 personas,
+win band 3.3–33.3%, no soft-locks): **`docs/V0.1-EVIDENCE.md`**. This is a
+baseline label, not "done" — Phase 8 (Unity ship path) is the live roadmap.
 
 ## Phase 8 — Ship path: TS engine → Unity presentation → iOS / App Store
 

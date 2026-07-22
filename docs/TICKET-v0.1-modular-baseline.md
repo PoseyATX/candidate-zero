@@ -1,18 +1,20 @@
 # Ticket: Establish Modular TypeScript Baseline v0.1
 
-**Status:** OPEN — in progress (honest label only after evidence)
+**Status:** MET — `v0.1` earned 2026-07-22 (package `0.1.0`). Evidence bundle: `docs/V0.1-EVIDENCE.md`.
 **Source of truth:** https://github.com/PoseyATX/candidate-zero
 
 ## Acceptance criteria
 
+All met with recorded, re-runnable evidence — see `docs/V0.1-EVIDENCE.md`.
+
 | ID | Criterion | Status |
 |----|-----------|--------|
-| AC1 | Side-by-side verification vs original prototype | **STRENGTHENED** — seeded RNG, campaign replay, STD≡prototypeRoll 2000/2000; intentional deltas documented |
-| AC2 | Full card audit vs SRD §10 | **STRENGTHENED** — `npm run harness:audit` evidence table; all plays attr-tagged |
-| AC3 | Clean layered extraction (Data / Engine / UI) | **STRENGTHENED** — Engine complete; thin Vite UI shell live |
-| AC4 | UI reliable | PARTIAL — setup + play + draft + stage/outcome; still thin |
-| AC5 | Harness skeleton | **STRENGTHENED** — + calendar, setup, yield tables |
-| AC6 | Honest version label | **Not v0.1** — package `0.0.1` |
+| AC1 | Side-by-side verification vs original prototype | **MET** — `harness:ac1` determinism + `harness:ac1-parity` STD≡prototypeRoll 2000/2000; intentional deltas documented |
+| AC2 | Full card audit vs SRD §10 | **MET** — `harness:audit`: 44 plays clean (attrs/ids/risk + residency) |
+| AC3 | Clean layered extraction (Data / Engine / UI) | **MET** — engine imports zero ui/cli/DOM; portable toward Unity host |
+| AC4 | UI reliable | **MET** — full act flow; `smoke:ui` + `a11y` (0 critical/serious) both CI gates |
+| AC5 | Harness skeleton | **MET** — 25-harness chain green (resolve→content) |
+| AC6 | Honest version label | **MET** — package `0.1.0`; Phase 6 closed, AC1–AC5 evidenced |
 
 ## Increment: Minimal play loop + multi-strategy harness (2026-07-16)
 
