@@ -1565,3 +1565,121 @@ h1 {
 /* a11y: --oxblood-bright was 2.89:1 on the dark panel (< AA 4.5); this
    lighter warm-red keeps the "the note is due" warning tone at 6.2:1. */
 #terminal-head .debt-note { color: #e0836f; }
+
+/* =====================================================================
+   MOBILE LAYER — one-handed IA over the full-featured UI
+   Bottom-nav tabs (Play/Dossier/Log), sticky compact HUD, thumb-reach
+   primary action. Presentation only; the engine render targets (#hud,
+   #ledger, #playables, #draft, #log, #ground-picker) are unchanged.
+   Cleaner typography (Inter body / Merriweather headings), walnut theme
+   already in :root above.
+   ===================================================================== */
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
+.panel-actions > h2, .panel-log > h2 {
+  font-family: 'Merriweather', Georgia, serif;
+}
+/* Keep the ornate display face only for the big title wordmark. */
+.title-name, h1.title-name { font-family: 'Cinzel', serif; }
+
+/* In-game fills the whole viewport as a flex column (covering the redundant
+   marketing topbar), so the sticky bottom nav lands at the true bottom. */
+#game:not(.hidden) {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(176, 141, 62, 0.08), transparent 60%),
+    var(--walnut);
+}
+#game #hud {
+  display: flex;         /* vitals always visible in-game, all widths */
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+/* Tab panels fill the space between HUD and the bottom nav. */
+.mtabs { flex: 1 1 auto; overflow: hidden; position: relative; }
+.mtab-panel {
+  display: none;
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.75rem 0.75rem 0.5rem;
+}
+.mtab-panel.active { display: block; }
+.mtab-panel .panel { border: none; background: none; padding: 0; }
+
+/* Thumb-reach End Week, pinned above the nav; only on the Play tab. */
+.play-footer {
+  flex: 0 0 auto;
+  padding: 0.6rem 0.9rem;
+  border-top: 1px solid var(--gold-dim);
+  background: var(--walnut-2);
+}
+.play-footer .btn { width: 100%; padding: 0.9rem; font-size: 1rem; }
+#game.tab-dossier .play-footer,
+#game.tab-log .play-footer { display: none; }
+
+/* Bottom navigation. */
+.mbottom-nav {
+  flex: 0 0 auto;
+  display: flex;
+  border-top: 1px solid var(--gold-dim);
+  background: var(--walnut-2);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.mnav-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  /* a11y: --gold-dim is 3.07:1 on walnut (< AA). parchment-dim reads as a
+     muted-but-legible inactive; active state is --gold + underline. */
+  color: var(--parchment-dim);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.7rem 0;
+  cursor: pointer;
+}
+.mnav-btn.active { color: var(--gold); box-shadow: inset 0 2px 0 var(--gold); }
+.mnav-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
+
+/* Ground picker as a bottom sheet on mobile. */
+#game #ground-picker:not(.hidden) {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+}
+#ground-picker .gp-panel {
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  border-radius: 16px 16px 0 0;
+}
+
+/* Two-column hand, comfortable tap targets. */
+#playables.card-grid, #draft.card-grid {
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+}
+@media (min-width: 560px) {
+  #playables.card-grid, #draft.card-grid { grid-template-columns: repeat(3, 1fr); }
+}
