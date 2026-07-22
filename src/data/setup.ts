@@ -289,6 +289,7 @@ export function applySetup(state: GameState, sel: SetupSelection): GameState {
   persona.apply(state);
   bumpAttrs(state, persona.attrs);
   state.persona = persona.n;
+  state.personaId = sel.personaId;
   state.issue = issue.n;
   state.assets.push('ISSUE_' + issue.tag);
   const field = district.field(random);

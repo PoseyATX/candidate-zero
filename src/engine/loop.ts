@@ -36,6 +36,7 @@ import {
   syncMovementFlags
 } from './entities.js';
 import { WAITING_PLAYS } from '../data/waiting-plays.js';
+import { SIGNATURE_PLAYS, SIGNATURE_BY_PERSONA } from '../data/signature-plays.js';
 import {
   applySetup,
   HARNESS_DEFAULT_SETUP,
@@ -134,6 +135,8 @@ export function buildCatalog(plays: PlayCard[] = ALL_PLAYS): Map<string, PlayCar
   // Phase 4: session pipeline + survival plays
   for (const p of SESSION_PLAYS) map.set(p.id, p);
   for (const p of WAITING_PLAYS) map.set(p.id, p);
+  // Persona-exclusive signature cards (gated by req/show + deck injection).
+  for (const p of SIGNATURE_PLAYS) map.set(p.id, p);
   return map;
 }
 
@@ -155,9 +158,14 @@ export function createCampaign(overrides: CreateCampaignOptions = {}): Campaign 
   // Seed starter deck inventory (ownership) from the same list that seeds the
   // physical draw pile (createDeckState's default), so the two can't drift.
   state.deck = [...new Set(STARTER_DECK_IDS)];
+  const deckState = createDeckState();
+  // Deal this persona their one signature card — exclusive (no other persona's
+  // deck ever contains it) and reachable (shuffled into the draw pile).
+  const sigId = SIGNATURE_BY_PERSONA[setup.personaId];
+  if (sigId) injectIntoDrawPile(deckState, state, [sigId]);
   return {
     state,
-    deck: createDeckState(),
+    deck: deckState,
     catalog: buildCatalog(),
     handSize: DEFAULT_HAND_SIZE,
     filingDeadline: PRIMARY_WEEKS,

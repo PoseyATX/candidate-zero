@@ -15,6 +15,7 @@ import { buildContentManifest, CONTENT_MANIFEST_VERSION } from '../data/manifest
 import { ALL_PLAYS } from '../data/plays.js';
 import { SESSION_PLAYS } from '../data/session-plays.js';
 import { WAITING_PLAYS } from '../data/waiting-plays.js';
+import { SIGNATURE_PLAYS } from '../data/signature-plays.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const EXPORT_PATH = join(ROOT, 'unity', 'content', 'candidate-zero-content.json');
@@ -31,7 +32,7 @@ const m = buildContentManifest();
 assert(m.version === CONTENT_MANIFEST_VERSION, 'manifest carries a version');
 
 // Completeness: every code-defined card is in the export, exactly once.
-const codeIds = [...ALL_PLAYS, ...SESSION_PLAYS, ...WAITING_PLAYS].map(c => c.id);
+const codeIds = [...ALL_PLAYS, ...SESSION_PLAYS, ...WAITING_PLAYS, ...SIGNATURE_PLAYS].map(c => c.id);
 const exportIds = m.cards.map(c => c.id);
 assert(exportIds.length === codeIds.length, `card count matches code (${exportIds.length}/${codeIds.length})`);
 assert(new Set(exportIds).size === exportIds.length, 'no duplicate card ids in export');
