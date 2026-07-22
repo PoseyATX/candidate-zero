@@ -229,7 +229,8 @@ h1 {
   font-size: 0.62rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--gold-dim);
+  /* a11y: --gold-dim was 3.07:1 on walnut-2 (< AA 4.5); --gold is 5.46:1 */
+  color: var(--gold);
   margin-bottom: 0.4rem;
 }
 
@@ -1118,7 +1119,8 @@ h1 {
 }
 
 .log-line .w {
-  color: var(--gold-dim);
+  /* a11y: --gold-dim was 3.07:1 on the log's dark panel (< AA 4.5) */
+  color: var(--gold);
   margin-right: 0.35rem;
   font-size: 0.78rem;
 }
@@ -1561,5 +1563,9 @@ h1 {
 #terminal-head h2 { margin-top: 0; }
 #terminal-head p { margin: 0 0 0.5rem; }
 #terminal-head .epithet { font-style: italic; color: var(--parchment); }
-#terminal-head .growth { color: var(--sage); }
-#terminal-head .debt-note { color: var(--oxblood-bright); }
+/* a11y: --sage (#6b7a5e) was 3.71:1 on the dark panel; a lighter sage keeps
+   the "you grew despite the loss" tone at 6.6:1. */
+#terminal-head .growth { color: #93a883; }
+/* a11y: --oxblood-bright was 2.89:1 on the dark panel (< AA 4.5); this
+   lighter warm-red keeps the "the note is due" warning tone at 6.2:1. */
+#terminal-head .debt-note { color: #e0836f; }

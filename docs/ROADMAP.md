@@ -477,9 +477,22 @@ action, never hide the hand):
 
 Concretely still open:
 
-- No accessibility pass (color contrast, keyboard nav for the card grid,
-  `aria-live` regions exist on log/juice but haven't been screen-reader
-  tested).
+- **Accessibility — automated WCAG 2 A/AA audit built + run (2026-07-19).**
+  `scripts/a11y-audit.mjs` (`npm run a11y`) runs axe-core (the Lighthouse
+  engine) against every screen state — title, tutorial, setup, in-game,
+  ground picker, terminal. Findings: **title / tutorial / setup clean;**
+  **all 7 color-contrast AA failures fixed** (dark-theme text below 4.5:1:
+  `.ledger-band-label`, `.log-line .w`, `.debt-note`, `.growth` — recolored
+  to 5.4–6.6:1, on-theme, verified by re-audit + smoke). **One serious item
+  remains, pending a card-layout decision:** `scrollable-region-focusable`
+  on the card `.desc` (4 nodes) — the fixed-2:3 card makes long descriptions
+  an overflow-scroll region a keyboard-only user can't reach. There's no
+  lossless CSS-only fix (adding `tabindex` inside the card `<button>` trades
+  it for a `nested-interactive` violation); the real fix is a card-layout
+  call — clip long text with a fade, or let cards grow to fit — which
+  shouldn't be made unilaterally. `a11y` is NOT yet a CI gate (it exits
+  non-zero while that one item stands). Still manual, not automatable:
+  keyboard focus-order flow and screen-reader copy review.
 - ~~No visual regression / e2e test in CI~~ **DONE 2026-07-19.** The engine
   had 24 harnesses; the UI had zero automated coverage — the exact blind
   spot behind the UI-regression class of bug (dead End Week button, field
