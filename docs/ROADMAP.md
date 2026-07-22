@@ -553,6 +553,30 @@ Full bundle with reproduce steps + balance-matrix breadth (24 personas,
 win band 3.3–33.3%, no soft-locks): **`docs/V0.1-EVIDENCE.md`**. This is a
 baseline label, not "done" — Phase 8 (Unity ship path) is the live roadmap.
 
+## ✅ Mobile UI redesign — design-import (DONE 2026-07-22)
+
+Imported the "Candidate Zero mobile UI" design (claude.ai/design, via the
+claude_design MCP) and implemented it as the real web UI, wired to the pure
+engine's frozen API (`src/engine/api.ts`) — the design was already built
+against `setupOptions → newGame → view → apply`, so it dropped onto the
+engine with **near-zero reconciliation**.
+
+- **New IA:** dark-walnut theme (Inter/Merriweather), sticky AP/$/W header,
+  bottom-nav tabs (Play / Dossier / Log), **tap-to-reveal card detail sheet**
+  (the card face is name + art + cost + risk; the description is data on tap),
+  ground / draft / act-splash / weather / over sheets. `index.html`,
+  `src/ui/styles.css`, `src/ui/main.ts` rewritten; `src/ui/card-art.ts`
+  emblems reused as the art fallback.
+- **Reconcile:** added `desc`/`tag`/`kind` to `ActionOption` in `api.ts` so
+  the detail sheet shows the real card text (additive; determinism untouched).
+- **Card art:** raster where we have it (`CARD_ART`, PL01 →
+  `public/assets/card-block-walk.png`), engraved emblem SVG otherwise. Art
+  status + the imageless-card list: **`docs/CARD-ART-STATUS.md`** (1 of 66
+  cards has a raster image).
+- **Gates updated + green:** `smoke:ui` and `a11y` rewritten for the new DOM;
+  axe-core 0 critical/serious across 7 states (adds card-detail + ground
+  sheets); full harness (127) green; screenshot-verified at 390×844.
+
 ## Phase 8 — Ship path: TS engine → Unity presentation → iOS / App Store
 
 **Owner direction (2026-07-19):** ship through Unity as presentation shell

@@ -29,6 +29,8 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const AXE = join(ROOT, 'node_modules', 'axe-core', 'axe.min.js');
 const PORT = Number(process.env.A11Y_PORT ?? 4198);
 const BASE = `http://localhost:${PORT}/candidate-zero/`;
+// Fixed seed → deterministic run so the CI gate can't flake on a random hand.
+const RUN_URL = `${BASE}?seed=4242`;
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -89,76 +91,79 @@ function main() {
       if (!(await waitForServer(BASE))) throw new Error(`preview never ready at ${BASE}`);
       browser = await chromium.launch();
       const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
-      await page.goto(BASE, { waitUntil: 'networkidle' });
+      await page.goto(RUN_URL, { waitUntil: 'networkidle' });
       await page.evaluate(() => localStorage.clear());
       await page.reload({ waitUntil: 'networkidle' });
+
+      const vis = async (sel) => {
+        const l = page.locator(sel);
+        return (await l.count()) > 0 && (await l.first().isVisible());
+      };
 
       // --- Title ---
       byState['title'] = await runAxe(page);
 
-      // --- Tutorial ---
-      await page.locator('#btn-title-howto').click();
-      await page.waitForSelector('#tutorial:not(.hidden)');
-      byState['tutorial'] = await runAxe(page);
-      await page.locator('#btn-tut-back').click();
+      // --- How to Play ---
+      await page.locator('[data-act="howto"]').click();
+      await page.waitForSelector('.howto-screen.active');
+      byState['howto'] = await runAxe(page);
+      await page.locator('[data-act="close-howto"]').click();
 
       // --- Setup ---
-      await page.locator('#btn-title-start').click();
-      await page.waitForSelector('#setup:not(.hidden)');
+      await page.locator('[data-act="goSetup"]').click();
+      await page.waitForSelector('.screen-setup.active');
       byState['setup'] = await runAxe(page);
 
-      // --- In-game (start a seeded run, clear the act splash) ---
-      await page.locator('#seed-input').fill('4242');
-      await page.locator('#btn-start').click();
-      await page.waitForSelector('#game:not(.hidden)');
+      // --- In-game (start a run, clear the act splash) ---
+      await page.locator('#btn-file').click();
+      await page.waitForSelector('.screen-game.active');
       for (let i = 0; i < 4; i++) {
-        const splash = page.locator('#act-splash');
-        if ((await splash.count()) && (await splash.isVisible())) {
-          await page.locator('#act-splash-ok').click();
+        if (await vis('.splash-screen.active')) {
+          await page.locator('[data-act="dismiss-splash"]').click();
           await page.waitForTimeout(80);
         } else break;
       }
-      await page.waitForSelector('#playables .play-card');
+      await page.waitForSelector('.card[data-act="tap-card"]');
       byState['game'] = await runAxe(page);
 
-      // --- Ground picker (open on a field card) ---
-      const cards = await page.$$('#playables .play-card:not(.locked)');
-      for (const c of cards) {
-        await safeClick(c);
-        await page.waitForTimeout(80);
-        if (await page.locator('#ground-picker').isVisible()) break;
+      // --- Card detail sheet (tap-to-reveal) ---
+      await safeClick(page.locator('.card[data-act="tap-card"]').first());
+      await page.waitForTimeout(80);
+      if (await vis('.card-detail.active')) {
+        byState['card-detail'] = await runAxe(page);
+        await safeClick(page.locator('[data-act="close-detail"]'));
+        await page.waitForTimeout(60);
       }
-      if (await page.locator('#ground-picker').isVisible()) {
-        byState['ground-picker'] = await runAxe(page);
-        await page.locator('#gp-cancel').click();
+
+      // --- Ground sheet (play a field card until it opens) ---
+      for (let i = 0; i < 8; i++) {
+        if (await vis('[data-act="pick-ground"]')) break;
+        if (await vis('.card-detail.active')) {
+          await safeClick(page.locator('[data-act="play-detail"]'));
+        } else {
+          await safeClick(page.locator('.card[data-act="tap-card"]').nth(i));
+        }
+        await page.waitForTimeout(80);
+      }
+      if (await vis('[data-act="pick-ground"]')) {
+        byState['ground-sheet'] = await runAxe(page);
+        await safeClick(page.locator('[data-act="cancel-ground"]'));
       }
 
       // --- Terminal (drive to a run end) ---
       for (let iter = 0; iter < 400; iter++) {
-        if (await page.locator('#terminal').isVisible()) break;
-        for (const id of ['#act-splash', '#outside-weather']) {
-          const m = page.locator(id);
-          if ((await m.count()) && (await m.isVisible())) {
-            await safeClick(page.locator(`${id}-ok`));
-            await page.waitForTimeout(50);
-          }
-        }
-        if (await page.locator('#ground-picker').isVisible()) {
-          const gs = await page.$$('.gp-ground');
-          if (gs.length) await safeClick(gs[0]);
-          else await safeClick(page.locator('#gp-cancel'));
-          await page.waitForTimeout(40);
-          continue;
-        }
-        const drafts = await page.$$('#draft .play-card');
-        if (drafts.length) { await safeClick(drafts[0]); await page.waitForTimeout(30); continue; }
-        const play = await page.$$('#playables .play-card:not(.locked)');
-        if (play.length) { await safeClick(play[0]); await page.waitForTimeout(30); continue; }
-        const end = page.locator('#btn-end');
-        if (await end.isVisible()) { await safeClick(end); await page.waitForTimeout(30); }
+        if (await vis('.over-screen.active')) break;
+        if (await vis('.splash-screen.active')) { await safeClick(page.locator('[data-act="dismiss-splash"]')); await page.waitForTimeout(40); continue; }
+        if (await vis('.weather-screen.active')) { await safeClick(page.locator('[data-act="dismiss-weather"]')); await page.waitForTimeout(40); continue; }
+        if (await vis('[data-act="pick-draft"]')) { await safeClick(page.locator('[data-act="pick-draft"]').first()); await page.waitForTimeout(30); continue; }
+        if (await vis('[data-act="pick-ground"]')) { await safeClick(page.locator('[data-act="pick-ground"]').first()); await page.waitForTimeout(30); continue; }
+        if (await vis('.card-detail.active')) { await safeClick(page.locator('[data-act="play-detail"]')); await page.waitForTimeout(30); continue; }
+        const play = await page.$$('.card[data-act="tap-card"]');
+        if (play.length) { await safeClick(play[iter % play.length]); await page.waitForTimeout(30); continue; }
+        if (await vis('#btn-endweek')) { await safeClick(page.locator('#btn-endweek')); await page.waitForTimeout(30); }
         else break;
       }
-      if (await page.locator('#terminal').isVisible()) {
+      if (await vis('.over-screen.active')) {
         byState['terminal'] = await runAxe(page);
       }
     } finally {

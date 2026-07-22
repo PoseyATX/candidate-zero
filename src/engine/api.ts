@@ -74,6 +74,10 @@ export interface ActionOption {
   handIndex: number;
   cardId: string;
   name: string;
+  /** Card description — revealed on tap/inspect, never drawn on the card face. */
+  desc: string;
+  tag: string;
+  kind: string;
   risk: string;
   camp: boolean;
   /** true → this play wants a groundId (a field play). */
@@ -205,6 +209,9 @@ export function legalActions(snap: EngineSnapshot): ActionOption[] {
     handIndex: index,
     cardId: card.id,
     name: card.n,
+    desc: card.d ?? '',
+    tag: card.tag ?? '',
+    kind: card.kind ?? 'action',
     risk: card.risk,
     camp: index < 0,
     field: !!card.field,
