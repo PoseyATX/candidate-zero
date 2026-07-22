@@ -41,6 +41,7 @@
     "harness:api": "npx tsx src/harness/api.ts",
     "build:engine": "vite build --config vite.engine.config.ts && node scripts/copy-engine-to-unity.mjs",
     "export:content": "npx tsx scripts/export-content.ts",
+    "export:cards": "npx tsx scripts/export-cards-csv.ts",
     "harness:content": "npx tsx src/harness/content.ts"
   },
   "devDependencies": {

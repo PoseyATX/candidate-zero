@@ -70,6 +70,10 @@ npm run dev              # Vite UI shell
 
 GitHub: https://github.com/PoseyATX/candidate-zero
 
+## Support
+
+If the climb is worth a coffee: [buy me a ko-fi](https://ko-fi.com/poseyatx)
+
 ---
 
 *Living project. Version labels are honest: v0.1 only after evidence.*
