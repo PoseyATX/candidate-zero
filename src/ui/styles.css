@@ -987,14 +987,10 @@ h1 {
   margin-bottom: 0.25rem;
 }
 
-.play-card .desc {
-  flex: 1 1 auto;
-  font-size: 0.7rem;
-  line-height: 1.3;
-  color: #4a3b24;
-  overflow-y: auto;
-  padding-right: 2px;
-}
+/* Card descriptions are revealed on demand (button title / accessible name),
+   never drawn on the 2:3 face — so there is no on-card scroll region. See
+   cardHtml() in src/ui/main.ts. Choice-card `.desc` (terminal/persona/trait
+   panels) is a separate, non-scrolling layout and keeps its own rule. */
 
 /* --- Ticket-stub footer --- */
 .play-card .card-footer {

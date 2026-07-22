@@ -522,7 +522,6 @@ function cardInner(
     <span class="cost-seal">${seal}</span>
     ${subs.length ? `<span class="cost-subs">${subs.map(s => `<span>${s}</span>`).join('')}</span>` : ''}
     <span class="tagline">${card.tag}</span>
-    <span class="desc">${card.d}</span>
     ${opts.locked && opts.lockReason ? `<span class="locked-reason">${opts.lockReason}</span>` : ''}
     <span class="card-footer">
       <span class="risk-tag">${card.risk}</span>
@@ -550,13 +549,28 @@ function cardClasses(
     .join(' ');
 }
 
+/** Escape a string for safe use inside a double-quoted HTML attribute. */
+function attrEscape(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 function cardHtml(
   card: PlayCard,
   index: number,
   opts: { camp?: boolean; shop?: boolean; locked?: boolean; lockReason?: string }
 ): string {
+  // Description is data revealed on demand — not drawn on the card face.
+  // It lives in the button's accessible name (screen readers) and title
+  // (hover tooltip), so the face stays name + art + cost + kind tint.
+  const desc = attrEscape(card.d);
+  const label = `${attrEscape(card.n)} — ${desc}`;
   return `
     <button type="button" class="${cardClasses(card, opts)}" data-idx="${index}"
+      title="${desc}" aria-label="${label}"
       ${opts.locked ? 'disabled aria-disabled="true"' : ''}>
       ${cardInner(card, opts)}
     </button>
