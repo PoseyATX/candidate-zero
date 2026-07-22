@@ -24,8 +24,6 @@ import { chromium } from 'playwright';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.env.SMOKE_PORT ?? 4199);
 const BASE = `http://localhost:${PORT}/candidate-zero/`;
-// Fixed seed → deterministic run so the CI gate can't flake on a random hand.
-const RUN_URL = `${BASE}?seed=4242`;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -80,100 +78,108 @@ async function main() {
     });
 
     // 1. Title screen loads and its buttons are wired.
-    await page.goto(RUN_URL, { waitUntil: 'networkidle' });
+    await page.goto(BASE, { waitUntil: 'networkidle' });
     await page.evaluate(() => localStorage.clear());
     await page.reload({ waitUntil: 'networkidle' });
-    assert(await page.locator('.screen-title.active').isVisible(), 'title screen renders on load');
+    assert(await page.locator('#title').isVisible(), 'title screen renders on load');
 
-    await page.locator('[data-act="goSetup"]').click();
-    assert(await page.locator('.screen-setup.active').isVisible(), 'Begin → setup screen');
-    assert(await page.locator('#sel-persona').isVisible(), 'persona select present on setup');
+    await page.locator('#btn-title-start').click();
+    assert(await page.locator('#setup').isVisible(), 'Begin the Climb → setup screen');
+    assert(await page.locator('#seed-input').isVisible(), 'seed input present on setup');
 
-    // 2. Start a run.
-    await page.locator('#btn-file').click();
-    await page.waitForSelector('.screen-game.active', { timeout: 10_000 });
-    assert(true, 'File the Papers → game screen');
-    assert((await page.locator('.card[data-act="tap-card"]').count()) > 0, 'hand renders playable cards');
+    // 2. Start a seeded run.
+    await page.locator('#seed-input').fill('4242');
+    await page.locator('#btn-start').click();
+    await page.waitForSelector('#game:not(.hidden)', { timeout: 10_000 });
+    assert(true, 'Begin primary → game screen');
+    assert((await page.locator('#playables .play-card').count()) > 0, 'hand renders playable cards');
 
-    // 3. Play through several weeks: tap a card → detail sheet → Play; field
-    //    plays resolve via the ground sheet; drafts auto-first; end weeks.
+    // 3. Play through several weeks: resolve field plays via the ground
+    //    picker, everything else directly; drafts auto-first; end weeks.
     let playsResolved = 0;
     let groundPicks = 0;
     let endWeeks = 0;
     let maxWeek = 1;
     let reachedTerminal = false;
-    let actSplashesDismissed = 0;
-    let handPtr = 0;
 
-    // Week ("W 3/14") from the sticky header vitals — proves End Week
-    // actually advances state, not just that the button was clickable.
+    // Calendar week ("W3/14") from the ledger — proves End Week actually
+    // advances state, not just that the button was clickable.
     const readWeek = async () => {
-      const txt = await page.locator('.header-vitals').innerText().catch(() => '');
-      const m = txt.match(/(\d+)\s*\/\s*\d+/);
+      const txt = await page.locator('#ledger').innerText().catch(() => '');
+      const m = txt.match(/\bW(\d+)\s*\/\s*\d+/);
       if (m) maxWeek = Math.max(maxWeek, Number(m[1]));
     };
-    const visible = async (sel) => {
-      const l = page.locator(sel);
-      return (await l.count()) > 0 && (await l.first().isVisible());
-    };
 
+    let actSplashesDismissed = 0;
+    let outsideDismissed = 0;
     for (let iter = 0; iter < 400; iter++) {
-      if (await visible('.over-screen.active')) { reachedTerminal = true; break; }
-
-      // Act ceremony splash (primary/general/session hand-off) gates play.
-      if (await visible('.splash-screen.active')) {
-        await page.locator('[data-act="dismiss-splash"]').click();
+      if (await page.locator('#terminal').isVisible()) {
+        reachedTerminal = true;
+        break;
+      }
+      // Act ceremony splash (primary/general/session hand-off) gates play —
+      // dismiss it the way a player taps "Continue".
+      const splash = page.locator('#act-splash');
+      if ((await splash.count()) && (await splash.isVisible())) {
+        await page.locator('#act-splash-ok').click();
         actSplashesDismissed++;
         await page.waitForTimeout(60);
         continue;
       }
-      // Outside "world weather" event — must be acknowledged to continue.
-      if (await visible('.weather-screen.active')) {
-        await page.locator('[data-act="dismiss-weather"]').click();
+      // Outside "world weather" event — you answer it or weather it; the
+      // modal must be acknowledged before play continues.
+      const weather = page.locator('#outside-weather');
+      if ((await weather.count()) && (await weather.isVisible())) {
+        await page.locator('#outside-weather-ok').click();
+        outsideDismissed++;
         await page.waitForTimeout(60);
         continue;
       }
-      // Phase draft (ground modal styling, pick-draft action) — take one.
-      if (await visible('[data-act="pick-draft"]')) {
-        await page.locator('[data-act="pick-draft"]').first().click();
-        await page.waitForTimeout(40);
-        continue;
-      }
-      // Ground sheet for a field play.
-      if (await visible('[data-act="pick-ground"]')) {
-        const grounds = await page.$$('[data-act="pick-ground"]');
-        await grounds[groundPicks % grounds.length].click();
-        groundPicks++;
-        playsResolved++;
-        await page.waitForTimeout(60);
-        continue;
-      }
-      // Card detail sheet open → Play it.
-      if (await visible('.card-detail.active')) {
-        await page.locator('[data-act="play-detail"]').click();
-        await page.waitForTimeout(60);
-        // Field plays now show the ground sheet; non-field resolved directly.
-        if (!(await visible('[data-act="pick-ground"]'))) {
-          if (!(await visible('.card-detail.active'))) playsResolved++;
-          else await page.locator('[data-act="close-detail"]').click(); // unplayable → skip
+      if (await page.locator('#ground-picker').isVisible()) {
+        const grounds = await page.$$('.gp-ground');
+        if (!grounds.length) {
+          failures.push('ground picker open but no grounds listed');
+          await page.locator('#gp-cancel').click();
+        } else {
+          const logBefore = (await page.locator('#log').innerText().catch(() => '')).length;
+          await grounds[groundPicks % grounds.length].click();
+          groundPicks++;
+          await page.waitForTimeout(60);
+          const logAfter = (await page.locator('#log').innerText().catch(() => '')).length;
+          if (logAfter > logBefore) playsResolved++;
         }
         continue;
       }
-      // Open a hand card's detail sheet (rotate so we don't stick on one).
-      const cards = await page.$$('.card[data-act="tap-card"]');
-      if (cards.length) {
-        await cards[handPtr % cards.length].click();
-        handPtr++;
-        await page.waitForTimeout(50);
+      const drafts = await page.$$('#draft .play-card');
+      if (drafts.length) {
+        await drafts[0].click();
+        await page.waitForTimeout(40);
         continue;
       }
-      // Nothing left to play → end the week.
-      if (await visible('#btn-endweek')) {
+      const cards = await page.$$('#playables .play-card:not(.locked)');
+      if (cards.length) {
+        const logBefore = (await page.locator('#log').innerText().catch(() => '')).length;
+        await cards[0].click();
+        await page.waitForTimeout(60);
+        // A non-field play resolves immediately (log grows); a field play
+        // opens the picker (handled next iteration).
+        if (!(await page.locator('#ground-picker').isVisible())) {
+          const logAfter = (await page.locator('#log').innerText().catch(() => '')).length;
+          if (logAfter > logBefore) playsResolved++;
+        }
+        continue;
+      }
+      // Nothing playable → end the week.
+      const endBtn = page.locator('#btn-end');
+      if (await endBtn.isVisible()) {
         await readWeek();
-        await page.locator('#btn-endweek').click();
+        await endBtn.click();
         endWeeks++;
         await page.waitForTimeout(60);
         await readWeek();
+        // A healthy campaign resolves in ~14 weeks + drafts; if we've ended
+        // far more "weeks" than that without a terminal, End Week is broken —
+        // fail fast instead of grinding the guard to 400.
         if (endWeeks > 30) break;
       } else {
         break;
@@ -181,14 +187,14 @@ async function main() {
     }
 
     assert(playsResolved > 0, `cards actually resolve when played (${playsResolved} plays)`);
-    assert(groundPicks > 0, `ground sheet opens and resolves for field plays (${groundPicks} picks)`);
-    assert(maxWeek > 1, `End Week advances the calendar (reached week ${maxWeek}, ${endWeeks} end-week clicks)`);
+    assert(groundPicks > 0, `ground picker opens and resolves for field plays (${groundPicks} picks)`);
+    assert(maxWeek > 1, `End Week advances the calendar (reached week W${maxWeek}, ${endWeeks} end-week clicks)`);
     assert(actSplashesDismissed > 0, `act ceremony splash appears and dismisses (${actSplashesDismissed})`);
     assert(reachedTerminal, 'a full campaign reaches a terminal screen');
 
     if (reachedTerminal) {
-      const choices = await page.$$('.over-screen.active [data-act="restart"]');
-      assert(choices.length > 0, 'terminal offers a forward choice (New Run)');
+      const choices = await page.$$('#terminal-choices .play-card, #terminal-choices button');
+      assert(choices.length > 0, 'terminal offers forward choices (no dead end)');
     }
 
     // 4. Zero console/page errors across the whole run.
