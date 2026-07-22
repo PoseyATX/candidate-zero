@@ -29,6 +29,8 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const AXE = join(ROOT, 'node_modules', 'axe-core', 'axe.min.js');
 const PORT = Number(process.env.A11Y_PORT ?? 4198);
 const BASE = `http://localhost:${PORT}/candidate-zero/`;
+// Fixed seed → deterministic run so the CI gate can't flake on a random hand.
+const RUN_URL = `${BASE}?seed=4242`;
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -89,7 +91,7 @@ function main() {
       if (!(await waitForServer(BASE))) throw new Error(`preview never ready at ${BASE}`);
       browser = await chromium.launch();
       const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
-      await page.goto(BASE, { waitUntil: 'networkidle' });
+      await page.goto(RUN_URL, { waitUntil: 'networkidle' });
       await page.evaluate(() => localStorage.clear());
       await page.reload({ waitUntil: 'networkidle' });
 

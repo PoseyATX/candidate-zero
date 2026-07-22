@@ -126,7 +126,10 @@ function actionByIndex(hi: number): ActionOption | undefined {
 
 // ---- commands ----
 function startRun(): void {
-  const seed = (Math.random() * 2147483647) >>> 0 || 1;
+  // `?seed=N` forces a deterministic run (used by smoke:ui / a11y so the CI
+  // gates aren't flaky); otherwise a fresh random seed each run.
+  const forced = Number(new URLSearchParams(location.search).get('seed'));
+  const seed = (Number.isFinite(forced) && forced > 0 ? forced : (Math.random() * 2147483647)) >>> 0 || 1;
   const snap = newGame({ seed, setup: { ...state.sel } });
   const v = view(snap);
   set({

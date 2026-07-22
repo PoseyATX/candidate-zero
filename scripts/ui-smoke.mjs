@@ -24,6 +24,8 @@ import { chromium } from 'playwright';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.env.SMOKE_PORT ?? 4199);
 const BASE = `http://localhost:${PORT}/candidate-zero/`;
+// Fixed seed → deterministic run so the CI gate can't flake on a random hand.
+const RUN_URL = `${BASE}?seed=4242`;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -78,7 +80,7 @@ async function main() {
     });
 
     // 1. Title screen loads and its buttons are wired.
-    await page.goto(BASE, { waitUntil: 'networkidle' });
+    await page.goto(RUN_URL, { waitUntil: 'networkidle' });
     await page.evaluate(() => localStorage.clear());
     await page.reload({ waitUntil: 'networkidle' });
     assert(await page.locator('.screen-title.active').isVisible(), 'title screen renders on load');
