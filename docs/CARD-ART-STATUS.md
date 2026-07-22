@@ -2,9 +2,11 @@
 
 Only cards with a raster image in `CARD_ART` (src/ui/main.ts) show a photo/illustration; every other card falls back to its engraved emblem SVG (src/ui/card-art.ts). Source of truth for the catalog: unity/content/candidate-zero-content.json.
 
-**Has image (1):** PL01 Block Walk (assets/card-block-walk.png)
+**Has image (0):** none currently ship — the 1600×1600 Block Walk PNG was
+reverted (oversized for a ~150px thumbnail, failed to load reliably). Add
+properly-sized (≈300px) art under `public/assets/` and map it in `CARD_ART`.
 
-## Cards WITHOUT images (65)
+## Cards WITHOUT images (66 — all)
 
 | # | ID | Name | Deck |
 |---|----|------|------|

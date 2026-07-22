@@ -26,10 +26,11 @@ import {
 import { emblemFor } from './card-art.js';
 
 // ---- card art: raster where we have it, engraved emblem as the fallback ----
+// No raster art currently ships — every card uses its engraved emblem. Add
+// entries here as properly-sized (≈300px) card art lands under public/assets/.
 const ASSET_BASE = import.meta.env.BASE_URL;
-const CARD_ART: Record<string, string> = {
-  PL01: ASSET_BASE + 'assets/card-block-walk.png'
-};
+const CARD_ART: Record<string, string> = {};
+void ASSET_BASE;
 
 const OUTCOME_LABELS: Record<string, string> = {
   ongoing: 'In progress',
