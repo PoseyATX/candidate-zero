@@ -37,6 +37,8 @@ import {
 } from './entities.js';
 import { WAITING_PLAYS } from '../data/waiting-plays.js';
 import { SIGNATURE_PLAYS, SIGNATURE_BY_PERSONA } from '../data/signature-plays.js';
+import { PATH_REWARDS } from '../data/paths.js';
+import { advancePaths } from './paths.js';
 import {
   applySetup,
   HARNESS_DEFAULT_SETUP,
@@ -137,6 +139,8 @@ export function buildCatalog(plays: PlayCard[] = ALL_PLAYS): Map<string, PlayCar
   for (const p of WAITING_PLAYS) map.set(p.id, p);
   // Persona-exclusive signature cards (gated by req/show + deck injection).
   for (const p of SIGNATURE_PLAYS) map.set(p.id, p);
+  // Path-unlock reward cards (gated; injected on unlock — see engine/paths.ts).
+  for (const p of PATH_REWARDS) map.set(p.id, p);
   return map;
 }
 
@@ -565,7 +569,9 @@ export function playFromHand(
       return { ok: false, reason: 'Not playable', cardId: card.id, cardName: card.n };
     }
     // Shop / camp actions are not physical hand cards — no discard.
-    return executePlay(campaign.state, card, ground);
+    const campOutcome = executePlay(campaign.state, card, ground);
+    if (campOutcome.ok) advancePaths(campaign.state, card.id, campaign.deck);
+    return campOutcome;
   }
   const id = campaign.deck.hand[handIndex];
   if (id === undefined) return { ok: false, reason: 'Invalid hand index' };
@@ -580,6 +586,7 @@ export function playFromHand(
   }
   takeFromHand(campaign.deck, handIndex);
   const outcome = executePlay(campaign.state, card, ground);
+  if (outcome.ok) advancePaths(campaign.state, card.id, campaign.deck);
   discardCard(campaign.deck, id);
   return outcome;
 }
