@@ -1,525 +1,1438 @@
 /**
- * CANDIDATE ZERO — mobile UI (presentation shell)
- * ================================================
- * A thin presentation layer over the pure engine's frozen API
- * (src/engine/api.ts) — the engine is the sole rules authority; this file
- * renders its `view()` and forwards taps as `apply()` commands. Ported from
- * the "Candidate Zero mobile UI" design (claude.ai/design): dark-walnut
- * theme, bottom-nav tabs (Play / Dossier / Log), tap-to-reveal card detail
- * sheets, ground / draft / act / weather ceremonies.
- *
- * Card descriptions are data revealed on tap (the detail sheet), never drawn
- * on the 2:3 card face — the face is name + art + cost + risk.
+ * CANDIDATE ZERO — Minimal web shell over pure engine
+ * Presentation only. All rules live in src/engine.
  */
 
-import './styles.css';
 import {
-  setupOptions,
-  newGame,
-  view,
-  apply,
-  type EngineSnapshot,
-  type RenderView,
-  type ActionOption,
-  type Command
-} from '../engine/api.js';
-import { emblemFor } from './card-art.js';
+  createCampaign,
+  createIncumbentCampaign,
+  listPlayableHand,
+  playFromHand,
+  startWeek,
+  endWeekInPlace,
+  snapshot,
+  pickPhaseDraft,
+  maybeOfferPhaseDraft,
+  summarizeWeek,
+  CAMP_PETITION,
+  CAMP_FILING_FEE,
+  campIndexToCardId,
+  type Campaign
+} from '../engine/loop.js';
+import { getPhase, stageLabel, stageWeek } from '../engine/state.js';
+import { STAMPS } from '../engine/resolve.js';
+import { pickDefaultGround, cardAttrMod, isPhaseLegal, isVisible, canAfford } from '../engine/play.js';
+import type { PlayFeedback } from '../engine/feedback.js';
+import {
+  PERSONAS,
+  ISSUES,
+  DISTRICTS,
+  REGIONS,
+  type SetupSelection
+} from '../data/setup.js';
+import {
+  loadLegacy,
+  saveLegacy,
+  applyLegacy,
+  buildPaths,
+  buildEpithet,
+  buildGrowthLine,
+  computeShare,
+  recordRun,
+  setInterimPath,
+  addTrait,
+  romanRun,
+  TRAITS,
+  type InterimPath
+} from '../engine/legacy.js';
+import { enterWaiting, finishWaiting, WAITING_WEEKS } from '../engine/waiting.js';
+import type { CampaignOutcome, Ground, LegacyState, PlayCard, PlayOutcome, TraitId } from '../engine/types.js';
+import { emblemFor, emblem, kindMark, KIND_META } from './card-art.js';
+import './styles.css';
 
-// ---- card art: raster where we have it, engraved emblem as the fallback ----
-// No raster art currently ships — every card uses its engraved emblem. Add
-// entries here as properly-sized (≈300px) card art lands under public/assets/.
-const ASSET_BASE = import.meta.env.BASE_URL;
-const CARD_ART: Record<string, string> = {};
-void ASSET_BASE;
+let campaign: Campaign | null = null;
+let weekPlays: PlayOutcome[] = [];
 
-const OUTCOME_LABELS: Record<string, string> = {
-  ongoing: 'In progress',
-  missed_filing: 'You missed the filing deadline',
-  lost_primary: 'You lost the primary',
-  won_general: 'You won the general',
-  lost_general: 'You lost the general',
-  session_law: 'A law carries your name',
-  session_survived: 'You survived the session',
-  session_primaried: 'You were primaried out'
+const ATTR_SHORT: Record<string, string> = {
+  CLO: 'Close',
+  CON: 'Conviction',
+  CRA: 'Craft',
+  INK: 'Ink',
+  DIP: 'Diplomacy',
+  CHA: 'Charm'
 };
 
-interface StageMeta { act: string; title: string; sub: string; }
-function stageMeta(stage: string): StageMeta {
-  switch (stage) {
-    case 'primary': return { act: 'Act I', title: 'The Primary', sub: 'File the papers. Make the ballot by week eight.' };
-    case 'general': return { act: 'Act II', title: 'The General', sub: 'Take the field. Turnout is the whole game now.' };
-    case 'session': return { act: 'Act III', title: 'The Session', sub: 'You are sworn in. Move a bill before sine die.' };
-    case 'waiting': return { act: 'Interim', title: 'The Waiting', sub: 'Keep the list warm until the next filing.' };
-    default: return { act: '', title: stage, sub: '' };
+function attrChipsHtml(attrs: Record<string, number>): string {
+  return Object.entries(attrs)
+    .map(([k, v]) => {
+      const label = ATTR_SHORT[k] ?? k;
+      return `<span class="attr-chip" title="${label}"><span class="attr-k">${k}</span><span class="attr-v">${v}</span></span>`;
+    })
+    .join('');
+}
+let legacy: LegacyState = loadLegacy();
+let terminalKind: CampaignOutcome | null = null;
+let terminalShare = 0;
+
+/** Ceremony shell — which act of the run the player is in. */
+type ActId = 'primary' | 'general' | 'session' | 'waiting';
+
+interface ActShellDef {
+  id: ActId;
+  actNum: string;
+  title: string;
+  /** Short line on persistent banner */
+  bannerSub: string;
+  /** Static splash body (detail line appended when engine provides text) */
+  splashBody: string;
+  splashHint: string;
+  cta: string;
+  endWeekLabel: string;
+  actionsTitle: string;
+  logTitle: string;
+  tag: string;
+  /** Hand / motions section label inside playables */
+  kitLabel: string;
+}
+
+/**
+ * Presentation-only act shells. Rules stay in the engine; this is the
+ * unmistakable stage boundary the player asked for (not a soft re-skin).
+ */
+const ACT_SHELLS: Record<ActId, ActShellDef> = {
+  primary: {
+    id: 'primary',
+    actNum: 'Act I',
+    title: 'The Primary',
+    bannerSub: 'Ballot · doors · force',
+    splashBody:
+      'Eight weeks. Make the ballot or the primary goes on without you. ' +
+      'Petition labor or filing fee — pick a door. Field work needs a ground.',
+    splashHint:
+      'Main Deck campaign verbs. Shop is 0 AP. Once: Self-Fund · Once: PAC Check (Session will collect).',
+    cta: 'File the papers',
+    endWeekLabel: 'End campaign week',
+    actionsTitle: 'Campaign hand',
+    logTitle: 'Campaign log',
+    tag: 'Primary',
+    kitLabel: 'Campaign plays'
+  },
+  general: {
+    id: 'general',
+    actNum: 'Act II',
+    title: 'The General',
+    bannerSub: 'GOTV · turnout · November',
+    splashBody:
+      'You survived the primary. Same run — new clock. Six weeks to November. ' +
+      'Primary rapport seeds GOTV on the grounds that know you. Block walks and phones now bank turnout, not just introductions. Kitchen-table club math is closed.',
+    splashHint:
+      'GOTV Weekend is in your hand. Field work converts to conversion %. Flatbed (A06) unlocks Rides to the Polls. November is arithmetic — contacts alone will not save you.',
+    cta: 'Take the field',
+    endWeekLabel: 'End general week',
+    actionsTitle: 'General field',
+    logTitle: 'Campaign log',
+    tag: 'General',
+    kitLabel: 'Turnout kit · GOTV is the lever'
+  },
+  session: {
+    id: 'session',
+    actNum: 'Act III',
+    title: 'You are sworn in',
+    bannerSub: 'Bill pipeline · sine die',
+    splashBody:
+      'The general is won. You are a member now — still THIS run, not a new campaign. ' +
+      'Campaign cards leave the table. Legislative motions (Special kit) only.',
+    splashHint:
+      'File your bill. One pipeline motion per week. Casework keeps the seat. Clock ends at sine die — then reelection is a NEW cycle.',
+    cta: 'Enter the chamber',
+    endWeekLabel: 'End legislative week',
+    actionsTitle: 'Legislative motions',
+    logTitle: 'Chamber log',
+    tag: 'Session',
+    kitLabel: 'Session Special kit · not Main Deck'
+  },
+  waiting: {
+    id: 'waiting',
+    actNum: 'Act IV',
+    title: 'The Waiting Season',
+    bannerSub: 'Interim orbit · next filing',
+    splashBody:
+      'The race ended. The climb did not. Four compressed weeks — one action each. ' +
+      'What you bank rides into the next campaign. No true game over; only redirection.',
+    splashHint: 'Special waiting verbs only (WA*). Path-scoped kit. Then setup for the next filing.',
+    cta: 'Begin the interim',
+    endWeekLabel: 'End interim week',
+    actionsTitle: 'Interim orbit',
+    logTitle: 'Waiting log',
+    tag: 'Waiting',
+    kitLabel: 'Waiting Special kit · bank for next cycle'
+  }
+};
+
+function actFromStage(stage: string | undefined): ActId {
+  if (stage === 'waiting') return 'waiting';
+  if (stage === 'session') return 'session';
+  if (stage === 'general') return 'general';
+  return 'primary';
+}
+
+function $(id: string): HTMLElement {
+  const el = document.getElementById(id);
+  if (!el) throw new Error(`#${id} missing`);
+  return el;
+}
+
+function fillSelects(): void {
+  const fill = (id: string, items: { id: string; n: string }[]) => {
+    const sel = $(id) as HTMLSelectElement;
+    sel.innerHTML = items.map(i => `<option value="${i.id}">${i.n}</option>`).join('');
+  };
+  fill('sel-persona', PERSONAS);
+  fill('sel-issue', ISSUES);
+  fill('sel-district', DISTRICTS);
+  fill('sel-region', REGIONS);
+  (document.getElementById('sel-persona') as HTMLSelectElement).value = 'teacher';
+  (document.getElementById('sel-issue') as HTMLSelectElement).value = 'taxes';
+  (document.getElementById('sel-district') as HTMLSelectElement).value = 'open';
+  (document.getElementById('sel-region') as HTMLSelectElement).value = 'east';
+  updateBlurb();
+}
+
+function currentSetup(): SetupSelection {
+  return {
+    personaId: (document.getElementById('sel-persona') as HTMLSelectElement).value,
+    issueId: (document.getElementById('sel-issue') as HTMLSelectElement).value,
+    districtId: (document.getElementById('sel-district') as HTMLSelectElement).value,
+    regionId: (document.getElementById('sel-region') as HTMLSelectElement).value
+  };
+}
+
+function updateBlurb(): void {
+  const setup = currentSetup();
+  const p = PERSONAS.find(x => x.id === setup.personaId);
+  const r = REGIONS.find(x => x.id === setup.regionId);
+  const d = DISTRICTS.find(x => x.id === setup.districtId);
+  const attr = p ? Object.entries(p.attrs).map(([k, v]) => `${k}+${v}`).join(' ') : '';
+  $('setup-blurb').textContent = [
+    p?.d ?? '',
+    d?.d ?? '',
+    r ? `${r.n}: petition mod ${r.petitionMod >= 0 ? '+' : ''}${r.petitionMod}.` : '',
+    attr ? `Attr tilt: ${attr}` : ''
+  ]
+    .filter(Boolean)
+    .join(' ');
+}
+
+/**
+ * Compact persistent HUD — mobile deckbuilder convention (the vitals never
+ * scroll away). Hidden on wide screens where the full ledger is visible
+ * anyway; sticky at the top of #game on phones.
+ */
+function renderHud(): void {
+  if (!campaign) return;
+  const s = campaign.state;
+  const snap = snapshot(s);
+  const pips = Array.from({ length: s.apMax }, (_, i) =>
+    `<i class="pip ${i < snap.ap ? 'on' : ''}"></i>`
+  ).join('');
+  const fieldChip = snap.fieldAp ? `<span class="chip chip-field">+${snap.fieldAp} field</span>` : '';
+  const debtChip =
+    snap.debt > 0
+      ? `<span class="chip chip-debt" title="Debt does not tax odds — win/loss branch only">−$${snap.debt}</span>`
+      : '';
+  const oblChip =
+    snap.oblsCount > 0
+      ? `<span class="chip chip-debt" title="Obligations drag weekly (e.g. PAC String)">OB×${snap.oblsCount}</span>`
+      : '';
+  const weekPct = Math.round((snap.week / s.weeksTotal) * 100);
+  const ballotBit = snap.ballot
+    ? '<span class="chip chip-on">BALLOT ON</span>'
+    : `<span class="hud-meter" title="${snap.signatures}/${s.sigNeed} signatures">
+         <i style="width:${Math.min(100, Math.round((snap.signatures / s.sigNeed) * 100))}%"></i>
+       </span><span class="hud-meter-label">${snap.signatures}/${s.sigNeed}</span>`;
+  const spendNote =
+    snap.debt > 0 && snap.availableCash < snap.money
+      ? `<span class="hud-item" title="Service reserve — elevated debt tightens spend, not odds">$${snap.availableCash}<span class="hud-sub">spend</span></span>`
+      : '';
+  const act = ACT_SHELLS[actFromStage(s.stage)];
+  const actChip = `<span class="chip chip-act chip-act-${act.id}" title="${act.actNum}: ${act.title}">${act.tag}</span>`;
+  const ballotHud =
+    s.stage === 'session'
+      ? `<span class="chip chip-on" title="Sworn member">SEAT</span>`
+      : s.stage === 'waiting'
+        ? `<span class="chip chip-act chip-act-waiting" title="Waiting season">WAIT</span>`
+        : ballotBit;
+  const who = (s.persona ?? '—').split(' ')[0] ?? '—';
+  $('hud').innerHTML = `
+    <span class="hud-item">${actChip}</span>
+    <span class="hud-item"><span class="pips" title="Action points">${pips}</span>${fieldChip}</span>
+    <span class="hud-item hud-cash" title="Cash on hand">$${snap.money}${debtChip}${oblChip}</span>
+    ${spendNote}
+    <span class="hud-item" title="Week ${snap.week} of ${s.weeksTotal}"><span class="hud-week">W${snap.week}/${s.weeksTotal}</span>
+      <span class="hud-meter hud-meter-week"><i style="width:${weekPct}%"></i></span>
+    </span>
+    <span class="hud-item">${ballotHud}</span>
+    <span class="hud-item hud-who" title="${s.persona ?? ''} · ${s.issue ?? ''}">${who}</span>
+  `;
+}
+
+/**
+ * Dossier ledger — Phase 6 hierarchy (docs/UI-IA.md):
+ * Identity band → force/session → vitals (desktop) → machine.
+ */
+function renderLedger(): void {
+  if (!campaign) return;
+  const s = campaign.state;
+  const snap = snapshot(s);
+  const allyBits = s.allies
+    .filter(a => a.warm > 0)
+    .map(a => {
+      const g =
+        a.grounds && a.grounds.length
+          ? ` @ ${a.grounds
+              .map(id => s.groundsArr.find(x => x.id === id)?.n ?? id)
+              .join(', ')}`
+          : '';
+      return `${a.id}${g}`;
+    })
+    .join(' · ');
+  const assetBits = s.assets.filter(a => /^A\d+/.test(a)).join(' · ');
+  const oblBits = s.obls.join(' · ');
+
+  const debtBits =
+    snap.debt > 0
+      ? `<div class="ledger-cell"><span class="k">Debt</span> $${snap.debt}${
+          s.pacBridgeDebt ? ` · PAC $${s.pacBridgeDebt}` : ''
+        } <span class="muted">no odds tax</span></div>
+        <div class="ledger-cell"><span class="k">Spendable</span> $${snap.availableCash}</div>`
+      : '';
+
+  let forceBand = '';
+  if (s.stage === 'session') {
+    forceBand = `
+      <div class="ledger-band ledger-force">
+        <div class="ledger-band-label">Chamber</div>
+        <div class="ledger-grid">
+          <div class="ledger-cell"><span class="k">Capital</span> ${s.capital}</div>
+          <div class="ledger-cell"><span class="k">Favor</span> ${Math.round(s.favor)}</div>
+          <div class="ledger-cell"><span class="k">District</span> ${Math.round(s.districtStanding)}</div>
+          <div class="ledger-wide"><span class="k">Committee</span> ${s.committee?.n ?? '—'}</div>
+          <div class="ledger-wide bill-status"><span class="k">Bill</span> ${
+            s.bill
+              ? `${s.bill.title} · <b>${s.bill.status}</b> (${billStageLabelUi(s.bill)}) · heat ${s.bill.heat}${
+                  s.bill.tally.aye || s.bill.tally.nay
+                    ? ` · tally ${s.bill.tally.aye}–${s.bill.tally.nay}`
+                    : ''
+                }`
+              : '—'
+          }</div>
+          ${
+            s.sessionFlags?.pac_lender_claim || s.obls.includes('OB1')
+              ? '<div class="ledger-wide muted">PAC claim rides — referral will collect.</div>'
+              : ''
+          }
+        </div>
+      </div>`;
+  } else if (s.stage === 'waiting') {
+    const bank = s.sessionFlags || {};
+    forceBand = `
+      <div class="ledger-band ledger-force">
+        <div class="ledger-band-label">Waiting bank</div>
+        <div class="ledger-grid">
+          <div class="ledger-cell"><span class="k">Path</span> ${s.waitingPathId ?? 'orbit'}</div>
+          <div class="ledger-cell"><span class="k">Banked contacts</span> +${Number(bank.waitBankContacts || 0)}</div>
+          <div class="ledger-cell"><span class="k">Banked name</span> +${Number(bank.waitBankName || 0)}</div>
+          <div class="ledger-cell"><span class="k">Week</span> ${s.week}/${WAITING_WEEKS}</div>
+        </div>
+      </div>`;
+  } else {
+    const ballotCell = !snap.ballot
+      ? `<div class="ledger-cell ledger-gate"><span class="k">Signatures</span> ${snap.signatures}/${s.sigNeed}</div>`
+      : '';
+    forceBand = `
+      <div class="ledger-band ledger-force">
+        <div class="ledger-band-label">Force</div>
+        <div class="ledger-grid">
+          <div class="ledger-cell"><span class="k">Contacts</span> ${snap.contacts}</div>
+          <div class="ledger-cell"><span class="k">Name ID</span> ${snap.nameID}</div>
+          <div class="ledger-cell"><span class="k">Vols</span> ${snap.volPool}</div>
+          <div class="ledger-cell ledger-secondary"><span class="k">Momentum</span> ${snap.momentum}</div>
+          <div class="ledger-cell ledger-secondary"><span class="k">Endorse</span> ${snap.endorsePts}</div>
+          ${ballotCell}
+        </div>
+      </div>`;
+  }
+
+  // Desktop vitals (mobile reads these from sticky HUD)
+  const vitalsBand = `
+    <div class="ledger-band ledger-vitals">
+      <div class="ledger-band-label">Vitals</div>
+      <div class="ledger-grid">
+        <div class="ledger-cell ledger-cash" title="Cash on hand">$${snap.money}</div>
+        <div class="ledger-cell"><span class="k">AP</span> ${snap.ap}/${s.apMax}${
+          snap.fieldAp ? ` +${snap.fieldAp} field` : ''
+        }</div>
+        <div class="ledger-cell"><span class="k">Week</span> ${stageWeek(s)} · W${snap.week}/${s.weeksTotal}</div>
+        <div class="ledger-cell muted">${stageLabel(s)} · Ph ${getPhase(s)}</div>
+        ${debtBits}
+      </div>
+    </div>`;
+
+  $('ledger').innerHTML = `
+    <div class="ledger-dossier">
+      <div class="ledger-band ledger-identity">
+        <div class="ledger-who">${s.persona ?? '—'}</div>
+        <div class="ledger-issue">${s.issue ?? '—'}</div>
+        <div class="attr-chips" aria-label="Attributes">${attrChipsHtml(s.attrs)}</div>
+      </div>
+      ${forceBand}
+      ${vitalsBand}
+      <div class="ledger-band ledger-machine">
+        <div class="ledger-band-label">Machine</div>
+        <div class="ledger-wide"><span class="k">Allies</span> ${allyBits || '—'}</div>
+        <div class="ledger-wide"><span class="k">Assets</span> ${assetBits || '—'}</div>
+        <div class="ledger-wide"><span class="k">Obligations</span> ${oblBits || '—'}</div>
+        ${s.over && s.outcome ? `<div class="ledger-wide"><span class="k">Outcome</span> ${s.outcome}</div>` : ''}
+      </div>
+    </div>
+  `;
+  applyStageChrome();
+  const hint = $('week-hint');
+  if (s.over) {
+    hint.textContent = `Campaign over: ${s.outcome ?? 'ended'}.`;
+  } else if (s.stage === 'waiting') {
+    const bank = s.sessionFlags || {};
+    hint.textContent =
+      `ACT IV · WAITING W${s.week}/${WAITING_WEEKS} (${s.waitingPathId ?? 'orbit'}) — ` +
+      `banked +${Number(bank.waitBankContacts || 0)} contacts · +${Number(bank.waitBankName || 0)} name. One AP/week.`;
+  } else if (s.stage === 'session') {
+    const bill = s.bill
+      ? `Bill: ${billStageLabelUi(s.bill)} (heat ${s.bill.heat}).`
+      : 'No bill.';
+    hint.textContent =
+      `ACT III · SESSION W${s.week}/${s.weeksTotal} — ${bill} Special kit only. One pipeline motion/week.`;
+  } else if (s.stage === 'general') {
+    hint.textContent =
+      'ACT II · GENERAL — GOTV and contrast. Six weeks to November. Same run.';
+  } else if (s.ballot) {
+    hint.textContent =
+      'ACT I · PRIMARY — On the ballot. Build force before week 8. Shop is 0 AP.';
+  } else {
+    hint.textContent =
+      'ACT I · PRIMARY — Not on ballot. Petition / Fee / Shop available. Deadline: end of week 8.';
   }
 }
 
-type SetupOpts = ReturnType<typeof setupOptions>;
-interface Sel { personaId: string; issueId: string; districtId: string; regionId: string; }
-
-interface UIState {
-  screen: 'title' | 'setup' | 'game';
-  setupOpts: SetupOpts;
-  sel: Sel;
-  snap: EngineSnapshot | null;
-  view: RenderView | null;
-  activeTab: 'play' | 'dossier' | 'log';
-  detailIndex: number | null;
-  pendingFieldIndex: number | null;
-  toast: string;
-  splash: StageMeta | null;
-  weather: string | null;
-  howto: boolean;
+function billStageLabelUi(bill: { pipelineStage: number; status: string }): string {
+  const labels = [
+    'Unfiled',
+    'Filed',
+    'Referred',
+    'Heard',
+    'Voted Out',
+    'Calendar',
+    'Passed House',
+    'Through Senate',
+    'SIGNED'
+  ];
+  if (bill.pipelineStage < 0) return 'Dead';
+  return labels[Math.min(8, bill.pipelineStage)] ?? bill.status;
 }
 
-// ---- helpers ----
-const esc = (s: unknown): string =>
-  String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-const fmtMoney = (n: number): string => '$' + Math.round(n || 0).toLocaleString();
-const oddsPct = (o: number | null | undefined): string => (o == null ? '—' : Math.round(o * 100) + '%');
-const riskLc = (r: string): string => (r || '').toLowerCase();
-
-function cardArtHtml(a: ActionOption): string {
-  const img = CARD_ART[a.cardId];
-  if (img) return `<img src="${esc(img)}" alt="" loading="lazy" decoding="async" />`;
-  return `<span class="emblem">${emblemFor(a.cardId)}</span>`;
-}
-
-// ---- engine bootstrap ----
-const opts = setupOptions();
-const def = opts.default;
-const state: UIState = {
-  screen: 'title',
-  setupOpts: opts,
-  sel: {
-    personaId: def.personaId ?? opts.personas[0].id,
-    issueId: def.issueId ?? opts.issues[0].id,
-    districtId: def.districtId ?? opts.districts[0].id,
-    regionId: def.regionId ?? opts.regions[0].id
-  },
-  snap: null,
-  view: null,
-  activeTab: 'play',
-  detailIndex: null,
-  pendingFieldIndex: null,
-  toast: '',
-  splash: null,
-  weather: null,
-  howto: false
-};
-
-let toastTimer: ReturnType<typeof setTimeout> | undefined;
-function showToast(msg: string): void {
-  state.toast = msg;
-  render();
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { state.toast = ''; render(); }, 2200);
-}
-
-function set(patch: Partial<UIState>): void {
-  Object.assign(state, patch);
-  render();
-}
-
-function actionByIndex(hi: number): ActionOption | undefined {
-  return state.view?.actions.find(a => a.handIndex === hi);
-}
-
-// ---- commands ----
-function startRun(): void {
-  // `?seed=N` forces a deterministic run (used by smoke:ui / a11y so the CI
-  // gates aren't flaky); otherwise a fresh random seed each run.
-  const forced = Number(new URLSearchParams(location.search).get('seed'));
-  const seed = (Number.isFinite(forced) && forced > 0 ? forced : (Math.random() * 2147483647)) >>> 0 || 1;
-  const snap = newGame({ seed, setup: { ...state.sel } });
-  const v = view(snap);
-  set({
-    screen: 'game', activeTab: 'play', detailIndex: null, pendingFieldIndex: null,
-    snap, view: v, splash: stageMeta(v.stage), weather: null
-  });
-}
-
-function applyCmd(cmd: Command): void {
-  if (!state.snap) return;
-  const res = apply(state.snap, cmd);
-  if (!res.ok) {
-    // Close whatever sheet issued the command so the toast reads as the reply.
-    state.detailIndex = null;
-    state.pendingFieldIndex = null;
-    showToast(res.reason || 'Not allowed');
+function renderDraft(): void {
+  const box = $('draft');
+  if (!campaign?.state.pendingDraft?.options.length) {
+    box.innerHTML = '';
     return;
   }
-  const prevStage = state.view?.stage;
-  const nextView = view(res.snapshot);
-  const outside = res.events.find(e => /^OUTSIDE/.test(e.text));
-  const weather = outside ? outside.text.replace(/^OUTSIDE\s*[—-]\s*/, '') : null;
-  if (!weather) {
-    const meaningful = [...res.events].reverse().find(e => e.kind !== 'draw' && e.kind !== 'week' && e.text);
-    if (meaningful) { showToast(meaningful.text); }
-  }
-  const splash = (!nextView.over && nextView.stage !== prevStage) ? stageMeta(nextView.stage) : null;
-  set({
-    snap: res.snapshot, view: nextView,
-    detailIndex: null, pendingFieldIndex: null,
-    weather, splash: splash || state.splash
+  const draft = campaign.state.pendingDraft;
+  box.innerHTML =
+    `<p class="hint">Phase ${draft.phase} draft — pick one for your pool</p>` +
+    draft.options
+      .map((id, i) => {
+        const card = campaign!.catalog.get(id);
+        if (!card) return '';
+        return `
+        <button type="button" class="${cardClasses(card)} draft-card" data-draft="${i}">
+          ${cardInner(card)}
+        </button>`;
+      })
+      .join('');
+  box.querySelectorAll<HTMLButtonElement>('[data-draft]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      pickPhaseDraft(campaign!, Number(btn.dataset.draft));
+      paint();
+    });
   });
 }
 
-function playDetail(): void {
-  const hi = state.detailIndex;
-  if (hi === null) return;
-  const a = actionByIndex(hi);
-  if (!a) return;
-  if (a.field) { set({ pendingFieldIndex: hi, detailIndex: null }); return; }
-  applyCmd({ type: 'play', handIndex: hi });
+/** Primary cost for the seal + any secondary costs for the sub-stamp row. */
+function costParts(card: PlayCard): { seal: string; subs: string[] } {
+  const c = card.cost;
+  const all: string[] = [];
+  if (c.a) all.push(`${c.a} AP`);
+  if (c.$) all.push(`$${c.$}`);
+  if (c.vp) all.push(`${c.vp} vol`);
+  if (c.m) all.push(`${c.m} mom`);
+  if (c.fav) all.push(`${c.fav} fav`);
+  if (!all.length) return { seal: 'free', subs: [] };
+  return { seal: all[0]!, subs: all.slice(1) };
 }
 
-// ---- render ----
-const HOWTO = `
-  <p>You are nobody, running for the Texas House. <b>Make the ballot</b> by week eight,
-  win the <b>primary</b>, then the <b>general</b>, then move a bill in <b>session</b>.</p>
-  <p>Each week you get action points. Spend them on the <b>cards</b> in your hand — tap a card
-  to inspect it, then <b>Play</b>. <b>Field</b> plays ask where you work it (you vs. the opposition).
-  <b>Camp actions</b> — petition, filing fee, the shop — sit below the hand.</p>
-  <p>Results are <b>SAFE</b> (never a disaster), <b>STD</b> (honest variance), or <b>VOL</b>
-  (swings big). The dice are impartial; there is no pity timer. <b>End Week</b> when you are done.</p>
-`;
-
-function titleScreen(): string {
-  return `
-  <section class="screen screen-title${state.screen === 'title' ? ' active' : ''}">
-    <div class="title-container">
-      <div class="title-star" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1.5l2.7 6.8 7.3.4-5.7 4.6 2 7.2L12 16.4 5.7 20.5l2-7.2-5.7-4.6 7.3-.4z"/></svg></div>
-      <div class="title-badge">Alpha · v0.1</div>
-      <h1 class="title-main">Candidate Zero</h1>
-      <p class="title-sub">A Texas political ascent</p>
-      <button class="btn btn-lg btn-primary" data-act="goSetup">Begin</button>
-      <button class="btn btn-lg btn-outline" data-act="howto">How to Play</button>
-    </div>
-  </section>`;
-}
-
-function setupScreen(): string {
-  const o = state.setupOpts;
-  const optList = (arr: { id: string; n: string }[], selId: string) =>
-    arr.map(x => `<option value="${esc(x.id)}"${x.id === selId ? ' selected' : ''}>${esc(x.n)}</option>`).join('');
-  const selPersona = o.personas.find(p => p.id === state.sel.personaId);
-  const selIssue = o.issues.find(i => i.id === state.sel.issueId);
-  const blurb = selPersona
-    ? `${selPersona.n} — ${selPersona.d}${selIssue ? ' Running on ' + selIssue.n.toLowerCase() + '.' : ''}`
-    : 'Choices bind for this run.';
-  return `
-  <section class="screen screen-setup${state.screen === 'setup' ? ' active' : ''}">
-    <div class="setup-container" data-scroll="setup">
-      <h2 class="setup-title">Who are you?</h2>
-      <p class="setup-hint">Choices bind for this run</p>
-      <div class="setup-section">
-        <label class="setup-label" for="sel-persona">Persona</label>
-        <select class="setup-input" id="sel-persona" data-sel="personaId">${optList(o.personas, state.sel.personaId)}</select>
-      </div>
-      <div class="setup-section">
-        <label class="setup-label" for="sel-issue">Issue</label>
-        <select class="setup-input" id="sel-issue" data-sel="issueId">${optList(o.issues, state.sel.issueId)}</select>
-      </div>
-      <div class="setup-section">
-        <label class="setup-label" for="sel-district">District</label>
-        <select class="setup-input" id="sel-district" data-sel="districtId">${optList(o.districts, state.sel.districtId)}</select>
-      </div>
-      <div class="setup-section">
-        <label class="setup-label" for="sel-region">Region</label>
-        <select class="setup-input" id="sel-region" data-sel="regionId">${optList(o.regions, state.sel.regionId)}</select>
-      </div>
-      <div class="setup-blurb">${esc(blurb)}</div>
-      <button class="btn btn-lg btn-primary" data-act="start" id="btn-file">File the Papers</button>
-    </div>
-  </section>`;
-}
-
-function cardHtml(a: ActionOption): string {
-  return `
-    <button class="card" data-act="tap-card" data-idx="${a.handIndex}" aria-label="${esc(a.name)} — ${esc(a.desc)}">
-      <span class="card-edge ${riskLc(a.risk)}" aria-hidden="true"></span>
-      <div class="card-header">${esc(a.name)}</div>
-      <div class="card-art-box">${cardArtHtml(a)}</div>
-      <div class="card-footer">
-        <span class="card-cost">${esc(a.costLabel)}</span>
-        <span class="card-risk ${riskLc(a.risk)}">${esc(a.risk)}</span>
-      </div>
-    </button>`;
-}
-
-function playTab(v: RenderView): string {
-  const L = v.ledger;
-  const hand = v.actions.filter(a => a.handIndex >= 0);
-  const camp = v.actions.filter(a => a.handIndex < 0);
-  const showBallot = !L.ballot && v.stage === 'primary';
-  const ballot = showBallot
-    ? `<div class="ballot-line"><span>Ballot access</span><strong>${L.signatures} / ${L.sigNeed} sigs</strong></div>`
-    : '';
-  const cards = hand.length
-    ? hand.map(cardHtml).join('')
-    : `<p class="log-empty">No plays in hand — end the week.</p>`;
-  const campSection = camp.length
-    ? `<div class="camp-section">
-         <div class="camp-title">Camp actions</div>
-         <div class="camp-list">
-           ${camp.map(a => `<button class="camp-btn" data-act="tap-card" data-idx="${a.handIndex}">
-             <span class="camp-name">${esc(a.name)}</span><span class="camp-cost">${esc(a.costLabel)}</span></button>`).join('')}
-         </div>
-       </div>`
+/**
+ * Shared card body — the one card anatomy every surface uses (hand, camp
+ * actions, phase drafts). Name banner, deco divider, engraved emblem with
+ * a cost seal stamped over it, tagline, body text, ticket-stub footer.
+ */
+function cardInner(
+  card: PlayCard,
+  opts: { camp?: boolean; shop?: boolean; locked?: boolean; lockReason?: string } = {}
+): string {
+  const state = campaign!.state;
+  const g = pickDefaultGround(state);
+  const base = card.odds?.(state, g);
+  const mod = cardAttrMod(state, card);
+  const p = base !== undefined ? Math.max(0.02, Math.min(0.95, base + mod)) : undefined;
+  const odds = p !== undefined ? `p≈${(p * 100).toFixed(0)}%` : '';
+  const meter =
+    p !== undefined
+      ? `<span class="odds-meter"><i style="width:${Math.round(p * 100)}%"></i></span>`
+      : '';
+  const attr = card.attrs?.length ? card.attrs.join(' · ') : '';
+  const { seal, subs } = costParts(card);
+  const stamp = opts.shop
+    ? '<span class="stamp stamp-shop">Shop</span>'
+    : opts.camp
+      ? '<span class="stamp stamp-camp">Camp</span>'
+      : '';
+  // Kind seal (top-left, mirroring the cost seal): a subtle corner glyph
+  // marking the card's family. No verdict text — the category name lives
+  // in title/aria only. `action` cards carry no mark (unmarked default).
+  const kind = card.kind ?? 'action';
+  const mark = kindMark(kind);
+  const meta = KIND_META[kind];
+  const kindSeal = mark
+    ? `<span class="kind-seal" role="img" title="${meta?.label ?? ''} — ${meta?.blurb ?? ''}" aria-label="${meta?.label ?? ''}">${mark}</span>`
     : '';
   return `
-    <main class="tab-panel${state.activeTab === 'play' ? ' active' : ''}" data-scroll="tab-play">
-      ${ballot}
-      <p class="week-hint">${esc(v.stageLabel)} · spend AP on your hand</p>
-      <div class="card-hand">${cards}</div>
-      ${campSection}
-    </main>`;
+    ${kindSeal}
+    <span class="name">${card.n}</span>
+    <span class="orn"><i></i>&#10022;<i></i></span>
+    <span class="card-art">${emblemFor(card.id)}${stamp}</span>
+    <span class="cost-seal">${seal}</span>
+    ${subs.length ? `<span class="cost-subs">${subs.map(s => `<span>${s}</span>`).join('')}</span>` : ''}
+    <span class="tagline">${card.tag}</span>
+    ${opts.locked && opts.lockReason ? `<span class="locked-reason">${opts.lockReason}</span>` : ''}
+    <span class="card-footer">
+      <span class="risk-tag">${card.risk}</span>
+      ${odds ? `<span class="odds">${odds}</span>` : ''}
+    </span>
+    ${meter}
+    ${attr ? `<span class="attrs">${attr}</span>` : ''}
+  `;
 }
 
-function dossierTab(v: RenderView): string {
-  const L = v.ledger;
-  const cell = (k: string, val: string | number) => `<div class="dossier-cell"><span class="k">${esc(k)}</span><span class="v">${esc(val)}</span></div>`;
+function cardClasses(
+  card: PlayCard,
+  opts: { camp?: boolean; shop?: boolean; locked?: boolean } = {}
+): string {
+  const kind = card.kind ?? 'action';
+  return [
+    'play-card',
+    `risk-${card.risk.toLowerCase()}`,
+    kind !== 'action' ? `kind-${kind}` : '',
+    opts.shop ? 'shop' : '',
+    opts.camp && !opts.shop ? 'camp' : '',
+    opts.locked ? 'locked' : ''
+  ]
+    .filter(Boolean)
+    .join(' ');
+}
+
+/** Escape a string for safe use inside a double-quoted HTML attribute. */
+function attrEscape(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function cardHtml(
+  card: PlayCard,
+  index: number,
+  opts: { camp?: boolean; shop?: boolean; locked?: boolean; lockReason?: string }
+): string {
+  // Description is data revealed on demand — not drawn on the card face.
+  // It lives in the button's accessible name (screen readers) and title
+  // (hover tooltip), so the face stays name + art + cost + kind tint.
+  const desc = attrEscape(card.d);
+  const label = `${attrEscape(card.n)} — ${desc}`;
   return `
-    <div class="tab-panel${state.activeTab === 'dossier' ? ' active' : ''}" data-scroll="tab-dossier">
-      <div class="dossier-block">
-        <div class="dossier-label">Force</div>
-        <div class="dossier-grid">
-          ${cell('Contacts', L.contacts)}${cell('Name ID', L.nameID)}
-          ${cell('Volunteers', L.volPool)}${cell('Momentum', L.momentum)}
-          ${cell('Endorsements', L.endorsePts)}${cell('Favors', L.favors)}
-          ${cell('Cash', fmtMoney(L.money))}${cell('Debt', fmtMoney(L.debt))}
-          ${cell('Allies', L.alliesWarm)}${cell('Assets', L.assetsOwned)}
-        </div>
-      </div>
-      <div class="dossier-block">
-        <div class="dossier-label">Identity</div>
-        <div class="dossier-grid">
-          ${cell('Persona', v.identity.persona ?? '—')}${cell('Issue', v.identity.issue ?? '—')}
-        </div>
-      </div>
-    </div>`;
+    <button type="button" class="${cardClasses(card, opts)}" data-idx="${index}"
+      title="${desc}" aria-label="${label}"
+      ${opts.locked ? 'disabled aria-disabled="true"' : ''}>
+      ${cardInner(card, opts)}
+    </button>
+  `;
 }
 
-function logTab(v: RenderView): string {
-  const entries = [...v.log].reverse();
-  const body = entries.length
-    ? entries.map(e => `<div class="log-entry"><span class="w">W${esc(e.week)}</span>${esc(e.text)}</div>`).join('')
-    : `<p class="log-empty">Nothing logged yet.</p>`;
-  return `
-    <div class="tab-panel${state.activeTab === 'log' ? ' active' : ''}" data-scroll="tab-log">
-      <div class="log-list">${body}</div>
-    </div>`;
-}
-
-function navIcon(kind: string): string {
-  if (kind === 'play') return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h16v16H4z M8 9h8M8 13h5"/></svg>';
-  if (kind === 'dossier') return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg>';
-  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 4h14v16l-3-2-3 2-3-2-3 2-2-2z M8 8h8M8 11h8M8 14h5"/></svg>';
-}
-
-function gameScreen(): string {
-  const v = state.view;
-  if (!v) return `<section class="screen screen-game${state.screen === 'game' ? ' active' : ''}"></section>`;
-  const L = v.ledger;
-  const tab = state.activeTab;
-  const da = state.detailIndex !== null ? actionByIndex(state.detailIndex) : undefined;
-  const pd = v.pendingDraft;
-
-  const detail = da ? `
-    <div class="card-detail active">
-      <div class="detail-panel">
-        <div class="detail-header">
-          <h3 class="detail-title">${esc(da.name)}</h3>
-          <button class="detail-close" data-act="close-detail" aria-label="Close">✕</button>
-        </div>
-        <p class="detail-desc">${esc(da.desc || da.tag || '')}</p>
-        <div class="detail-stats">
-          <span class="detail-stat"><strong>${oddsPct(da.approxOdds)}</strong> odds</span>
-          <span class="detail-risk ${riskLc(da.risk)}">${esc(da.risk)}</span>
-          ${da.field ? '<span class="detail-stat">· needs a ground</span>' : ''}
-        </div>
-        <button class="btn btn-primary btn-large" data-act="play-detail" id="btn-play-detail">Play — ${esc(da.costLabel)}</button>
-      </div>
-    </div>` : '';
-
-  const ground = state.pendingFieldIndex !== null ? `
-    <div class="modal-ground active">
-      <div class="modal-content">
-        <h3 class="modal-title">Where do you work?</h3>
-        <div class="ground-list">
-          ${v.grounds.map(g => `
-            <button class="ground-btn" data-act="pick-ground" data-ground="${esc(g.id)}">
-              <span class="ground-name">${esc(g.n)}</span>
-              <div class="ground-meter-row"><span class="ground-meter-label">You</span>
-                <span class="ground-meter-track"><span class="ground-meter-fill you" style="width:${Math.min(100, g.rapport * 4)}%"></span></span>
-                <span class="ground-meter-num">${g.rapport}</span></div>
-              <div class="ground-meter-row"><span class="ground-meter-label">Opp</span>
-                <span class="ground-meter-track"><span class="ground-meter-fill opp" style="width:${Math.min(100, g.rivalRap * 4)}%"></span></span>
-                <span class="ground-meter-num">${g.rivalRap}</span></div>
-              <div class="ground-pool">Pool ${g.pool}</div>
-            </button>`).join('')}
-        </div>
-        <button class="btn btn-outline" data-act="cancel-ground">Cancel</button>
-      </div>
-    </div>` : '';
-
-  const draft = pd ? `
-    <div class="modal-ground active">
-      <div class="modal-content">
-        <h3 class="modal-title">Phase ${pd.phase} — take one for the deck</h3>
-        <div class="ground-list">
-          ${pd.options.map((o, i) => `
-            <button class="ground-btn" data-act="pick-draft" data-idx="${i}">
-              <span class="ground-name">${esc(o.name)}</span>
-              <span class="draft-risk">${esc(o.risk)}</span>
-            </button>`).join('')}
-        </div>
-      </div>
-    </div>` : '';
-
-  const over = v.over ? `
-    <div class="over-screen active">
-      <div class="over-panel">
-        <div class="over-label">Campaign over</div>
-        <h2 class="over-outcome">${esc(OUTCOME_LABELS[v.outcome] || v.outcome)}</h2>
-        <button class="btn btn-lg btn-primary" data-act="restart">New Run</button>
-      </div>
-    </div>` : '';
-
-  const splash = state.splash ? `
-    <div class="splash-screen active">
-      <div class="splash-panel">
-        <div class="splash-act">${esc(state.splash.act)}</div>
-        <h2 class="splash-title">${esc(state.splash.title)}</h2>
-        <p class="splash-sub">${esc(state.splash.sub)}</p>
-        <button class="btn btn-lg btn-primary" data-act="dismiss-splash">Begin</button>
-      </div>
-    </div>` : '';
-
-  const weather = state.weather ? `
-    <div class="weather-screen active">
-      <div class="weather-panel">
-        <div class="weather-label">Outside · weather</div>
-        <p class="weather-text">${esc(state.weather)}</p>
-        <button class="btn btn-lg btn-outline" data-act="dismiss-weather">The world turns</button>
-      </div>
-    </div>` : '';
-
-  const footer = tab === 'play'
-    ? `<footer class="game-footer"><button class="btn btn-primary" data-act="end-week" id="btn-endweek">End Week</button></footer>`
-    : '';
-
-  return `
-  <section class="screen screen-game${state.screen === 'game' ? ' active' : ''}">
-    <div class="game-layout">
-      <header class="game-header">
-        <div class="header-identity">
-          <div class="identity-persona">${esc(v.identity.persona ?? 'Candidate')}</div>
-          <div class="identity-issue">${esc(v.identity.issue ?? '')}</div>
-        </div>
-        <div class="header-vitals">
-          <div class="vital-item"><span class="vital-label">AP</span><span class="vital-value">${L.ap}</span></div>
-          <div class="vital-item"><span class="vital-label">$</span><span class="vital-value">${fmtMoney(L.money)}</span></div>
-          <div class="vital-item"><span class="vital-label">W</span><span class="vital-value">${v.stageWeek}/${v.weeksTotal}</span></div>
-        </div>
-      </header>
-
-      ${playTab(v)}
-      ${dossierTab(v)}
-      ${logTab(v)}
-      ${footer}
-
-      <nav class="bottom-nav">
-        <button class="nav-btn${tab === 'play' ? ' active' : ''}" data-act="tab" data-tab="play"><span class="nav-icon">${navIcon('play')}</span>Play</button>
-        <button class="nav-btn${tab === 'dossier' ? ' active' : ''}" data-act="tab" data-tab="dossier"><span class="nav-icon">${navIcon('dossier')}</span>Dossier</button>
-        <button class="nav-btn${tab === 'log' ? ' active' : ''}" data-act="tab" data-tab="log"><span class="nav-icon">${navIcon('log')}</span>Log</button>
-      </nav>
-    </div>
-    ${detail}${ground}${draft}${over}${splash}${weather}
-  </section>`;
-}
-
-function overlays(): string {
-  const howto = state.howto ? `
-    <div class="howto-screen active">
-      <div class="howto-panel">
-        <h2>How to Play</h2>
-        ${HOWTO}
-        <button class="btn btn-lg btn-primary" data-act="close-howto">Got it</button>
-      </div>
-    </div>` : '';
-  const toast = `<div class="toast${state.toast ? ' show' : ''}">${esc(state.toast)}</div>`;
-  return howto + toast;
-}
-
-const root = document.getElementById('app-frame')!;
-
-// The UI re-renders the whole frame on each state change (simple + correct for
-// a turn-based game). Preserve scroll position of the active scroll region so
-// tapping a card deep in the hand doesn't yank you back to the top.
-const scrollMem: Record<string, number> = {};
-function render(): void {
-  root.querySelectorAll<HTMLElement>('[data-scroll]').forEach(el => {
-    if (el.offsetParent !== null) scrollMem[el.dataset.scroll!] = el.scrollTop; // visible only
-  });
-  root.innerHTML = titleScreen() + setupScreen() + gameScreen() + overlays();
-  root.querySelectorAll<HTMLElement>('[data-scroll]').forEach(el => {
-    const y = scrollMem[el.dataset.scroll!];
-    if (y) el.scrollTop = y;
-  });
-}
-
-// ---- one delegated click handler + select-change handler ----
-root.addEventListener('click', (e) => {
-  const t = e.target as HTMLElement;
-  // Tap the dimmed backdrop (not the sheet body) to dismiss. The draft sheet
-  // is exempt — it requires a pick — and pendingFieldIndex gates the ground one.
-  if (t.classList.contains('card-detail')) return set({ detailIndex: null });
-  if (t.classList.contains('modal-ground') && state.pendingFieldIndex !== null) return set({ pendingFieldIndex: null });
-  const el = t.closest<HTMLElement>('[data-act]');
-  if (!el) return;
-  const act = el.dataset.act!;
-  const idx = el.dataset.idx !== undefined ? Number(el.dataset.idx) : null;
-  switch (act) {
-    case 'goSetup': set({ screen: 'setup' }); break;
-    case 'howto': set({ howto: true }); break;
-    case 'close-howto': set({ howto: false }); break;
-    case 'start': startRun(); break;
-    case 'tap-card': if (idx !== null && actionByIndex(idx)) set({ detailIndex: idx }); break;
-    case 'close-detail': set({ detailIndex: null }); break;
-    case 'play-detail': playDetail(); break;
-    case 'pick-ground': {
-      const hi = state.pendingFieldIndex;
-      if (hi !== null && el.dataset.ground) applyCmd({ type: 'play', handIndex: hi, groundId: el.dataset.ground });
-      break;
+function lockReason(card: PlayCard): string {
+  const state = campaign!.state;
+  if (!isPhaseLegal(state, card)) return `Phase ${card.ph.join('/')} only`;
+  if (!canAfford(state, card)) {
+    const c = card.cost;
+    if ((c.a ?? 0) > state.ap && !(card.field && state.fieldAp > 0)) return 'No AP left';
+    // Phase 3: $ costs check availableCash (debt service reserve), not raw money
+    const spend = snapshot(state).availableCash;
+    if ((c.$ ?? 0) > spend) {
+      return (state.debt || 0) > 0 && spend < state.money
+        ? 'Cash reserved for the note'
+        : 'Not enough money';
     }
-    case 'cancel-ground': set({ pendingFieldIndex: null }); break;
-    case 'pick-draft': if (idx !== null) applyCmd({ type: 'draft', option: idx }); break;
-    case 'end-week': applyCmd({ type: 'endWeek' }); break;
-    case 'tab': set({ activeTab: (el.dataset.tab as UIState['activeTab']) || 'play' }); break;
-    case 'restart': set({ screen: 'setup', snap: null, view: null, splash: null, weather: null }); break;
-    case 'dismiss-splash': set({ splash: null }); break;
-    case 'dismiss-weather': set({ weather: null }); break;
+    if ((c.vp ?? 0) > state.volPool) return 'Not enough volunteers';
+    if ((c.m ?? 0) > state.momentum) return 'Not enough momentum';
+    if ((c.fav ?? 0) > state.favors) return 'No favors owed';
+    return "Can't afford";
   }
-});
+  return 'Unavailable';
+}
 
-// Escape / hardware-back closes the topmost transient surface (never the
-// blocking act-splash, which is a required acknowledgement).
-document.addEventListener('keydown', (e) => {
-  if (e.key !== 'Escape') return;
-  if (state.howto) return set({ howto: false });
-  if (state.weather) return set({ weather: null });
-  if (state.detailIndex !== null) return set({ detailIndex: null });
-  if (state.pendingFieldIndex !== null) return set({ pendingFieldIndex: null });
-});
+function renderPlayables(): void {
+  if (!campaign) return;
+  const grid = $('playables');
+  if (campaign.state.pendingDraft?.options.length) {
+    grid.innerHTML = `<p class="hint">Resolve the phase draft first.</p>`;
+    return;
+  }
+  if (campaign.state.over) {
+    grid.innerHTML = `<p class="hint">Run over (${campaign.state.outcome}). Start a new run.</p>`;
+    return;
+  }
 
-root.addEventListener('change', (e) => {
-  const sel = (e.target as HTMLElement).closest<HTMLSelectElement>('select[data-sel]');
-  if (!sel) return;
-  const key = sel.dataset.sel as keyof Sel;
-  state.sel = { ...state.sel, [key]: sel.value };
-  render();
-});
+  const state = campaign.state;
+  const playable = listPlayableHand(campaign);
+  const playableIdx = new Set(playable.map(p => p.index));
+  const apExhausted = state.ap <= 0 && state.fieldAp <= 0;
 
-render();
+  // The whole hand stays on the table, deckbuilder-style: cards you can't
+  // play right now render dimmed with the reason, instead of vanishing.
+  // Cards failing show/req stay hidden — those are undiscovered content,
+  // not locked options.
+  const handCards = campaign.deck.hand
+    .map((id, index) => ({ index, card: campaign!.catalog.get(id) }))
+    .filter((e): e is { index: number; card: PlayCard } => !!e.card && isVisible(state, e.card));
+  // Phase 4: session is all synthetic SS* plays (no hand / shop)
+  if (state.stage === 'session') {
+    const sessionCards = playable;
+    const kit = ACT_SHELLS.session.kitLabel;
+    const hintLine = apExhausted
+      ? `<p class="hint">Out of actions — end the legislative week (or play free motions if any).</p>`
+      : !sessionCards.length
+        ? `<p class="hint">Nothing legal this week — end week (pipeline already used, or wait for calendar).</p>`
+        : `<p class="hint session-hint kit-label">${kit} · one pipeline motion per week</p>`;
+    grid.innerHTML =
+      hintLine +
+      sessionCards
+        .map(({ index, card }) => {
+          const free = (card.cost.a ?? 0) === 0;
+          const locked = !free && apExhausted;
+          return cardHtml(card, index, {
+            camp: true,
+            locked,
+            lockReason: locked ? 'No AP left' : undefined
+          });
+        })
+        .join('');
+    grid.querySelectorAll<HTMLButtonElement>('.play-card:not(.locked)').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = Number(btn.dataset.idx);
+        if (Number.isNaN(idx)) return;
+        commitPlay(idx);
+      });
+    });
+    return;
+  }
+
+  // Waiting season: WA* path kit
+  if (state.stage === 'waiting') {
+    const kit = ACT_SHELLS.waiting.kitLabel;
+    const hintLine = apExhausted
+      ? `<p class="hint">Out of actions — end the interim week.</p>`
+      : !playable.length
+        ? `<p class="hint">Nothing legal — end week.</p>`
+        : `<p class="hint kit-label">${kit} · path: ${state.waitingPathId ?? '—'}</p>`;
+    grid.innerHTML =
+      hintLine +
+      playable
+        .map(({ index, card }) => {
+          const locked = apExhausted && (card.cost.a ?? 0) > 0;
+          return cardHtml(card, index, {
+            camp: true,
+            locked,
+            lockReason: locked ? 'No AP left' : undefined
+          });
+        })
+        .join('');
+    grid.querySelectorAll<HTMLButtonElement>('.play-card:not(.locked)').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = Number(btn.dataset.idx);
+        if (Number.isNaN(idx)) return;
+        commitPlay(idx);
+      });
+    });
+    return;
+  }
+
+  const campCards = playable.filter(p => p.index < 0 && !p.card.id.startsWith('BUY'));
+  const shopCards = playable.filter(p => p.card.id.startsWith('BUY'));
+  const act = ACT_SHELLS[actFromStage(state.stage)];
+
+  // Shop is 0-AP — still available when AP is gone (spend-now lever visibility).
+  const hintLine = apExhausted
+    ? `<p class="hint">Out of actions — shop buys (0 AP) still work, or end the week.</p>`
+    : !playable.length && !handCards.length
+      ? `<p class="hint">Nothing playable. End week.</p>`
+      : `<p class="hint kit-label">${act.kitLabel}</p>`;
+
+  grid.innerHTML =
+    hintLine +
+    handCards
+      .map(({ index, card }) => {
+        const locked = apExhausted || !playableIdx.has(index);
+        return cardHtml(card, index, {
+          locked,
+          lockReason: locked ? (apExhausted ? 'No AP left' : lockReason(card)) : undefined
+        });
+      })
+      .join('') +
+    campCards.map(({ index, card }) => cardHtml(card, index, { camp: true })).join('') +
+    (shopCards.length
+      ? `<p class="hint shop-hint">Campaign shop — 0 AP · money or volunteers · Main unlocks</p>` +
+        shopCards
+          .map(({ index, card }) => {
+            const locked = !playableIdx.has(index);
+            return cardHtml(card, index, {
+              shop: true,
+              locked,
+              lockReason: locked ? lockReason(card) : undefined
+            });
+          })
+          .join('')
+      : '');
+
+  grid.querySelectorAll<HTMLButtonElement>('.play-card:not(.locked)').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (!campaign) return;
+      const index = Number(btn.dataset.idx);
+      const card = cardForIndex(index);
+      // Field plays open the ground picker; everything else resolves now.
+      if (card?.field) {
+        openGroundPicker(index, card);
+      } else {
+        commitPlay(index);
+      }
+    });
+  });
+}
+
+/** Resolve the card at a hand/camp index (from `data-idx`) into a PlayCard. */
+function cardForIndex(index: number): PlayCard | undefined {
+  if (!campaign) return undefined;
+  const campId = campIndexToCardId(campaign, index);
+  if (campId) return campaign.catalog.get(campId);
+  const id = campaign.deck.hand[index];
+  return id ? campaign.catalog.get(id) : undefined;
+}
+
+/** Execute a play (optionally at a chosen ground) and fold in the result. */
+function commitPlay(index: number, ground?: Ground): void {
+  if (!campaign) return;
+  const wasBallot = campaign.state.ballot;
+  const outcome = playFromHand(campaign, index, ground);
+  if (!outcome.ok) {
+    campaign.state.log.push({
+      week: campaign.state.week,
+      kind: 'note',
+      text: outcome.reason ?? 'Play failed'
+    });
+  } else {
+    weekPlays.push(outcome);
+    if (outcome.feedback) showJuice(outcome.feedback);
+  }
+  if (!wasBallot && campaign.state.ballot) {
+    maybeOfferPhaseDraft(campaign, false);
+  }
+  paint();
+}
+
+let pendingGroundIndex: number | null = null;
+
+function openGroundPicker(index: number, card: PlayCard): void {
+  if (!campaign) return;
+  pendingGroundIndex = index;
+  $('gp-title').textContent = `${card.n} — where do you work it?`;
+  renderGroundPicker();
+  $('ground-picker').classList.remove('hidden');
+}
+
+function closeGroundPicker(): void {
+  pendingGroundIndex = null;
+  $('ground-picker').classList.add('hidden');
+}
+
+function renderGroundPicker(): void {
+  if (!campaign) return;
+  const s = campaign.state;
+  const last = s.lastGround;
+  $('gp-list').innerHTML = s.groundsArr
+    .map(g => {
+      const rap = Math.round(g.rapport || 0);
+      const rival = Math.round(g.rivalRap || 0);
+      const workedThisWeek = (s.groundPlays?.[g.id] ?? 0) > 0;
+      return `
+        <button type="button" class="gp-ground${g.id === last ? ' gp-last' : ''}" data-ground="${g.id}">
+          <span class="gp-name">${g.n}${g.id === last ? ' <span class="gp-tag">last</span>' : ''}</span>
+          <span class="gp-meters">
+            <span class="gp-meter" title="Your rapport">
+              <span class="gp-mlabel">you</span>
+              <span class="gp-bar"><i class="gp-you" style="width:${Math.min(100, rap)}%"></i></span>
+              <span class="gp-num">${rap}</span>
+            </span>
+            <span class="gp-meter" title="Opposition presence (does not affect odds yet)">
+              <span class="gp-mlabel">opp</span>
+              <span class="gp-bar"><i class="gp-opp" style="width:${Math.min(100, rival)}%"></i></span>
+              <span class="gp-num">${rival}</span>
+            </span>
+          </span>
+          <span class="gp-foot">
+            <span>pool ${g.pool}</span>
+            ${workedThisWeek ? '<span class="gp-worked">worked · ½ rapport</span>' : ''}
+          </span>
+        </button>`;
+    })
+    .join('');
+  $('gp-list')
+    .querySelectorAll<HTMLButtonElement>('.gp-ground')
+    .forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (!campaign || pendingGroundIndex === null) return;
+        const ground = campaign.state.groundsArr.find(g => g.id === btn.dataset.ground);
+        const index = pendingGroundIndex;
+        closeGroundPicker();
+        commitPlay(index, ground);
+      });
+    });
+}
+
+/**
+ * Fixed overlay toasts — never reflow the card grid (Phase 6 / UI-IA).
+ * Replaces the old in-flow #juice banner above playables.
+ */
+function showJuice(fb: PlayFeedback): void {
+  const host = document.getElementById('toast-host');
+  if (!host) return;
+  const streak =
+    fb.streak && fb.streak.count >= 2
+      ? fb.streak.kind === 'hot'
+        ? ` · hot ×${fb.streak.count}`
+        : ` · cold ×${fb.streak.count}`
+      : '';
+  const t = document.createElement('div');
+  t.className = `toast toast-${fb.beat}`;
+  t.setAttribute('role', 'status');
+  t.innerHTML = `<div class="toast-stamp">${fb.stamp}${streak}</div><div class="toast-body">${escapeHtml(fb.juice)}</div>`;
+  host.appendChild(t);
+  // Cap stack so spam doesn't cover the board
+  while (host.children.length > 3) {
+    host.firstElementChild?.remove();
+  }
+  window.setTimeout(() => {
+    t.classList.add('toast-out');
+    window.setTimeout(() => t.remove(), 280);
+  }, 2800);
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function renderLog(): void {
+  if (!campaign) return;
+  const box = $('log');
+  box.innerHTML = campaign.state.log
+    .slice(-60)
+    .map(e => {
+      const stamp = e.tier !== undefined && e.kind === 'play' ? `[${STAMPS[e.tier as 0 | 1 | 2 | 3] ?? '?'}] ` : '';
+      const cls = [
+        'log-line',
+        e.kind === 'juice' ? 'juice' : '',
+        e.kind === 'summary' ? 'summary' : '',
+        e.tier !== undefined ? `tier-${e.tier}` : ''
+      ]
+        .filter(Boolean)
+        .join(' ');
+      return `<div class="${cls}"><span class="w">W${e.week}</span> ${stamp}${e.text}</div>`;
+    })
+    .join('');
+  box.scrollTop = box.scrollHeight;
+}
+
+function paint(): void {
+  renderHud();
+  renderLedger();
+  renderDraft();
+  renderPlayables();
+  renderLog();
+}
+
+const SCREENS = ['title', 'tutorial', 'setup', 'game', 'terminal'] as const;
+type ScreenId = (typeof SCREENS)[number];
+let currentScreen: ScreenId = 'title';
+let tutorialReturn: ScreenId = 'title';
+
+function showScreen(id: ScreenId): void {
+  currentScreen = id;
+  for (const s of SCREENS) $(s).classList.toggle('hidden', s !== id);
+  // The masthead top bar and footer duplicate the title screen's nameplate
+  // and tag line — hide both there; everywhere else the bar carries
+  // How to Play / New run.
+  $('topbar').classList.toggle('hidden', id === 'title');
+  $('foot').classList.toggle('hidden', id === 'title');
+  window.scrollTo({ top: 0 });
+}
+
+function showTitle(): void {
+  showScreen('title');
+}
+
+function showTutorial(): void {
+  if (currentScreen !== 'tutorial') tutorialReturn = currentScreen;
+  showScreen('tutorial');
+}
+
+function showGame(): void {
+  showScreen('game');
+}
+
+function showSetup(): void {
+  showScreen('setup');
+  renderChronicle();
+}
+
+function showTerminal(): void {
+  showScreen('terminal');
+}
+
+/**
+ * Persona (and the rest of setup) is a one-time, run-defining choice —
+ * it never changes mid-campaign at the engine level (applySetup runs
+ * exactly once, inside createCampaign). "New run" abandons the current
+ * campaign entirely rather than mutating it, so guard against doing that
+ * by accident mid-run.
+ */
+function requestNewRun(): void {
+  if (campaign && !campaign.state.over) {
+    const ok = window.confirm(
+      'Start a new run? This abandons the current campaign — persona, ' +
+        'district, and everything else were locked in at the start and ' +
+        'cannot be changed on an in-progress run.'
+    );
+    if (!ok) return;
+  }
+  showSetup();
+}
+
+function startRun(): void {
+  const seed =
+    Number((document.getElementById('seed-input') as HTMLInputElement | null)?.value) ||
+    Date.now() % 1_000_000;
+  const input = document.getElementById('seed-input') as HTMLInputElement | null;
+  if (input) input.value = String(seed);
+  campaign = createCampaign({ seed, setup: currentSetup() });
+  applyLegacy(campaign.state, legacy);
+  weekPlays = [];
+  startWeek(campaign);
+  showGame();
+  applyStageChrome();
+  paint();
+  // Act I ceremony — unmistakable start of the climb
+  openActSplash('primary');
+}
+
+/**
+ * The Chronicle — ported from the archive's LEGACY/terminal system. A run
+ * ending is not a reset: record the epithet, show what this run grew even
+ * on a loss, then offer a real next move (an interim path + trait on a
+ * loss, or a direct "Stand for Reelection" continuation on a win) instead
+ * of a dead-end screen.
+ */
+function enterTerminal(c: Campaign): void {
+  const kind = (c.state.outcome ?? 'ongoing') as CampaignOutcome;
+  terminalKind = kind;
+  terminalShare = computeShare(c.state, kind);
+  recordRun(legacy, c.state, kind, terminalShare);
+  saveLegacy(legacy);
+  renderTerminalOutcome();
+  showTerminal();
+}
+
+function renderTerminalOutcome(): void {
+  if (!campaign || terminalKind === null) return;
+  const state = campaign.state;
+  const titles: Record<CampaignOutcome, string> = {
+    ongoing: '',
+    missed_filing: 'Never Made the Ballot',
+    lost_primary: 'Primary Lost',
+    won_general: 'The Seat Is Won',
+    lost_general: 'The General’s Wall',
+    session_law: 'Sine Die — Law',
+    session_survived: 'Sine Die — Seat Holds',
+    session_primaried: 'Sine Die — Primaried Out'
+  };
+  const epithet = buildEpithet(state, terminalKind, terminalShare);
+  const growth = buildGrowthLine(state);
+  // Phase 3: debt is a win/loss branch split, not an odds tax.
+  let debtNote = '';
+  if (terminalKind === 'won_general' && (state.debt || state.pacBridgeDebt || state.obls.includes('OB1'))) {
+    debtNote =
+      state.pacBridgeDebt || state.obls.includes('OB1')
+        ? `<p class="debt-note">Notes retire cheap on a win — but the PAC still holds a Session claim (OB1). Committee work will not be free.</p>`
+        : `<p class="debt-note">Self-loan retires cheap at the swearing-in (token fee). Homestead risk is paid; no Session leash.</p>`;
+  } else if (terminalKind !== 'won_general' && (state.debt || state.obls.length)) {
+    const crisis =
+      (state.debt || 0) >= 5000
+        ? ' Crisis territory: keep running with worse economics, or go home — the PAC Check is the structured relief valve next cycle.'
+        : '';
+    debtNote = `<p class="debt-note">The bank still wants its money ($${state.debt || 0}). Losing does not cancel the note — it compounds into the next cycle.${crisis}</p>`;
+  }
+  const sessionWin =
+    terminalKind === 'session_law' || terminalKind === 'session_survived';
+  const billLine =
+    state.bill
+      ? `<p class="bill-epitaph"><b>Signature bill:</b> ${state.bill.title} — ${state.bill.status} (stage ${state.bill.pipelineStage}).</p>`
+      : '';
+  const nextHint = sessionWin
+    ? 'Sine die. You finished Session on this run. Reelection starts a NEW election cycle (incumbent primary) — not a Session skip.'
+    : terminalKind === 'session_primaried'
+      ? 'The gavel fell and the seat broke. Two years until you can file again.'
+      : terminalKind === 'won_general'
+        ? 'Bug: general win should enter Session in-engine. Report if you see this screen without Session.'
+        : 'Two years until the next filing deadline. How do you spend them?';
+
+  $('terminal-head').innerHTML = `
+    <h2>${titles[terminalKind]}</h2>
+    <p class="epithet">${epithet}</p>
+    ${billLine}
+    ${debtNote}
+    ${growth ? `<p class="growth">${growth}</p>` : ''}
+    <p class="hint">${nextHint}</p>
+  `;
+
+  // won_general should never terminal (engine enters Session). If it does, force setup.
+  if (sessionWin) {
+    renderTerminalWinChoices();
+  } else if (terminalKind === 'won_general') {
+    // Safety: never offer "new campaign" as if Session was skipped without notice
+    renderTerminalWinChoices();
+  } else {
+    renderTerminalPaths();
+  }
+}
+
+function renderTerminalWinChoices(): void {
+  const grid = $('terminal-choices');
+  grid.innerHTML = `
+    <button type="button" class="play-card choice-card" data-choice="reelect">
+      <span class="name">Stand for Reelection</span>
+      <span class="orn"><i></i>&#10022;<i></i></span>
+      <span class="card-art">${emblem('star')}</span>
+      <span class="desc">Next election cycle as incumbent — new primary (you skip petition). Session already finished.</span>
+    </button>
+    <button type="button" class="play-card choice-card" data-choice="rest">
+      <span class="name">Close the book on this term</span>
+      <span class="orn"><i></i>&#10022;<i></i></span>
+      <span class="card-art">${emblem('cup')}</span>
+      <span class="desc">Back to setup. Chronicle keeps this ballad entry. Not a soft-reset mid-Session.</span>
+    </button>
+  `;
+  grid.querySelector('[data-choice="reelect"]')?.addEventListener('click', () => {
+    if (!campaign) return;
+    campaign = createIncumbentCampaign(campaign, legacy);
+    weekPlays = [];
+    startWeek(campaign);
+    showGame();
+    applyStageChrome();
+    paint();
+    // New cycle as incumbent — still Act I primary shell, not Session
+    openActSplash(
+      'primary',
+      'Incumbent cycle. You skip petition — but the primary still wants a fight. Session is behind you until you win November again.'
+    );
+  });
+  grid.querySelector('[data-choice="rest"]')?.addEventListener('click', () => {
+    showSetup();
+  });
+}
+
+function renderTerminalPaths(): void {
+  if (!campaign) return;
+  const paths = buildPaths(campaign.state, terminalShare);
+  const pathEmblems: Record<string, string> = {
+    perennial: 'pennant',
+    advocate: 'megaphone',
+    staffer: 'clipboard',
+    home: 'cup'
+  };
+  const grid = $('terminal-choices');
+  grid.innerHTML = paths
+    .map(
+      p => `
+    <button type="button" class="play-card choice-card" data-path="${p.id}">
+      <span class="name">${p.n}</span>
+      <span class="orn"><i></i>&#10022;<i></i></span>
+      <span class="card-art">${emblem(pathEmblems[p.id] ?? 'star')}</span>
+      <span class="desc">${p.d}</span>
+    </button>
+  `
+    )
+    .join('');
+  grid.querySelectorAll<HTMLButtonElement>('[data-path]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const path = paths.find(p => p.id === btn.dataset.path);
+      if (path) renderTerminalTraits(path);
+    });
+  });
+}
+
+function renderTerminalTraits(path: InterimPath): void {
+  const grid = $('terminal-choices');
+  grid.innerHTML =
+    `<p class="hint" style="grid-column:1/-1">The two years pass. What did they leave you? ` +
+    `(Choose one — it persists across every run to come.)</p>` +
+    path.traits
+      .map(
+        t => `
+    <button type="button" class="play-card choice-card" data-trait="${t}">
+      <span class="name">${TRAITS[t].n}</span>
+      <span class="orn"><i></i>&#10022;<i></i></span>
+      <span class="card-art">${emblem('quill')}</span>
+      <span class="desc">${TRAITS[t].d}</span>
+    </button>
+  `
+      )
+      .join('');
+  grid.querySelectorAll<HTMLButtonElement>('[data-trait]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const traitId = btn.dataset.trait as TraitId;
+      addTrait(legacy, traitId);
+      // Chronicle → starmap waiting loop + playable interim season
+      setInterimPath(legacy, path.id, path.interim);
+      saveLegacy(legacy);
+      beginWaitingSeason(path.id);
+    });
+  });
+}
+
+/** After path+trait: enter playable waiting season (Act IV), not straight to setup. */
+function beginWaitingSeason(pathId: string): void {
+  if (!campaign) {
+    showSetup();
+    return;
+  }
+  // Revive the campaign object for interim play (outcome already recorded)
+  const { text } = enterWaiting(campaign.state, pathId);
+  weekPlays = [];
+  showGame();
+  applyStageChrome();
+  paint();
+  openActSplash('waiting', text);
+}
+
+function renderChronicle(): void {
+  const el = $('chronicle');
+  if (!legacy.runs.length) {
+    el.classList.add('hidden');
+    el.innerHTML = '';
+    return;
+  }
+  el.classList.remove('hidden');
+  el.innerHTML = `
+    <span class="ct">Your ballad so far</span>
+    ${legacy.runs
+      .map(
+        (r, i) =>
+          `<p><b>Run ${romanRun(i)}.</b> ${r.epithet} ${r.interim ? `<i>${r.interim}</i>` : ''}</p>`
+      )
+      .join('')}
+    ${
+      legacy.traits.length
+        ? `<p><b>What the years taught:</b> ${legacy.traits.map(t => TRAITS[t].n).join(' · ')}</p>`
+        : ''
+    }
+    <p class="burn-row"><button type="button" class="btn" id="btn-burn-chronicle">Burn the ballad (start anew)</button></p>
+  `;
+  const burnBtn = document.getElementById('btn-burn-chronicle') as HTMLButtonElement | null;
+  if (burnBtn) {
+    burnBtn.addEventListener('click', () => {
+      if (burnBtn.dataset.armed) {
+        legacy = { runs: [], traits: [], carry: {} };
+        saveLegacy(legacy);
+        renderChronicle();
+        return;
+      }
+      burnBtn.dataset.armed = '1';
+      burnBtn.textContent = 'Tap again to burn it all — every run, every trait';
+      setTimeout(() => {
+        if (burnBtn.dataset) {
+          delete burnBtn.dataset.armed;
+          burnBtn.textContent = 'Burn the ballad (start anew)';
+        }
+      }, 4000);
+    });
+  }
+}
+
+function endWeek(): void {
+  if (!campaign || campaign.state.over) {
+    paint();
+    return;
+  }
+  if (campaign.state.pendingDraft?.options.length) {
+    campaign.state.log.push({
+      week: campaign.state.week,
+      kind: 'note',
+      text: 'Resolve the phase draft before ending the week.'
+    });
+    paint();
+    return;
+  }
+  const summary = summarizeWeek(campaign, weekPlays);
+  showJuice({
+    stamp: summary.bestStamp ?? 'GAIN',
+    beat: summary.bestStamp === 'DISASTER' ? 'crash' : summary.bestStamp === 'BREAKTHROUGH' ? 'spark' : 'hit',
+    intensity: 0.7,
+    margin: 0,
+    juice: summary.juice
+  });
+  weekPlays = [];
+  const transition = endWeekInPlace(campaign);
+  if (transition.kind === 'enter_general') {
+    maybeOfferPhaseDraft(campaign, false);
+  }
+  if (transition.kind === 'waiting_complete') {
+    const fin = finishWaiting(campaign.state, legacy);
+    saveLegacy(legacy);
+    campaign.state.log.push({
+      week: campaign.state.week,
+      kind: 'note',
+      text: fin.text
+    });
+    // Season done — next filing at setup (carry has waiting banks)
+    showSetup();
+    renderChronicle();
+    return;
+  }
+  if (campaign.state.over) {
+    enterTerminal(campaign);
+    return;
+  }
+  if (!campaign.state.pendingDraft) {
+    startWeek(campaign);
+  }
+  applyStageChrome();
+  paint();
+  // Weather first, then act handoffs — Outside never stacks under a missed splash
+  const afterWeather = (): void => {
+    if (transition.kind === 'enter_general') {
+      openActSplash('general', transition.text);
+    } else if (transition.kind === 'enter_session') {
+      openActSplash('session', transition.text);
+    }
+  };
+  if (campaign.state.pendingOutside) {
+    openOutsideWeather(campaign.state.pendingOutside, afterWeather);
+  } else {
+    afterWeather();
+  }
+}
+
+/**
+ * Outside weather surface — world pressure the player does not play.
+ * Fixed modal (not hand, not toast). Dismiss clears pendingOutside.
+ */
+function openOutsideWeather(
+  notice: { id: string; n: string; text: string },
+  onDone?: () => void
+): void {
+  if (!campaign) {
+    onDone?.();
+    return;
+  }
+  let root = document.getElementById('outside-weather');
+  if (!root) {
+    root = document.createElement('div');
+    root.id = 'outside-weather';
+    root.className = 'outside-weather';
+    root.setAttribute('role', 'dialog');
+    root.setAttribute('aria-modal', 'true');
+    root.setAttribute('aria-labelledby', 'outside-weather-title');
+    root.innerHTML = `
+      <div class="outside-weather-panel">
+        <p class="eyebrow outside-weather-tag">Outside · world weather</p>
+        <h2 id="outside-weather-title" class="outside-weather-title"></h2>
+        <p class="outside-weather-body"></p>
+        <p class="hint outside-weather-hint">You cannot play this card. You answer it — or you weather it.</p>
+        <button type="button" class="btn btn-gold" id="outside-weather-ok">Understood</button>
+      </div>`;
+    document.getElementById('game')?.appendChild(root);
+  }
+  root.classList.remove('hidden');
+  const title = root.querySelector('.outside-weather-title');
+  const body = root.querySelector('.outside-weather-body');
+  const ok = root.querySelector('#outside-weather-ok') as HTMLButtonElement | null;
+  if (title) title.textContent = notice.n;
+  // Strip leading "OUTSIDE — …" stamp if present for cleaner body (log keeps full line)
+  let bodyText = notice.text;
+  const dash = bodyText.indexOf('—');
+  if (/^OUTSIDE/i.test(bodyText) && dash >= 0) {
+    bodyText = bodyText.slice(dash + 1).trim();
+  }
+  if (body) body.textContent = bodyText;
+  const dismiss = (): void => {
+    root!.classList.add('hidden');
+    if (campaign) campaign.state.pendingOutside = null;
+    ok?.removeEventListener('click', dismiss);
+    onDone?.();
+  };
+  if (ok) {
+    ok.replaceWith(ok.cloneNode(true));
+    const fresh = root.querySelector('#outside-weather-ok') as HTMLButtonElement;
+    fresh.addEventListener('click', dismiss);
+    fresh.focus();
+  }
+}
+
+/**
+ * Full-screen act handoff. Primary / General / Session all use this shell
+ * so stage changes cannot be missed or mistaken for a soft reset.
+ */
+function openActSplash(actId: ActId, engineDetail?: string): void {
+  const act = ACT_SHELLS[actId];
+  let root = document.getElementById('act-splash');
+  if (!root) {
+    root = document.createElement('div');
+    root.id = 'act-splash';
+    root.className = 'act-splash';
+    root.setAttribute('role', 'dialog');
+    root.setAttribute('aria-modal', 'true');
+    root.innerHTML = `
+      <div class="act-splash-panel">
+        <p class="eyebrow act-splash-num"></p>
+        <h2 class="act-splash-title"></h2>
+        <p class="act-splash-body"></p>
+        <p class="hint act-splash-hint"></p>
+        <button type="button" class="btn btn-gold" id="act-splash-ok">Continue</button>
+      </div>`;
+    document.getElementById('game')?.appendChild(root);
+  }
+  root.dataset.act = actId;
+  root.className = `act-splash act-splash-${actId}`;
+  const num = root.querySelector('.act-splash-num');
+  const title = root.querySelector('.act-splash-title');
+  const body = root.querySelector('.act-splash-body');
+  const hint = root.querySelector('.act-splash-hint');
+  const ok = root.querySelector('#act-splash-ok') as HTMLButtonElement | null;
+  if (num) num.textContent = act.actNum;
+  if (title) title.textContent = act.title;
+  if (body) {
+    body.textContent = engineDetail?.trim()
+      ? `${engineDetail.trim()}\n\n${act.splashBody}`
+      : act.splashBody;
+  }
+  if (hint) hint.textContent = act.splashHint;
+  if (ok) ok.textContent = act.cta;
+  root.classList.remove('hidden');
+  if (ok) {
+    ok.onclick = () => {
+      root!.classList.add('hidden');
+      paint();
+    };
+  }
+}
+
+/** Persistent stage chrome: banner, tint, verbs, panel titles, masthead tag. */
+function applyStageChrome(): void {
+  if (!campaign) return;
+  const s = campaign.state;
+  const act = ACT_SHELLS[actFromStage(s.stage)];
+  const game = document.getElementById('game');
+  if (game) {
+    game.classList.remove('stage-primary', 'stage-general', 'stage-session');
+    game.classList.add(`stage-${act.id}`);
+  }
+
+  const endBtn = document.getElementById('btn-end');
+  if (endBtn) endBtn.textContent = act.endWeekLabel;
+
+  const actionsH = document.getElementById('actions-heading');
+  if (actionsH) actionsH.textContent = act.actionsTitle;
+  const logH = document.getElementById('log-heading');
+  if (logH) logH.textContent = act.logTitle;
+
+  // Persistent act banner
+  const banner = document.getElementById('act-banner');
+  if (banner) {
+    banner.hidden = false;
+    banner.dataset.act = act.id;
+    banner.className = `act-banner act-banner-${act.id}`;
+    const num = banner.querySelector('.act-banner-num');
+    const title = banner.querySelector('.act-banner-title');
+    const sub = banner.querySelector('.act-banner-sub');
+    if (num) num.textContent = act.actNum;
+    if (title) title.textContent = act.tag;
+    if (sub) {
+      const weekBit =
+        s.stage === 'session'
+          ? ` · W${s.week}/${s.weeksTotal} sine die`
+          : ` · W${stageWeek(s)} · cal ${s.week}/${s.weeksTotal}`;
+      sub.textContent = `${act.bannerSub}${weekBit}`;
+    }
+  }
+
+  // Masthead stage tag (single, always current)
+  const h1 = document.querySelector('#topbar h1');
+  if (h1) {
+    document.querySelector('#topbar .stage-tag')?.remove();
+    // legacy session-tag cleanup
+    document.querySelector('#topbar .session-tag')?.remove();
+    const tag = document.createElement('span');
+    tag.className = `alpha-tag stage-tag stage-tag-${act.id}`;
+    tag.textContent = act.tag;
+    h1.appendChild(document.createTextNode(' '));
+    h1.appendChild(tag);
+  }
+}
+
+function boot(): void {
+  fillSelects();
+  ['sel-persona', 'sel-issue', 'sel-district', 'sel-region'].forEach(id => {
+    $(id).addEventListener('change', updateBlurb);
+  });
+  $('title-emblem').innerHTML = emblem('star');
+  $('btn-title-start').addEventListener('click', () => showSetup());
+  $('btn-title-howto').addEventListener('click', () => showTutorial());
+  $('btn-howto').addEventListener('click', () => showTutorial());
+  $('btn-tut-back').addEventListener('click', () => showScreen(tutorialReturn));
+  $('btn-start').addEventListener('click', () => startRun());
+  $('btn-new').addEventListener('click', () => requestNewRun());
+  $('btn-end').addEventListener('click', () => endWeek());
+  $('gp-cancel').addEventListener('click', () => closeGroundPicker());
+  showTitle();
+}
+
+boot();
