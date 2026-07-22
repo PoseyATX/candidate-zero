@@ -80,7 +80,7 @@ const riskLc = (r: string): string => (r || '').toLowerCase();
 
 function cardArtHtml(a: ActionOption): string {
   const img = CARD_ART[a.cardId];
-  if (img) return `<img src="${esc(img)}" alt="" />`;
+  if (img) return `<img src="${esc(img)}" alt="" loading="lazy" decoding="async" />`;
   return `<span class="emblem">${emblemFor(a.cardId)}</span>`;
 }
 
@@ -141,7 +141,13 @@ function startRun(): void {
 function applyCmd(cmd: Command): void {
   if (!state.snap) return;
   const res = apply(state.snap, cmd);
-  if (!res.ok) { showToast(res.reason || 'Not allowed'); return; }
+  if (!res.ok) {
+    // Close whatever sheet issued the command so the toast reads as the reply.
+    state.detailIndex = null;
+    state.pendingFieldIndex = null;
+    showToast(res.reason || 'Not allowed');
+    return;
+  }
   const prevStage = state.view?.stage;
   const nextView = view(res.snapshot);
   const outside = res.events.find(e => /^OUTSIDE/.test(e.text));
@@ -203,7 +209,7 @@ function setupScreen(): string {
     : 'Choices bind for this run.';
   return `
   <section class="screen screen-setup${state.screen === 'setup' ? ' active' : ''}">
-    <div class="setup-container">
+    <div class="setup-container" data-scroll="setup">
       <h2 class="setup-title">Who are you?</h2>
       <p class="setup-hint">Choices bind for this run</p>
       <div class="setup-section">
@@ -262,7 +268,7 @@ function playTab(v: RenderView): string {
        </div>`
     : '';
   return `
-    <main class="tab-panel${state.activeTab === 'play' ? ' active' : ''}">
+    <main class="tab-panel${state.activeTab === 'play' ? ' active' : ''}" data-scroll="tab-play">
       ${ballot}
       <p class="week-hint">${esc(v.stageLabel)} · spend AP on your hand</p>
       <div class="card-hand">${cards}</div>
@@ -274,7 +280,7 @@ function dossierTab(v: RenderView): string {
   const L = v.ledger;
   const cell = (k: string, val: string | number) => `<div class="dossier-cell"><span class="k">${esc(k)}</span><span class="v">${esc(val)}</span></div>`;
   return `
-    <div class="tab-panel${state.activeTab === 'dossier' ? ' active' : ''}">
+    <div class="tab-panel${state.activeTab === 'dossier' ? ' active' : ''}" data-scroll="tab-dossier">
       <div class="dossier-block">
         <div class="dossier-label">Force</div>
         <div class="dossier-grid">
@@ -300,7 +306,7 @@ function logTab(v: RenderView): string {
     ? entries.map(e => `<div class="log-entry"><span class="w">W${esc(e.week)}</span>${esc(e.text)}</div>`).join('')
     : `<p class="log-empty">Nothing logged yet.</p>`;
   return `
-    <div class="tab-panel${state.activeTab === 'log' ? ' active' : ''}">
+    <div class="tab-panel${state.activeTab === 'log' ? ' active' : ''}" data-scroll="tab-log">
       <div class="log-list">${body}</div>
     </div>`;
 }
@@ -447,13 +453,30 @@ function overlays(): string {
 }
 
 const root = document.getElementById('app-frame')!;
+
+// The UI re-renders the whole frame on each state change (simple + correct for
+// a turn-based game). Preserve scroll position of the active scroll region so
+// tapping a card deep in the hand doesn't yank you back to the top.
+const scrollMem: Record<string, number> = {};
 function render(): void {
+  root.querySelectorAll<HTMLElement>('[data-scroll]').forEach(el => {
+    if (el.offsetParent !== null) scrollMem[el.dataset.scroll!] = el.scrollTop; // visible only
+  });
   root.innerHTML = titleScreen() + setupScreen() + gameScreen() + overlays();
+  root.querySelectorAll<HTMLElement>('[data-scroll]').forEach(el => {
+    const y = scrollMem[el.dataset.scroll!];
+    if (y) el.scrollTop = y;
+  });
 }
 
 // ---- one delegated click handler + select-change handler ----
 root.addEventListener('click', (e) => {
-  const el = (e.target as HTMLElement).closest<HTMLElement>('[data-act]');
+  const t = e.target as HTMLElement;
+  // Tap the dimmed backdrop (not the sheet body) to dismiss. The draft sheet
+  // is exempt — it requires a pick — and pendingFieldIndex gates the ground one.
+  if (t.classList.contains('card-detail')) return set({ detailIndex: null });
+  if (t.classList.contains('modal-ground') && state.pendingFieldIndex !== null) return set({ pendingFieldIndex: null });
+  const el = t.closest<HTMLElement>('[data-act]');
   if (!el) return;
   const act = el.dataset.act!;
   const idx = el.dataset.idx !== undefined ? Number(el.dataset.idx) : null;
@@ -478,6 +501,16 @@ root.addEventListener('click', (e) => {
     case 'dismiss-splash': set({ splash: null }); break;
     case 'dismiss-weather': set({ weather: null }); break;
   }
+});
+
+// Escape / hardware-back closes the topmost transient surface (never the
+// blocking act-splash, which is a required acknowledgement).
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (state.howto) return set({ howto: false });
+  if (state.weather) return set({ weather: null });
+  if (state.detailIndex !== null) return set({ detailIndex: null });
+  if (state.pendingFieldIndex !== null) return set({ pendingFieldIndex: null });
 });
 
 root.addEventListener('change', (e) => {
