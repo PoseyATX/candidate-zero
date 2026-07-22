@@ -1,6 +1,6 @@
 {
   "name": "candidate-zero",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "CANDIDATE ZERO — Texas Legislature roguelike deckbuilder. Pure TS engine → Unity → iOS. Package 0.0.1 (not v0.1).",
   "type": "module",
   "scripts": {
