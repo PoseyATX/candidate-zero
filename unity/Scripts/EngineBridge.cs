@@ -1,70 +1,74 @@
-// Candidate Zero — Engine bridge (reference stub)
+// Candidate Zero — Engine bridge (Jint)
 // -------------------------------------------------------------------------
 // The runtime half of the Unity binding: Unity calls the pure TypeScript
 // rules engine and NEVER reimplements a rule. The engine ships as a
-// standalone JS bundle (dist-engine/candidate-zero-engine.umd.cjs, built by
-// `npm run build:engine`) that exposes a `CandidateZeroEngine` global. Load
-// it in an embedded JS runtime (ClearScript, Jint, or Puerts) and marshal
-// snapshots/commands as JSON. Full contract: docs/ENGINE-API.md.
+// standalone JS bundle (unity/engine/candidate-zero-engine.js, built by
+// `npm run build:engine`, targeted es2019 for Jint) that defines a global
+// `CandidateZeroEngine`. This runs it in Jint — a pure-C# JS interpreter,
+// so there are no native libraries and the iOS/IL2CPP path stays clean.
+// Full contract: docs/ENGINE-API.md · setup: docs/UNITY-SETUP.md.
 //
-// This is a shape/reference stub — the concrete JS-runtime call is left to
-// the project's chosen host (there are several viable ones). Fill in
-// Eval(...) with your runtime; everything else is the stable protocol.
+// Add Jint to the Unity project via NuGetForUnity (package id: "Jint") or
+// by dropping Jint.dll into Assets/Plugins. A game is turn-based, so the
+// interpreter's speed is a non-issue.
 // -------------------------------------------------------------------------
 using System;
-using UnityEngine;
+using Jint;
 
 namespace CandidateZero.Runtime
 {
     /// <summary>
     /// Stateless facade over the JS engine bundle. A "snapshot" is opaque
-    /// JSON — Unity persists it to save, never inspects rules inside it.
+    /// JSON — Unity persists it to save a game, never inspects rules inside.
+    /// Determinism: (seed + command log) reproduces state exactly, and
+    /// serialize/deserialize is lossless (docs/ENGINE-API.md, harness:api).
     /// </summary>
     public interface IEngineBridge
     {
-        /// newGame({ seed, setup }) -> snapshot json
         string NewGame(int seed, string setupJson = null);
-
-        /// view(snapshot) -> render-model json (ledger, actions, grounds, log)
         string View(string snapshotJson);
-
-        /// apply(snapshot, command) -> { snapshot, ok, reason, events } json
         string Apply(string snapshotJson, string commandJson);
-
-        /// setupOptions() -> persona/issue/district/region choices json
         string SetupOptions();
     }
 
-    /// <summary>
-    /// Example wiring. Replace Eval() with your embedded JS runtime call.
-    /// The engine is deterministic: (seed + command log) reproduces state
-    /// exactly, and serialize/deserialize is lossless (docs/ENGINE-API.md).
-    /// </summary>
     public sealed class EngineBridge : IEngineBridge
     {
-        // TODO: hold your JS runtime + the loaded CandidateZeroEngine global.
-        private Func<string, string> _eval;
+        private readonly Engine _js;
 
-        public EngineBridge(Func<string, string> evalJsExpression)
+        /// <param name="bundleSource">
+        /// Contents of unity/engine/candidate-zero-engine.js (import it as a
+        /// TextAsset — e.g. rename to .txt/.bytes so Unity doesn't treat the
+        /// .js as script). Evaluated once to define CandidateZeroEngine.
+        /// </param>
+        public EngineBridge(string bundleSource)
         {
-            _eval = evalJsExpression ?? throw new ArgumentNullException(nameof(evalJsExpression));
+            if (string.IsNullOrEmpty(bundleSource))
+                throw new ArgumentNullException(nameof(bundleSource));
+
+            _js = new Engine(options => options
+                .LimitRecursion(4000)
+                .TimeoutInterval(TimeSpan.FromSeconds(5)));
+
+            _js.Execute(bundleSource); // defines the global CandidateZeroEngine
         }
 
         public string NewGame(int seed, string setupJson = null)
         {
-            var arg = setupJson == null
+            var arg = string.IsNullOrEmpty(setupJson)
                 ? $"{{ seed: {seed} }}"
                 : $"{{ seed: {seed}, setup: {setupJson} }}";
-            return _eval($"JSON.stringify(CandidateZeroEngine.newGame({arg}))");
+            return Eval($"JSON.stringify(CandidateZeroEngine.newGame({arg}))");
         }
 
         public string View(string snapshotJson) =>
-            _eval($"JSON.stringify(CandidateZeroEngine.view({snapshotJson}))");
+            Eval($"JSON.stringify(CandidateZeroEngine.view({snapshotJson}))");
 
         public string Apply(string snapshotJson, string commandJson) =>
-            _eval($"JSON.stringify(CandidateZeroEngine.apply({snapshotJson}, {commandJson}))");
+            Eval($"JSON.stringify(CandidateZeroEngine.apply({snapshotJson}, {commandJson}))");
 
         public string SetupOptions() =>
-            _eval("JSON.stringify(CandidateZeroEngine.setupOptions())");
+            Eval("JSON.stringify(CandidateZeroEngine.setupOptions())");
+
+        private string Eval(string expression) => _js.Evaluate(expression).AsString();
     }
 }

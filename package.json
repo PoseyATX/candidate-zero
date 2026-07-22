@@ -39,7 +39,7 @@
     "smoke:ui": "node scripts/ui-smoke.mjs",
     "a11y": "node scripts/a11y-audit.mjs",
     "harness:api": "npx tsx src/harness/api.ts",
-    "build:engine": "vite build --config vite.engine.config.ts",
+    "build:engine": "vite build --config vite.engine.config.ts && node scripts/copy-engine-to-unity.mjs",
     "export:content": "npx tsx scripts/export-content.ts",
     "harness:content": "npx tsx src/harness/content.ts"
   },

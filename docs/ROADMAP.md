@@ -585,13 +585,20 @@ pure, presentation-only export that Unity ingests as ScriptableObjects.
   kind tint; description is tap-to-reveal data, not drawn on the face.**
 - Contract doc: **`docs/UNITY-BRIDGE.md`**.
 
-**Next for this phase (the actual Unity project):** stand up the Unity
-project that (a) runs the content importer to generate the card SOs and
-(b) embeds the engine bundle behind `EngineBridge` and renders `view()` —
-presentation, input, audio, persistence, and the Chronicle live in Unity;
-**no rules**. An open Unity-project decision: which embedded JS runtime
-(Jint / ClearScript / Puerts) hosts the engine bundle — see
-`docs/UNITY-BRIDGE.md`.
+**✅ Unity drop-in + Jint runtime — DONE 2026-07-19.** Runtime chosen: **Jint**
+(pure C#, no native deps → clean iOS/IL2CPP). The engine bundle now builds at
+es2019 with an IIFE global and is copied to a committed drop-in
+`unity/engine/candidate-zero-engine.js` (verified: eval'd Jint-style in Node,
+global defines, newGame/apply/serialize all work). `unity/Scripts/` now has
+the concrete `EngineBridge.cs` (Jint) and a `GameController.cs` sample
+("engine-in-Unity hello world"). Step-by-step for the open editor:
+**`docs/UNITY-SETUP.md`**.
+
+**Next (in the Unity editor, not this repo):** follow `docs/UNITY-SETUP.md` —
+Track A imports the 66 cards as ScriptableObjects (Newtonsoft), Track B runs
+`GameController` to confirm the engine is live in-editor, then build the real
+UI over `newGame → view → apply`. Presentation, input, audio, persistence,
+and the Chronicle live in Unity; **no rules**.
 
 Swift-native remains a possible *future* rewrite of the same pure engine —
 not the near-term store path.

@@ -55,10 +55,13 @@ the opaque snapshot string to save a game; it never inspects rules inside it.
   run in a Unity project, not in this repo. They are the reference
   implementation to drop in and validate there.
 
-## Choosing the JS runtime for the engine (open decision for the Unity project)
+## JS runtime: Jint (chosen)
 
-The engine bundle needs a JS host inside Unity/IL2CPP. Viable options, to be
-decided when the Unity project starts: **Jint** (pure C#, no native deps,
-simplest for IL2CPP/iOS), **ClearScript** (V8, fast, heavier native deps),
-or **Puerts** (V8/QuickJS, Unity-focused). This is a Unity-project decision,
-not a rules decision — the engine contract is identical across all three.
+The engine bundle runs inside Unity in **Jint** — a pure-C# JS interpreter,
+no native libraries, so the iOS / IL2CPP / App Store path stays clean (the
+game is turn-based, so interpreter speed is irrelevant). The bundle is built
+at **es2019** (`vite.engine.config.ts`) so no ES2020 syntax reaches Jint, and
+`npm run build:engine` emits an IIFE build copied to a committed drop-in at
+**`unity/engine/candidate-zero-engine.js`** (a plain `var CandidateZeroEngine`
+global Jint evaluates directly). `EngineBridge.cs` is the concrete Jint
+implementation. Click-by-click: **`docs/UNITY-SETUP.md`**.
