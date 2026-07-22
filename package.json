@@ -1,7 +1,7 @@
 {
   "name": "candidate-zero",
   "version": "0.0.1",
-  "description": "CANDIDATE ZERO — A Hot Texas Primary (modular TypeScript baseline for eventual Swift/iOS)",
+  "description": "CANDIDATE ZERO — Texas Legislature roguelike deckbuilder. Pure TS engine → Unity → iOS. Package 0.0.1 (not v0.1).",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -24,15 +24,30 @@
     "harness:yields": "npx tsx src/harness/yield-tables.ts",
     "harness:full": "npx tsx src/harness/full-campaign.ts",
     "harness:dopamine": "npx tsx src/harness/dopamine.ts",
-    "harness:career": "npx tsx src/harness/career-persist.ts",
+    "harness:grounds": "npx tsx src/harness/grounds.ts",
     "harness:dead-refs": "npx tsx src/harness/dead-refs.ts",
-    "harness:obligations": "npx tsx src/harness/obligations-tick.ts",
-    "harness:shop": "npx tsx src/harness/shop-loot.ts",
+    "harness:shop": "npx tsx src/harness/shop.ts",
+    "harness:obligations": "npx tsx src/harness/obligations.ts",
+    "harness:debt": "npx tsx src/harness/debt.ts",
+    "harness:session": "npx tsx src/harness/session.ts",
+    "harness:starmap": "npx tsx src/harness/starmap.ts",
+    "harness:matrix": "npx tsx src/harness/matrix.ts",
+    "harness:outside": "npx tsx src/harness/outside.ts",
+    "harness:chronicle": "npx tsx src/harness/chronicle-waiting.ts",
+    "harness:waiting": "npx tsx src/harness/waiting.ts",
+    "harness": "npm run harness:resolve && npm run harness:smoke && npm run harness:ballot && npm run harness:strategies && npm run harness:ac1 && npm run harness:ac1-parity && npm run harness:audit && npm run harness:calendar && npm run harness:setup && npm run harness:yields && npm run harness:full && npm run harness:dopamine && npm run harness:grounds && npm run harness:dead-refs && npm run harness:shop && npm run harness:obligations && npm run harness:debt && npm run harness:session && npm run harness:starmap && npm run harness:matrix && npm run harness:outside && npm run harness:chronicle && npm run harness:waiting && npm run harness:api && npm run harness:content",
+    "smoke:ui": "node scripts/ui-smoke.mjs",
+    "a11y": "node scripts/a11y-audit.mjs",
+    "harness:api": "npx tsx src/harness/api.ts",
+    "build:engine": "vite build --config vite.engine.config.ts && node scripts/copy-engine-to-unity.mjs",
+    "export:content": "npx tsx scripts/export-content.ts",
     "export:cards": "npx tsx scripts/export-cards-csv.ts",
-    "harness": "npm run harness:resolve && npm run harness:smoke && npm run harness:ballot && npm run harness:strategies && npm run harness:ac1 && npm run harness:ac1-parity && npm run harness:audit && npm run harness:calendar && npm run harness:setup && npm run harness:yields && npm run harness:full && npm run harness:dopamine && npm run harness:career && npm run harness:dead-refs && npm run harness:obligations && npm run harness:shop"
+    "harness:content": "npx tsx src/harness/content.ts"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",
+    "axe-core": "4.10.2",
+    "playwright": "1.56.1",
     "tsx": "^4.16.0",
     "typescript": "^5.5.0",
     "vite": "^8.1.5"

@@ -1,47 +1,53 @@
 # Roadmap
 
-Status snapshot and prioritized forward plan, written after a full
-routine-maintenance pass (2026-07-17). Grounded entirely in evidence found
-in this repo — code paths that are dead, fields that are written but never
-read, and the project's own prior documentation (`TICKET-v0.1-modular-baseline.md`,
-`ARCHITECTURE.md`, `AC1-NOTES.md`, `BALANCE-NOTES.md`). Nothing here is
-invented scope; every item traces to something already scaffolded, flagged,
-or discovered in the codebase.
+**Operating plan lives on GitHub Projects** — not only this file:
+
+- **Board:** https://github.com/users/PoseyATX/projects/2  
+- **Mirror + hygiene:** [`docs/PROJECT-BOARD.md`](./PROJECT-BOARD.md)  
+- **Full workstream log:** [`docs/WORK-LOG.md`](./WORK-LOG.md) · issue [#16](https://github.com/PoseyATX/candidate-zero/issues/16)  
+- **Player flow:** [`docs/GAME-FLOW.md`](./GAME-FLOW.md)  
+- **Issues:** #4–#16 (phases, meta, deploy bug, AC1 remainder, work-log pin)
+
+This document is the **evidence log**: what shipped, with paths and harness
+proof. Board columns / issue titles are the **to-do queue**. When they disagree,
+**code + harnesses win**, then update both.
+
+Grounded in repo evidence (`TICKET-v0.1-modular-baseline.md`, `ARCHITECTURE.md`,
+`AC1-NOTES.md`, `BALANCE-NOTES.md`). Nothing invented as “done” without a file.
 
 ## How to read this doc
 
-- **Phase 0** is done — this session's maintenance pass. Listed for context.
-- **Phases 1–3** are the highest-value next work: they finish systems that
-  are already half-built (real bugs and inert scaffolding), not new ideas.
-- **Phases 4–6** are larger, legitimately new feature/content investments.
-- **Phase 7–8** are the project's own stated end goals (v0.1, Swift/iOS).
-- Each item lists its evidence so a future reader (human or agent) doesn't
-  have to re-derive "why does this matter."
-
-### Pass discipline (mandatory — also in `AGENTS.md`)
-
-Every increment must: **CLEAN · DEBUG · UPDATE ROADMAP · UPDATE SRD**
-(as needed). No mechanical change without SRD touch; no pass left red on
-`tsc` / `npm run harness`.
+- **Phase 0–4** done (issues #4–#8; Session shipped 2026-07-19).
+- **Starmap** — full catalog + **7 entity templates** MV01–07 (#17/#18 DONE).
+- **Card residency law** — Main / Special / Outside + control channel
+  (`docs/CARD-RESIDENCY.md`); schema + catalog tags; no boosters/event deck yet.
+- **Phase 5** — balance breadth (issue #9) **DONE** 2026-07-19.
+- **Phases 6–7** — mobile polish, honest v0.1.
+- **Phase 8** — ship path: **TS pure engine → Unity presentation → iOS / App Store**
+  (issue #12). Unity is not a second rules engine.
+- **North star:** career graph / no true game over — see `docs/STARMAP.md`.
+- Each item lists evidence so agents don’t re-derive status from vibes.
 
 ---
 
-## ✅ Persistent career loop (done 2026-07-17, Grok Build)
+## ✅ Phase 1 — Ground-centered campaign model (DONE 2026-07-17, re-verified)
 
-Evidence: `src/engine/career.ts`, `calendar.ts`, `identity-shift.ts`,
-`src/data/interim-plays.ts`, `session-plays.ts`, `src/ui/main.ts`,
-`src/harness/career-persist.ts`. SRD: `docs/SRD-NOTES.md` § Persistent career.
+**Goal:** make *where* you work a visible decision; show zero-sum opposition
+without yet giving it odds teeth; measure ground distribution. No RNG covenant
+changes; no card-set redesign.
 
-| Done | Notes |
-|---|---|
-| No terminal end on ballot outcomes | `over` only for rare ruin; `lastCycleOutcome` labels cycles |
-| Persona locked after first filing | UI "Abandon career" only hard wipe; no re-pick screen |
-| Off-season themed by identity | Residue boons/hindrances into next primary |
-| Thematic forks (issue/district/region) | Costly; never free menus; never persona |
-| Thin Session after general win | 4 weeks capitol verbs → interim → reelection |
-| localStorage career resume | `cz_career_v1` |
-| Debt surfaced in ledger | Phase 3 partial — still no weekly tax |
+| Requirement | Status | Evidence |
+|---|---|---|
+| Ground picker on field plays (one ground / play, remember last) | **Done** | UI `#ground-picker` (`src/ui/main.ts`); CLI `chooseGround` (`src/cli/play.ts`); `state.lastGround` |
+| Same ground 2+/week: +odds, −50% rapport | **Done** | `getGroundPenalty` in `src/engine/calendar.ts`; applied in `executePlay` via `groundPlays` / `groundRapMult` |
+| Rival presence 5–40/week, logged + shown, **no odds bite** | **Done** | `advanceRivalGrounds` + `Ground.rivalRap`; picker meters; harness rival-avoidance Δ ≈ noise |
+| `allyWarmAtGround` for field-ops allies | **Done** | `reputation.ts`; AL09 localized on PL21B/PL39 grant; PL01/PL19 bonuses use it. *(PL08 Kitchen-Table not field-based in archive — ground gate deferred to Phase 2, not a Phase 1 redesign.)* |
+| `checkBallotThreshold` sketch, **unwired** | **Done** | `src/engine/career.ts` — measurement only; live elections still `calendar.ts` |
+| `npm run harness:grounds` | **Done** | 50× labor/money × focus/spread; spread contests ~2.8 grounds (target ~3); sketch met **0%** (rapport economy short of 60 home — Phase 2 input) |
 
+**Not in Phase 1 (correctly deferred):** rival odds modulation; `Ground.aff` / `gated` mechanics; rebalancing rapport to meet the sketch thresholds; PL08 redesign as a field card.
+
+Detail also under Phase 0 item 3 and `docs/SRD-NOTES.md` § "Ground selection is part of play execution".
 ---
 
 ## ✅ GitHub Pages source fixed (was the one manual action; done 2026-07-17)
@@ -96,43 +102,125 @@ calling it law).
 
 ---
 
-## ✅ Foundation bootstrap (2026-07-17) — expand only after this holds
+## ✅ The Chronicle — cross-run meta-progression (done, 2026-07-17)
 
-Evidence: `docs/ARCHITECTURE.md` (rewritten as expansion gate), `data/cards.csv`
-(52 live rows: 24 plays + 12 interim + 6 session + 10 assets), `npm run export:cards`.
+Direct user request: a roguelike shouldn't have a hard restart on a loss —
+"the player keeps moving through failure... they should keep moving and
+growing until the next election cycle." Turned out this was already fully
+designed and built in the archive (`LEGACY`/`TRAITS`/interim-path/
+`startIncumbentRun` system) but never ported — `types.ts` even had a
+`LegacyState` interface sitting there typed with `any`, unused anywhere,
+same shape as `fieldAp` before this session's Phase 2 item 1 fix.
 
-| Done | Notes |
-|---|---|
-| Architecture as ruleset + balance-gate contract | Layers, career SM, resolve/SAFE, attrs, faces, obligations, shop, deck, elections |
-| Card inventory CSV | Re-export from code; authoring columns (`role`, path, economy) |
-| Expansion process written | Peer anchors + harness list + “do not mass-import archive yet” |
-| Still open before free expansion | Ground-pick UI; full ally port; remaining rep counters; full bill pipeline deferred |
+Ported to `src/engine/legacy.ts` + `src/engine/loop.ts`'s
+`createIncumbentCampaign`:
+- A run ending (win or loss) records an epithet + growth summary to a
+  persistent "Chronicle" (`localStorage`, shown on the setup screen).
+- On a loss, the player picks an interim path (Perennial Candidate /
+  Advocate / Staffer / Go Home a While — gated by how the run went) and
+  then a permanent trait from that path (10 archive traits ported in
+  full, capped at 3 held at once) that measurably buffs every future run
+  — no dead "New run" button, an actual card-pick screen.
+- On a `won_general`, "Stand for Reelection" skips setup entirely and
+  continues straight into the next filing period as the incumbent,
+  carrying forward a discounted share of contacts/nameID/money/
+  endorsePts/volPool/reps/deck (archive's exact carry-forward formulas).
+- `T_NERD` trait revealed a second dead scaffold: `parlSave`/`parlUsed`
+  fields existed on `GameState` (one persona already granted `parlSave`)
+  but nothing ever read them — wired into `executePlay` for `PL04`
+  (archive also gates `PL24`, not yet ported).
+- Not ported: obligations don't carry forward on reelection (modular
+  `obls` is still free-text, not the archive's structured registry —
+  Phase 2 item 4), and `district.incumbent` is deliberately left `false`
+  on a reelection continuation rather than mirroring the archive's flag
+  literally — that flag models an *opposing* entrenched incumbent in this
+  engine's probability formulas, so setting it `true` for the player's
+  own seat would double-penalize them.
 
-**Rule:** every new card must clear Architecture §6 (design + numeric peer + harness). No content dumps.
-
----
+Verified: pure-engine checks (carry-forward math, trait cap, path
+gating) plus a full Playwright pass — played a seeded run to
+`missed_filing`, picked a path and trait, confirmed the Chronicle
+renders and survives a page reload, then started a fresh run and
+confirmed the banked-contacts trait actually applied (25 contacts at
+week 1, exactly 30% of the prior run's total).
 
 ## Phase 1 — Close the gaps this pass exposed but didn't fix (near-term, low risk)
 
 These are direct follow-ups to Phase 0 findings — verification and tooling,
 not new design.
 
-1. **~~Reachability check~~ Done (2026-07-17):** `npm run harness:dead-refs`
-   probes every catalog card against pre-ballot / ballot / general states
-   and reports unreachable ids. Soft-report for now (not hard-fail) until
-   remaining PL* show/req gates are intentional.
+1. **Reachability check in `harness:audit`.** The audit harness
+   (`src/harness/audit-srd-plays.ts`) checks catalog *shape* (id format,
+   attrs, risk, phases) but not *reachability*. That's exactly the gap that
+   let PL20 sit dead for an unknown number of increments — it was asserted
+   present in the catalog (`harness:ac1`) but never asserted playable.
+   Add a check that simulates enough of a campaign (or directly walks
+   `show`/`req` gates against a matrix of representative states) to confirm
+   every card can, under some real game state, actually become playable.
 
-2. **~~Dead reference scan~~ Done (2026-07-17):** `npm run harness:dead-refs`
-   greps `warm`/`hasRep`/`.includes` vs grant sites. Soft-report remaining
-   stubs (currently AL03/04/05, A01/A09 — no grant path yet; Phase 2 ally
-   port). Reachability probes use unlocked-state (B06/AL09) so gated cards
-   like PL11 are not false-unreachables.
+2. **Automated "dead reference" scan for ally/rep/asset/backer ids.** This
+   pass found ~13 ids (`AL01`, `AL03`, `AL04`, `AL05`, `AL09`, `AL11`,
+   `R01`, `R05`, `R06`, `R07`, `R10`, `A01`, `A09`, `B05`) referenced in
+   `odds`/`run`/`req` functions across `src/data/plays.ts` that are never
+   granted anywhere. Rather than re-discover this by hand next time, add a
+   small script/harness that greps `warm(s,'ID')` / `hasRep(s,'ID')` /
+   `s.assets.includes('ID')` / `s.backers.includes('ID')` call sites,
+   collects referenced ids, and cross-checks each against every place an id
+   is pushed onto `state.allies`/`.assets`/`.reps`/`.backers`. Report any id
+   that's referenced but never granted. This is the same shape of bug as
+   the district-trap issue (Phase 0) and `state.tier` (Phase 0) — a
+   condition that can structurally never fire — so it's worth a permanent
+   guardrail, not just a one-time cleanup.
 
-3. **~~Grounds affinity (engine)~~ Partial (2026-07-17):**
-   `pickDefaultGround` now ranks by face affinity + rapport; gated GR04
-   opens at True Believer ≥12 or preacher bio; field plays get
-   `groundAffinityMod` odds tilt. **Still open:** explicit ground-pick UI
-   (player still doesn't choose by hand on mobile).
+3. **Grounds subsystem is half-built.** ~~There is no ground-selection UI
+   anywhere; `pickDefaultGround` always auto-picks.~~ **Substantially
+   addressed 2026-07-17 (Ground-centered campaign model, Phase 1 order).**
+   Ground selection is now a real, visible decision on every field play:
+
+   - **Ground picker** (UI modal + CLI prompt): playing a field card opens a
+     selector showing each ground's name, your rapport, the opposition's
+     presence, and pool; remembers the last-worked ground. `pickDefaultGround`
+     is now only the fallback when no ground is passed (harness/auto).
+   - **Diminishing returns** (`getGroundPenalty`, `src/engine/calendar.ts`):
+     working the same ground twice in a week gives a small familiarity odds
+     bump but half the rapport — so broad rapport means spreading out. A
+     per-week `state.groundPlays` tally drives it; `state.groundRapMult`
+     carries the multiplier into `rapGain`.
+   - **Ally-at-ground affinity** (`allyWarmAtGround`/`hasAllyWarm`,
+     `src/engine/reputation.ts`): allies granted by a ground-based field play
+     (Canvass Captain / Field Director → AL09) are now *localized* to that
+     ground, and the AL09 field bonus on Block Walk / GOTV only applies on the
+     turf the director actually works. Roster/persona grants stay warm
+     everywhere (backward-compatible). NOTE: the spec also asked to gate
+     Kitchen-Table (PL08) on AL01-at-ground, but PL08 is not a ground-based
+     card and making it one is a card redesign (explicitly out of the Phase 1
+     scope), so that specific gate is deferred to Phase 2 — the helper it
+     needs is built and exercised on the AL09 case.
+   - **Opposition presence** (`Ground.rivalRap`, `advanceRivalGrounds`):
+     the opposition banks 5–40 rapport at a random ground each week, logged
+     and shown in the picker. **Cosmetic in Phase 1** — it does not touch
+     your odds yet (that's Phase 2). The `harness:grounds` rival-avoidance
+     probe confirms it: steering toward vs. away from opposition grounds
+     moves the win rate only within noise (≈4pp at N=50).
+   - **Win-condition sketch** (`checkBallotThreshold`, new
+     `src/engine/career.ts`): the intended rapport-distribution win condition
+     (primary 60% home + 40%×2; general 40% + 30%×2) is implemented for
+     measurement only and **deliberately not wired** — the live election
+     still runs on `calendar.ts` probabilities.
+   - **Harness** (`npm run harness:grounds`, 50 labor/money campaigns ×
+     ground strategies): measured findings — a "spread" player contests
+     **~2.8–3 grounds**, a "focus" player **1** (design target "a few, not
+     all 8" ✓); and critically **the ground win-condition sketch is met 0%
+     of the time** under current tuning (avg top-ground rapport ~5–25 vs a
+     60 home threshold). That last number is the load-bearing Phase 2 input:
+     the rapport economy is an order of magnitude short of the sketched
+     condition, so Phase 2 must either rebalance rapport yields upward or
+     lower the thresholds before this can become the real win condition.
+
+   Still genuinely open (Phase 2): `Ground.aff` affinity tags and
+   `Ground.gated` are still unread by any mechanic; opposition presence has
+   no teeth; the rapport economy needs rebalancing against the win sketch;
+   PL08's ground gate.
 
 4. **Archive-prototype yield parity is still open.** `docs/AC1-NOTES.md`:
    "Action yield-table full compare for archive ACTIONS (walk/fund/chairs)"
@@ -141,92 +229,188 @@ not new design.
    truth), but it's the one remaining unchecked box on AC1, which gates the
    v0.1 label (Phase 7).
 
-## Phase 2 — Allies / Assets / Reps acquisition system (rescoped 2026-07-17 — this is a port, not a design task)
+## ✅ Phase 2 — Allies / Assets / Reps acquisition system (DONE 2026-07-18 — port, not design)
 
-**Update:** the source design conversation shared 2026-07-17 turned out to
-contain the actual archive prototype this engine was extracted from
-(`archive/prototype-single-file.html`), which has a complete, working
-version of most of this. **The "open question" below has been answered:**
-this phase is now a porting task with an exact source to port from, not a
-from-scratch design task. Full detail: `docs/SRD-NOTES.md` ("Shadow
-consequences + reputation grants" section).
+**Goal:** finish the archive port of allies, assets, obligations, and
+reputation grants. No resolve/RNG covenant changes; no ground-picker redesign.
 
-**Already done (2026-07-17):** `src/engine/reputation.ts` ports
-`shadowCheck()` in full (Faces thresholds → real consequences — this was
-also TICKET's "Next: Shadow consequences on Faces", now satisfied) and the
-subset of `repCheck()` reachable with existing state (R01, R02, R04, R07,
-R10, R11). Also fixed one concrete bug found via the diff: `PL13_FishFry`'s
-text promised "the small-dollar list starts here" but never actually
-granted `B05` — now it does.
+| Requirement | Status | Evidence |
+|---|---|---|
+| Asset shop (archive 8 items: A01–A04, A06, A09, A11, A12) | **Done** | `src/data/assets.ts`; BUY* camp actions via `buildCatalog` + `listPlayableHand`; `npm run harness:shop` |
+| A01 / A09 dead refs closed | **Done** | Shop grants; dead-refs harness green |
+| Obligations registry OB1–OB8 (+ OB9/OB10) with weekly `drag` | **Done** | `src/data/obligations.ts`; `applyOblDrag` in `calendar.onWeekAdvance`; PL20→OB1, PL21→OB2, G2→OB8; `harness:obligations` |
+| Ally grant paths from archive | **Done** | PL08→AL01/AL02, PL10→AL04, PL11→AL03, PL14→AL01, PL21B/PL39→AL09, PL22B→AL16, PL30→AL08, PL32→AL04, PL48→AL15, PL29+events→AL06/AL12/AL14; personas AL01/AL11 |
+| Intentional stubs (archive never `addAlly`) | **Documented** | AL05, AL07, AL10, AL13 in `INTENTIONAL_STUB_ALLIES` — warm() kept for parity; `harness:dead-refs` |
+| Full `repCheck` (R01–R12) | **Done** | `reputation.ts` — R05/R06/R08/R09/R12 now reachable with counters + allies |
+| Kitchen-Table ground affinity | **Archive-faithful** | Archive allies are roster-wide; PL08 stays roster-wide. `allyWarmAtGround` remains for field AL09 (Phase 1). Documented in plays + SRD |
+| Bill / committee types (data only) | **Done** | `Bill`, `Committee`, `VoteTally`, `BillStatus` in `types.ts` — unwired for Phase 4 |
+| `harness:dead-refs` / `shop` / `obligations` | **Done** | package.json scripts; full `npm run harness` green |
 
-**Still open, now precisely scoped instead of open-ended:**
+**Already done earlier (2026-07-17):** `shadowCheck` full port; R01/R02/R04/R07/R10/R11 subset; PL21B/PL39 + fieldAp; 20 personas + issues; PL13→B05.
 
-1. **~~Two dedicated cards~~ Done (2026-07-17):** `PL21B` "Promote a
-   Canvass Captain" (`{a:1, vp:3}`, SAFE, grants `AL09`) and `PL39` "Hire a
-   Field Director" (`{a:1, $:2200}`, STD, alt. paid path to `AL09`) both
-   ported into `src/data/plays-wave4.ts`. This also required porting the
-   archive's `fieldAp` mechanic itself (a free weekly field-ops action,
-   `S.fieldAp`) which didn't exist in the modular engine at all —
-   `GameState.fieldAp` was declared but dead. Now: `canAfford`/`payCost`
-   (`src/engine/play.ts`) let a `card.field` play spend `state.fieldAp`
-   instead of `state.ap`, and `state.fieldAp` resets to `warm(s,'AL09') ? 1
-   : 0` at every week boundary (`src/engine/calendar.ts`, both the
-   primary→general transition and the normal weekly advance). Every
-   existing `warm(s,'AL09')` bonus in `PL01`/`PL02`/`PL04`/`PL19` is now
-   reachable. Adding these two cards to the deck pool nudged the
-   `harness:full` money-vs-labor guardrail from 2.3x to a documented 2.4x
-   (see `src/harness/full-campaign.ts` for the dated rationale) — both
-   routes to `AL09` are affordability/RNG-gated, not guaranteed, so this is
-   texture, not a landslide.
-2. **~~A purchasable assets shop~~ Done (2026-07-17):** `src/data/assets.ts`
-   — billboard, website, voter file, walk list, phone tree, mail, flatbed,
-   push cards, yard cache, part-time scheduler. UI Shop grid + Kit strip.
-   Passives (billboard name ID weekly). Failure loot mints cards + flags.
-   Harness: `npm run harness:shop`.
-3. **~~6–21 more personas~~ Done (2026-07-17):** ported 20 of the archive's
-   21 attribute-linked personas (one skipped — name collision with the
-   existing `preacher`), plus all 12 remaining issues (18 total now). Pure
-   data, no new mechanics needed, so this no longer needed the "curated
-   subset vs. all 21" judgment call the note below used to raise — all of
-   it went in. What *is* still an open call: whether the resulting 24-persona
-   roster needs its own balance pass (see Phase 5's `smallbiz` note — "more
-   starting power" isn't automatically balance-neutral, and 20 new personas
-   is a lot of new starting-state surface that hasn't been through
-   `harness:full` individually).
-4. **~~Obligations registry restructure~~ Done (2026-07-17):**
-   `src/engine/obligations.ts` — registry ids (`OB1` PAC String, `OB2` Bank
-   Note, `OB8` Cousin, etc.) with weekly `drag()`; `tickObligations` on
-   every week/month end; PL20/PL21/shadow/interim grant real ids; free-text
-   normalizes. Ledger shows obligation names. Harness: `harness:obligations`.
-5. **Allies remaining:** AL03/AL04/AL05 now have grant paths (kitchen-table
-   breakthrough, earned media). A01/A09 grant via walk volume / phone volume.
-   Still open: AL02, AL06–08, AL10, AL12–16 (archive port).
+Detail: `docs/SRD-NOTES.md` § "Shadow consequences + reputation grants" (updated Phase 2 closeout).
 
-## Phase 3 — Debt has no consequence (partial; 2026-07-17)
+## ✅ Phase 3 — Debt as leveraged optionality (DONE 2026-07-18)
 
-| Status | Detail |
-|---|---|
-| **Done** | Debt shown in ledger (`$X · note $Y`) so the note is visible mid-career |
-| **Open** | Win-prob bite still absent; **OB2 Bank Note** now weekly-drags money/debt when self-fund or debt>0 |
+**Correction:** a prior draft floated a flat debt→odds penalty. That was
+wrong on theme (mid-campaign voters/donors don't mark you down for a bank
+note) and wrong on game theory (makes debt strictly bad). **Debt has zero
+in-campaign resolve() odds effect.** Consequence is deferred and asymmetric.
 
-## Phase 4 — Session stage (thin done; deep open)
+| Requirement | Status | Evidence |
+|---|---|---|
+| No resolve()/band debt tax | **Done** | `resolve.ts` has no `debt` ref; harness pairwise seed equality debt=0 vs 99999 |
+| Spend-now lever (PL21 self-loan + OB2) | **Done** | `applySelfLoan` in `src/engine/debt.ts`; +$3000 cash unlocks fee/assets; `harness:debt` |
+| Win: self-loan retires cheap, no Session gate | **Done** | `retireDebtOnWin` token fee ≤$200; clears OB2; no `pac_lender_claim` |
+| Win: PAC bridge retires cash + Session claim | **Done** | `maybePacBridge` on PL20 under open debt; keeps OB1 + `sessionFlags.pac_lender_claim` for Phase 4 |
+| Loss: compounds into next cycle | **Done** | `LegacyCarry.debt` × `DEBT_CYCLE_COMPOUND` (1.15); `applyLegacyDebt` re-adds OB2 drag |
+| Loss: affordability gate, not odds | **Done** | `availableCash` / `canAfford` reserve; never touches resolve |
+| Crisis path pressure | **Done** | `DEBT_CRISIS_THRESHOLD` 5000 → perennial/home only; PL20 early via `pacCheckAvailable` |
+| Leverage win-rate case | **Done** | `harness:debt` n=40: debt leverage **45%** gen wins vs conservative money **35%** (+10pp) |
 
-| Status | Detail |
-|---|---|
-| **Done (thin)** | 4-week session after general win: file / whip / gallery / testify / district call / rest (`session-plays.ts`); sine die → interim |
-| **Open (deep)** | Real bill object lifecycle (`bill`/`committee` still mostly inert), issue-linked legislation win condition, calendar kill pressure as sine die approaches, Speaker favor as referral gate |
+Hooks reused (no parallel systems): `addObl`/`OB1`/`OB2` (`obligations.ts`),
+`sessionFlags`, `LegacyCarry`/`applyLegacy`/`recordRun`, `canAfford` →
+`availableCash`. UI terminal copy + epithet surface the branch split.
 
-## Phase 5 — Sweep balance breadth beyond labor/money
+Detail: `docs/SRD-NOTES.md` § debt / Phase 3.
+
+## ✅ Phase 4 — Session stage (DONE 2026-07-19, [#8](https://github.com/PoseyATX/candidate-zero/issues/8))
+
+Port of archive Session (prototype ~917–1075). General win **enters Session**
+(no longer terminal). Sine die yields `session_law` | `session_survived` |
+`session_primaried`.
+
+| Requirement | Status | Evidence |
+|---|---|---|
+| Enter Session on general win | **Done** | `enterSessionFromGeneral` in `calendar.ts` / `session.ts` |
+| Bill lifecycle draft→…→law | **Done** | `pipelineStage` 0–8 + `BillStatus`; SS01–SS07 |
+| Issue-linked signature bill | **Done** | `createDraftBill` uses `state.issue` |
+| PAC claim gates referral | **Done** | `applyPacClaimOnReferral` on SS02; SS_PAC refuse |
+| UI bill status | **Done** | Ledger bill line + session actions menu |
+| `harness:session` | **Done** | green — law/survived/primaried partition |
+
+Files: `src/engine/session.ts`, `src/data/session-plays.ts`, UI/strategy wires.
+`resolve.ts` untouched.
+
+## ✅ Starmap — Catalog + ≥3 playable pilots (DONE 2026-07-19)
+
+**Design law:** [#17](https://github.com/PoseyATX/candidate-zero/issues/17), [#18](https://github.com/PoseyATX/candidate-zero/issues/18).  
+**Map index:** [`docs/STARMAP.md`](./STARMAP.md).
+
+| Deliverable | Status | Evidence |
+|---|---|---|
+| Full ENT_* catalog (tiers 0–8) | **Done** | `src/data/starmap/entities.ts` (~93 entities) |
+| Orbits, no orphans | **Done** | `orbits.ts` + `harness:starmap` |
+| Loops registry | **Done** | `loops.ts` |
+| Multi-pilot registry | **Done** | `pilots.ts` PLAYABLE_PILOTS (7) |
+| MV01–03 core pilots | **Done** | Precinct / Captain / Judge |
+| MV04–07 templates | **Done** | Party / Club / Editor / Faith |
+| Simultaneous multi-orbit | **Done** | harness |
+| `npm run harness:starmap` | **Done** | 7-template e2e |
+
+**Not in this pass:** movement UI modal, waiting-loop stage rewrite, higher-office forks.
+
+## ✅ Card residency — Main / Special / Outside (DONE 2026-07-19)
+
+**Design law:** [`docs/CARD-RESIDENCY.md`](./CARD-RESIDENCY.md) (includes honest critique + MTG-scale template rule).
+
+| Deliverable | Status | Evidence |
+|---|---|---|
+| `CardResidency` / `CardControl` / `entityScope` on `PlayCard` | **Done** | `src/engine/types.ts` |
+| CORE + WAVE4 + shop → main/player | **Done** | `plays.ts`, `plays-wave4.ts`, `assets.ts` |
+| SESSION SS* → special + entityScope | **Done** | `session-plays.ts` |
+| MV01 → special + ENT_PRECINCT_CHAIR | **Done** | `plays-starmap.ts` |
+| Outside content | **Deferred** | schema ready; 0 Outside cards (correct) |
+| Audit residency tally | **Done** | `harness:audit` — main=37 special=14 outside=0 |
+
+**Not in this pass:** event deck, boosters/draft, auto-strip on scandal, Unity kit UI.
+
+## ✅ Ceremony shells — three-act stage chrome (DONE 2026-07-19)
+
+| Deliverable | Status | Evidence |
+|---|---|---|
+| Shared act splash (I/II/III) | **Done** | `openActSplash` in `src/ui/main.ts` |
+| Persistent act banner + frame tints | **Done** | `#act-banner`, `.stage-primary/general/session` |
+| Distinct verbs (end week, panel titles, HUD chip) | **Done** | `ACT_SHELLS` + `applyStageChrome` |
+| Tutorial + GAME-FLOW | **Done** | `index.html`, `docs/GAME-FLOW.md` |
+
+**Presentation only** — `enter_general` / `enter_session` engine paths unchanged.
+
+## ✅ General kit gravity (DONE 2026-07-19)
+
+| Deliverable | Status | Evidence |
+|---|---|---|
+| Rapport seeds GOTV on enter general | **Done** | `seedGeneralGotvFromRapport` in `calendar.ts` |
+| Field plays bank GOTV in general | **Done** | PL01/PL02 stage branches |
+| Primary club plays off-table | **Done** | PL08 `ph: [1,2]` |
+| PL19 into hand + PL23 Rides | **Done** | `ensureGeneralTools`, `plays.ts` |
+| Win math favors GOTV over contact pad | **Done** | `generalWinProbability` weights |
+| Harness | **Done** | `harness:calendar` kit-gravity asserts |
+
+## ✅ Waiting season play + higher-office paths (DONE 2026-07-19)
+
+| Deliverable | Status | Evidence |
+|---|---|---|
+| `stage: 'waiting'` + 4w season | **Done** | `waiting.ts` |
+| WA01–09 path kit | **Done** | `waiting-plays.ts` |
+| UI Act IV + end → setup | **Done** | `main.ts` beginWaitingSeason |
+| Senate / statewide paths | **Done** | `buildPaths` gates |
+| Bank yields to legacy | **Done** | `finishWaiting` + `applyLegacy` |
+| `harness:waiting` | **Done** | green |
+
+## ✅ RivalRap teeth + Chronicle waiting bridge (DONE 2026-07-19)
+
+| Deliverable | Status | Evidence |
+|---|---|---|
+| Field-play odds tax from rivalRap | **Done** | `rivalOddsPenalty` in `play.ts` |
+| Win math pressure | **Done** | `meanRivalRapport` in primary/general p |
+| Chronicle path → LOOP_WAITING_* | **Done** | `PATH_TO_WAITING_LOOP`, `setInterimPath` |
+| Next-run residue | **Done** | `applyLegacy` WAITING ORBIT log |
+| Harnesses | **Done** | `harness:grounds`, `harness:chronicle` |
+
+## ✅ Outside event deck v0 (DONE 2026-07-19)
+
+| Deliverable | Status | Evidence |
+|---|---|---|
+| OutsideEvent catalog (10) | **Done** | `src/data/outside-events.ts` |
+| Draw + resolve (never hand) | **Done** | `src/engine/outside.ts` |
+| Week ticks (campaign + session) | **Done** | `calendar.ts` / `session.ts` |
+| Screw worm + map/ethics/weather | **Done** | residency examples live |
+| `harness:outside` | **Done** | catalog + once + no hand inject |
+
+## ✅ Session teeth (DONE 2026-07-19)
+
+| Deliverable | Status | Evidence |
+|---|---|---|
+| Casework-or-bleed district drain | **Done** | `tickSessionPressure` |
+| Bill stall heat | **Done** | `weeksAtStage` / `applyBillStallHeat` |
+| Challenger heat → sine die | **Done** | `challengerHeat` on reelect |
+| Speaker freeze (calendar/floor) | **Done** | `sessionPipelineBlocked` SS05/SS06 |
+| Weekly chamber events | **Done** | lobby / emergency / errand demand / press |
+| Strategy + harness | **Done** | casework-aware strategy; `harness:session` |
+
+## ✅ Phase 5 — Balance breadth (DONE 2026-07-19, [#9](https://github.com/PoseyATX/candidate-zero/issues/9))
+
+**Goal:** setup matrix is brutal-but-winnable — no soft-locks, no free wins.
+
+| Deliverable | Status | Evidence |
+|---|---|---|
+| `harness:matrix` structured sample | **Done** | `src/harness/matrix.ts` · 93 cells × N=30 |
+| All 24 personas open/east labor | **Done** | mean win 20.3% · band 6.7–33.3% |
+| Wrong-party stress | **Done** | mean ~12%; retuned genBase + wrong tax |
+| Money identity documented | **Done** | smallbiz / PA_CRA_DIP / PA_DIP_CHA |
+| Labor/money ratio guardrail | **Done** | teacher ~1.8x (cap 3.5x) |
+| Notes | **Done** | `docs/BALANCE-NOTES.md` 2026-07-19 Phase 5 |
+
+**Not in Phase 5:** full 12k issue grid (issues are flavor for win math); boosters; starmap multi-loop.
+
+### Prior backlog note (superseded by evidence above)
 
 Phase 0 fixed the two headline strategies and one systemic district bug,
 but the full setup matrix — now 24 personas × 4 districts × 7 regions × 18
 issues = 12,096 combinations (was 672 before the 2026-07-17 persona/issue
-port) — has only ever been spot-checked (`harness:setup` covers
-teacher/open/east and veteran/gulf; `harness:full` only runs the default
-setup, and none of the 20 newly-ported personas have been through it at
-all). This matrix just got substantially bigger without a corresponding
-increase in balance coverage — worth flagging as higher priority than it
-was this morning. Things worth checking:
+port) — had only been spot-checked. Phase 5 closed the persona×district×region
+axes via structured sampling.
 
 - **The 20 newly-ported personas**: verified mechanically correct (apply()
   effects fire, `harness` suite green) but not balance-checked individually
@@ -269,21 +453,82 @@ way balance changes get harness-verified before considering them done.
 
 TICKET already names general UI polish as the last gate before considering
 v0.1 ("UI polish; only then consider v0.1 label with evidence bundle").
-Beyond Phase 1's ground-selection gap, concretely still missing (verified
-by reading `src/ui/main.ts`/`src/ui/styles.css`, not assumed):
 
-- No visual distinction between SAFE / STD / VOL risk classes beyond the
-  text label (a trap-card border color exists; a risk-class color coding
-  doesn't).
-- No mobile-responsiveness pass has been done or verified.
-- No accessibility pass (color contrast, keyboard nav for the card grid,
-  `aria-live` regions exist on log/juice but haven't been screen-reader
-  tested).
-- No visual regression / e2e test in CI — Phase 0 added a CI gate for
-  typecheck+harness+build, but a headless click-through (the kind used to
-  verify the index.html fix and the Vite 8 upgrade this session) isn't
-  automated yet. Worth adding once the UI is a real target for iteration
-  rather than a recently-repaired one.
+**Done in the 2026-07-17 mobile-game UI pass** (patterns borrowed from the
+mobile-deckbuilder canon — persistent vitals HUD, thumb-reach primary
+action, never hide the hand):
+
+- ✅ Risk-class color coding (left border per class + risk-tinted odds
+  meter fill).
+- ✅ Mobile pass, screenshot-verified at 390×844: sticky compact HUD (AP
+  pips, money, week + signature progress meters) pinned to the top of the
+  screen while scrolling; End Week pinned to the bottom of the viewport in
+  thumb reach; both hidden/normal on desktop widths.
+- ✅ Full-hand visibility: cards you can't currently play render dimmed
+  with the specific reason ("No AP left", "Not enough money", "Phase 2/3
+  only") instead of vanishing from the list — plan-around information,
+  standard in the genre. Cards gated by `show`/`req` stay hidden
+  (undiscovered content, not locked options).
+- ✅ Per-card success-odds meter bar (at-a-glance p%, tinted by risk).
+- ✅ Fixed a fieldAp regression: with 0 AP but a field action banked, the
+  UI said "No AP left — end the week" and hid the playable field card.
+- ✅ `theme-color` meta + `color-scheme: dark` (mobile browser chrome
+  matches the walnut theme; form controls render dark natively).
+
+Concretely still open:
+
+- **Accessibility — automated WCAG 2 A/AA audit built + run (2026-07-19).**
+  `scripts/a11y-audit.mjs` (`npm run a11y`) runs axe-core (the Lighthouse
+  engine) against every screen state — title, tutorial, setup, in-game,
+  ground picker, terminal. Findings: **title / tutorial / setup clean;**
+  **all 7 color-contrast AA failures fixed** (dark-theme text below 4.5:1:
+  `.ledger-band-label`, `.log-line .w`, `.debt-note`, `.growth` — recolored
+  to 5.4–6.6:1, on-theme, verified by re-audit + smoke). **One serious item
+  remains, pending a card-layout decision:** `scrollable-region-focusable`
+  on the card `.desc` (4 nodes) — the fixed-2:3 card makes long descriptions
+  an overflow-scroll region a keyboard-only user can't reach. There's no
+  lossless CSS-only fix (adding `tabindex` inside the card `<button>` trades
+  it for a `nested-interactive` violation); the real fix is a card-layout
+  call — clip long text with a fade, or let cards grow to fit — which
+  shouldn't be made unilaterally. `a11y` is NOT yet a CI gate (it exits
+  non-zero while that one item stands). Still manual, not automatable:
+  keyboard focus-order flow and screen-reader copy review.
+- ~~No visual regression / e2e test in CI~~ **DONE 2026-07-19.** The engine
+  had 24 harnesses; the UI had zero automated coverage — the exact blind
+  spot behind the UI-regression class of bug (dead End Week button, field
+  card hidden by a stale "No AP left"). Added `scripts/ui-smoke.mjs`
+  (`npm run smoke:ui`): a headless Playwright drive of the real built app
+  through the full critical path — title → setup → seeded run → play cards
+  → ground picker → dismiss act/outside modals → end weeks → reach a
+  terminal with forward choices — asserting screen transitions, that plays
+  actually resolve, that the calendar week advances (reads `W{n}/14`, not
+  just button clicks), and **zero console/page errors**. Wired into
+  `ci.yml` after build (`npx playwright install --with-deps chromium` +
+  `npm run smoke:ui`); `playwright` pinned to `1.56.1` as a devDep.
+  **Proven to have teeth:** temporarily unwiring the End Week handler makes
+  it fail directly ("End Week advances the calendar (reached week W1)") and
+  fast (~32s), then reverted. This is the guardrail that turns "did the UI
+  break?" from a manual screenshot worry into a CI gate.
+- ~~Card art is still typographic-only~~ Addressed (2026-07-17, same-day
+  follow-up after direct feedback that the cards hadn't visibly improved
+  since the 2:3 change): every card now has a real anatomy — centered
+  name banner, Art Deco hairline-and-diamond divider, an engraved emblem
+  plate (24 hand-drawn lineart SVG marks in `src/ui/card-art.ts`, one
+  per card: boot, rotary phone, fish, pie tin, megaphone, money bag, …)
+  with a sunburst backdrop, a rotated notary-seal cost stamp with
+  sub-cost tags, rubber-stamp CAMP/TRAP treatments replacing the corner
+  ribbons, aged-paper grain (inline feTurbulence noise), corner
+  brackets, and a ticket-stub footer with a risk-colored dot. Draft
+  cards and terminal/Chronicle choice cards share the same anatomy via
+  one `cardInner()` renderer. Raster/painted art per card remains the
+  eventual ceiling, but the typographic-only gap is closed.
+- ~~The log panel is plain text; juice banner reflows cards~~ **2026-07-19
+  Phase 6 hierarchy pass:** fixed `#toast-host` stack (no layout thrash);
+  reserved-height week hint; ledger dossier bands (Identity + attrs first,
+  force/session/waiting conditional, vitals, machine); `$N` label diet;
+  setup nameplate continuity; sticky identity under mobile HUD. See
+  `docs/UI-IA.md`. Residual: WCAG AA audit, screenshot CI, formal phone
+  playtest sign-off.
 
 ## Phase 7 — v0.1 label
 
@@ -296,18 +541,67 @@ hardened the audit tooling's honesty; Phase 1 item 1 (reachability
 checking) is the natural way to make AC2 evidence trustworthy going
 forward rather than re-discovered by accident.
 
-## Phase 8 — Swift / iOS port
+## Phase 8 — Ship path: TS engine → Unity presentation → iOS / App Store
 
-The stated long-term shipping target (`ARCHITECTURE.md`: "Long-term
-shipping target remains native Swift / iOS"; `AGENTS.md`: "Do not
-implement a second rules engine in Unity; TS (then Swift) owns mechanics").
-Not started, and shouldn't be until the engine is stable enough that a port
-isn't chasing a moving target — i.e., realistically after Phases 1–4 land,
-since Phase 2–4 all touch `GameState`'s shape. One concrete thing Phase 0
-already did in this direction: tightening `district`/`genOpp`/`rivals`/`log`
-from `any` to real interfaces. A cleanly-typed TS `GameState` maps far more
-directly onto Swift structs/enums than one full of `any` — worth continuing
-that discipline as new fields are added (Phase 2–4 will add several).
+**Owner direction (2026-07-19):** ship through Unity as presentation shell
+over the pure TypeScript engine, then iOS / App Store. Issue
+[#12](https://github.com/PoseyATX/candidate-zero/issues/12).
+
+Non-negotiable: Unity does **not** reimplement resolve/odds/yields.
+
+**✅ Engine API freeze + seed contract — DONE 2026-07-19.** The prep this
+phase named ("keep `GameState` clean, freeze engine API, seed contract") is
+shipped as the host binding boundary:
+
+- **`src/engine/api.ts`** — the one frozen surface a host binds to:
+  `newGame`, `view`, `legalActions`, `apply`, `serialize`/`deserialize`,
+  `setupOptions`, `ENGINE_API_VERSION` (1.0.0). Pure, JSON-serializable,
+  deterministic; wraps the existing engine with **zero rule changes**.
+- **Seed/save contract** — the RNG is mulberry32 (state = one uint32
+  counter), so a game reproduces exactly from `{ seed, rng, setup, state,
+  deck }`. Guarantees, proven by `npm run harness:api` across 5 seeds:
+  same seed + command log → identical state; serialize→deserialize at any
+  step is exact (save file ≈ 3.5 KB).
+- **`npm run build:engine`** → `dist-engine/candidate-zero-engine.{mjs,umd.cjs}`
+  — standalone headless bundle (UMD `CandidateZeroEngine` global) for
+  Unity's JS runtime (ClearScript/Jint/Puerts); no DOM. Built in CI so it
+  can't rot. Verified headless in Node.
+- Contract doc: **`docs/ENGINE-API.md`**.
+
+**✅ Content → ScriptableObjects bridge — DONE 2026-07-19.** The other half
+of the Unity binding (the first was the engine bundle): content is now a
+pure, presentation-only export that Unity ingests as ScriptableObjects.
+
+- `src/data/manifest.ts` — `buildContentManifest()`: every card (66),
+  persona (24), issue, district, region, ground as pure data with the
+  **rules stripped** (odds/run/show functions never leave the engine).
+- `npm run export:content` → `unity/content/candidate-zero-content.json`
+  (deterministic, committed, diffable). `npm run harness:content` guards it
+  — CI fails if a card is added in code but not re-exported (no silent drift).
+- Unity scaffold (`unity/Scripts/`): `CardDefinition.cs` (ScriptableObject),
+  `Editor/ContentImporter.cs` (JSON → SO assets, idempotent), `EngineBridge.cs`
+  (engine-bundle call pattern). Reference C# to verify in the Unity project.
+- Card presentation direction captured: **card face = name + art + cost +
+  kind tint; description is tap-to-reveal data, not drawn on the face.**
+- Contract doc: **`docs/UNITY-BRIDGE.md`**.
+
+**✅ Unity drop-in + Jint runtime — DONE 2026-07-19.** Runtime chosen: **Jint**
+(pure C#, no native deps → clean iOS/IL2CPP). The engine bundle now builds at
+es2019 with an IIFE global and is copied to a committed drop-in
+`unity/engine/candidate-zero-engine.js` (verified: eval'd Jint-style in Node,
+global defines, newGame/apply/serialize all work). `unity/Scripts/` now has
+the concrete `EngineBridge.cs` (Jint) and a `GameController.cs` sample
+("engine-in-Unity hello world"). Step-by-step for the open editor:
+**`docs/UNITY-SETUP.md`**.
+
+**Next (in the Unity editor, not this repo):** follow `docs/UNITY-SETUP.md` —
+Track A imports the 66 cards as ScriptableObjects (Newtonsoft), Track B runs
+`GameController` to confirm the engine is live in-editor, then build the real
+UI over `newGame → view → apply`. Presentation, input, audio, persistence,
+and the Chronicle live in Unity; **no rules**.
+
+Swift-native remains a possible *future* rewrite of the same pure engine —
+not the near-term store path.
 
 ---
 

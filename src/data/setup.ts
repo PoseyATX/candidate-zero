@@ -18,18 +18,7 @@ export interface PersonaDef {
   /** Root attribute deltas (cardAttrMod). Baseline is 10. */
   attrs: AttrBoost;
   apply: (s: GameState) => void;
-  /**
-   * Password-gated debug persona. Not for normal play.
-   * UI prompts; never log the password.
-   */
-  locked?: boolean;
-  /** Debug-only overpowered kit for status review / replay. */
-  debug?: boolean;
 }
-
-/** Debug persona password — checked only in UI; do not surface in blurbs. */
-export const DEBUG_PERSONA_PASSWORD = 'MrSp0ck';
-export const DEBUG_PERSONA_ID = 'taxman';
 
 function bumpAttrs(s: GameState, boost: AttrBoost): void {
   if (!s.attrs) {
@@ -99,7 +88,14 @@ export const PERSONAS: PersonaDef[] = [
     id: 'preacher', n: 'The Preacher', tag: 'pulpit precinct',
     d: 'A pulpit is a precinct. Sundays are turnout.',
     attrs: { CHA: 3, CLO: 2, DIP: 1 },
-    apply: s => { s.volPool += 2; s.faces.F += 8; s.assets.push('BIO_PREACHER'); }
+    // archive PA_CON_CHA (line 357) pushed B02 Sunday Congregation — same intent
+    apply: s => {
+      s.volPool += 2;
+      s.faces.F += 8;
+      s.faces.T += 6;
+      s.assets.push('BIO_PREACHER');
+      if (!s.backers.includes('B02')) s.backers.push('B02');
+    }
   },
   {
     id: 'smallbiz', n: 'The Feed-Store Owner', tag: 'credit and favors',
@@ -235,58 +231,6 @@ export const PERSONAS: PersonaDef[] = [
     d: "A known name and a gift for people. Doors open on the family reputation; you keep them open on your own.",
     attrs: { DIP: 3, CHA: 3 },
     apply: s => { s.faces.G += 10; s.faces.L += 6; s.money += 2500; s.nameID += 6; }
-  },
-  // ——— Debug / review only (password in UI) ———
-  {
-    id: 'taxman',
-    n: 'TAX MAN',
-    tag: 'debug · review',
-    d:
-      'DEBUG PERSONA — locked. God-tier cash, list, name, and kit so you can review ' +
-      'systems without replaying an impossible grind. Not a real identity. Password required.',
-    attrs: { CLO: 8, CON: 8, CRA: 8, INK: 8, DIP: 8, CHA: 8 },
-    locked: true,
-    debug: true,
-    apply: s => {
-      s.money += 50_000;
-      s.contacts += 400;
-      s.nameID += 35;
-      s.volPool += 12;
-      s.momentum += 4;
-      s.favors += 3;
-      s.endorsePts += 4;
-      s.messageSharp = true;
-      s.oppoFile = true;
-      s.fieldAp = 1;
-      s.apMax = 4;
-      s.ap = 4;
-      s.faces.P += 10;
-      s.faces.O += 10;
-      s.faces.L += 10;
-      s.faces.G += 10;
-      s.faces.T += 10;
-      s.faces.F += 10;
-      // Full shop kit for reviewing passives / UI
-      for (const id of ['A02', 'A01', 'A09', 'A04', 'A11', 'A03', 'A06', 'A12', 'A07', 'A08']) {
-        if (!s.assets.includes(id)) s.assets.push(id);
-      }
-      if (!s.backers.includes('B05')) s.backers.push('B05');
-      if (!s.backers.includes('B06')) s.backers.push('B06');
-      s.assets.push('BIO_TAXMAN');
-      s.trophies = s.trophies ?? [];
-      s.trophies.push({
-        id: 'FLAG_DEBUG_TAXMAN',
-        name: 'TAX MAN (debug)',
-        text: 'Review kit. Password-gated. Not a legitimate candidacy.',
-        kind: 'flag',
-        cycle: 0
-      });
-      s.log.push({
-        week: 1,
-        kind: 'note',
-        text: 'DEBUG — TAX MAN unlocked. Systems review mode. Spend money in the Shop is optional; kit is already loaded.'
-      });
-    }
   }
 ];
 
@@ -316,7 +260,7 @@ export const DISTRICTS: DistrictDef[] = [
   { id: 'open', n: 'Open seat, safe district', d: 'Incumbent retired. Crowded field.', align: 'safe', incumbent: false, field: rng => 3 + Math.floor(rng() * 3) },
   { id: 'incumb', n: 'Safe district, entrenched incumbent', d: 'Twelve years and a war chest.', align: 'safe', incumbent: true, field: () => 1 },
   { id: 'comp', n: 'Competitive district, open primary', d: 'Primary then general. Two fights.', align: 'competitive', incumbent: false, field: () => 2 },
-  { id: 'wrong', n: 'Wrong-party district', d: 'RISK: bravery is not arithmetic.', align: 'wrong', incumbent: false, trap: true, field: () => 0 }
+  { id: 'wrong', n: 'Wrong-party district', d: 'Bravery is not arithmetic.', align: 'wrong', incumbent: false, trap: true, field: () => 0 }
 ];
 
 export const REGIONS: RegionDef[] = [
@@ -342,14 +286,6 @@ export function applySetup(state: GameState, sel: SetupSelection): GameState {
   if (!persona || !issue || !district || !region) {
     throw new Error(`Invalid setup: ${JSON.stringify(sel)}`);
   }
-  // Lock identity ids once — persona never changes after this.
-  state.personaId = sel.personaId;
-  state.issueId = sel.issueId;
-  state.districtId = sel.districtId;
-  state.regionId = sel.regionId;
-  state.regionName = region.n;
-  state.cycleIndex = 0;
-
   persona.apply(state);
   bumpAttrs(state, persona.attrs);
   state.persona = persona.n;
@@ -390,10 +326,8 @@ export function applySetup(state: GameState, sel: SetupSelection): GameState {
     week: 1,
     kind: 'note',
     text:
-      `Identity locked: ${persona.n} · ${issue.n} · ${district.n} · ${region.n}. ` +
-      `Sigs need ${state.sigNeed}. Attrs [${attrSummary}]. ` +
-      `Persona never re-rolls. Issue/district/region shift only for thematic cause. ` +
-      `The career does not end when a ballot does.`
+      `Identity: ${persona.n} · ${issue.n} · ${district.n} · ${region.n}. ` +
+      `Sigs need ${state.sigNeed}. Attrs [${attrSummary}]. Choices bind.`
   });
   return state;
 }

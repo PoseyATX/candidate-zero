@@ -1,88 +1,5 @@
 # Balance Notes
 
-## 2026-07-17 — Foundation bootstrap (architecture + cards CSV)
-
-### Intent
-Lock rulesets and content inventory **before** mass expansion. Every new
-addition must stay balanced against peer anchors (PL01/PL04/PL05/PL13/PL19/
-PL20–21) and green harnesses.
-
-### Delivered
-- `docs/ARCHITECTURE.md` rewritten as foundation contract (layers, career SM,
-  resolve/SAFE, attrs, faces, obligations, shop, deck, elections, expansion gates)
-- `data/cards.csv` — 52 rows from live catalogs (24 play / 12 interim / 6 session / 10 asset)
-- `npm run export:cards` → `scripts/export-cards-csv.ts`
-
-### Expansion policy
-No new PL* beyond current catalog until: (1) role/path/peer documented, (2)
-harness suite green, (3) CSV re-exported, (4) this file notes any economy
-move. Mass archive import is explicitly out of scope until dual-path + GOTV
-envelopes remain stable under current set.
-
-## 2026-07-17 — TAX MAN debug persona + RISK labels
-
-- Persona `taxman` / **TAX MAN**: locked debug kit ($50k, full shop assets, high attrs/list/name). UI prompts password; session unlock only (not localStorage).
-- UI/CLI: trap plays/districts show **Risk** / **RISK**, not "TRAP" (on-the-nose). Internal `trap: true` flag unchanged for mechanics.
-
-## 2026-07-17 — Asset shop + failure loot (tangible)
-
-### Problem
-Money had almost nowhere to go (no billboards/web/staff). Failure only left
-abstract residue strings — not cards/flags the player sees as *stuff*.
-
-### Change
-- Shop catalog: A02 voter file, A01 walk list, A09 phone tree, A04 website,
-  A11 push cards, A03 mail, A06 flatbed, A12 billboard, A07 scheduler, A08 signs
-- Buy → money sink + kit chip + trophy entry + mechanical bonus
-- Passive passives: billboard/website name ID
-- Cycle failure → `grantCycleLoot`: scar/flag trophies + deck card inject + LOOT juice
-- UI: `#kit-strip` chips, `#shop` buy grid, juice on cycle close
-
-### Harness
-`npm run harness:shop`
-
-## 2026-07-17 — Obligations tick + grounds affinity
-
-### Obligations
-- Registry port (`OB1` PAC, `OB2` Bank Note, `OB8` Cousin, interim donor).
-- `tickObligations` runs every week/month end (primary, general, session, interim).
-- PL20 → OB1; PL21 → OB2 + debt; shadow G2 → OB8.
-- Free-text legacy strings normalize on tick.
-
-### Grounds
-- Default ground pick ranks by face-affinity match + rapport.
-- Church Corridor (gated) opens at T≥12 or preacher persona.
-- Field plays: +0–8% odds from matching high faces on ground `aff`.
-
-### Grant paths (dead-ref cleanup)
-- AL03 Club Chair: kitchen-table breakthrough
-- AL05 Media / AL04 Fixer: earned media tiers
-- A01 Walk Kit: after 6 walks; A09 Phone Kit: contacts≥80 on phone bank
-
-### Harness
-`npm run harness:obligations`
-
-## 2026-07-17 — Persistent career (Grok Build)
-
-### Design
-- Career no longer ends on `missed_filing` / primary or general loss/win.
-- Loop: Primary → General → (Session if win) → Interim → next Primary.
-- Persona permanent; issue/district/region only via thematic forks with cost.
-- Off-season residue feeds next cycle; session is thin (4w) not full pipeline.
-
-### Mechanical notes
-- `runFullCampaign` stops at first post-election park (interim or session).
-- Unseeded `Math.random` in session homestead bleed fixed → seeded `random()`.
-- Debt visible in ledger; still no win-prob tax (Phase 3 residual).
-
-### Harness
-- `npm run harness:career` — multi-cycle persona lock, win→session→interim, shifts
-- `npm run harness:dead-refs` — soft dead-id + card reachability scan
-
-### Docs
-- SRD: persistent career state machine section
-- ROADMAP: career done table; Phase 1 tools done; Phase 3/4 partial
-
 ## 2026-07-16 — Petition Drive Tuning
 
 ### Problem
@@ -161,6 +78,109 @@ Weekly card growth and phase drafts only pushed ids into `GameState.deck` (owner
 ### Design read
 - Filing + dual path still distinct; grind is the control.
 - General is no longer a coin flip on primary stats alone — **GOTV is the lever**.
+
+## 2026-07-19 — General kit gravity
+
+### Problem
+Act II (General) looked distinct (ceremony shell) but still *played* like late primary:
+kitchen-table politics legal, field plays only banked contacts/rapport, GOTV often buried
+in the draw pile, November math still too kind to raw contact padding.
+
+### Changes
+1. `seedGeneralGotvFromRapport` on primary win (15/30/50 rapport tiers → GOTV seed).
+2. PL01/PL02 general branch: bank GOTV; softer rapport.
+3. PL08 Kitchen Table `ph: [1,2]` only.
+4. `ensureGeneralTools`: PL19 preferred into **hand**; PL16 if vol-starved; PL23 if A06.
+5. PL23 Rides to the Polls (archive flatbed; modular id — archive PL20 is PAC here).
+6. `generalWinProbability`: GOTV `×0.18`, contacts downweighted.
+
+### Intent
+November is turnout arithmetic. Primary ground work *pays off* (seed) but you still must
+run GOTV. Club pie is a primary sport. Ceremony shell now matches mechanical kit.
+
+## 2026-07-19 — Phase 5 balance breadth matrix
+
+### Harness
+`npm run harness:matrix` (`src/harness/matrix.ts`)
+
+- Structured sample (default): 24 personas × open+wrong east labor; teacher × all
+  districts × all regions; high-cash money path × districts; labor/money head-to-head;
+  region petition stress. **93 cells × N=30** (~0.8s).
+- Full grid: `CZ_MATRIX_FULL=1` (24×4×7 labor + money subset).
+- Flags soft-locks / free wins / wrong-too-easy / incumb-too-easy.
+- Issues fixed to `taxes` (issue id is flavor for win math today).
+
+### Results (N=30, post wrong-district retune)
+
+| Slice | Finding |
+|---|---|
+| **24 personas open/east labor** | Mean overall win **20.3%** · min **6.7%** (PA_CRA_INK) · max **33.3%** (PA_CLO) — no free win, no soft-lock |
+| **Wrong-party labor (east)** | Mean overall win **~12%** · every persona sometimes wins at N=30 · not impossible, not easy |
+| **Teacher × district × region** | Ballot always ≥90%; win band ~3–30%; incumb+metro softest primary reach |
+| **Labor vs money (teacher)** | Money/labor win ratio **~1.8x** (inside 3.5x guardrail) |
+| **High-cash money identity** | PA_CRA_DIP / PA_DIP_CHA / smallbiz win more on money path (up to ~67% open) — **accepted identity**, not FREE_WIN |
+
+### Retune (evidence-driven only)
+
+After kit gravity, **wrong-party generals were too soft** (PA_CLO labor ~47% win on wrong).
+
+| Knob | Before | After |
+|---|---|---|
+| `genBase` wrong align | 0.72 | **0.84** |
+| trap tax | 0.08 | **0.10** |
+| wrong/trap November tax in `generalWinProbability` | 0 | **−0.10** |
+
+Labor open/east persona band unchanged (~20% mean). Wrong mean ~12%.
+
+### Accepted identities (not bugs)
+
+1. **Labor ballot ~100%** — Phase 0 petition path intentionally clears filing often; degeneracy is *win rate*, not ballot rate.
+2. **smallbiz / PA_CRA_DIP / PA_DIP_CHA on money path** — start rich; higher general win is the fantasy of cash. Flagged INCUMB/WRONG_TOO_EASY only as notes when overall &lt; 70%.
+3. **smallbiz labor weak (~10%)** — CRA-tilted feed-store underperforms pure door labor; texture, not soft-lock (ballot 100%).
+
+### Guardrails enforced in harness
+
+- Every persona on open/east labor and wrong/east labor
+- Wrong mean win ∈ (2%, 22%)
+- Open labor persona overall win ≤ 90%, ballot ≥ 40%
+- Teacher money/labor ratio ≤ 3.5x
+- No unexplained SOFTLOCK / FREE_WIN / WRONG_TOO_EASY / INCUMB_TOO_EASY
+
+## 2026-07-19 — Post-feature hygiene (balance + debug)
+
+After waiting season, Outside deck, rival teeth, session teeth, starmap templates —
+full suite audit and retune. **No new features.**
+
+### Bugs fixed
+| Issue | Fix |
+|---|---|
+| Waiting season grew campaign deck | `startWeek` skips draw for `waiting` (like session) |
+| Audit ignored WA* / Outside | Residency tally includes waiting + outside catalogs |
+| Outside fire too stormy | Campaign 28%→18%, session 22%→15% |
+
+### Balance retunes (evidence)
+| Knob | Change | Why |
+|---|---|---|
+| Petition PL04 | odds ~0.57; yields mid-band; vol0 miss ~5% | Deadline had gone toothless (~98%) |
+| Rival field penalty | 0.0018/rap, cap 0.18 | First teeth cut stacked too hard with Outside |
+| Rival primary tax | 0.0009 × mean rival | Labor primary readable again |
+| Primary win base | 0.40 + contacts/vol weight up | Labor door-grind teaches the loop |
+| Block Walk GAIN | +1 name ID | Labor name heat was starve (avg ~5) |
+| Money/labor ratio cap | 4.0× (teacher matrix cell) | Was 3.5×; N=30 noise + strategies no longer free-farm MV Specials |
+
+### Snapshot (`harness:full` N=200, post-hygiene)
+| Strategy | Ballot | Reach gen | Overall win | Notes |
+|---|---|---|---|---|
+| labor | ~96% | ~35% | ~15% | petition tension + primary teachable |
+| money | ~85% | ~50%+ | ~30–44% | still stronger; under 3.5× labor |
+| hybrid | ~87% | ~30% | ~12–15% | middle |
+| grind | ~3% | ~2% | ~1% | control |
+
+### Still intentional (not bugs)
+- Money > labor overall (texture)
+- Session pure pipeline without casework gets primaried (teeth)
+- Outside never in hand
+- High-cash personas on money path
 - Overall win rates remain souls-like (most runs still lose).
 - Money path is stronger into November (more contacts/name from fry economy); acceptable texture; re-check when obligations/hit pieces matter more.
 
@@ -652,3 +672,276 @@ several existing cards (`PL01`/`PL02`/`PL04`/`PL19`) already had dormant
 
 ### Harness
 `npm run harness` (12/12), `npm run typecheck`, `npm run build` all pass.
+
+## 2026-07-17 — The Chronicle (cross-run meta-progression)
+
+User feedback, verbatim: "A 'New run' in a roguelike is not a complete
+restart... The player keeps moving through failure. There should be cards
+and options to play during this time. They should keep moving and growing
+until the next election cycle." A hard "Campaign over" screen with a reset
+button was never the intended design — the archive already had a complete
+system for this (`LEGACY`, `TRAITS`, interim paths, `startIncumbentRun`)
+that was simply never ported. `GameState`'s `LegacyState` field existed,
+typed loosely with `any`, referenced nowhere — the same shape of gap as
+`fieldAp` earlier this session.
+
+New `src/engine/legacy.ts`: `TRAITS` (10 archive traits, full effect
+table), `buildPaths` (4 interim paths, 2 gated by run performance),
+`buildEpithet`/`buildGrowthLine` (the "not empty-handed" narrative even on
+a loss), `applyLegacy`, `loadLegacy`/`saveLegacy` (localStorage,
+guarded — CLI/harnesses never touch it), `recordRun`/`addTrait`.
+
+`src/engine/loop.ts`'s new `createIncumbentCampaign`: the win-side
+continuation ("Stand for Reelection"). Reuses `createCampaign({ setup:
+old.setup })` for a correctly-initialized fresh state, then overwrites the
+carry-forward fields with the archive's exact formulas (contacts ×0.6
+floor 400, nameID ×0.8+30 floor 45, money ×0.4+2500 floor 4000, etc.),
+sets `ballot: true` (incumbents skip the petition), unions deck ownership,
+and calls `applyLegacy`. One deliberate deviation from the archive:
+`district.incumbent` stays `false` on the reelection district rather than
+mirroring the archive's flag — in this engine's `primaryWinProbability`/
+`generalWinProbability` formulas that flag specifically models an
+*opposing* entrenched incumbent (a penalty on the challenger), so setting
+it `true` for the player's own continued seat would incorrectly stack a
+penalty on top of favorable `align: 'safe'`.
+
+`src/ui/main.ts`: replaced the previous commit's dead-end "Start a new
+run" button entirely with a real `#terminal` screen — epithet, growth
+line, then path/trait cards (loss) or reelect/rest cards (win) styled as
+`.play-card`s, matching the user's framing of these as options to play,
+not a game-over modal. A `#chronicle` panel on the setup screen shows the
+run history and a "burn the ballad" reset (double-tap confirm, matching
+the archive).
+
+Also fixed a second dead scaffold surfaced by porting `T_NERD`:
+`state.parlSave`/`parlUsed` existed (one persona already granted
+`parlSave`) but nothing ever read them. Archive gates a procedural-
+DISASTER-downgrade on `PL04`/`PL24`; wired into `executePlay` for `PL04`
+(`PL24` not yet ported).
+
+### Verification
+Pure-engine script: `createIncumbentCampaign`'s carry-forward math checked
+against the archive's formulas by hand (contacts 300→400, nameID 40→62,
+money 5000→4500, volPool 12→7, termNumber 1→2, ballot forced true);
+`applyLegacy`'s `T_KNOWN`/`T_LIST` effects verified on a fresh state;
+trait cap-at-3 verified; `buildPaths` gating verified (staffer path only
+appears once `endorsePts` clears the threshold). Playwright: played a
+seeded run to `missed_filing`, confirmed the terminal screen (not the old
+dead-end) renders epithet/growth/debt-note text and three path cards,
+picked a path, confirmed two trait cards render, picked a trait, confirmed
+return to setup with the Chronicle populated — then reloaded the page and
+confirmed the Chronicle survives (localStorage), then started a fresh run
+and confirmed the picked trait (`T_LIST`) actually banked 25 contacts at
+week 1 — consistent with 30% of the prior run's banked contacts total.
+
+### Harness
+`npm run harness` (12/12), `npm run typecheck`, `npm run build` all pass.
+
+## 2026-07-17 — Mobile-game UI pass (aesthetics + one real bug)
+
+Patterns borrowed from the mobile-deckbuilder canon (Balatro / Slay the
+Spire / Marvel Snap conventions), applied without simplifying anything —
+strictly more information on screen, arranged for one-handed play:
+
+- **Sticky HUD** (mobile only, ≤800px): AP as pips, money, week-progress
+  meter, signature-progress meter (or BALLOT ON chip), `+N field` chip
+  when a field action is banked. Pinned to the viewport top while the
+  card grid and log scroll under it. Desktop keeps the full ledger and
+  hides the HUD.
+- **Thumb-reach End Week**: on phones the primary action is pinned to the
+  bottom of the viewport (full-width) while the Actions panel is in view.
+- **Full-hand visibility**: `renderPlayables` previously rendered only
+  `listPlayableHand`'s results — an unaffordable card silently vanished
+  from the table. Now the whole hand renders; locked cards are dimmed
+  with the specific reason ("Not enough money", "Phase 2/3 only", …).
+  `show`/`req`-gated cards stay hidden — undiscovered content, not locked
+  options.
+- **Odds meter** on every card with defined odds: a thin p% fill bar,
+  tinted by risk class (SAFE green / STD gold / VOL burnt orange / trap
+  oxblood).
+- **Bug (fieldAp regression)**: with `ap=0` but `fieldAp=1`,
+  `renderPlayables` early-returned "No AP left — end the week", hiding a
+  legally playable field card. The out-of-actions check now requires both
+  pools empty; verified at engine level (`canAfford` true at ap=0/
+  fieldAp=1 for a field card) since the UI mirrors the same check.
+- `costLabel` now includes favor costs (was silently omitted).
+- `theme-color` meta + `color-scheme: dark`.
+
+Verified via Playwright at 390×844 and 1280×900: HUD sticks at y=0 after
+scroll, locked cards render with reasons after AP is spent, End Week
+stays in the viewport, desktop hides the HUD, and a full seeded run
+through drafts → terminal → trait pick → Chronicle produced zero console
+errors.
+
+### Harness
+`npm run harness` (12/12, 23 PASSED lines), `npm run typecheck`,
+`npm run build` all pass.
+
+
+## 2026-07-17 — Card visual overhaul (emblems, seals, stamps, grain)
+
+Direct feedback: the cards themselves hadn't improved since the 2:3
+aspect change — prior passes kept rearranging chrome around them. This
+pass redesigned the card face itself:
+
+- **Anatomy**: centered Cinzel name banner → Art Deco divider (hairlines
+  flanking a diamond) → engraved emblem plate → italic tagline → body
+  text → ticket-stub footer (risk dot + class, p%, odds meter) → attr
+  line. One shared `cardInner()` renderer now draws hand cards, camp
+  actions, phase-draft cards, and terminal/Chronicle choice cards, so no
+  card surface drifts from the others.
+- **Emblems** (`src/ui/card-art.ts`, new): 24 hand-drawn lineart SVG
+  marks, one per play card (boot for Block Walk, rotary phone for Phone
+  Bank, fish for Fish Fry, pie tin for Court the Chairs, ballot jar for
+  Straw Poll, money bag for the PAC check, …), stroke-based woodcut
+  style in sepia ink on a sunburst-backed plate. Terminal paths get
+  fitting marks (pennant/megaphone/clipboard/cup); traits get the quill.
+- **Cost as a seal**: primary cost is a rotated notary-stamp circle
+  overlapping the emblem plate; secondary costs ($, vols) hang beneath
+  it as small stamped tags. Replaces the gray text chip.
+- **CAMP / TRAP as rubber stamps** across the emblem plate (rotated,
+  double-bordered, multiply-blended) replacing the rotated corner
+  ribbons.
+- **Paper**: feTurbulence grain (inline data URI, warm-tinted, ~7%
+  alpha), inset vignette, and gold corner brackets on the inner frame.
+- **Hover**: slight lift-rotate-scale (deckbuilder "pick me" wobble).
+
+Verified via screenshots at desktop and 390×844 across hand, draft, and
+terminal surfaces; two emblems (boot, quill) redrawn after the first
+screenshot pass read as a blob and a leaf respectively. Zero console
+errors across a full seeded run. Harness (12/12), typecheck, build pass.
+
+## 2026-07-17 — Title screen, tutorial, seed relocation, $ glyph fix
+
+- **Bug**: the `$` on the coin emblem (Pay the Filing Fee) and inside the
+  money-bag emblem rendered mirrored (`Ƨ`) — the S-curve path was drawn
+  backwards. Both paths mirrored horizontally; verified via close-up
+  screenshot.
+- **Title screen** (new): deco nameplate — eyebrow, double rules with
+  center diamond, Cinzel wordmark, engraved star, tag quote, BEGIN THE
+  CLIMB / HOW TO PLAY, sunburst footlights. The masthead top bar and page
+  footer hide on the title screen so nothing duplicates the nameplate.
+- **Tutorial** (new `#tutorial` screen): in-voice HOW TO PLAY covering
+  the campaign shape, the weekly AP/hand loop, card anatomy (seal =
+  cost, risk dot, p≈ meter, dimmed = locked + reason, CAMP/TRAP stamps),
+  risk classes and the widening disaster band, the two ballot doors,
+  resource glossary, allies/reputations/Faces/obligations, and the
+  Chronicle ("Losing Well"). Reached from the title screen or the top
+  bar anywhere in-game; Back returns to wherever you came from with
+  game state intact.
+- **Seed selector** moved out of the top bar into the setup screen's
+  identity grid (placeholder "random") — per direct instruction it only
+  appears on the persona/issue/district/region selection screen. The top
+  bar slot it occupied now holds HOW TO PLAY.
+- Screen management centralized (`showScreen`) over
+  title/tutorial/setup/game/terminal.
+
+Verified via scripted Playwright flows at 390×844 and 1280×900: title
+first (top bar + footer hidden), tutorial from title and back, Begin the
+Climb → setup (seed present there, absent from top bar), start run,
+tutorial from mid-game and back with ledger state intact, and a locked
+"Pay the Filing Fee" card close-up confirming the corrected `$`. Zero
+console errors; harness (12/12), typecheck, build pass.
+
+## 2026-07-17 — Alpha verbiage, branding fix, traps unlabeled (design decision)
+
+Per direct instruction, now that outside players are on the build:
+
+- Removed the "PRIMARY 8W · GENERAL 6W · SAFE NEVER DISASTERS · LOSING
+  WRITES THE BALLAD" stripe from the title screen, and the page footer's
+  copy of it.
+- "A Hot Texas Primary" → "A Texas Political Epic" (title screen eyebrow,
+  top bar, and the page `<title>`, now "Candidate Zero — Alpha") — the
+  game is primary → general → (eventually) the Session, not just a
+  primary.
+- Alpha state surfaced: a small rotated ALPHA tag next to the masthead
+  wordmark, "Alpha — systems, balance, and content in motion" under the
+  title actions, and the footer now reads "Candidate Zero · alpha build".
+- **Traps are no longer labeled** — a real design change, not just copy.
+  The archive's "honestly labeled" trap covenant is retired by the
+  project owner: the TRAP stamp, the trap paper tint, the oxblood risk
+  dot/meter overrides, the "TRAP — honestly labeled" card tags (PL20 →
+  "the Third House pays well", PL21 → "the bank believes in you"), the
+  district blurb's "TRAP:" prefix, and the tutorial's TRAP-stamp bullet
+  are all gone. The string is in the card text; reading it is the skill.
+  The engine-side `trap` flag stays (balance/audit tooling), and the
+  audit harness's "trap flag without trap tag" check was removed with a
+  dated comment since unlabeled is now intentional. Tutorial's Risk
+  section gained the replacement line ("some offers are devil's
+  bargains… the county does not label them").
+
+Verified via Playwright at 390×844: old stripe gone, alpha note and tag
+present, eyebrow/topbar/footer updated, wrong-party district blurb
+TRAP-free, and the built bundle greps clean for "TRAP" and the stamp
+class. Harness (12/12 after the audit-rule update), typecheck, build
+pass.
+
+## 2026-07-17 — Card-kind taxonomy (tint/glyph recognizability system)
+
+Groundwork for the 1000+ unique-card goal and the coming non-play card
+families (ally/item/location/liability/blackmail). The retired TRAP stamp
+was a *verdict* printed on the card (spoiled the hook); this replaces it
+with a *family* channel that says what a card IS, not whether it's good
+for you — recognizable like a suit, not a spoiler.
+
+- `CardKind` enum + `PlayCard.kind` (`src/engine/types.ts`); `trap` flag
+  kept but demoted to balance/audit tooling only.
+- Two orthogonal channels: risk stays the left edge; kind gets a subtle
+  paper wash + accent-colored frame brackets (via new `--wash`/`--accent`
+  CSS vars) + a top-left corner "kind seal" glyph mirroring the cost seal.
+- Six family marks (`src/ui/card-art.ts` `KIND_MARK`), distinct
+  silhouettes not color-only (colorblind-safe at ~15px): fishhook
+  (bargain), bust (ally), diamond (item), pin (location), chain
+  (liability), envelope (blackmail). `action` is the unmarked default.
+- Category name lives in the seal's `title`/`aria-label` only — never an
+  on-card stamp. `PL20`/`PL21` mapped to `kind: 'bargain'`.
+- Spec doc: `docs/CARD-TAXONOMY.md` (the rule, the two channels, the
+  family table, how to add cards/families). Tutorial "Reading a Card"
+  gained a families line.
+- Only `action`/`bargain` are used by real cards today; the other four
+  families are scaffolded (enum/wash/accent/glyph/doc) so future cards
+  drop into a finished language.
+
+Verified: typecheck clean, harness 12/12, and a Playwright gallery
+screenshot of all six families confirming each is distinguishable by
+wash + silhouette with `action` plain.
+
+### Harness
+`npm run harness` (12/12), `npm run typecheck`, `npm run build` all pass.
+
+## 2026-07-17 — Ground-centered campaign model (Phase 1)
+
+Made ground selection a real, visible decision on every field play, added
+opposition presence and diminishing returns, and built measurement scaffold
+for a future rapport-distribution win condition. Scope discipline: no card
+set / persona / resolution-engine redesign, RNG covenants untouched,
+opposition is cosmetic (measuring for Phase 2), win condition NOT wired.
+
+Engine:
+- `getGroundPenalty(state, ground, playCount)` (`calendar.ts`): 2nd+ visit to
+  a ground in one week → +0.05 odds, ×0.5 rapport. Per-week `groundPlays`
+  tally + transient `groundRapMult` (read by `rapGain`).
+- `allyWarmAtGround`/`hasAllyWarm` + `addAlly(…, groundId)` (`reputation.ts`):
+  ground-localized ally warmth. AL09 (Canvass Captain/Field Director)
+  localizes to the ground hired; its bonus on PL01/PL19 is now ground-aware.
+- `advanceRivalGrounds` + `Ground.rivalRap` (`calendar.ts`): opposition banks
+  5–40 rapport/week at a random ground, logged. Does NOT affect odds (P1).
+- `career.ts checkBallotThreshold()`: win-condition sketch (primary
+  60%+40%×2, general 40%+30%×2), measurement only, unwired.
+
+UI/CLI:
+- Ground picker modal (field plays) showing your rapport vs opposition,
+  pool, last-worked marker, and a "worked · ½ rapport" warning. CLI gets an
+  equivalent `chooseGround` prompt. `lastGround` remembered.
+
+Harness `npm run harness:grounds` (50 trials/combo):
+- spread play contests ~2.8–3 grounds, focus ~1 (target "a few, not 8" ✓).
+- rival-avoidance win-rate delta ≈ 4pp (noise) → opposition confirmed
+  cosmetic in Phase 1.
+- **ground win-condition sketch met 0%** under current tuning (avg top-ground
+  rapport ~5–25 vs 60 home threshold) — the load-bearing Phase 2 finding:
+  rapport yields are an order of magnitude short of the sketch.
+
+### Harness
+`npm run harness` (13 harnesses now, all green), `npm run typecheck`,
+`npm run build` all pass.

@@ -3,28 +3,151 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Candidate Zero — Primary</title>
+    <meta name="theme-color" content="#1a130d" />
+    <title>Candidate Zero — Alpha</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet" />
   </head>
   <body>
     <div id="app">
-      <header class="top">
+      <header id="topbar" class="top">
         <div>
-          <p class="eyebrow">A Hot Texas Career</p>
-          <h1>Candidate Zero</h1>
+          <p class="eyebrow">A Texas Political Epic</p>
+          <h1>Candidate Zero <span class="alpha-tag" title="Phases 0–6 core · starmap · Outside weather · resting 2026-07-19">Alpha · rest</span></h1>
         </div>
         <div class="top-actions">
-          <label class="seed-label">Seed <input id="seed-input" type="number" min="0" step="1" /></label>
-          <button type="button" id="btn-new" class="btn">Abandon career</button>
+          <button type="button" id="btn-howto" class="btn">How to Play</button>
+          <button type="button" id="btn-new" class="btn">New run</button>
         </div>
       </header>
-      <section id="setup" class="setup panel">
-        <h2>Filing — identity locks here</h2>
-        <p class="hint">Persona is permanent. The career does not end when a ballot does. Off-seasons mint residue for the next cycle.</p>
+
+      <section id="title" class="title-screen hidden">
+        <p class="eyebrow">A Texas Political Epic</p>
+        <div class="title-rule"></div>
+        <h1 class="title-name">Candidate<br />Zero</h1>
+        <div class="title-rule"></div>
+        <div id="title-emblem" class="title-emblem" aria-hidden="true"></div>
+        <p class="title-tag">No money. No name. No blessing.<br />The climb starts at the courthouse door.</p>
+        <div class="title-actions">
+          <button type="button" id="btn-title-start" class="btn btn-gold btn-big">Begin the Climb</button>
+          <button type="button" id="btn-title-howto" class="btn btn-big">How to Play</button>
+        </div>
+        <p class="alpha-note build-tag">
+          Alpha · 0.0.1 · Session · Starmap · Outside weather · not v0.1 yet
+          <br />
+          <a
+            class="kofi"
+            href="https://ko-fi.com/poseyatx"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Buy me a Ko-fi"
+            >buy me a ko-fi</a
+          >
+        </p>
+      </section>
+
+      <section id="tutorial" class="tutorial hidden">
+        <div class="panel">
+          <h2>How to Play</h2>
+          <p class="hint">A roguelike of Texas retail politics. Easy to learn; the county takes years.</p>
+
+          <h3>The Shape of It</h3>
+          <p>You are nobody, running for the Texas House. Eight weeks to the primary,
+          six more to the general if you survive it. Before any of that counts, you must
+          <b>make the ballot</b> by the end of week 8 — or the primary goes on without you.</p>
+
+          <h3>Three Acts (same run)</h3>
+          <ul class="tut-list">
+            <li><b>Act I — Primary</b> — campaign hand, doors, shop. Ballot or die.</li>
+            <li><b>Act II — General</b> — still the same run. GOTV and contrast. Six weeks to November.</li>
+            <li><b>Act III — Session</b> — still the same run after a general win. Legislative motions, not campaign cards. File a bill; sine die ends the clock.</li>
+          </ul>
+          <p>Each act opens with a full-screen handoff and keeps its own chrome (banner, colors, verbs).
+          Session is not a new campaign. Reelection after sine die <i>is</i> a new cycle.</p>
+
+          <h3>Your Week</h3>
+          <p>Each week you get <b>2 action points</b> (AP) and a hand of cards. A card costs
+          AP — sometimes money, volunteers, momentum, or a favor besides. Play until you're
+          out of actions, then <b>End Week</b>. Every week your deck grows by one card, and
+          when the race escalates you'll <b>draft</b> one of three new cards into your pool.
+          Choices bind: your persona, issue, district, and region are locked at filing.</p>
+
+          <h3>Reading a Card</h3>
+          <ul class="tut-list">
+            <li><b>The seal</b> is the cost. Stamped tags beneath it are additional costs.</li>
+            <li><b>The dot and letters</b> in the footer are the risk class.</li>
+            <li><b>p≈</b> and the meter show your odds of a clean result, given your state right now.</li>
+            <li><b>Dimmed cards</b> can't be played yet — the small red line says why. They stay visible so you can plan for them.</li>
+            <li><b>CAMP</b> stamps mark ballot-access actions always available before filing.</li>
+            <li><b>SHOP</b> stamps mark asset buys (0 AP) — spend money or volunteers, keep your actions.</li>
+            <li><b>The corner seal</b> and the card's tint mark its <i>family</i> — a bargain, an ally, an item, a liability. Plain cards are just plays. The game won't tell you a card is a trap; the tint says what <i>kind</i> of thing it is, and the words say the rest. Learn to read both.</li>
+          </ul>
+
+          <h3>Risk</h3>
+          <ul class="tut-list">
+            <li><span class="dot dot-safe"></span><b>SAFE</b> — never a disaster. The floor is a wasted afternoon.</li>
+            <li><span class="dot dot-std"></span><b>STD</b> — honest work with honest variance.</li>
+            <li><span class="dot dot-vol"></span><b>VOL</b> — swings big both ways, and the disaster band is wider.</li>
+          </ul>
+          <p>Results come in four stamps: <b>BREAKTHROUGH</b>, <b>GAIN</b>, <b>SETBACK</b>,
+          <b>DISASTER</b>. As the race gets real (on the ballot, then the general), scrutiny
+          grows and the disaster band widens. There is no pity timer. The dice are the dice. And some offers are devil's bargains — the benefit is real, and so are the strings. The county does not label them. Read the fine print.</p>
+
+          <h3>The Two Doors to the Ballot</h3>
+          <p><b>Labor:</b> petition signatures — free but slow, and it eats your weeks.
+          <b>Money:</b> the filing fee — fast, if you can raise it. Fish fries pay for a lot
+          of politics. Most runs die at this door. Respect it.</p>
+
+          <h3>What the Numbers Mean</h3>
+          <ul class="tut-list">
+            <li><b>Contacts</b> — voters you've actually met. The spine of a primary win.</li>
+            <li><b>Name ID</b> — how many kitchen tables argue about you.</li>
+            <li><b>Volunteers</b> — make field cards better and pay some costs.</li>
+            <li><b>Momentum</b> — recent heat. Decays weekly; spend it while it's warm.</li>
+            <li><b>Endorsements</b> — chairs and clubs. Heavy in the primary math.</li>
+            <li><b>GOTV</b> — banked turnout, built in the general's final phase. Rapport is a promise; turnout is the promise kept.</li>
+          </ul>
+
+          <h3>Where You Work</h3>
+          <p>Field cards open a <b>ground picker</b>. Rapport banks on the ground you choose.
+          Working the same ground twice in a week is easier but yields half the rapport.
+          Opposition presence shows in the picker — visible, not yet biting your odds.</p>
+
+          <h3>Shop, Allies, Debt</h3>
+          <p><b>Shop</b> cards (0 AP) buy assets — voter file, walk list, phone tree — with
+          cash or volunteers. <b>Self-Fund on Credit</b> is real leverage: cash now, a bank
+          note later. Debt never taxes your roll odds; it settles on the win/loss branch
+          (cheap on a win; compounds into the next cycle on a loss). PAC money can bridge
+          a note — then Session will remember.</p>
+
+          <h3>The Long Game</h3>
+          <p>Allies change the machine — a <b>Canvass Captain</b> gives your field operation a
+          free action every week. Reputations accrue from how you play (nobody outworks you;
+          or the county calls you snakebit). Shadow work — oppo files, whisper campaigns,
+          PAC money — moves your private <b>Faces</b>, and past certain thresholds the county
+          starts telling stories about you that have mechanical teeth.</p>
+
+          <h3>Losing Well</h3>
+          <p>A run ending is not a reset. The <b>Chronicle</b> records every run as a ballad
+          entry. On a loss you choose how you spend the two years to the next filing deadline —
+          and the trait you take <b>persists across every future run</b>. On a win, the wheel
+          turns: stand for reelection as the incumbent, carrying your machine with you.
+          Lose better. It adds up.</p>
+
+          <div class="row-actions">
+            <button type="button" id="btn-tut-back" class="btn btn-gold">Back</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="setup" class="setup panel nameplate-panel hidden">
+        <p class="eyebrow setup-eyebrow">File the nameplate</p>
+        <div class="title-rule setup-rule" aria-hidden="true"></div>
+        <h2 class="setup-title">Identity — choices bind</h2>
+        <p class="hint setup-lede">Who you are at the courthouse door. Persona and issue stay on the ledger all run.</p>
         <div class="setup-grid">
-          <label>Persona (forever)
+          <label>Persona
             <select id="sel-persona"></select>
           </label>
           <label>Issue
@@ -36,46 +159,65 @@
           <label>Region
             <select id="sel-region"></select>
           </label>
+          <label>Seed
+            <input id="seed-input" type="number" min="0" step="1" placeholder="random" />
+          </label>
         </div>
         <p id="setup-blurb" class="hint"></p>
-        <button type="button" id="btn-start" class="btn btn-gold">Begin career</button>
+        <button type="button" id="btn-start" class="btn btn-gold">Begin primary</button>
+        <div id="chronicle" class="chronicle hidden"></div>
       </section>
       <section id="game" class="game hidden">
-        <section id="ledger" class="ledger" aria-live="polite"></section>
-        <section id="kit-strip" class="kit-strip" aria-label="Kit and flags"></section>
+        <div id="hud" class="hud" aria-live="polite"></div>
+        <!-- Ceremony shell: which act you are in (primary / general / session) -->
+        <div id="act-banner" class="act-banner" aria-live="polite" hidden>
+          <span class="act-banner-num"></span>
+          <span class="act-banner-title"></span>
+          <span class="act-banner-sub"></span>
+        </div>
+        <div id="ground-picker" class="ground-picker hidden" role="dialog" aria-modal="true" aria-label="Choose a ground">
+          <div class="gp-panel">
+            <div class="gp-head">
+              <h3 id="gp-title">Where do you work it?</h3>
+              <button type="button" id="gp-cancel" class="btn" aria-label="Cancel">Cancel</button>
+            </div>
+            <p class="hint" id="gp-sub">Pick the ground for this play. Rapport builds where you show up — and the same ground twice in a week banks less.</p>
+            <div id="gp-list" class="gp-list"></div>
+          </div>
+        </div>
+        <section id="ledger" class="ledger" aria-label="Campaign dossier"></section>
         <section class="panels">
-          <div class="panel">
-            <h2>Actions</h2>
-            <p id="week-hint" class="hint"></p>
-            <div id="juice" class="juice-banner hidden" aria-live="assertive"></div>
+          <div class="panel panel-actions">
+            <h2 id="actions-heading">Actions</h2>
+            <!-- Reserved height so text swaps never shove the card grid -->
+            <p id="week-hint" class="hint week-hint" aria-live="polite"></p>
             <div id="draft" class="card-grid"></div>
             <div id="playables" class="card-grid"></div>
-            <h3 class="subhead">Shop — spend the money</h3>
-            <p class="hint shop-hint">Billboards, websites, staff, lists. Money without kit is just a number.</p>
-            <div id="shop" class="card-grid shop-grid"></div>
             <div class="row-actions">
               <button type="button" id="btn-end" class="btn btn-gold">End week</button>
-              <button type="button" id="btn-restart" class="btn hidden">Abandon career</button>
             </div>
           </div>
-          <div class="panel">
-            <h2>Log</h2>
+          <div class="panel panel-log">
+            <h2 id="log-heading">Log</h2>
             <div id="log" class="log" role="log"></div>
           </div>
         </section>
       </section>
-      <footer class="foot">
-        <span>Persistent career · not v0.1</span>
-        <span
-          ><a
-            class="kofi"
-            href="https://ko-fi.com/poseyatx"
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Buy me a Ko-fi"
-            >buy me a ko-fi</a
-          >
-          · Primary → General → Session? → Off-season → next cycle</span
+      <!-- Fixed toasts — never reflow the play surface (Phase 6 / UI-IA) -->
+      <div id="toast-host" class="toast-host" aria-live="assertive" aria-atomic="false"></div>
+      <section id="terminal" class="game hidden">
+        <div id="terminal-head" class="panel"></div>
+        <div id="terminal-choices" class="card-grid"></div>
+      </section>
+      <footer id="foot" class="foot">
+        <span>Candidate Zero · alpha build</span>
+        <a
+          class="kofi"
+          href="https://ko-fi.com/poseyatx"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Buy me a Ko-fi"
+          >buy me a ko-fi</a
         >
       </footer>
     </div>

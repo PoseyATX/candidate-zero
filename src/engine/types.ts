@@ -26,12 +26,25 @@ export interface Ground {
   rapport: number;
   gotv: number;
   gated?: boolean;
+  /**
+   * Opposition presence at this ground. Rivals bank weekly (advanceRivalGrounds).
+   * Has teeth: field-play odds penalty + primary/general win pressure
+   * (see rivalOddsPenalty / meanRivalRapport in calendar.ts).
+   */
+  rivalRap?: number;
 }
 
 export interface Ally {
   id: string;
   warm: number;
   age: number;
+  /**
+   * Grounds where this ally is actually working (Phase 1). An ally granted
+   * by a ground-based field play is localized to that ground; personas/
+   * roster grants with no ground leave this undefined (= warm everywhere,
+   * backward-compatible). See allyWarmAtGround() in reputation.ts.
+   */
+  grounds?: string[];
 }
 
 export interface CardCost {
@@ -44,10 +57,54 @@ export interface CardCost {
 
 export type RiskClass = 'SAFE' | 'STD' | 'VOL' | 'CHOICE';
 
+/**
+ * Card family — WHAT a card is in the fiction, not whether it's good for
+ * you. This is the tint/recognizability channel (see src/ui/card-art.ts
+ * KIND_META and docs/CARD-TAXONOMY.md). Deliberately distinct from risk:
+ * a card can be a volatile Bargain, a safe Ally, etc. `action` is the
+ * unmarked default — the plain play. The rest carry a subtle paper wash,
+ * an accent frame, and a corner seal glyph so a returning player reads
+ * the frame the way they'd read a suit, WITHOUT a verdict label spoiling
+ * the hook the way "TRAP" did.
+ *
+ * Most kinds are forward-looking scaffolding for the 1000-card goal —
+ * only `action` and `bargain` are used by cards that exist today.
+ */
+export type CardKind =
+  | 'action'
+  | 'bargain'
+  | 'ally'
+  | 'item'
+  | 'location'
+  | 'liability'
+  | 'blackmail';
+
 /** Root character attributes that modify play odds via cardAttrMod. */
 export type AttrId = 'CLO' | 'CON' | 'CRA' | 'INK' | 'DIP' | 'CHA';
 
 export type Attrs = Record<AttrId, number>;
+
+/**
+ * Deck residency — WHERE a card lives architecturally.
+ * Orthogonal to CardKind (what it is) and RiskClass (variance).
+ * See docs/CARD-RESIDENCY.md.
+ *
+ * - main: always relevant across the career; lives in the Main Deck
+ *   (unless lost to scandal/misfortune later).
+ * - special: only relevant when embodying certain entities / loops;
+ *   may leave the main deck or live in an entity/event package.
+ * - outside: event-deck only; world pressure the player does not play
+ *   or control (New World Screw Worm, redistricting storm, etc.).
+ */
+export type CardResidency = 'main' | 'special' | 'outside';
+
+/**
+ * Who controls the card as an action.
+ * - player: something the player may choose / play / spend.
+ * - world: encounters the engine (or rivals) force; never a player play.
+ * Outside cards MUST be control: 'world'. Player never plays Outside.
+ */
+export type CardControl = 'player' | 'world';
 
 export interface PlayCard {
   id: string;
@@ -59,7 +116,32 @@ export interface PlayCard {
   tag: string;
   d: string;
   attrs?: AttrId[]; // Root attributes: CLO, CON, CRA, INK, DIP, CHA
-  trap?: boolean; // RISK plays (PAC, self-fund) — UI says "Risk", not "Trap"
+  /** Card family for tint/recognizability (default 'action'). See CardKind. */
+  kind?: CardKind;
+  /**
+   * Devil's-bargain flag — drives balance/audit tooling only. The
+   * player-facing tell is now the `kind: 'bargain'` frame, NOT a label
+   * (the "TRAP" stamp was retired). Kept separate from `kind` because a
+   * future non-bargain card could still want the balance flag, and vice
+   * versa.
+   */
+  trap?: boolean;
+  /**
+   * Deck architecture residency (default treated as 'main' for player
+   * verbs). Required for new cards; legacy catalog is tagged in data.
+   * See docs/CARD-RESIDENCY.md.
+   */
+  residency?: CardResidency;
+  /**
+   * Who may choose this card. Default 'player'. Outside → always 'world'.
+   */
+  control?: CardControl;
+  /**
+   * When residency is 'special': entity ids (ENT_*) this package belongs
+   * to. Empty/undefined = loop-scoped special (e.g. all Session SS*)
+   * rather than a single entity kit.
+   */
+  entityScope?: string[];
   odds?: (state: GameState, ground?: Ground) => number;
   run?: (state: GameState, result: RollResult, ground?: Ground) => string;
   show?: (state: GameState) => boolean;
@@ -81,7 +163,20 @@ export interface GameState {
   apMax: number;
   fieldAp: number;
   money: number;
+  /**
+   * Outstanding campaign debt principal (self-loan + any unretired bridge).
+   * Phase 3: NEVER read by resolve() odds — consequence is win/loss branch
+   * only (see src/engine/debt.ts). Loss compounds via LegacyCarry; win
+   * retires cheaply via retireDebtOnWin.
+   */
   debt: number;
+  /**
+   * Portion of `debt` that is PAC-bridged (PL20 under pressure). Win clears
+   * cash but leaves sessionFlags.pac_lender_claim + OB1. Loss compounds both.
+   */
+  pacBridgeDebt?: number;
+  /** True after PL21 self-loan this run (once-per-campaign show gate). */
+  selfLoanTaken?: boolean;
   contacts: number;
   nameID: number;
   volPool: number;
@@ -105,6 +200,20 @@ export interface GameState {
   faces: Faces;
   shFired: Record<string, boolean>;
   groundsArr: Ground[];
+  /**
+   * Per-ground play tally for THE CURRENT WEEK — drives diminishing returns
+   * (getGroundPenalty). Reset at every week boundary. Keyed by ground id.
+   */
+  groundPlays?: Record<string, number>;
+  /**
+   * Transient rapport multiplier for the play in flight — set by
+   * executePlay from getGroundPenalty before the card's run() calls
+   * rapGain(), read there, then reset. 1 = full rapport, 0.5 = repeat-ground
+   * diminishing return. Never persisted meaningfully between plays.
+   */
+  groundRapMult?: number;
+  /** Last ground the player chose — UX default for the picker + CLI. */
+  lastGround?: string;
   allies: Ally[];
   backers: string[];
   assets: string[];
@@ -112,67 +221,45 @@ export interface GameState {
   reps: string[];
   rivals: { id: string; n: string }[];
   tier: number;
-  /** Display names (locked at first setup). */
   persona: string | null;
   issue: string | null;
   district: DistrictInfo | null;
-  /** Stable ids — persona never changes; others only via thematic interim events. */
-  personaId?: string;
-  issueId?: string;
-  districtId?: string;
-  regionId?: string;
-  regionName?: string;
   eventsFired: Record<string, boolean>;
-  /** primary → general → interim (off-season) → primary … forever */
-  stage: 'primary' | 'general' | 'session' | 'interim';
+  stage: 'primary' | 'general' | 'session' | 'waiting';
   genOpp: GeneralOpponent | null;
   genBase: number;
-  /**
-   * Only true on rare career ruin. Election losses/wins do NOT end the career —
-   * they open interim / the next cycle.
-   */
   over: boolean;
-  /** Last cycle's election result (not a terminal end-state). */
+  /** Terminal outcome when `over` — pure campaign result label. */
   outcome?: CampaignOutcome;
-  lastCycleOutcome?: CampaignOutcome;
+  /**
+   * Chronicle waiting season (post-loss / post-session interim play).
+   * Compressed weeks between cycles; Special WA* kit only.
+   */
+  waitingPathId?: string;
+  waitingLoopId?: string;
+  /** Weeks remaining in waiting season (countdown). */
+  waitingWeeksLeft?: number;
   /** True after winning the primary and entering general. */
   primaryWon?: boolean;
-  /** Seated after a general win; cleared on later loss if we model that. */
-  inOffice?: boolean;
-  /** Career cycle counter (0 = first primary). */
-  cycleIndex?: number;
-  /** Off-season progress (1-based within interim). */
-  interimWeek?: number;
-  interimWeeksTotal?: number;
-  /** Thin regular session while in office (1-based). */
-  sessionWeek?: number;
-  sessionWeeksTotal?: number;
-  /** Speaker / chamber favor (session). */
-  speakerFavor?: number;
-  /** Bills filed this session (thin session counter). */
-  billsFiledSession?: number;
-  /** Residues earned in interim; applied when the next primary opens. */
-  pendingResidue?: CycleResidue[];
-  /** Applied residues still active this cycle (ids for flavor). */
-  activeResidue?: string[];
-  /** Visible trophies/flags/scars — failure and purchase loot for the UI. */
-  trophies?: Trophy[];
-  /** Card ids minted as cycle loot (also injected into deck). */
-  cycleLoot?: string[];
-  /** Last loot juice line for UI banner. */
-  lastLootJuice?: string;
-  /**
-   * Rare thematic identity fork — never persona.
-   * Player must resolve before more interim/session work (or auto-resolve in harnesses).
-   */
-  pendingThematic?: ThematicChoice | null;
   log: LogEntry[];
   capital: number;
   favor: number;
   districtStanding: number;
-  bill: any;
-  committee: any;
-  sessionFlags: Record<string, boolean>;
+  /**
+   * Session-stage bill shape (Phase 2 data-only groundwork for Phase 4).
+   * Not wired to win conditions — typed so Phase 4 doesn't re-shape GameState.
+   */
+  bill: Bill | null;
+  /**
+   * Committee assignment for the player's bill / membership (Phase 4).
+   * Inert until session mechanics land.
+   */
+  committee: Committee | null;
+  /**
+   * Session / campaign ephemeral gates. Boolean flags + small numeric
+   * counters (challenger heat, weeks at bill stage). Not a second ledger.
+   */
+  sessionFlags: Record<string, boolean | number>;
   wave: number;
   skippedTownHall: boolean;
   townHallThisWeek: boolean;
@@ -202,11 +289,109 @@ export interface GameState {
   deck?: string[];
   handBonus?: number;
   /** Last phase used for draft-evolution detection. */
-  lastPhase?: 0 | 1 | 2 | 3 | 4;
+  lastPhase?: 1 | 2 | 3;
   /** Pending phase-turn draft (3 card options). */
   pendingDraft?: { phase: number; options: string[] };
+  /**
+   * Latest Outside event for presentation (UI / Unity). Set by resolveOutsideEvent;
+   * cleared by the host after the weather surface is dismissed. Never hand.
+   */
+  pendingOutside?: { id: string; n: string; text: string } | null;
+  /** Set on a "Stand for Reelection" continuation (src/engine/legacy.ts). */
+  incumbentRun?: boolean;
+  /** 1 on a first run; increments each successful reelection continuation. */
+  termNumber?: number;
   /** Dopamine / feedback loop state (presentation of truth; never alters RNG). */
   feedback?: import('./feedback.js').FeedbackState;
+  /**
+   * Archive counters used by ally/rep grant thresholds (Phase 2 port).
+   * Optional so createNewState stays lean; plays initialize on first use.
+   */
+  /** Kitchen-table / pie-circuit successes — R05 at >=6 (archive pieCount). */
+  pieCount?: number;
+  /** Press releases filed — AL04 grant at 2 (archive prCount). */
+  prCount?: number;
+  /** Precinct chairs banked beyond ally instances (archive chairCount). */
+  chairCount?: number;
+  /** Prayer Breakfasts attended — AL08 threshold (archive pbCount). */
+  pbCount?: number;
+  /** Straw poll wins — R09 with pledges (archive strawWins). */
+  strawWins?: number;
+  /** Week number when funeral is available (archive funeralWeek); -1 = spent. */
+  funeralWeek?: number;
+  /** Billboard name-ID halved after rival buys next door (archive billboardHalved). */
+  billboardHalved?: boolean;
+  /**
+   * Starmap v0 (issues #17/#18) — optional career-graph fields.
+   * Default empty; pilot movement overlays campaign without requiring entity mode.
+   */
+  currentEntityId?: string;
+  entityHistory?: string[];
+  orbitWarmth?: Record<string, number>;
+  pendingMovement?: import('./types-entities.js').MovementOpportunity;
+}
+
+/**
+ * Session bill — Phase 2 froze the shape; Phase 4 wires the lifecycle.
+ * `pipelineStage` mirrors archive BILLSTAGES 0–8 for motion gating;
+ * `status` is the player-facing enum for UI / harnesses.
+ */
+export interface Bill {
+  id: string;
+  /** Short title (e.g. issue-linked). */
+  title: string;
+  /** Issue id from setup (state.issue) this bill advances. */
+  issueId: string | null;
+  /** Sponsor display name (player or co-author). */
+  sponsor: string;
+  /** Committee currently holding the bill, if any. */
+  committeeId: string | null;
+  status: BillStatus;
+  /** Aye / nay / present tallies when a floor or committee vote is open. */
+  tally: VoteTally;
+  /** Calendar week the bill was filed (session clock). */
+  filedWeek?: number;
+  /**
+   * Archive pipeline index 0–8 (Unfiled → SIGNED). Source:
+   * prototype-single-file.html BILLSTAGES / bill.stage.
+   */
+  pipelineStage: number;
+  /** Political heat — raises disaster pressure on later motions (archive heat). */
+  heat: number;
+  /** Weeks spent at current pipelineStage without advancing (stall heat). */
+  weeksAtStage?: number;
+}
+
+export type BillStatus =
+  | 'draft'
+  | 'filed'
+  | 'in_committee'
+  | 'reported'
+  | 'on_calendar'
+  | 'passed'
+  | 'failed'
+  | 'dead';
+
+export interface VoteTally {
+  aye: number;
+  nay: number;
+  present: number;
+  /** Seats that must vote for a win; 0 = unset until Phase 4. */
+  need?: number;
+}
+
+/**
+ * Legislative committee — membership + chair for session politics (Phase 4).
+ */
+export interface Committee {
+  id: string;
+  n: string;
+  /** Player is a member. */
+  member: boolean;
+  /** Player chairs (rare; power). */
+  chair: boolean;
+  /** Soft 0–100 standing with the chair / room. */
+  standing: number;
 }
 
 /** Runtime district binding (from data/setup.ts DISTRICTS, applied at setup). */
@@ -231,56 +416,72 @@ export type CampaignOutcome =
   | 'lost_primary'
   | 'won_general'
   | 'lost_general'
-  | 'ruin';
+  /** Phase 4: sine die — signature bill became law. */
+  | 'session_law'
+  /** Phase 4: sine die — no law (or near-miss), seat still holds. */
+  | 'session_survived'
+  /** Phase 4: sine die — reelection outlook broke (primaried out). */
+  | 'session_primaried';
 
-/** Off-season scar or gift that carries into the next election cycle. */
-export interface CycleResidue {
-  id: string;
-  name: string;
-  text: string;
-  kind: 'boon' | 'hindrance';
-  /** Which identity facet produced this (for theming / UI). */
-  source?: 'persona' | 'issue' | 'district' | 'region' | 'cycle' | 'session';
+/** One archive-authored trait — see src/engine/legacy.ts TRAITS for effects. */
+export type TraitId =
+  | 'T_AUTHOR'
+  | 'T_LEVERS'
+  | 'T_LIST'
+  | 'T_KNOWN'
+  | 'T_CRED'
+  | 'T_NORTH'
+  | 'T_NERD'
+  | 'T_WHIP'
+  | 'T_REST'
+  | 'T_PERSP';
+
+/** A finished run, recorded in the Chronicle. */
+export interface LegacyRun {
+  /** One-line narrative summary of how the run ended (src/engine/legacy.ts buildEpithet). */
+  epithet: string;
+  kind: CampaignOutcome;
+  /** Flavor text for the interim path chosen after this run ended. */
+  interim?: string;
 }
 
-/** Tangible UI-visible token: scar, flag, or loot from cycles / shop. */
-export interface Trophy {
-  id: string;
-  name: string;
-  text: string;
-  kind: 'scar' | 'flag' | 'loot';
-  cycle: number;
+/** What a finished run banks forward into the next one (before traits modify it further). */
+export interface LegacyCarry {
+  contacts?: number;
+  nameID?: number;
+  /**
+   * Phase 3 loss-branch: unretired debt compounds into the next cycle
+   * (see debt.ts DEBT_CYCLE_COMPOUND). Win path zeros this.
+   */
+  debt?: number;
+  pacBridgeDebt?: number;
+  /** Obligation ids that ride with the note (OB1/OB2/OB3). */
+  debtObls?: string[];
+  /**
+   * Starmap waiting loop from Chronicle interim path (LOOP_WAITING_*).
+   * Bridges "no true game over" career graph to next run.
+   */
+  waitingLoopId?: string;
+  /** Yields banked from playing the waiting season (contacts/name/etc.). */
+  waitingContacts?: number;
+  waitingNameID?: number;
+  waitingMoney?: number;
+  waitingVols?: number;
+  waitingFavors?: number;
+  /** Higher-office exploratory residue (senate / statewide). */
+  higherOfficeFork?: 'senate' | 'statewide';
 }
 
-/** A forced narrative fork — maps, issues, or region — never a free re-pick menu. */
-export interface ThematicChoice {
-  id: string;
-  kind: 'issue' | 'district' | 'region';
-  title: string;
-  body: string;
-  options: ThematicOption[];
-}
-
-export interface ThematicOption {
-  id: string;
-  label: string;
-  /** Human cost flavor shown under the button. */
-  costNote?: string;
-  /** What changes if picked (engine applies). */
-  effect: ThematicEffect;
-}
-
-export type ThematicEffect =
-  | { type: 'keep' }
-  | { type: 'set_issue'; issueId: string }
-  | { type: 'set_district'; districtId: string }
-  | { type: 'set_region'; regionId: string }
-  | { type: 'scar'; residueId: string; name: string; text: string };
-
+/**
+ * Cross-run meta-progression — "the Chronicle." Persisted to localStorage
+ * (browser only; harnesses/CLI never touch this). A run ending is not a
+ * reset: the player picks an interim path and a permanent trait, then the
+ * next run starts already carrying real progress forward.
+ */
 export interface LegacyState {
-  runs: any[];
-  traits: string[];
-  carry: any;
+  runs: LegacyRun[];
+  traits: TraitId[];
+  carry: LegacyCarry;
   name?: string;
 }
 

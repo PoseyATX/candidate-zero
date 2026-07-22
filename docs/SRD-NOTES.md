@@ -145,106 +145,13 @@ branching state machine, starting from Candidate-Zero.
 | Filing fee (expensive door) | **Implemented** — `PL05_PayFilingFee` |
 | Block walking | Implemented as a card, but see "Standing Actions" below — this was explicitly supposed to move off the deck |
 | Wrong-party-district trap | **Implemented, and fixed 2026-07-17** — this was mechanically backwards (easier, not harder) until this session; see `docs/BALANCE-NOTES.md` |
-| Self-funding-into-debt trap | **OB2 Bank Note** weekly drag (money/debt service) — `src/engine/obligations.ts` (2026-07-17) |
-| Early money/endorsement that forecloses coalitions | **OB1 PAC String** weekly drag (Lobbyist face + exposure) — same module; PL20 grants OB1 |
+| Self-funding-into-debt trap | **Phase 3 (2026-07-18):** real lever, not an odds tax — see § "Debt as leveraged optionality" below |
+| Early money/endorsement that forecloses coalitions | Card exists (`PL20_PacCheck`, honestly labeled, records an obligation) but the obligation has **no mechanical consequence** — same gap |
 | Indifference → notice → targeted resistance conflict shape | Partially implemented: `state.tier` now escalates disaster risk across pre-ballot/on-ballot/general (fixed 2026-07-17), but there's no explicit "you got noticed" event/spike — it's a smooth curve, not a phase-change moment |
-| Respectable-loss branches (Perennial Candidate / Advocate / Staffer) | **Superseded 2026-07-17 (persistent career):** losses no longer terminal — they open **off-season** with the same persona; "perennial" is the default loop, not a named branch |
-| Officeholder trunk beyond the general win | **Thin Session implemented 2026-07-17** — 4 legislative weeks under the dome after general win, then off-season; full bill pipeline still open |
+| Respectable-loss branches (Perennial Candidate / Advocate / Staffer) | **Not implemented.** Current terminal outcomes are only `missed_filing` / `lost_primary` / `won_general` / `lost_general` — no secondary paths exist at all |
+| Officeholder trunk beyond the general win | **Not implemented** — this is the Session stage; see below |
 | Shadow consequences on Faces | **Implemented 2026-07-17** — `src/engine/reputation.ts` ports `shadowCheck()` in full (see below) |
 | Reputation grants (R01/R02/R04/R07/R10/R11) | **Implemented 2026-07-17** — `src/engine/reputation.ts` ports the reachable subset of `repCheck()` (see below) |
-
-## Persistent career state machine (law as of 2026-07-17)
-
-The career **does not end** when a ballot does. `state.over` is reserved for
-rare ruin only. Normal election results set `lastCycleOutcome` and transition:
-
-```
-SETUP (once) — persona / issue / district / region lock
-    │
-    ▼
-PRIMARY (8 weeks) ── miss filing ──────────────────────────────┐
-    │ win primary                                              │
-    ▼                                                          │
-GENERAL (6 weeks) ── lose ─────────────────────────────────────┤
-    │ win                                                      │
-    ▼                                                          │
-SESSION (4 weeks, inOffice) ── sine die ───────────────────────┤
-    │                                                          │
-    └──────────────────────────► INTERIM / OFF-SEASON (6 mo) ──┤
-                                      │                        │
-                                      │ thematic forks (rare)  │
-                                      │ never persona          │
-                                      ▼                        │
-                                 next PRIMARY ◄────────────────┘
-                                 (incumbent if still inOffice)
-```
-
-### Identity rules (covenant 7, refined)
-
-| Facet | After first filing |
-|---|---|
-| **Persona** | **Permanent.** Never re-selected. Never on a fork menu. |
-| **Issue** | Shifts only via **thematic fork** (national detonation, crisis work) with cost (hit pieces / pivot scar). Hold is always an option. |
-| **District** | Shifts only via **map fork** (redistricting rumor / court order). Costs name ID / contacts, or debt if you stall-and-sue. |
-| **Region** | Shifts only via **geography pull** fork (cycle 2+). Petition math and lists change. |
-
-Free re-pick menus after the first screen are a **bug**, not a feature.
-
-### Off-season / residue
-
-Off-season work is themed by locked identity (persona bio work, district
-casework, region ritual, issue tour). Actions mint **residue**
-(`pendingResidue` → applied at next primary open) as boons or hindrances.
-This is the mechanical meaning of "a loss has value: banked list, name ID,
-reason to run again."
-
-### Failure must pay in the UI (dopamine / perennial design)
-
-Losing is not a blank terminal. On cycle close the engine mints **visible**
-loot into:
-
-1. **Trophies / flags / scars** — kit strip chips (`state.trophies`)
-2. **Deck cards** — e.g. miss filing → PL04 in pool; primary loss → recruit/fish-fry/chairs card; general loss → PL19 GOTV
-3. **Juice banner** — `LOOT: …` line the player cannot miss
-4. **Ledger kit line** — owned shop assets by name
-
-Money without sinks is a dead meter. The **Shop** sells billboards, websites,
-lists, phone trees, staff, mail, flatbed — each with a real mechanical effect
-(see archive `ASSETS` shop, ported to `src/data/assets.ts`).
-
-### Thin Session (in office)
-
-After general win only: 4 weeks of capitol verbs (file, whip lite, gallery,
-testify, district call, rest). Not a full bill pipeline yet — `bill` /
-`committee` remain future work. Homestead (`districtStanding`) bleeds.
-Then off-season, then reelection primary with incumbent lean.
-
-### Implementation map
-
-| Piece | Module |
-|---|---|
-| Calendar transitions | `src/engine/calendar.ts`, `src/engine/career.ts` |
-| Thematic forks | `src/engine/identity-shift.ts` |
-| Off-season plays | `src/data/interim-plays.ts` |
-| Session plays | `src/data/session-plays.ts` |
-| Foundation / expansion gates | `docs/ARCHITECTURE.md` |
-| Card inventory (audit) | `data/cards.csv` (`npm run export:cards`) |
-
-### Content expansion rule (SRD practice)
-
-New plays, assets, interim/session verbs, or obligations **must**:
-
-1. Fit a single role and labor/money/neutral path (do not erase dual ballot).
-2. Peer against an existing anchor card (see Architecture §6.2).
-3. Keep SAFE free of DISASTER; risk money carries obligation/exposure/debt.
-4. Ship with attrs (if rolled), grant paths for any named ally/rep/asset, and a CSV re-export.
-5. Leave `npm run harness` green; record measured moves in `docs/BALANCE-NOTES.md`.
-| UI career shell + localStorage | `src/ui/main.ts` |
-| Multi-cycle harness | `src/harness/career-persist.ts` |
-| Obligations weekly drag | `src/engine/obligations.ts` (`tickObligations` on week end) |
-| Ground affinity / gated grounds | `pickDefaultGround` + `groundAffinityMod` in `play.ts` |
-| Asset shop (money sinks) | `src/data/assets.ts` — buy kit; passives; UI Shop + Kit strip |
-| Failure loot (tangible) | `src/engine/failure-loot.ts` — trophies/flags + deck cards after loss |
 
 ## Standing Actions (PbtA basic moves / Blades downtime actions pattern)
 
@@ -269,6 +176,37 @@ scoped as `docs/ROADMAP.md` Phase 1 follow-up work (it touches starter-deck
 composition and draw math, so it needs a balance pass, not a blind swap).
 District Casework and the session bill-motion don't exist yet at all — see
 Session stage below.
+
+## Ground selection is part of play execution (Phase 1, 2026-07-17)
+
+Ground selection was formalized as a step of playing a field card, not a
+hidden auto-pick. When a field card resolves, the player chooses **one**
+ground for it (UI modal `#ground-picker`; CLI `chooseGround` prompt), and
+that choice feeds the card's `run()`/`odds()`. `pickDefaultGround` remains
+only as the fallback for the harness/auto path.
+
+Rules now live in the engine, not flavor text:
+
+- **Diminishing returns** — the same ground worked twice in one week bumps
+  odds slightly (familiarity) but banks half the rapport
+  (`getGroundPenalty` in `calendar.ts`; per-week `state.groundPlays`,
+  transient `state.groundRapMult`). Broad rapport requires spreading out.
+- **Ally-at-ground warmth** — an ally granted by a ground-based field play
+  (AL09 via Canvass Captain / Field Director) is localized to that ground
+  (`Ally.grounds`), and its field bonus only applies there
+  (`allyWarmAtGround`). Roster/persona grants stay warm everywhere.
+- **Opposition presence is VISIBLE but toothless in Phase 1** —
+  `Ground.rivalRap`, built 5–40/week by `advanceRivalGrounds`, renders in
+  the log and picker but does **not** affect the player's odds yet. Making
+  it bite is Phase 2. This is deliberate: Phase 1's job was to make the
+  choice *visible* and *measurable* (see `harness:grounds`), not to
+  rebalance around opposition before we could see the distribution.
+- **Win-condition sketch** — `career.ts checkBallotThreshold()` encodes the
+  intended rapport-distribution victory (primary 60% home + 40%×2; general
+  40% + 30%×2) for measurement only; it is not consulted by the live
+  election path. `harness:grounds` shows it is met 0% of the time under
+  current rapport tuning — the rapport economy is far short of it, which is
+  the headline Phase 2 balance input.
 
 ## Four card pools (only one exists in the modular engine)
 
@@ -321,9 +259,10 @@ own redundant double-call).
 
 This also finally makes several previously-dead references live:
 `resolve()`'s `hasRep(state,'R10')` disaster-band reduction and
-`warm(state,'AL11')` band reduction, `PL01`/`PL02`/`PL04`/`PL09`'s
-`warm(s,'AL09')` bonuses (once `AL09` is grantable — still not ported, see
-below), and `plays.ts`'s `rapGain()` already checking `state.rapStall`
+`warm(state,'AL11')` band reduction, `PL01`/`PL02`/`PL04`/`PL19`'s
+`warm(s,'AL09')` / `allyWarmAtGround` bonuses (AL09 grantable via PL21B/PL39
+as of 2026-07-17; full ally matrix 2026-07-18 — see Phase 2 closeout below),
+and `plays.ts`'s `rapGain()` already checking `state.rapStall`
 (now settable via the `F1` shadow threshold). One concrete bug fixed
 alongside this: `PL13_FishFry`'s BREAKTHROUGH-tier text says "the
 small-dollar list starts here" but the code never actually pushed `B05`
@@ -345,37 +284,95 @@ bonus). One archive persona effect dropped on port (`PA_CRA_DIP`'s
 See `docs/BALANCE-NOTES.md`, "Ported 20 personas + 12 issues from the
 archive," for full detail and verification.
 
-**Still not ported — larger than initially scoped, needs its own pass:**
-- **A structured obligations registry** (`OBLS`, archive line ~392+), not
-  the modular engine's free-text `state.obls: string[]`. Archive
-  obligations are `{n, drag}` records with an ongoing *weekly* drag effect
-  (e.g. `OB1` "PAC String": `faces.L -= 1; exposure += 0.15` every week
-  it's held) — a real, recurring cost, not a one-time flavor note. This is
-  a meaningfully bigger change than "port a function"; it changes what
-  `state.obls` *is* (a list of ids into a registry, not free strings) and
-  needs a weekly-tick call site.
-- **16 named allies** (`AL01`–`AL16`, archive line ~381–383), of which
-  only a handful have a confirmed grant path even in the archive itself
-  (`AL01` via Kitchen-Table-Meeting-equivalent and Court-the-Chairs-equivalent
-  BREAKTHROUGH/GAIN outcomes; `AL09` via two dedicated cards — see next).
-- **Two dedicated ally-granting cards not yet ported**: `PL21B` "Promote a
-  Canvass Captain" (`cost {a:1, vp:3}`, SAFE, grants `AL09` directly) and
-  `PL39` "Hire a Field Director" (`cost {a:1, $:2200}`, STD, alternate paid
-  path to the same ally). Porting these two specifically would make the
-  `warm(s,'AL09')` bonuses already written into `PL01`/`PL02`/`PL04`/`PL19`
-  finally reachable without touching anything else.
-- **A purchasable assets shop**: `A01` "The Walk List" (archive line 820,
-  cost $400, requires owning `A02`), `A09` "Phone Tree" (cost 0, `vcost:2`
-  — a volunteer cost, not money) and others — assets in the archive are
-  bought with real costs/requirements, not just narrative flags. Modular's
-  `state.assets: string[]` currently only ever receives `'BIO_*'`/`'ISSUE_*'`/
-  `'REGION_*'` tags from setup — there's no way to acquire `A01`/`A09` at all
-  right now, which is *why* they were dead references in the first place.
+### Phase 2 closeout (2026-07-18) — full ally/asset/obligation port
 
-Recommend treating this as its own scoped increment (`docs/ROADMAP.md`
-Phase 2, revised) rather than bundling further into ad hoc single-line
-fixes — the obligations-registry change in particular touches the shape of
-`GameState.obls`, not just its contents.
+Ported from `archive/prototype-single-file.html` with line citations in code:
+
+**Obligations** (`src/data/obligations.ts`, archive ~393–404):
+`state.obls` is now a list of registry ids (OB1–OB10). Weekly `drag` runs
+in `calendar.onWeekAdvance` via `applyOblDrag`. PL20 grants OB1 (PAC
+String); PL21 grants OB2 (Bank Note); shadow G2 grants OB8 (Cousin on the
+Payroll) instead of free-text. Empty-drag leashes (OB3/OB4/OB6/OB7/OB9/OB10)
+match archive.
+
+**Assets shop** (`src/data/assets.ts`, archive ~819–831): eight purchasable
+items (A01 Walk List, A02 Voter File, A03 Mail, A04 Website, A06 Flatbed,
+A09 Phone Tree, A11 Push Cards, A12 Billboard). Offered as 0-AP camp actions
+(`BUY*`) in `listPlayableHand`. A01 requires A02; A09 costs 2 volunteers.
+Closes the A01/A09 dead refs. A13 Church Directory remains a PL30 grant, not
+sold (archive parity).
+
+**Ally grants** (each cites archive function/line in code comments):
+
+| Ally | Grant path (archive) |
+|---|---|
+| AL01 Precinct Chair | PL08 t0/t1; PL14 t0; personas PA_DIP / PA_INK_DIP |
+| AL02 County Chairwoman | PL08 when chairs ≥ 3 (lines 581–582) |
+| AL03 Club President | PL11 straw win (599) |
+| AL04 Beat Reporter | PL10 prCount===2 (595); PL32 coffee t0 (723) |
+| AL06 Retired Judge | PL29 funeral respect path (1547) + week event unlock |
+| AL08 Pastor | PL30 pbCount≥2 && GR04.rapport≥30 (715) |
+| AL09 Canvass Captain | PL21B / PL39 (670, 747) — ground-localized |
+| AL11 Kitchen Cabinet | persona PA_CRA |
+| AL12 The Old Bull | week events (893, 901) |
+| AL14 Rival's Staffer | week event (885) |
+| AL15 County Judge | PL48 t0 (779) |
+| AL16 Slate-Maker | PL22B t≤1 + OB3 (673) |
+
+**Intentional stubs** (archive `warm()` refs, never `addAlly` — modular
+keeps the checks, documents in `INTENTIONAL_STUB_ALLIES`):
+AL05 Drive-Time Host, AL07 Feed-Store Regulars, AL10 Finance Chair
+(weekly +$300 effect ready), AL13 Lobbyist w/ a Conscience.
+
+**Kitchen-Table vs ground affinity:** archive allies are roster-wide
+(`addAlly` has no ground). Phase 1's `allyWarmAtGround` is a modular
+addition for *field* allies (AL09). PL08 is **not** gated on
+AL01-at-ground — that would invent mechanics the archive never had.
+Odds still scale on warm AL01 count + `chairCount`.
+
+**repCheck full matrix** (archive 512–524): R05 (pieCount≥6), R06
+(AL02|AL15), R08 (slate+R06), R09 (pledges+strawWins), R12 (AL12.warm≥3)
+now fire. R10 still uses modular `disasterLog.length` (stable AC1).
+
+**Bill/committee types** (`types.ts`): `Bill`, `Committee`, `VoteTally`,
+`BillStatus` — data shape only for Phase 4; no session mechanics.
+
+**Harnesses:** `npm run harness:dead-refs`, `harness:shop`,
+`harness:obligations` — all green; full suite green.
+
+## Career graph / Starmap (design law — v0 cartography 2026-07-19)
+
+**Issues:** [#17](https://github.com/PoseyATX/candidate-zero/issues/17) exhaustive actors;  
+[#18](https://github.com/PoseyATX/candidate-zero/issues/18) orbits, loops, advancement/setback, movement.
+
+**Core:** No true loss — only redirection into a new orbit. Entity registry + orbit web +
+loop/subloop cycles. Implementation starts as **data cartography** (`docs/STARMAP.md`,
+`src/data/starmap/`) with one **pilot road**: Precinct Chair (`ENT_PRECINCT_CHAIR` /
+AL01) → advancement conditions → **MV01** movement verb.
+
+Does not replace allies, session pipeline, or resolve RNG. Bridges map ENT↔AL.
+
+## Debt as leveraged optionality (Phase 3, 2026-07-18)
+
+**Wrong draft rejected:** flat debt→odds penalty. Mid-race donors and voters
+do not mark you down for net position; that design also made leverage
+strictly bad. **`resolve.ts` never reads `debt`.**
+
+**Model** (`src/engine/debt.ts`):
+
+| Branch | Behavior | Hooks reused |
+|---|---|---|
+| **Spend-now** | PL21 `applySelfLoan`: +$3000 cash, principal×1.4 on books, `addObl(OB2)` weekly −$150. Real optionality for fee/assets/field. | `obligations.ts` OB2; `canAfford` |
+| **Win — self** | `retireDebtOnWin`: token fee ≤$200, clear debt + OB2, **no** Session gate | — |
+| **Win — PAC bridge** | PL20 under open debt → `maybePacBridge`: PAC owns share of note; win clears cash but keeps **OB1** + `sessionFlags.pac_lender_claim` (Phase 4 committee/vote) | `addObl(OB1)`, `sessionFlags` |
+| **Loss** | `mergeDebtIntoCarry` / `debtCarryFromLoss`: principal ×1.15 into `LegacyCarry.debt`; next run `applyLegacyDebt` re-applies OB2 | `recordRun`, `applyLegacy` |
+| **Affordability** | `availableCash` reserves 8¢/$ over $2000 debt; `canAfford` uses it for $ costs only | `play.ts canAfford` |
+| **Crisis (≥$5000)** | Interim paths: perennial + home only; PL20 early via `pacCheckAvailable` as relief valve (no new fund card) | `buildPaths`, PL20 `show` |
+
+**Harness evidence** (`npm run harness:debt`, n=40): debt-leverage strategy
+**45%** general wins vs conservative money **35%** (+10pp). Leverage is a
+real win-rate case, not pure downside. Loss-branch compound verified
+(debt does not vanish; next cycle tighter cash without soft-lock).
 
 ## Registry integrity checker (prior art for a roadmap item)
 

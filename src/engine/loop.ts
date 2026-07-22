@@ -4,7 +4,8 @@
  * Pure engine surface for harnesses and eventual UI/Swift ports.
  */
 
-import { ALL_PLAYS } from '../data/plays.js';
+import { ALL_PLAYS, SHOP_PLAYS } from '../data/plays.js';
+import { SESSION_PLAYS } from '../data/session-plays.js';
 import {
   createDeckState,
   discardCard,
@@ -28,21 +29,23 @@ import {
 } from './calendar.js';
 import { markWeekStart, buildWeekSummary, type WeekSummary } from './feedback.js';
 import { repCheck } from './reputation.js';
+import { applyLegacy } from './legacy.js';
+import { availableCash, retireDebtOnWin } from './debt.js';
+import {
+  listAvailableMovementVerbIds,
+  syncMovementFlags
+} from './entities.js';
+import { WAITING_PLAYS } from '../data/waiting-plays.js';
 import {
   applySetup,
   HARNESS_DEFAULT_SETUP,
   type SetupSelection
 } from '../data/setup.js';
-import { pickInterimMenu, runInterimPlay } from '../data/interim-plays.js';
-import { pickSessionMenu, runSessionPlay } from '../data/session-plays.js';
-import { autoResolveThematic } from './identity-shift.js';
-import { tickObligations } from './obligations.js';
-import { flushCycleLootToDeck } from './failure-loot.js';
-import { tickAssetPassives } from '../data/assets.js';
 import type {
   DeckState,
   GameState,
   Ground,
+  LegacyState,
   PlayCard,
   PlayOutcome
 } from './types.js';
@@ -64,7 +67,7 @@ export interface CreateCampaignOptions extends Partial<GameState> {
 
 export interface WeekReport {
   week: number;
-  phase: 0 | 1 | 2 | 3 | 4;
+  phase: 1 | 2 | 3;
   stage: GameState['stage'];
   drawn: string[];
   plays: PlayOutcome[];
@@ -78,6 +81,9 @@ export interface LedgerSnapshot {
   ap: number;
   fieldAp: number;
   money: number;
+  /** Phase 3: cash after debt service reserve (what $ costs actually see). */
+  availableCash: number;
+  debt: number;
   contacts: number;
   nameID: number;
   volPool: number;
@@ -87,6 +93,9 @@ export interface LedgerSnapshot {
   endorsePts: number;
   hitPieces: number;
   walkCount: number;
+  alliesWarm: number;
+  assetsOwned: number;
+  oblsCount: number;
 }
 
 export type Chooser = (
@@ -100,6 +109,8 @@ export function snapshot(state: GameState): LedgerSnapshot {
     ap: state.ap,
     fieldAp: state.fieldAp,
     money: state.money,
+    availableCash: availableCash(state),
+    debt: state.debt || 0,
     contacts: state.contacts,
     nameID: state.nameID,
     volPool: state.volPool,
@@ -108,12 +119,22 @@ export function snapshot(state: GameState): LedgerSnapshot {
     momentum: state.momentum,
     endorsePts: state.endorsePts,
     hitPieces: state.hitPieces,
-    walkCount: state.walkCount
+    walkCount: state.walkCount,
+    alliesWarm: state.allies.filter(a => a.warm > 0).length,
+    assetsOwned: state.assets.filter(a => /^A\d+/.test(a)).length,
+    oblsCount: state.obls.length
   };
 }
 
+/** Full runtime catalog: deck plays + shop BUY* + session SS* actions. */
 export function buildCatalog(plays: PlayCard[] = ALL_PLAYS): Map<string, PlayCard> {
-  return new Map(plays.map(p => [p.id, p]));
+  const map = new Map(plays.map(p => [p.id, p]));
+  // Shop is always registered (archive assetPlays always available in menu).
+  for (const p of SHOP_PLAYS) map.set(p.id, p);
+  // Phase 4: session pipeline + survival plays
+  for (const p of SESSION_PLAYS) map.set(p.id, p);
+  for (const p of WAITING_PLAYS) map.set(p.id, p);
+  return map;
 }
 
 export function createCampaign(overrides: CreateCampaignOptions = {}): Campaign {
@@ -142,6 +163,90 @@ export function createCampaign(overrides: CreateCampaignOptions = {}): Campaign 
     filingDeadline: PRIMARY_WEEKS,
     setup
   };
+}
+
+/**
+ * "Stand for Reelection" — ported from the archive's startIncumbentRun().
+ * A won_general terminal doesn't have to end the ballad: the wheel turns
+ * straight into the next filing period with the same persona/issue/region,
+ * carrying a discounted share of what the last term built (archive's
+ * exact carry-forward formulas below) rather than resetting to zero.
+ *
+ * Phase 3: win-branch debt retirement runs on the *old* state first
+ * (retireDebtOnWin) — self-loan clears cheap; PAC bridge leaves OB1 +
+ * sessionFlags.pac_lender_claim on the carried sessionFlags/reps path.
+ * Loss-path debt is applied via applyLegacy → applyLegacyDebt, not here.
+ */
+export function createIncumbentCampaign(old: Campaign, legacy: LegacyState): Campaign {
+  // Settle the last race's notes before the wheel turns (win branch).
+  const retirement = retireDebtOnWin(old.state);
+
+  const next = createCampaign({ setup: old.setup });
+  const s = next.state;
+  const o = old.state;
+
+  s.contacts = Math.max(400, Math.round((o.contacts || 0) * 0.6));
+  s.nameID = Math.max(45, Math.round((o.nameID || 0) * 0.8) + 30);
+  s.money = Math.max(4000, 2500 + Math.round(Math.max(0, o.money) * 0.4));
+  s.endorsePts = Math.max(4, o.endorsePts || 0);
+  s.ballot = true; // incumbents don't petition
+  s.volPool = Math.max(4, Math.round((o.volPool || 0) * 0.6));
+  s.termNumber = (o.termNumber || 1) + 1;
+  s.reps = [...o.reps];
+  s.incumbentRun = true;
+  s.tier = 1;
+  // Win path: books cleared (debt 0). PAC Session claim may persist.
+  s.debt = 0;
+  s.pacBridgeDebt = 0;
+  s.selfLoanTaken = false;
+  s.sessionFlags = { ...(o.sessionFlags || {}) };
+  if (retirement.sessionClaim) {
+    s.sessionFlags.pac_lender_claim = true;
+    // Carry OB1 only (Session leash) — not the full free-text/obls dump.
+    if (!s.obls.includes('OB1')) s.obls.push('OB1');
+  }
+
+  // Incumbency reads as a favorable seat (few serious primary challengers,
+  // a friendlier general) rather than modular's `district.incumbent` flag,
+  // which models the OPPOSING side being the entrenched one — setting it
+  // true here would incorrectly double-penalize the player's own race.
+  if (s.district) {
+    s.district = { ...s.district, align: 'safe', incumbent: false, field: 1 };
+    s.rivals = [{ id: 'RIV1', n: 'Rival 1' }];
+  }
+
+  // Ownership carries forward (ground game already built); physical draw
+  // pile rebuilt to include it.
+  s.deck = [...new Set([...(o.deck || []), ...(s.deck || [])])];
+  next.deck = createDeckState(s.deck);
+
+  applyLegacy(s, legacy);
+
+  s.log.push({
+    week: s.week,
+    kind: 'note',
+    text:
+      'THE WHEEL TURNS — filing opens again, and this time the name on the ' +
+      'incumbent line is yours. You skip the petition table and begin KNOWN: ' +
+      'name recognition, a donor list, a record. That record is also a target.'
+  });
+  if (retirement.sessionClaim) {
+    s.log.push({
+      week: s.week,
+      kind: 'note',
+      text:
+        'THE THIRD HOUSE REMEMBERS — notes retired, but OB1 (PAC String) ' +
+        'rides into Session. Committee assignment and a future vote are not free.'
+    });
+  } else if (retirement.selfRetired > 0) {
+    s.log.push({
+      week: s.week,
+      kind: 'note',
+      text: `SELF-LOAN CLEARED — paid $${retirement.feePaid} to close the bank note. No Session leash.`
+    });
+  }
+  next.state.lastPhase = getPhase(next.state);
+  return next;
 }
 
 /**
@@ -175,37 +280,113 @@ export function pickPhaseDraft(campaign: Campaign, index: number): ReturnType<ty
   return resolvePhaseDraft(campaign.state, index, campaign.deck);
 }
 
-/** On entering general, ensure a GOTV card is in the physical deck (phase-3 spine). */
+/**
+ * General kit gravity — make Act II play different from Act I.
+ * Inject GOTV spine into physical deck + pull key tools into hand when possible.
+ */
 export function ensureGeneralTools(campaign: Campaign): void {
   if (campaign.state.stage !== 'general') return;
-  const hasGotv =
-    campaign.deck.draw.includes('PL19') ||
-    campaign.deck.hand.includes('PL19') ||
-    campaign.deck.discard.includes('PL19');
-  if (!hasGotv) {
-    injectIntoDrawPile(campaign.deck, campaign.state, ['PL19']);
-    campaign.state.log.push({
-      week: campaign.state.week,
+  const { deck, state } = campaign;
+
+  const inPlay = (id: string) =>
+    deck.draw.includes(id) || deck.hand.includes(id) || deck.discard.includes(id);
+
+  /** Prefer hand so the lever is usable this week, not buried in a 20-card pile. */
+  const ensureInDeckAndPreferHand = (id: string): void => {
+    if (!inPlay(id)) {
+      injectIntoDrawPile(deck, state, [id]);
+    }
+    // Pull from draw/discard into hand if room (or always if missing from hand)
+    if (deck.hand.includes(id)) return;
+    const di = deck.draw.indexOf(id);
+    if (di >= 0) {
+      deck.draw.splice(di, 1);
+      deck.hand.push(id);
+      return;
+    }
+    const ci = deck.discard.indexOf(id);
+    if (ci >= 0) {
+      deck.discard.splice(ci, 1);
+      deck.hand.push(id);
+    }
+  };
+
+  const hadGotv = inPlay('PL19');
+  ensureInDeckAndPreferHand('PL19');
+  if (!hadGotv) {
+    state.log.push({
+      week: state.week,
       kind: 'note',
-      text: 'General tools: GOTV Weekend enters the deck. Turnout is the promise kept.'
+      text:
+        'GENERAL KIT — GOTV Weekend is in your hand. Block walks and phone banks now bank turnout. Kitchen-table club math is closed for November.'
     });
   }
-  // Recruit path if still vol-starved
-  const hasRecruit =
-    campaign.deck.draw.includes('PL16') ||
-    campaign.deck.hand.includes('PL16') ||
-    campaign.deck.discard.includes('PL16');
-  if (!hasRecruit && (campaign.state.volPool ?? 0) < 2) {
-    injectIntoDrawPile(campaign.deck, campaign.state, ['PL16']);
+
+  // Volunteer spine for GOTV cost (vp:1)
+  if ((state.volPool ?? 0) < 2 && !inPlay('PL16')) {
+    injectIntoDrawPile(deck, state, ['PL16']);
+    state.log.push({
+      week: state.week,
+      kind: 'note',
+      text: 'Volunteer starve-out: Recruit Volunteers enters the deck. GOTV costs bodies.'
+    });
+  }
+
+  // Flatbed doctrine — archive Rides to the Polls when A06 owned
+  if (state.assets.includes('A06') && !inPlay('PL23')) {
+    ensureInDeckAndPreferHand('PL23');
+    state.log.push({
+      week: state.week,
+      kind: 'note',
+      text: 'The Flatbed is gassed: Rides to the Polls available. Low-turnout turf converts hardest.'
+    });
   }
 }
 
 export const CAMP_PETITION = -101;
 export const CAMP_FILING_FEE = -105;
+/** Camp-style shop index base: -200 - i for the i-th available BUY* play. */
+export const CAMP_SHOP_BASE = -200;
+/** Session play synthetic index base: -300 - i. */
+export const CAMP_SESSION_BASE = -300;
+/** Waiting-season play synthetic index base: -500 - i. */
+export const CAMP_WAITING_BASE = -500;
+/**
+ * Starmap movement verb camp indices: -401, -402, … (one per open MV##).
+ * Legacy alias CAMP_STARMAP_MV01 = first slot.
+ */
+export const CAMP_STARMAP_BASE = -401;
+/** @deprecated use CAMP_STARMAP_BASE — kept for any external refs */
+export const CAMP_STARMAP_MV01 = CAMP_STARMAP_BASE;
 
 export function listPlayableHand(campaign: Campaign): { index: number; card: PlayCard }[] {
   const out: { index: number; card: PlayCard }[] = [];
   const inHandIds = new Set<string>();
+
+  // Phase 4: session uses always-available SS* plays, not campaign hand/shop.
+  if (campaign.state.stage === 'session') {
+    let i = 0;
+    for (const card of SESSION_PLAYS) {
+      if (isPlayable(campaign.state, card)) {
+        out.push({ index: CAMP_SESSION_BASE - i, card });
+        i++;
+      }
+    }
+    return out;
+  }
+
+  // Waiting season: path-scoped WA* Special kit only
+  if (campaign.state.stage === 'waiting') {
+    let i = 0;
+    for (const card of WAITING_PLAYS) {
+      if (isPlayable(campaign.state, card)) {
+        out.push({ index: CAMP_WAITING_BASE - i, card });
+        i++;
+      }
+    }
+    return out;
+  }
+
   campaign.deck.hand.forEach((id, index) => {
     const card = campaign.catalog.get(id);
     if (card && isPlayable(campaign.state, card)) {
@@ -227,7 +408,63 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
       out.push({ index: CAMP_FILING_FEE, card: fee });
     }
   }
+  // Phase 2: asset shop — always-available BUY* plays (archive assetPlays).
+  // 0 AP; paid with $ or volunteers. Not drawn into hand.
+  let shopI = 0;
+  for (const [id, card] of campaign.catalog) {
+    if (!id.startsWith('BUY')) continue;
+    if (isPlayable(campaign.state, card)) {
+      out.push({ index: CAMP_SHOP_BASE - shopI, card });
+      shopI++;
+    }
+  }
+  // Starmap pilots: all open Special movement verbs as camp actions.
+  const openVerbs = listAvailableMovementVerbIds(campaign.state);
+  let mvI = 0;
+  for (const verbId of openVerbs) {
+    const mv = campaign.catalog.get(verbId);
+    if (mv && isPlayable(campaign.state, mv)) {
+      out.push({ index: CAMP_STARMAP_BASE - mvI, card: mv });
+      mvI++;
+    }
+  }
   return out;
+}
+
+/** Resolve a camp / shop / session synthetic index to a catalog card id, or null. */
+export function campIndexToCardId(
+  campaign: Campaign,
+  handIndex: number
+): string | null {
+  if (handIndex === CAMP_PETITION) return 'PL04';
+  if (handIndex === CAMP_FILING_FEE) return 'PL05';
+  // Index bands: waiting ≤-500 · starmap ≤-401 · session ≤-300 · shop ≤-200
+  if (handIndex <= CAMP_WAITING_BASE) {
+    const waitingCards = WAITING_PLAYS.filter(c => isPlayable(campaign.state, c));
+    const i = CAMP_WAITING_BASE - handIndex;
+    return waitingCards[i]?.id ?? null;
+  }
+  if (handIndex <= CAMP_STARMAP_BASE) {
+    const openVerbs = listAvailableMovementVerbIds(campaign.state).filter(id => {
+      const card = campaign.catalog.get(id);
+      return card && isPlayable(campaign.state, card);
+    });
+    const i = CAMP_STARMAP_BASE - handIndex;
+    return openVerbs[i] ?? null;
+  }
+  if (handIndex <= CAMP_SESSION_BASE) {
+    const sessionCards = SESSION_PLAYS.filter(c => isPlayable(campaign.state, c));
+    const i = CAMP_SESSION_BASE - handIndex;
+    return sessionCards[i]?.id ?? null;
+  }
+  if (handIndex <= CAMP_SHOP_BASE) {
+    const shopCards = [...campaign.catalog.entries()]
+      .filter(([id, card]) => id.startsWith('BUY') && isPlayable(campaign.state, card))
+      .map(([id]) => id);
+    const i = CAMP_SHOP_BASE - handIndex;
+    return shopCards[i] ?? null;
+  }
+  return null;
 }
 
 export function ensureBallotAccessInHand(campaign: Campaign): string | null {
@@ -255,41 +492,29 @@ export function ensureBallotAccessInHand(campaign: Campaign): string | null {
 }
 
 export function startWeek(campaign: Campaign): string[] {
-  // Flush failure/win card loot into the physical deck
-  const flushed = flushCycleLootToDeck(campaign.state, campaign.deck);
-  if (flushed.length) {
-    campaign.state.log.push({
-      week: campaign.state.week,
-      kind: 'draw',
-      text: `Loot cards enter the deck: ${flushed.join(', ')}`
-    });
-  }
-  for (const note of tickAssetPassives(campaign.state)) {
-    campaign.state.log.push({ week: campaign.state.week, kind: 'note', text: `KIT — ${note}` });
-  }
-
-  // Off-season / session use separate menus — no campaign deck draw spam
-  if (campaign.state.stage === 'interim') {
-    markWeekStart(campaign.state);
-    campaign.state.ap = campaign.state.apMax;
-    if (campaign.state.pendingThematic) {
-      campaign.state.log.push({
-        week: campaign.state.week,
-        kind: 'note',
-        text: `Thematic fork open: ${campaign.state.pendingThematic.title}`
-      });
-    }
-    return flushed;
-  }
-  if (campaign.state.stage === 'session') {
-    markWeekStart(campaign.state);
-    campaign.state.ap = campaign.state.apMax;
-    return flushed;
-  }
   if (campaign.state.stage === 'general') {
     ensureGeneralTools(campaign);
   }
   markWeekStart(campaign.state);
+
+  // Session / waiting: no campaign deck growth (different kits)
+  if (campaign.state.stage === 'session') {
+    campaign.state.log.push({
+      week: campaign.state.week,
+      kind: 'week',
+      text: `Session week ${campaign.state.week} — the building moves at the building's pace.`
+    });
+    return [];
+  }
+  if (campaign.state.stage === 'waiting') {
+    campaign.state.log.push({
+      week: campaign.state.week,
+      kind: 'week',
+      text: `Waiting week ${campaign.state.week} — interim orbit. No campaign draw.`
+    });
+    return [];
+  }
+
   // Mandatory weekly growth: own new cards AND put them in the draw pile
   const newCards = enforceWeeklyDraw(campaign.state);
   if (newCards.length > 0) {
@@ -321,16 +546,17 @@ export function playFromHand(
   handIndex: number,
   ground?: Ground
 ): PlayOutcome {
-  if (handIndex === CAMP_PETITION || handIndex === CAMP_FILING_FEE) {
-    const id = handIndex === CAMP_PETITION ? 'PL04' : 'PL05';
-    const card = campaign.catalog.get(id);
-    if (!card) return { ok: false, reason: `Unknown camp card ${id}` };
-    if (campaign.state.ballot) {
-      return { ok: false, reason: 'Already on ballot', cardId: id, cardName: card.n };
+  const campId = campIndexToCardId(campaign, handIndex);
+  if (campId) {
+    const card = campaign.catalog.get(campId);
+    if (!card) return { ok: false, reason: `Unknown camp card ${campId}` };
+    if ((campId === 'PL04' || campId === 'PL05') && campaign.state.ballot) {
+      return { ok: false, reason: 'Already on ballot', cardId: campId, cardName: card.n };
     }
     if (!isPlayable(campaign.state, card)) {
       return { ok: false, reason: 'Not playable', cardId: card.id, cardName: card.n };
     }
+    // Shop / camp actions are not physical hand cards — no discard.
     return executePlay(campaign.state, card, ground);
   }
   const id = campaign.deck.hand[handIndex];
@@ -350,26 +576,14 @@ export function playFromHand(
   return outcome;
 }
 
-export function endWeekInPlace(
-  campaign: Campaign,
-  opts: { autoThematic?: boolean } = {}
-): StageTransition {
-  const autoThematic = opts.autoThematic !== false; // default true for harnesses
-  if (campaign.state.stage === 'primary' || campaign.state.stage === 'general') {
-    discardHand(campaign.deck);
-  }
-  if (autoThematic && campaign.state.pendingThematic) {
-    autoResolveThematic(campaign.state);
-  }
-  // Obligations drag every week/month before calendar advances
-  tickObligations(campaign.state);
+export function endWeekInPlace(campaign: Campaign): StageTransition {
+  discardHand(campaign.deck);
   const transition = advanceCampaignWeek(campaign.state);
-  if (campaign.state.stage === 'primary' || campaign.state.stage === 'general') {
-    repCheck(campaign.state);
-  }
-  if (transition.kind === 'enter_next_primary') {
-    discardHand(campaign.deck);
-  }
+  // Catches week-gated reputation thresholds (e.g. R02) even on a week
+  // with no plays; play-triggered thresholds are already checked in
+  // executePlay. See src/engine/reputation.ts.
+  repCheck(campaign.state);
+  syncMovementFlags(campaign.state);
   return transition;
 }
 
@@ -393,69 +607,29 @@ export function runWeek(campaign: Campaign, choose: Chooser): WeekReport {
   const stageAtStart = campaign.state.stage;
   const drawn = startWeek(campaign);
   const plays: PlayOutcome[] = [];
-
-  if (campaign.state.stage === 'interim') {
-    if (campaign.state.pendingThematic) autoResolveThematic(campaign.state);
-    let guard = campaign.state.apMax * 3 + 2;
-    while (campaign.state.ap > 0 && guard-- > 0) {
-      const menu = pickInterimMenu(campaign.state, 4);
-      if (!menu.length) break;
-      const pick = menu[0]!;
-      const r = runInterimPlay(campaign.state, pick.id);
-      plays.push({
-        ok: r.ok,
-        text: r.text,
-        cardId: pick.id,
-        cardName: pick.n,
-        stamp: 'GAIN',
-        tier: 1
-      });
-      if (!r.ok) break;
+  let guard = campaign.state.apMax * 4 + 4;
+  while (campaign.state.ap > 0 && !campaign.state.over && guard-- > 0) {
+    // Resolve any pending draft before plays (auto for harness path)
+    if (campaign.state.pendingDraft) {
+      autoResolvePhaseDraft(campaign.state, campaign.deck);
     }
-  } else if (campaign.state.stage === 'session') {
-    let guard = campaign.state.apMax * 3 + 2;
-    while (campaign.state.ap > 0 && guard-- > 0) {
-      const menu = pickSessionMenu(campaign.state, 4);
-      if (!menu.length) break;
-      const pick = menu[0]!;
-      const r = runSessionPlay(campaign.state, pick.id);
-      plays.push({
-        ok: r.ok,
-        text: r.text,
-        cardId: pick.id,
-        cardName: pick.n,
-        stamp: 'GAIN',
-        tier: 1
-      });
-      if (!r.ok) break;
+    const playable = listPlayableHand(campaign);
+    if (playable.length === 0) break;
+    const handIndex = choose(playable, campaign.state);
+    if (handIndex === null || handIndex === undefined) break;
+    const wasBallot = campaign.state.ballot;
+    const outcome = playFromHand(campaign, handIndex);
+    plays.push(outcome);
+    if (!wasBallot && campaign.state.ballot) {
+      maybeOfferPhaseDraft(campaign, true);
     }
-  } else {
-    let guard = campaign.state.apMax * 4 + 4;
-    while (campaign.state.ap > 0 && !campaign.state.over && guard-- > 0) {
-      if (campaign.state.pendingDraft) {
-        autoResolvePhaseDraft(campaign.state, campaign.deck);
-      }
-      const playable = listPlayableHand(campaign);
-      if (playable.length === 0) break;
-      const handIndex = choose(playable, campaign.state);
-      if (handIndex === null || handIndex === undefined) break;
-      const wasBallot = campaign.state.ballot;
-      const outcome = playFromHand(campaign, handIndex);
-      plays.push(outcome);
-      if (!wasBallot && campaign.state.ballot) {
-        maybeOfferPhaseDraft(campaign, true);
-      }
-      if (!outcome.ok) break;
-    }
+    if (!outcome.ok) break;
   }
   const summary = summarizeWeek(campaign, plays);
   const transition = endWeekInPlace(campaign);
   if (transition.kind === 'enter_general') {
     ensureGeneralTools(campaign);
     maybeOfferPhaseDraft(campaign, true);
-  }
-  if (transition.kind === 'enter_next_primary') {
-    startWeek(campaign);
   }
   return {
     week: weekAtStart,
@@ -475,51 +649,17 @@ export function runWeeks(
   choose: Chooser
 ): WeekReport[] {
   const reports: WeekReport[] = [];
-  while (campaign.state.week <= throughWeek && !campaign.state.over && campaign.state.stage !== 'interim') {
+  while (campaign.state.week <= throughWeek && !campaign.state.over) {
     reports.push(runWeek(campaign, choose));
-  }
-  // Allow the week that transitions into interim to complete
-  if (campaign.state.stage === 'primary' || campaign.state.stage === 'general') {
-    // already stopped without interim
   }
   return reports;
 }
 
-/**
- * Run one election cycle until post-election parking:
- * - losses → interim
- * - general win → session (not yet interim)
- * Harnesses read lastCycleOutcome; career never ends.
- */
+/** Run primary + general until the campaign ends or calendar exhausts. */
 export function runFullCampaign(campaign: Campaign, choose: Chooser): WeekReport[] {
   const reports: WeekReport[] = [];
   let guard = 40;
-  while (
-    !campaign.state.over &&
-    campaign.state.stage !== 'interim' &&
-    campaign.state.stage !== 'session' &&
-    guard-- > 0
-  ) {
-    reports.push(runWeek(campaign, choose));
-  }
-  return reports;
-}
-
-/** Auto-play through session weeks into interim. */
-export function runThroughSession(campaign: Campaign, choose: Chooser): WeekReport[] {
-  const reports: WeekReport[] = [];
-  let guard = 12;
-  while (campaign.state.stage === 'session' && !campaign.state.over && guard-- > 0) {
-    reports.push(runWeek(campaign, choose));
-  }
-  return reports;
-}
-
-/** Keep auto-playing through interim months into the next primary (multi-cycle). */
-export function runThroughInterim(campaign: Campaign, choose: Chooser): WeekReport[] {
-  const reports: WeekReport[] = [];
-  let guard = 20;
-  while (campaign.state.stage === 'interim' && !campaign.state.over && guard-- > 0) {
+  while (!campaign.state.over && guard-- > 0) {
     reports.push(runWeek(campaign, choose));
   }
   return reports;

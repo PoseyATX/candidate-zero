@@ -56,19 +56,26 @@ function runStrategy(name: string): Row {
     setDefaultSeed(seed);
     const c = createCampaign({ seed });
     runFullCampaign(c, choose);
-    const o = (c.state.lastCycleOutcome ?? c.state.outcome ?? 'ongoing') as CampaignOutcome;
+    const o = (c.state.outcome ?? 'ongoing') as CampaignOutcome;
 
+    // Phase 4: general win enters Session — terminal outcomes are session_* or lost_general.
+    const wonGenPath =
+      o === 'won_general' ||
+      o === 'session_law' ||
+      o === 'session_survived' ||
+      o === 'session_primaried';
     if (o === 'missed_filing') missedFiling++;
     else if (o === 'lost_primary') lostPrimary++;
-    else if (o === 'won_general') wonGeneral++;
+    else if (wonGenPath) wonGeneral++;
     else if (o === 'lost_general') lostGeneral++;
 
-    if (o === 'won_general' || o === 'lost_general') {
+    if (wonGenPath || o === 'lost_general') {
       nGenStats++;
       const gotv = c.state.groundsArr.reduce((s, g) => s + (g.gotv || 0), 0);
       gotvSum += gotv;
       nameSum += c.state.nameID;
       contactSum += c.state.contacts;
+      // After session, genOpp math is historical; still useful for pre-session force.
       genPSum += generalWinProbability(c.state);
     }
   }
@@ -149,7 +156,9 @@ assert(
 // affordability-gated, not guaranteed, so this is texture, not landslide;
 // cap raised a hair rather than distorting archive card costs to force
 // an exact number.
-const maxMoneyOverLabor = TRIALS < 80 ? 3.5 : 2.4;
+// 2026-07-19: rival teeth + Outside weather widen money's edge (cash buys
+// field flexibility and less petition starvation). Cap 3.5 = texture band.
+const maxMoneyOverLabor = TRIALS < 80 ? 3.8 : 3.5;
 assert(
   money.overallGeneralWin <= labor.overallGeneralWin * maxMoneyOverLabor,
   `money overall win (${money.overallGeneralWin}) should not dominate labor (${labor.overallGeneralWin}) by more than ${maxMoneyOverLabor}x`
@@ -157,7 +166,8 @@ assert(
 
 console.log('\nDesign read:');
 console.log('- Deck growth injects into the physical draw pile (ownership-only bug fixed).');
-console.log('- General injects PL19 GOTV; cost 1 vol so the lever is usable.');
+console.log('- General kit gravity: PL19 into hand; field→GOTV; rapport seed; PL08 off-table.');
+console.log('- PL23 Rides to the Polls when A06 owned; win math weights GOTV harder than contacts.');
 console.log('- Primary modestly more winnable when balloted; general still GOTV-gated.');
 console.log('- grind remains the control (miss filing).');
 console.log('\nHarness complete.');

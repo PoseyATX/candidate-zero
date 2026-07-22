@@ -1,167 +1,446 @@
 /**
- * Thin regular session — only while inOffice.
- * Capitol verbs: casework from Austin, file, whip lite, gallery risk, dream.
+ * Session pipeline + survival plays — port of archive SESSION_PLAYS
+ * (prototype-single-file.html ~940–1003 core path + casework/errand/whip).
+ *
+ * All show-gated on stage==='session'. Pipeline plays (SS02–SS07) are one
+ * per week (sessionFlags.pipelineUsed), matching archive pace.
  */
 
-import type { GameState, CycleResidue } from '../engine/types.js';
-import { random } from '../engine/rng.js';
+import type { PlayCard } from '../engine/types.js';
+import {
+  applyPacClaimOnReferral,
+  billOdds,
+  refusePacClaim,
+  sessionPipelineBlocked,
+  setBillStage
+} from '../engine/session.js';
 
-export interface SessionPlay {
-  id: string;
-  n: string;
-  tag: string;
-  d: string;
-  costAp: number;
-  weight: (s: GameState) => number;
-  run: (s: GameState) => { text: string; residue?: CycleResidue };
+function clamp(v: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, v));
 }
 
-function pushRes(s: GameState, r: CycleResidue): void {
-  if (!s.pendingResidue) s.pendingResidue = [];
-  if (!s.pendingResidue.some(x => x.id === r.id)) s.pendingResidue.push(r);
-}
-
-export const SESSION_PLAYS: SessionPlay[] = [
-  {
-    id: 'SES_FILE',
-    n: 'File a bill',
-    tag: 'procedure',
-    d: 'A number on a jacket. Most die. Filing is still a signal home.',
-    costAp: 1,
-    weight: () => 2,
-    run: s => {
-      s.capital = (s.capital || 0) + 1;
-      s.sessionFlags = s.sessionFlags || {};
-      s.sessionFlags.filed = true;
-      s.billsFiledSession = (s.billsFiledSession ?? 0) + 1;
-      if (random() < 0.25) {
-        s.speakerFavor = (s.speakerFavor ?? 0) + 1;
-        return { text: 'Filed. The clerk stamps. A staffer from leadership nods once.' };
-      }
-      return { text: 'Filed. The hopper swallows paper. Home will see the press release.' };
-    }
-  },
-  {
-    id: 'SES_CASEWORK',
-    n: 'District call from Austin',
-    tag: 'homestead',
-    d: 'The phone does not know you are under the dome.',
-    costAp: 1,
-    weight: s => (s.districtStanding < 50 ? 2.5 : 1.5),
-    run: s => {
-      s.contacts += 15;
-      s.districtStanding = Math.min(100, (s.districtStanding ?? 60) + 3);
-      return { text: 'Casework from a bad hotel. Someone at home still has your direct line.' };
-    }
-  },
-  {
-    id: 'SES_WHIP',
-    n: 'Count votes',
-    tag: 'whip',
-    d: 'A spreadsheet of maybes. Never leave it on the printer.',
-    costAp: 1,
-    weight: s => ((s.speakerFavor ?? 0) >= 1 ? 2 : 1),
-    run: s => {
-      if (random() < 0.4) {
-        s.speakerFavor = (s.speakerFavor ?? 0) + 1;
-        s.favors += 1;
-        return { text: 'Your count was right. Leadership files the favor under your name.' };
-      }
-      s.faces.O += 2;
-      return { text: 'The count slips. You learn who lies in the hallway.' };
-    }
-  },
-  {
-    id: 'SES_GALLERY',
-    n: 'Third House dinner',
-    tag: 'risk-adjacent',
-    d: 'Thick stock. No agenda printed. The agenda is the point.',
-    costAp: 1,
-    weight: () => 1.2,
-    run: s => {
-      s.money += 500;
-      s.shadowPlays += 1;
-      if (random() < 0.45) {
-        s.hitPieces += 1;
-        s.exposure = (s.exposure || 0) + 1;
-        const r: CycleResidue = {
-          id: 'RES_GALLERY',
-          name: 'Photographed at dinner',
-          text: 'Gallery heat follows you home next cycle.',
-          kind: 'hindrance',
-          source: 'session'
-        };
-        pushRes(s, r);
-        return { text: 'The dinner is photographed. WHO DINED WITH WHOM. Heat +1.', residue: r };
-      }
-      s.speakerFavor = Math.max(0, (s.speakerFavor ?? 0) - 0); // noop clarity
-      s.faces.L += 3;
-      return { text: 'You leave early. The Third House still has your card.' };
-    }
-  },
-  {
-    id: 'SES_TESTIFY',
-    n: 'Committee testimony',
-    tag: 'issue',
-    d: 'Three points. One story. Leave the rage for the garage.',
-    costAp: 1,
-    weight: s => (s.issueId ? 2 : 1),
-    run: s => {
-      s.nameID += 2;
-      s.messageSharp = true;
-      if (random() < 0.3) {
-        s.endorsePts += 1;
-        return { text: `Testimony on ${s.issue}. A chair leans in. Endorsement path opens a crack.` };
-      }
-      return { text: `Testimony on ${s.issue}. The record keeps what the cameras miss.` };
-    }
-  },
-  {
-    id: 'SES_REST',
-    n: 'Bad hotel sleep',
-    tag: 'exhaustion',
-    d: 'Session eats homestead. Dream is a truce, not a strategy.',
-    costAp: 1,
-    weight: s => ((s.sessionWeek ?? 1) >= 3 ? 2 : 0.8),
-    run: s => {
-      s.districtStanding = Math.max(0, (s.districtStanding ?? 60) - 2);
-      s.hitPieces = Math.max(0, s.hitPieces - (random() < 0.3 ? 1 : 0));
-      return { text: 'Sleep. The district thins a degree. Austin does not notice.' };
-    }
+/** archive SS01 */
+export const SS01_FileBill: PlayCard = {
+  id: 'SS01',
+  n: 'File the Bill',
+  cost: { a: 1 },
+  risk: 'SAFE',
+  ph: [1, 2, 3],
+  tag: 'H.B. ____',
+  attrs: ['INK'],
+  d: 'Your name, your issue, a number. It exists now, which is more than most ideas get.',
+  show: s => s.stage === 'session' && !!s.bill && s.bill.pipelineStage === 0,
+  odds: () => 0.95,
+  run: s => {
+    setBillStage(s, 1);
+    if (s.bill) s.bill.filedWeek = s.week;
+    return `H.B. filed on ${s.issue ?? 'your issue'}. The clerk stamps it without looking up. Referral is the Speaker's to give.`;
   }
-];
+};
 
-export function pickSessionMenu(state: GameState, n = 4): SessionPlay[] {
-  const bag: SessionPlay[] = [];
-  for (const p of SESSION_PLAYS) {
-    const w = Math.max(0.2, p.weight(state));
-    const copies = Math.max(1, Math.round(w * 2));
-    for (let i = 0; i < copies; i++) bag.push(p);
+/** archive SS02 — PAC claim bites here (Phase 3 hook) */
+export const SS02_SeekReferral: PlayCard = {
+  id: 'SS02',
+  n: 'Seek Referral',
+  cost: { a: 1 },
+  risk: 'STD',
+  ph: [1, 2, 3],
+  tag: "the Speaker's desk",
+  attrs: ['DIP'],
+  d: "Bills go where the Speaker sends them. (Opens wk 2.) If the PAC holds a claim, they collect before the desk moves.",
+  show: s =>
+    s.stage === 'session' &&
+    !!s.bill &&
+    s.bill.pipelineStage === 1 &&
+    s.week >= 2 &&
+    !s.sessionFlags?.pipelineUsed,
+  odds: s => billOdds(s, 0.45),
+  run: (s, o) => {
+    s.sessionFlags = s.sessionFlags || {};
+    s.sessionFlags.pipelineUsed = true;
+    let pac = '';
+    if (s.sessionFlags.pac_lender_claim || s.obls.includes('OB1')) {
+      if (!s.sessionFlags.pac_claim_refused) {
+        pac = applyPacClaimOnReferral(s);
+      }
+    }
+    if (o.tier <= 1) {
+      setBillStage(s, 2);
+      if (s.committee && s.bill) s.bill.committeeId = s.committee.id;
+      return (
+        (o.tier === 0
+          ? 'Referred to a friendly committee. Someone up there is smiling on you.'
+          : 'Referred. Not the graveyard. That is a start.') + pac
+      );
+    }
+    if (o.tier === 2) {
+      return 'Sitting on the desk. The Speaker\'s office says "soon." Soon is a place bills die.' + pac;
+    }
+    if (s.bill) s.bill.heat += 1;
+    return 'Referred to a hostile committee. Someone up there is not smiling.' + pac;
   }
-  const picked: SessionPlay[] = [];
-  const seen = new Set<string>();
-  for (const p of [...bag].sort(() => random() - 0.5)) {
-    if (seen.has(p.id)) continue;
-    seen.add(p.id);
-    picked.push(p);
-    if (picked.length >= n) break;
-  }
-  return picked;
-}
+};
 
-export function runSessionPlay(state: GameState, playId: string): { ok: boolean; text: string } {
-  const play = SESSION_PLAYS.find(p => p.id === playId);
-  if (!play) return { ok: false, text: 'Unknown session work.' };
-  if (state.stage !== 'session') return { ok: false, text: 'Chamber is not in session.' };
-  if (!state.inOffice) return { ok: false, text: 'You do not hold the seat.' };
-  if (state.ap < play.costAp) return { ok: false, text: 'No AP left this week.' };
-  state.ap -= play.costAp;
-  const result = play.run(state);
-  state.log.push({
-    week: state.week,
-    kind: 'play',
-    text: `${play.n}: ${result.text}`,
-    cardId: play.id
-  });
-  return { ok: true, text: result.text };
-}
+/** Explicit PAC refuse — optional before referral if claim held */
+export const SS_PAC_Refuse: PlayCard = {
+  id: 'SS_PAC',
+  n: 'Refuse the PAC Call',
+  cost: { a: 0 },
+  risk: 'VOL',
+  ph: [1, 2, 3],
+  tag: 'the string pulls',
+  kind: 'bargain',
+  attrs: ['CON'],
+  d: 'They want an aye on a quiet association bill. Refuse and keep your district — pay in heat and ink.',
+  show: s =>
+    s.stage === 'session' &&
+    !!(s.sessionFlags?.pac_lender_claim || s.obls.includes('OB1')) &&
+    !s.sessionFlags?.pac_claim_paid &&
+    !s.sessionFlags?.pac_claim_refused,
+  odds: () => 0.99,
+  run: s => refusePacClaim(s)
+};
+
+/** archive SS03 */
+export const SS03_CourtChair: PlayCard = {
+  id: 'SS03',
+  n: 'Court the Chair',
+  cost: { a: 1 },
+  risk: 'STD',
+  ph: [1, 2, 3],
+  tag: 'the gatekeeper',
+  attrs: ['DIP'],
+  d: 'The chair decides what gets heard. (Hearings open wk 4.) Kitchen-table rules, marble floors.',
+  show: s =>
+    s.stage === 'session' &&
+    !!s.bill &&
+    s.bill.pipelineStage === 2 &&
+    s.week >= 4 &&
+    !s.sessionFlags?.pipelineUsed,
+  odds: s => billOdds(s, 0.45) + (s.faces.O > 10 ? 0.08 : 0),
+  run: (s, o) => {
+    s.sessionFlags = s.sessionFlags || {};
+    s.sessionFlags.pipelineUsed = true;
+    if (o.tier <= 1) {
+      setBillStage(s, 3);
+      if (s.committee) s.committee.standing = Math.min(100, s.committee.standing + 8);
+      if (o.tier === 0) s.capital += 1;
+      return 'A hearing date. The chair pencils you in — pencils being the operative word.';
+    }
+    if (o.tier === 2) return '"We\'ll see what the calendar allows." The calendar allows what the chair allows.';
+    s.faces.O -= 2;
+    return 'You push the chair. The chair does not care for pushing.';
+  }
+};
+
+/** archive SS04 */
+export const SS04_Testimony: PlayCard = {
+  id: 'SS04',
+  n: 'Committee Testimony',
+  cost: { a: 1 },
+  risk: 'VOL',
+  ph: [1, 2, 3],
+  tag: 'on the record',
+  attrs: ['CON', 'CHA'],
+  d: 'Witnesses, a timer, members reading their phones. (Votes-out open wk 6.)',
+  show: s =>
+    s.stage === 'session' &&
+    !!s.bill &&
+    s.bill.pipelineStage === 3 &&
+    s.week >= 6 &&
+    !s.sessionFlags?.pipelineUsed,
+  odds: s => billOdds(s, 0.45) + (s.messageSharp ? 0.08 : 0),
+  run: (s, o) => {
+    s.sessionFlags = s.sessionFlags || {};
+    s.sessionFlags.pipelineUsed = true;
+    if (o.tier === 0) {
+      setBillStage(s, 4);
+      s.capital += 1;
+      s.nameID += 3;
+      if (s.bill) s.bill.tally = { aye: 9, nay: 0, present: 0, need: 5 };
+      return 'Your witness makes a member look up from his phone. Voted out with a rare unanimous nod.';
+    }
+    if (o.tier === 1) {
+      setBillStage(s, 4);
+      if (s.bill) s.bill.tally = { aye: 5, nay: 4, present: 0, need: 5 };
+      return 'Voted out on party lines. Forward is forward.';
+    }
+    if (o.tier === 2) return 'Left pending. "Pending" is committee for "quietly bleeding."';
+    if (s.bill) s.bill.heat += 2;
+    return 'A hostile witness lands. The bill is pending and hemorrhaging.';
+  }
+};
+
+/** archive SS05 */
+export const SS05_CalendarSlot: PlayCard = {
+  id: 'SS05',
+  n: 'Beg a Calendar Slot',
+  cost: { a: 1 },
+  risk: 'STD',
+  ph: [1, 2, 3],
+  tag: 'the narrowest door',
+  attrs: ['CRA', 'DIP'],
+  d: 'Calendars decides what the House even sees. (Opens wk 9.) Favor is the only currency here.',
+  show: s =>
+    s.stage === 'session' &&
+    !!s.bill &&
+    s.bill.pipelineStage === 4 &&
+    s.week >= 9 &&
+    !s.sessionFlags?.pipelineUsed &&
+    !sessionPipelineBlocked(s, 'SS05'),
+  odds: s => billOdds(s, 0.3) + (s.favor > 65 ? 0.15 : 0),
+  run: (s, o) => {
+    s.sessionFlags = s.sessionFlags || {};
+    s.sessionFlags.pipelineUsed = true;
+    if (o.tier <= 1) {
+      setBillStage(s, 5);
+      return 'A slot. Late in the day, late in the session — but a slot.';
+    }
+    if (o.tier === 2) {
+      if (s.bill) s.bill.heat += 1;
+      return 'Below the line again. The clock eats another week, and the line gets longer.';
+    }
+    s.favor -= 5;
+    return 'You lean on Calendars and Calendars leans back. Favor slips.';
+  }
+};
+
+/** archive SS06 */
+export const SS06_FloorFight: PlayCard = {
+  id: 'SS06',
+  n: 'Floor Fight',
+  cost: { a: 1 },
+  risk: 'VOL',
+  ph: [1, 2, 3],
+  tag: 'the whole House watching',
+  attrs: ['CRA', 'CLO'],
+  d: 'Amendments fly, points of order lurk, the back mic is loaded. (Floor opens wk 11.)',
+  show: s =>
+    s.stage === 'session' &&
+    !!s.bill &&
+    s.bill.pipelineStage === 5 &&
+    s.week >= 11 &&
+    !s.sessionFlags?.pipelineUsed &&
+    !sessionPipelineBlocked(s, 'SS06'),
+  odds: s => billOdds(s, 0.5) + s.capital * 0.02,
+  run: (s, o) => {
+    s.sessionFlags = s.sessionFlags || {};
+    s.sessionFlags.pipelineUsed = true;
+    if (o.tier === 0) {
+      setBillStage(s, 6);
+      s.capital += 2;
+      s.nameID += 5;
+      if (s.bill) s.bill.tally = { aye: 92, nay: 48, present: 0, need: 76 };
+      return 'Passed to third reading clean. The Old Bulls nod from the back row. That nod is currency.';
+    }
+    if (o.tier === 1) {
+      setBillStage(s, 6);
+      if (s.bill) {
+        s.bill.heat += 1;
+        s.bill.tally = { aye: 78, nay: 62, present: 0, need: 76 };
+      }
+      return 'Passed — wearing two hostile amendments like buckshot. Alive, though.';
+    }
+    if (o.tier === 2) {
+      if (s.bill) s.bill.heat += 1;
+      return 'Postponed on a motion. The clock grins.';
+    }
+    if (s.bill) s.bill.heat += 2;
+    s.capital = Math.max(0, s.capital - 1);
+    return 'POINT OF ORDER — sustained. Back to committee on a technicality. The author of the point does not look at you.';
+  }
+};
+
+/** archive SS07 */
+export const SS07_WorkSenate: PlayCard = {
+  id: 'SS07',
+  n: 'Work the Senate',
+  cost: { a: 1 },
+  risk: 'VOL',
+  ph: [1, 2, 3],
+  tag: 'the other chamber',
+  attrs: ['INK', 'DIP'],
+  d: 'Thirty-one senators, the Lt. Governor, and the Tag in wait. (Opens wk 13.)',
+  show: s =>
+    s.stage === 'session' &&
+    !!s.bill &&
+    s.bill.pipelineStage === 6 &&
+    s.week >= 13 &&
+    !s.sessionFlags?.pipelineUsed,
+  odds: s => billOdds(s, 0.4),
+  run: (s, o) => {
+    s.sessionFlags = s.sessionFlags || {};
+    s.sessionFlags.pipelineUsed = true;
+    if (o.tier <= 1) {
+      setBillStage(s, 7);
+      return 'A senator adopts it. Through the upper chamber, scarred but breathing.';
+    }
+    if (o.tier === 2) {
+      if (s.bill) s.bill.heat += 1;
+      return 'TAGGED. Forty-eight hours lost, and the session has no forty-eight hours to spare.';
+    }
+    if (s.bill) s.bill.heat += 2;
+    return 'It dies in Senate committee at 11:58 on a procedural motion. Revive it — if the clock allows.';
+  }
+};
+
+/** archive SS08 */
+export const SS08_Casework: PlayCard = {
+  id: 'SS08',
+  n: 'District Casework',
+  cost: { a: 1 },
+  risk: 'SAFE',
+  ph: [1, 2, 3],
+  tag: 'the home fires',
+  attrs: ['CHA'],
+  d: "A veteran's benefits, a stop-sign petition, a widow's property line. The seat is kept here, not in Austin.",
+  show: s => s.stage === 'session',
+  odds: () => 0.85,
+  run: (s, o) => {
+    s.sessionFlags = s.sessionFlags || {};
+    s.sessionFlags.caseworkThisWeek = true;
+    const bonus = s.sessionFlags?.caseworkBonus ? 1 : 0;
+    // Session teeth: casework is the only full answer to weekly home-fire drain
+    const g =
+      (s.districtStanding > 75 ? (o.tier === 0 ? 4 : 3) : o.tier === 0 ? 7 : 5) + bonus;
+    s.districtStanding = clamp(s.districtStanding + g, 0, 100);
+    // Soften challenger if you show up at home
+    const ch = Number(s.sessionFlags.challengerHeat || 0);
+    if (ch > 0 && o.tier <= 1) {
+      s.sessionFlags.challengerHeat = Math.max(0, ch - 1);
+    }
+    return (
+      'Calls returned, problems chased. The district remembers who answers.' +
+      (s.districtStanding > 75 ? ' (High standing: gains diminish.)' : '') +
+      (ch > 0 && o.tier <= 1 ? ' Challenger heat eases one notch.' : '')
+    );
+  }
+};
+
+/** archive SS09 */
+export const SS09_SpeakerErrand: PlayCard = {
+  id: 'SS09',
+  n: "The Speaker's Errand",
+  cost: { a: 1 },
+  risk: 'STD',
+  ph: [1, 2, 3],
+  tag: 'favor for favor',
+  attrs: ['DIP'],
+  d: 'Carry a small unpleasant thing for leadership. It costs your name a little; it buys your bill a lot.',
+  show: s => s.stage === 'session',
+  odds: () => 0.75,
+  run: (s, o) => {
+    s.sessionFlags = s.sessionFlags || {};
+    if (o.tier <= 1) {
+      s.favor += 8;
+      s.districtStanding = clamp(s.districtStanding - 2, 0, 100);
+      // Session teeth: errands thaw freeze / clear demand
+      const fz = Number(s.sessionFlags.speakerFreeze || 0);
+      if (fz > 0) s.sessionFlags.speakerFreeze = Math.max(0, fz - 1);
+      s.sessionFlags.errandDemand = false;
+      return (
+        'Done quietly. The fifth floor notes it. The district would not love the details.' +
+        (fz > 0 ? ' (Leadership freeze eases.)' : '')
+      );
+    }
+    return 'The errand goes sideways and you own a little of it. Nothing gained.';
+  }
+};
+
+/** archive SS10 */
+export const SS10_WhipTrade: PlayCard = {
+  id: 'SS10',
+  n: 'Whip a Vote Trade',
+  cost: { a: 1 },
+  risk: 'STD',
+  ph: [1, 2, 3],
+  tag: 'the favor economy',
+  attrs: ['CRA'],
+  d: 'Your aye for his, payable when called. The whole building runs on this ledger.',
+  show: s => s.stage === 'session',
+  odds: s => 0.65 + s.faces.O * 0.004,
+  run: (s, o) => {
+    if (o.tier <= 1) {
+      s.capital += o.tier === 0 ? 2 : 1;
+      return 'Traded. Your little bank of ayes grows.';
+    }
+    if (o.tier === 2) return "No takers this week. Everyone's ledger is full.";
+    s.faces.O -= 2;
+    return 'A trade leaks and reads as cynical. It was, but still.';
+  }
+};
+
+/** archive SS12 */
+export const SS12_StudyRules: PlayCard = {
+  id: 'SS12',
+  n: 'Study the Rules',
+  cost: { a: 1 },
+  risk: 'SAFE',
+  ph: [1, 2, 3],
+  tag: 'the manual',
+  attrs: ['INK'],
+  d: "Most members never read them. The ones who do own the ones who don't.",
+  show: s => s.stage === 'session',
+  odds: () => 0.9,
+  run: s => {
+    s.faces.P += 4;
+    s.capital += 1;
+    return 'An evening with the rulebook. Somewhere in there is the parliamentary trick that will one day save your bill.';
+  }
+};
+
+/** archive SS13 — Old Bull writ */
+export const SS13_PlayWrit: PlayCard = {
+  id: 'SS13',
+  n: 'Play the Writ',
+  cost: { a: 0 },
+  risk: 'SAFE',
+  ph: [1, 2, 3],
+  tag: "the Old Bull's gift",
+  attrs: ['INK'],
+  d: 'One procedural miracle, pre-paid. Spend it where the session bends.',
+  show: s => s.stage === 'session' && !!s.sessionFlags?.writ,
+  odds: () => 1,
+  run: s => {
+    s.sessionFlags = s.sessionFlags || {};
+    s.sessionFlags.writ = false;
+    if (s.bill && s.bill.pipelineStage >= 1 && s.bill.pipelineStage < 8) {
+      setBillStage(s, Math.min(8, s.bill.pipelineStage + 1));
+      s.bill.heat = Math.max(0, s.bill.heat - 1);
+      return "The Writ spends itself: a motion nobody saw coming, and your bill jumps a stage. The Old Bull, watching from the gallery, tips two fingers.";
+    }
+    s.capital += 3;
+    return 'No bill to move — the Writ converts to raw capital. Three ayes\' worth.';
+  }
+};
+
+/**
+ * Session loop package — Special residency (not Main Deck).
+ * Scoped to freshman / state-rep family; departs kit on sine die (future wire).
+ * See docs/CARD-RESIDENCY.md.
+ */
+const SESSION_ENTITY_SCOPE = ['ENT_FRESHMAN_MEMBER', 'ENT_STATE_REP'] as const;
+
+export const SESSION_PLAYS: PlayCard[] = (() => {
+  const cards: PlayCard[] = [
+    SS01_FileBill,
+    SS02_SeekReferral,
+    SS_PAC_Refuse,
+    SS03_CourtChair,
+    SS04_Testimony,
+    SS05_CalendarSlot,
+    SS06_FloorFight,
+    SS07_WorkSenate,
+    SS08_Casework,
+    SS09_SpeakerErrand,
+    SS10_WhipTrade,
+    SS12_StudyRules,
+    SS13_PlayWrit
+  ];
+  for (const c of cards) {
+    c.residency = 'special';
+    c.control = 'player';
+    c.entityScope = [...SESSION_ENTITY_SCOPE];
+  }
+  return cards;
+})();

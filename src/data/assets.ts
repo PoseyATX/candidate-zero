@@ -1,186 +1,145 @@
 /**
- * Buyable campaign assets — money (and rare vol) sinks with real mechanical bite.
- * Ported/adapted from archive ASSETS shop (billboards, website, staff tools).
+ * Purchasable campaign assets — ported from archive/prototype-single-file.html
+ * ASSETS registry + assetPlays() (lines ~819–831).
+ *
+ * Shop entries appear as always-available camp actions (0 AP; money or
+ * volunteer cost). Buying pushes the id onto state.assets; cards that
+ * already check s.assets.includes('A01'/'A09'/…) become live.
+ *
+ * Not inventing: only the eight archive shop assets. A13 Church Directory
+ * is granted by PL30 Prayer Breakfast, not sold.
  */
 
-import type { GameState } from '../engine/types.js';
+import type { GameState, PlayCard } from '../engine/types.js';
 
 export interface AssetDef {
   id: string;
   n: string;
+  /** Dollar cost (archive `cost`). */
   cost: number;
-  /** Optional volunteer cost */
+  /** Volunteer cost (archive `vcost`) — paid as vp. */
   vcost?: number;
   d: string;
-  /** Mechanical summary for UI */
-  effect: string;
   req?: (s: GameState) => boolean;
-  /** Called once on purchase */
-  onBuy?: (s: GameState) => void;
 }
 
-/** Purchasable kit — BIO_/ISSUE_/REGION_ tags are not in this catalog. */
-export const SHOP_ASSETS: AssetDef[] = [
-  {
+/**
+ * Archive ASSETS (prototype-single-file.html:820–827).
+ * Order matches archive Object.entries iteration for harness stability.
+ */
+export const ASSETS: Record<string, AssetDef> = {
+  // archive line 820
+  A01: {
+    id: 'A01',
+    n: 'The Walk List',
+    cost: 400,
+    req: s => s.assets.includes('A02'),
+    d: 'Walks +50%, targeted doors.'
+  },
+  // archive line 821
+  A02: {
     id: 'A02',
     n: 'Voter File Access',
     cost: 400,
-    d: 'Last cycle’s names, or a cousin’s login. Targeting starts here.',
-    effect: 'Enables Walk List purchase; walks slightly sharper.',
-    onBuy: s => {
-      s.nameID += 1;
-    }
+    d: 'Enables the Walk List and absentee targeting.'
   },
-  {
-    id: 'A01',
-    n: 'The Walk List',
-    cost: 450,
-    d: 'Annotated doors. Not the whole county — the doors that vote.',
-    effect: 'Block Walk +12% odds and ×1.5 contacts.',
-    req: s => s.assets.includes('A02') || s.contacts >= 40,
-  },
-  {
-    id: 'A09',
-    n: 'Phone Tree',
-    cost: 350,
-    vcost: 1,
-    d: 'A printed tree and a grandma who will call until the pizza ends.',
-    effect: 'Phone Bank +15% odds; double contact yield.',
-  },
-  {
-    id: 'A04',
-    n: 'Website That Works',
-    cost: 300,
-    d: 'Not a Facebook. A real form. Small dollars start here.',
-    effect: 'Fish Fry / small-dollar +20%; name ID +1 passive/week.',
-    onBuy: s => {
-      if (!s.backers.includes('B05')) s.backers.push('B05');
-    }
-  },
-  {
-    id: 'A11',
-    n: 'Push Cards',
-    cost: 250,
-    d: 'Corrugated stock. Your face. The issue in fourteen-point type.',
-    effect: 'Every walk +1 Name ID.',
-  },
-  {
+  // archive line 822
+  A03: {
     id: 'A03',
     n: 'Mail Program',
     cost: 1500,
-    d: 'House file, ink, postage. Contrast Mail actually lands.',
-    effect: 'Contrast Mail cheaper mentally; Subdivisions convert harder.',
-    req: s => s.tier >= 1 || s.ballot,
+    d: 'Unlocks Contrast Mail (with Oppo File); Subdivisions convert ×2.'
   },
-  {
+  // archive line 823
+  A04: {
+    id: 'A04',
+    n: 'Website That Works',
+    cost: 300,
+    d: 'Small-dollar list compounds.'
+  },
+  // archive line 824
+  A06: {
     id: 'A06',
     n: 'The Flatbed Truck',
     cost: 800,
-    d: 'Signs, coolers, a generator. Logistics is ideology with a hitch.',
-    effect: 'Crisis events +name; FM Roads walks stronger; GOTV edge.',
+    d: 'Rides to the Polls; FM Roads events double.'
   },
-  {
+  // archive line 825 — money 0, volunteer cost 2
+  A09: {
+    id: 'A09',
+    n: 'Phone Tree',
+    cost: 0,
+    vcost: 2,
+    d: 'Phone Bank doubles; college kids flake-proofed.'
+  },
+  // archive line 826
+  A11: {
+    id: 'A11',
+    n: 'Push Cards',
+    cost: 250,
+    d: 'Every walk adds +1 name ID.'
+  },
+  // archive line 827
+  A12: {
     id: 'A12',
     n: 'Billboard on the Highway',
     cost: 2000,
-    d: 'Your name above the feedlot exit. Passive ID the expensive way.',
-    effect: '+2 Name ID on buy; +1 Name ID each week while held.',
-    req: s => s.money >= 500 || s.tier >= 1,
-    onBuy: s => {
-      s.nameID += 2;
+    d: 'Passive name ID, Phase II–III.'
+  }
+};
+
+/** Asset ids that the shop can sell (excludes BIO_/ISSUE_/REGION_ tags). */
+export const SHOP_ASSET_IDS = Object.keys(ASSETS);
+
+/**
+ * Build BUY* plays for assets the player does not yet own and whose req
+ * (if any) is met. Port of archive assetPlays() (line ~829–831).
+ */
+export function buildShopPlays(state: GameState): PlayCard[] {
+  const out: PlayCard[] = [];
+  for (const [id, a] of Object.entries(ASSETS)) {
+    if (state.assets.includes(id)) continue;
+    if (a.req && !a.req(state)) continue;
+    out.push({
+      id: 'BUY' + id,
+      n: 'Acquire: ' + a.n,
+      cost: { a: 0, $: a.cost || undefined, vp: a.vcost || undefined },
+      risk: 'SAFE',
+      ph: [1, 2, 3],
+      tag: 'asset',
+      kind: 'item',
+      residency: 'main',
+      control: 'player',
+      d: a.d,
+      odds: () => 1,
+      run: s => {
+        if (!s.assets.includes(id)) s.assets.push(id);
+        return a.n + ' acquired. ' + a.d;
+      }
+    });
+  }
+  return out;
+}
+
+/** Static catalog of all BUY* cards (for dead-refs / harness; show gates live state). */
+export function allShopPlayTemplates(): PlayCard[] {
+  return Object.entries(ASSETS).map(([id, a]) => ({
+    id: 'BUY' + id,
+    n: 'Acquire: ' + a.n,
+    cost: { a: 0, $: a.cost || undefined, vp: a.vcost || undefined },
+    risk: 'SAFE' as const,
+    ph: [1, 2, 3],
+    tag: 'asset',
+    kind: 'item' as const,
+    /** Main unlocks — persistent assets the campaign carries. */
+    residency: 'main' as const,
+    control: 'player' as const,
+    d: a.d,
+    show: (s: GameState) => !s.assets.includes(id) && (!a.req || a.req(s)),
+    odds: () => 1,
+    run: (s: GameState) => {
+      if (!s.assets.includes(id)) s.assets.push(id);
+      return a.n + ' acquired. ' + a.d;
     }
-  },
-  {
-    id: 'A07',
-    n: 'Part-Time Scheduler',
-    cost: 1200,
-    d: 'Someone who answers the phone so you can walk.',
-    effect: '+1 AP max while held (staff is a force multiplier).',
-    req: s => (s.cycleIndex ?? 0) >= 0 && s.contacts >= 25,
-    onBuy: s => {
-      s.apMax = Math.min(4, s.apMax + 1);
-      s.ap = Math.min(s.apMax, s.ap + 1);
-    }
-  },
-  {
-    id: 'A08',
-    n: 'Yard Sign Cache',
-    cost: 400,
-    d: 'Unplanted plastic and a staple gun.',
-    effect: 'Yard Sign Blitz free of $ cost once owned (stock on hand).',
-  }
-];
-
-export function assetName(id: string): string {
-  return SHOP_ASSETS.find(a => a.id === id)?.n ?? id;
-}
-
-export function ownedShopAssets(state: GameState): AssetDef[] {
-  return SHOP_ASSETS.filter(a => state.assets.includes(a.id));
-}
-
-export function listShopOffers(state: GameState): AssetDef[] {
-  return SHOP_ASSETS.filter(a => {
-    if (state.assets.includes(a.id)) return false;
-    if (a.req && !a.req(state)) return false;
-    return true;
-  });
-}
-
-export function canAffordAsset(state: GameState, a: AssetDef): boolean {
-  if ((a.cost ?? 0) > state.money) return false;
-  if ((a.vcost ?? 0) > state.volPool) return false;
-  return true;
-}
-
-export function buyAsset(
-  state: GameState,
-  id: string
-): { ok: boolean; text: string } {
-  const a = SHOP_ASSETS.find(x => x.id === id);
-  if (!a) return { ok: false, text: 'Unknown asset.' };
-  if (state.assets.includes(id)) return { ok: false, text: 'Already owned.' };
-  if (a.req && !a.req(state)) return { ok: false, text: 'Requirements not met.' };
-  if (!canAffordAsset(state, a)) return { ok: false, text: 'Cannot afford.' };
-
-  state.money -= a.cost;
-  if (a.vcost) state.volPool -= a.vcost;
-  state.assets.push(id);
-  a.onBuy?.(state);
-
-  const text = `ACQUIRED: ${a.n}. ${a.effect}`;
-  state.log.push({ week: state.week, kind: 'note', text });
-  // Dopamine-friendly flag
-  if (!state.trophies) state.trophies = [];
-  state.trophies.push({
-    id: 'BUY_' + id + '_' + state.week,
-    name: a.n,
-    text: a.effect,
-    kind: 'loot',
-    cycle: state.cycleIndex ?? 0
-  });
-  return { ok: true, text };
-}
-
-/** Passive weekly effects from owned shop assets. */
-export function tickAssetPassives(state: GameState): string[] {
-  const notes: string[] = [];
-  if (state.assets.includes('A12')) {
-    state.nameID += 1;
-    notes.push('Billboard: +1 Name ID');
-  }
-  if (state.assets.includes('A04') && state.week % 2 === 0) {
-    state.nameID += 1;
-    notes.push('Website: +1 Name ID');
-  }
-  if (state.assets.includes('A07')) {
-    // keep apMax elevated if staff was bought (re-apply clamp)
-    if (state.apMax < 3) state.apMax = 3;
-  }
-  return notes;
-}
-
-/** Display chips for kit — shop assets only, not BIO tags. */
-export function kitChips(state: GameState): { id: string; n: string; effect: string }[] {
-  return ownedShopAssets(state).map(a => ({ id: a.id, n: a.n, effect: a.effect }));
+  }));
 }

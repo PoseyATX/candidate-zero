@@ -9,9 +9,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PLAYS } from '../src/data/plays.js';
-import { INTERIM_PLAYS } from '../src/data/interim-plays.js';
+import { WAITING_PLAYS } from '../src/data/waiting-plays.js';
 import { SESSION_PLAYS } from '../src/data/session-plays.js';
-import { SHOP_ASSETS } from '../src/data/assets.js';
+import { ASSETS } from '../src/data/assets.js';
 import type { PlayCard } from '../src/engine/types.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -176,82 +176,39 @@ for (const c of PLAYS) {
   rows.push(playRow(c, wave4.has(c.id) ? 'plays-wave4.ts' : 'plays.ts'));
 }
 
-for (const c of INTERIM_PLAYS) {
-  rows.push({
-    catalog: 'interim',
-    source_file: 'interim-plays.ts',
-    id: c.id,
-    name: c.n,
-    tag: c.tag,
-    risk: 'CHOICE',
-    trap_risk_flag: false,
-    field: false,
-    cost_ap: c.costAp,
-    cost_money: '',
-    cost_vol: '',
-    cost_momentum: '',
-    cost_favor: '',
-    phases: '0',
-    attrs: '',
-    weight: '',
-    has_odds: false,
-    has_run: true,
-    has_show: false,
-    has_req: false,
-    description: (c.d ?? '').replace(/\r?\n/g, ' ').trim(),
-    role: 'offseason',
-    path_labor_money_neutral: 'neutral',
-    stage_primary_general_session_interim: 'interim',
-    economy_target: 'residue',
-    balance_notes: '',
-    status: 'live',
-  });
+// Interim / "waiting" verbs — full PlayCards on this line (WAITING_PLAYS).
+for (const c of WAITING_PLAYS) {
+  const row = playRow(c, 'waiting-plays.ts');
+  row.catalog = 'interim';
+  row.role = 'offseason';
+  row.stage_primary_general_session_interim = 'interim';
+  row.economy_target = row.economy_target || 'residue';
+  rows.push(row);
 }
 
+// Session motions — full PlayCards on this line (SESSION_PLAYS).
 for (const c of SESSION_PLAYS) {
-  rows.push({
-    catalog: 'session',
-    source_file: 'session-plays.ts',
-    id: c.id,
-    name: c.n,
-    tag: c.tag,
-    risk: 'CHOICE',
-    trap_risk_flag: false,
-    field: false,
-    cost_ap: c.costAp,
-    cost_money: '',
-    cost_vol: '',
-    cost_momentum: '',
-    cost_favor: '',
-    phases: '4',
-    attrs: '',
-    weight: '',
-    has_odds: false,
-    has_run: true,
-    has_show: false,
-    has_req: false,
-    description: (c.d ?? '').replace(/\r?\n/g, ' ').trim(),
-    role: 'session',
-    path_labor_money_neutral: 'neutral',
-    stage_primary_general_session_interim: 'session',
-    economy_target: 'capital_or_favor',
-    balance_notes: '',
-    status: 'live',
-  });
+  const row = playRow(c, 'session-plays.ts');
+  row.catalog = 'session';
+  row.role = 'session';
+  row.stage_primary_general_session_interim = 'session';
+  row.economy_target = row.economy_target || 'capital_or_favor';
+  rows.push(row);
 }
 
-for (const a of SHOP_ASSETS) {
+// Shop assets — ASSETS record (id -> AssetDef) on this line.
+for (const [id, a] of Object.entries(ASSETS)) {
   rows.push({
     catalog: 'asset',
     source_file: 'assets.ts',
-    id: a.id,
+    id,
     name: a.n,
     tag: 'shop',
     risk: 'SAFE',
     trap_risk_flag: false,
     field: false,
     cost_ap: '',
-    cost_money: a.cost,
+    cost_money: a.cost || '',
     cost_vol: a.vcost ?? '',
     cost_momentum: '',
     cost_favor: '',
@@ -262,7 +219,7 @@ for (const a of SHOP_ASSETS) {
     has_run: false,
     has_show: false,
     has_req: typeof a.req === 'function',
-    description: `${a.d} | EFFECT: ${a.effect}`.replace(/\r?\n/g, ' ').trim(),
+    description: (a.d ?? '').replace(/\r?\n/g, ' ').trim(),
     role: 'shop_sink',
     path_labor_money_neutral: 'money',
     stage_primary_general_session_interim: 'primary|general|session|interim',
