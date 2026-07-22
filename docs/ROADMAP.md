@@ -483,16 +483,20 @@ Concretely still open:
   ground picker, terminal. Findings: **title / tutorial / setup clean;**
   **all 7 color-contrast AA failures fixed** (dark-theme text below 4.5:1:
   `.ledger-band-label`, `.log-line .w`, `.debt-note`, `.growth` — recolored
-  to 5.4–6.6:1, on-theme, verified by re-audit + smoke). **One serious item
-  remains, pending a card-layout decision:** `scrollable-region-focusable`
-  on the card `.desc` (4 nodes) — the fixed-2:3 card makes long descriptions
-  an overflow-scroll region a keyboard-only user can't reach. There's no
-  lossless CSS-only fix (adding `tabindex` inside the card `<button>` trades
-  it for a `nested-interactive` violation); the real fix is a card-layout
-  call — clip long text with a fade, or let cards grow to fit — which
-  shouldn't be made unilaterally. `a11y` is NOT yet a CI gate (it exits
-  non-zero while that one item stands). Still manual, not automatable:
-  keyboard focus-order flow and screen-reader copy review.
+  to 5.4–6.6:1, on-theme, verified by re-audit + smoke). **Last serious item
+  closed 2026-07-22** (`scrollable-region-focusable`, the card `.desc`, 4
+  nodes): the fix followed the owner's card-face direction — *descriptions
+  are data revealed on demand, never drawn on the 2:3 face* (and nothing
+  clipped or resized, both explicitly ruled out). The on-card `.desc`
+  overflow-scroll region was removed entirely; the full description now
+  lives in the card `<button>`'s accessible name (`aria-label`, read by
+  screen readers) and `title` (hover tooltip) — so there is no scroll region
+  to trap keyboard focus, no `nested-interactive` trade-off, and the face
+  matches the committed Unity card-face spec (name + art + cost + kind
+  tint). Screenshot-verified at 390×844; `smoke:ui` still green. **`a11y` is
+  now a CI gate** (`npm run a11y` after `smoke:ui` in `ci.yml`) — axe-core
+  reports **0 critical / 0 serious** across all screens. Still manual, not
+  automatable: keyboard focus-order flow and screen-reader copy review.
 - ~~No visual regression / e2e test in CI~~ **DONE 2026-07-19.** The engine
   had 24 harnesses; the UI had zero automated coverage — the exact blind
   spot behind the UI-regression class of bug (dead End Week button, field

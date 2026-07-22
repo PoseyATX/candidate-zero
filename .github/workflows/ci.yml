@@ -41,3 +41,6 @@ jobs:
 
       - name: UI smoke test (drives the real built app; catches dead buttons, stuck modals, console errors)
         run: npm run smoke:ui
+
+      - name: Accessibility audit (axe-core WCAG 2 A/AA; fails on any critical/serious)
+        run: npm run a11y
