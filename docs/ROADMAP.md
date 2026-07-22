@@ -547,9 +547,31 @@ forward rather than re-discovered by accident.
 over the pure TypeScript engine, then iOS / App Store. Issue
 [#12](https://github.com/PoseyATX/candidate-zero/issues/12).
 
-Non-negotiable: Unity does **not** reimplement resolve/odds/yields. Prep
-work (keep `GameState` clean, freeze engine API, seed contract) can start
-while Phase 4–7 run; full vertical slice waits for Session shape to settle.
+Non-negotiable: Unity does **not** reimplement resolve/odds/yields.
+
+**✅ Engine API freeze + seed contract — DONE 2026-07-19.** The prep this
+phase named ("keep `GameState` clean, freeze engine API, seed contract") is
+shipped as the host binding boundary:
+
+- **`src/engine/api.ts`** — the one frozen surface a host binds to:
+  `newGame`, `view`, `legalActions`, `apply`, `serialize`/`deserialize`,
+  `setupOptions`, `ENGINE_API_VERSION` (1.0.0). Pure, JSON-serializable,
+  deterministic; wraps the existing engine with **zero rule changes**.
+- **Seed/save contract** — the RNG is mulberry32 (state = one uint32
+  counter), so a game reproduces exactly from `{ seed, rng, setup, state,
+  deck }`. Guarantees, proven by `npm run harness:api` across 5 seeds:
+  same seed + command log → identical state; serialize→deserialize at any
+  step is exact (save file ≈ 3.5 KB).
+- **`npm run build:engine`** → `dist-engine/candidate-zero-engine.{mjs,umd.cjs}`
+  — standalone headless bundle (UMD `CandidateZeroEngine` global) for
+  Unity's JS runtime (ClearScript/Jint/Puerts); no DOM. Built in CI so it
+  can't rot. Verified headless in Node.
+- Contract doc: **`docs/ENGINE-API.md`**.
+
+**Next for this phase (the actual Unity work, unchanged):** stand up the
+Unity project that embeds the bundle and renders `view()` — presentation,
+input, audio, persistence, and the Chronicle live in Unity; **no rules**.
+Full vertical slice still waits for Session shape to fully settle.
 
 Swift-native remains a possible *future* rewrite of the same pure engine —
 not the near-term store path.
