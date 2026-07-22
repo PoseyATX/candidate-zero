@@ -24,6 +24,7 @@ import { ALL_PLAYS } from './plays.js';
 import { SESSION_PLAYS } from './session-plays.js';
 import { WAITING_PLAYS } from './waiting-plays.js';
 import { SIGNATURE_PLAYS } from './signature-plays.js';
+import { PATH_REWARDS } from './paths.js';
 import { PERSONAS, ISSUES, DISTRICTS, REGIONS } from './setup.js';
 import { createDefaultGrounds } from '../engine/state.js';
 import type { CardKind, PlayCard } from '../engine/types.js';
@@ -46,7 +47,7 @@ export interface CardEntry {
   control: string;
   entityScope: string[];
   /** Which deck pool this card belongs to (presentation grouping). */
-  deck: 'main' | 'session' | 'waiting' | 'signature';
+  deck: 'main' | 'session' | 'waiting' | 'signature' | 'path';
 }
 
 export interface ContentManifest {
@@ -104,7 +105,8 @@ export function buildContentManifest(): ContentManifest {
     ...ALL_PLAYS.map(c => cardEntry(c, 'main')),
     ...SESSION_PLAYS.map(c => cardEntry(c, 'session')),
     ...WAITING_PLAYS.map(c => cardEntry(c, 'waiting')),
-    ...SIGNATURE_PLAYS.map(c => cardEntry(c, 'signature'))
+    ...SIGNATURE_PLAYS.map(c => cardEntry(c, 'signature')),
+    ...PATH_REWARDS.map(c => cardEntry(c, 'path'))
   ];
 
   const personas = PERSONAS.map(p => ({

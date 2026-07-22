@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "counts": {
-    "cards": 87,
+    "cards": 90,
     "personas": 24,
     "issues": 18,
     "districts": 4,
@@ -2640,6 +2640,93 @@
       "control": "player",
       "entityScope": [],
       "deck": "signature"
+    },
+    {
+      "id": "RW_INTERNS",
+      "name": "Outsource Petition Drive to University Interns",
+      "tagline": "the intern army",
+      "description": "A hundred students, one afternoon, clipboards everywhere. Signatures at scale — the labor door, staffed by the young.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "INK",
+        "CLO"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "path"
+    },
+    {
+      "id": "RW_BUNDLER",
+      "name": "Work the Bundler's List",
+      "tagline": "pre-sorted checks",
+      "description": "Someone else's rolodex, dialing for you. The money arrives bundled, with strings you can mostly ignore.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CRA",
+        "DIP"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "path"
+    },
+    {
+      "id": "RW_PRECINCT",
+      "name": "Turn Out the Precinct Captains",
+      "tagline": "the machine turns",
+      "description": "Every captain a small turnout operation. When they move together, the count moves with them.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 1,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP",
+        "CLO"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "path"
     }
   ],
   "personas": [

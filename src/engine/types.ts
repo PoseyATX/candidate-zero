@@ -223,8 +223,14 @@ export interface GameState {
   tier: number;
   persona: string | null;
   /** Persona id from setup (e.g. 'PA_CHA') — the id, not the display name.
-      Used for persona-gated content (signature cards, future unlock paths). */
+      Used for persona-gated content (signature cards, unlock paths). */
   personaId: string | null;
+  /** Unlock paths (docs/PATHS.md): count of each card id ever played this run
+      (combo tracking), required-steps met per path, and completed paths. A
+      completed path injects its reward card and fires a lore toast. */
+  playedCardIds: Record<string, number>;
+  pathProgress: Record<string, number>;
+  pathsUnlocked: Record<string, boolean>;
   issue: string | null;
   district: DistrictInfo | null;
   eventsFired: Record<string, boolean>;

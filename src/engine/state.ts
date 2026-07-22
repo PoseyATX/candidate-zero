@@ -58,6 +58,7 @@ export function createNewState(overrides: Partial<GameState> = {}): GameState {
     faces: createInitialFaces(), shFired: {}, groundsArr: createDefaultGrounds(),
     allies: [], backers: [], assets: [], obls: [], reps: [], rivals: [],
     tier: 0, persona: null, personaId: null, issue: null, district: null, eventsFired: {},
+    playedCardIds: {}, pathProgress: {}, pathsUnlocked: {},
     stage: 'primary', genOpp: null, genBase: 0, over: false, outcome: 'ongoing',
     primaryWon: false, log: [],
     capital: 0, favor: 50, districtStanding: 60, bill: null, committee: null, sessionFlags: {},
