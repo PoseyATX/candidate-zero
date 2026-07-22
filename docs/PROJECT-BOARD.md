@@ -35,7 +35,7 @@ become a second rules implementation.
 | **DONE** | — | Outside weather UI surface (`pendingOutside`) |
 | **RESTING** | — | Package clean — see [`RESTING.md`](./RESTING.md); wake: templates *or* P7 prep *or* a11y residual |
 | PLANNED | [#11](https://github.com/PoseyATX/candidate-zero/issues/11) | Phase 7 — Honest v0.1 label |
-| PLANNED | [#12](https://github.com/PoseyATX/candidate-zero/issues/12) | Phase 8 — TS → Unity → iOS / App Store · **engine API freeze + seed contract DONE** (`api.ts`, `harness:api`, `build:engine`, `docs/ENGINE-API.md`); Unity vertical slice next |
+| PLANNED | [#12](https://github.com/PoseyATX/candidate-zero/issues/12) | Phase 8 — TS → Unity → iOS / App Store · **DONE: engine API + seed contract** (`api.ts`, `harness:api`, `build:engine`) **+ content→ScriptableObjects bridge** (`manifest.ts`, `export:content`, `harness:content`, `unity/`, `docs/UNITY-BRIDGE.md`); Unity project (importer + engine host) next |
 | META | [#13](https://github.com/PoseyATX/candidate-zero/issues/13) | Board hygiene rules |
 | BUG | [#14](https://github.com/PoseyATX/candidate-zero/issues/14) | Pages deploy auto-fire / workflow scope |
 | PLANNED | [#15](https://github.com/PoseyATX/candidate-zero/issues/15) | AC1 archive yield-table full compare |

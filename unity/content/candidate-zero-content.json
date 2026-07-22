@@ -1,0 +1,2524 @@
+{
+  "version": "1.0.0",
+  "counts": {
+    "cards": 66,
+    "personas": 24,
+    "issues": 18,
+    "districts": 4,
+    "regions": 7,
+    "grounds": 8
+  },
+  "cardKinds": [
+    {
+      "id": "action",
+      "label": "Action"
+    },
+    {
+      "id": "bargain",
+      "label": "Bargain"
+    },
+    {
+      "id": "ally",
+      "label": "Ally"
+    },
+    {
+      "id": "item",
+      "label": "Item"
+    },
+    {
+      "id": "location",
+      "label": "Location"
+    },
+    {
+      "id": "liability",
+      "label": "Liability"
+    },
+    {
+      "id": "blackmail",
+      "label": "Blackmail"
+    }
+  ],
+  "cards": [
+    {
+      "id": "PL01",
+      "name": "Block Walk",
+      "tagline": "the spine",
+      "description": "Boots and a clipboard. The one play that never turns on you. When in doubt. In the general, doors become turnout.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": true,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL02",
+      "name": "Phone Bank",
+      "tagline": "rain-proof",
+      "description": "Half the yield, none of the weather. Grandma's kitchen table is HQ. In the general, the phone is a GOTV tool.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": true,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 1,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL03",
+      "name": "Yard Sign Blitz",
+      "tagline": "visibility",
+      "description": "A district that sees your name starts believing it belongs there.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": true,
+      "phases": [
+        1,
+        2
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 150,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL04",
+      "name": "Petition Drive",
+      "tagline": "the zero-dollar door",
+      "description": "Signatures instead of a fee. Labor is the currency you were born holding.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL05",
+      "name": "Pay the Filing Fee",
+      "tagline": "the money door",
+      "description": "$1,250 and it's done. Shame-free, story-free.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1
+      ],
+      "cost": {
+        "ap": 0,
+        "money": 1250,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL06",
+      "name": "Town Hall",
+      "tagline": "showing up",
+      "description": "Folding chairs, burnt coffee, real questions. The kids notice if you skip these.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL07",
+      "name": "Candidate Forum",
+      "tagline": "bright lights",
+      "description": "Sixty seconds and every rival watching for the stumble.",
+      "risk": "VOL",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CON",
+        "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL08",
+      "name": "Kitchen-Table Meeting",
+      "tagline": "pie is not optional",
+      "description": "A chair's kitchen, her rules. Bring pie; leave with a precinct or nothing. (Primary circuit — out of the general.)",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL09",
+      "name": "Earned Media Pitch",
+      "tagline": "the gallery",
+      "description": "A county weekly, a drive-time host, a stringer if you're lucky.",
+      "risk": "VOL",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 1,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL10",
+      "name": "Press Release",
+      "tagline": "the on-ramp",
+      "description": "Nobody prints it. Everybody files it. The reporter learns your name spelling.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CRA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL13",
+      "name": "Fish Fry",
+      "tagline": "clean money",
+      "description": "Five-dollar plates, donation jar, casseroles. Net positive, always.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": true,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 150,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL14",
+      "name": "Court the Chairs (Pie Circuit)",
+      "tagline": "gatekeepers",
+      "description": "The kitchen-table circuit at scale. Phase III chairs are already spoken for.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL11",
+      "name": "Straw Poll Push",
+      "tagline": "club math",
+      "description": "Pack the room, count the hands. Clubs remember who wins their straw.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 1,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO",
+        "DIP"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL12",
+      "name": "Club Speech",
+      "tagline": "the circuit",
+      "description": "Rubber chicken, real gatekeepers. Read the room or the room reads you.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CON",
+        "DIP"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL15",
+      "name": "Oppo Research",
+      "tagline": "the file",
+      "description": "A quiet man with a courthouse habit. What he finds becomes yours to spend — or to hold.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 500,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CRA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL17",
+      "name": "Debate Prep",
+      "tagline": "homework",
+      "description": "The Kitchen Cabinet plays your rival better than your rival does.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "INK",
+        "CON"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL19",
+      "name": "GOTV Weekend",
+      "tagline": "the point of it all",
+      "description": "Rapport is a promise. Turnout is the promise kept. One volunteer and a weekend. The general spine.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": true,
+      "phases": [
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 1,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL23",
+      "name": "Rides to the Polls",
+      "tagline": "the flatbed doctrine",
+      "description": "The truck runs routes. Steepest conversion where turnout is lowest. Needs the Flatbed (shop A06).",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": true,
+      "phases": [
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 1,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL16",
+      "name": "Recruit Volunteers",
+      "tagline": "force multiplier",
+      "description": "An army marches on casseroles. Every volunteer makes every other card better.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO",
+        "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL18",
+      "name": "Sharpen the Message",
+      "tagline": "one issue, said right",
+      "description": "You are not running on nine things. You are running on one thing, said so it stays said.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CON"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL20",
+      "name": "Take the PAC Check",
+      "tagline": "the Third House pays well",
+      "description": "A man in a good suit admires your race. The check is real. So is the string tied to it. Once. Session will collect.",
+      "risk": "STD",
+      "kind": "bargain",
+      "trap": true,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CRA",
+        "DIP"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL21",
+      "name": "Self-Fund on Credit",
+      "tagline": "the bank believes in you",
+      "description": "The bank will lend against the homestead. Campaigns have eaten better men's farms. Spend it now — the bill lands on the win/loss branch, not your odds.",
+      "risk": "SAFE",
+      "kind": "bargain",
+      "trap": true,
+      "field": false,
+      "phases": [
+        1,
+        2
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CRA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL22",
+      "name": "Contrast Mail",
+      "tagline": "the folder spent",
+      "description": "What the quiet man found, printed on cheap stock and mailed to every primary voter who votes.",
+      "risk": "VOL",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 800,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CRA",
+        "INK"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL21B",
+      "name": "Promote a Canvass Captain",
+      "tagline": "the field gets a spine",
+      "description": "One volunteer stops showing up as a volunteer and starts showing up as staff.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": true,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 3,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL39",
+      "name": "Hire a Field Director",
+      "tagline": "professionalize",
+      "description": "A professional who has run four of these before. Money buys what volunteers can't always deliver on schedule.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": true,
+      "phases": [
+        1,
+        2
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 2200,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL22B",
+      "name": "See the Slate-Maker",
+      "tagline": "the printed word",
+      "description": "One man prints the card half the primary votes from. His price is never only money.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 1500,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP",
+        "CRA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL30",
+      "name": "Prayer Breakfast",
+      "tagline": "the corridor opens",
+      "description": "Biscuits at six-thirty. The Corridor watches who shows before sunrise.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CON",
+        "DIP"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL32",
+      "name": "Coffee with the Editor",
+      "tagline": "earned goodwill",
+      "description": "Not for an endorsement — for a fair shake. The weekly decides who's \"serious\" long before the voters do.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL48",
+      "name": "Court the County Judge",
+      "tagline": "the heaviest name",
+      "description": "The one endorsement that moves a whole county. He gives it to winners, so look like one.",
+      "risk": "VOL",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL29",
+      "name": "Attend the Funeral",
+      "tagline": "the morality lesson",
+      "description": "A beloved judge has died. You can be present, or you can be seen. Presence earns the living.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "MV01",
+      "name": "Call in the Precinct Chair network",
+      "tagline": "orbit movement",
+      "description": "The chairs you banked open a door: lists, volunteers, a quiet county nod. Special kit — Precinct Chair orbit.",
+      "risk": "SAFE",
+      "kind": "ally",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_PRECINCT_CHAIR"
+      ],
+      "deck": "main"
+    },
+    {
+      "id": "MV02",
+      "name": "Execute the field plan",
+      "tagline": "orbit movement",
+      "description": "The captain's route book becomes the week's law. Special kit — Canvass Captain orbit. Field AP and turf GOTV.",
+      "risk": "SAFE",
+      "kind": "ally",
+      "trap": false,
+      "field": true,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO",
+        "DIP"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_CANVASS_CAPTAIN"
+      ],
+      "deck": "main"
+    },
+    {
+      "id": "MV03",
+      "name": "Spend the courthouse nod",
+      "tagline": "orbit movement",
+      "description": "The heaviest local name spends itself once. Special kit — County Judge orbit. Endorsement gravity and name heat.",
+      "risk": "SAFE",
+      "kind": "ally",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP",
+        "CLO"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_COUNTY_JUDGE"
+      ],
+      "deck": "main"
+    },
+    {
+      "id": "MV04",
+      "name": "Activate the party apparatus",
+      "tagline": "orbit movement",
+      "description": "The Chairwoman opens the file and the volunteer list. Special kit — County Party orbit.",
+      "risk": "SAFE",
+      "kind": "ally",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP",
+        "CLO"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_COUNTY_PARTY_EXEC"
+      ],
+      "deck": "main"
+    },
+    {
+      "id": "MV05",
+      "name": "Pull the club roster",
+      "tagline": "orbit movement",
+      "description": "Every name that votes straw. Special kit — Club Leader orbit.",
+      "risk": "SAFE",
+      "kind": "ally",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP",
+        "CHA"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_CLUB_LEADER"
+      ],
+      "deck": "main"
+    },
+    {
+      "id": "MV06",
+      "name": "Call in the fair shake",
+      "tagline": "orbit movement",
+      "description": "Not an endorsement — the benefit of the doubt in print. Special kit — Local Editor orbit.",
+      "risk": "SAFE",
+      "kind": "ally",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA",
+        "CRA"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_LOCAL_EDITOR"
+      ],
+      "deck": "main"
+    },
+    {
+      "id": "MV07",
+      "name": "Open the corridor",
+      "tagline": "orbit movement",
+      "description": "The Pastor's hand on both of yours. Directory and volunteers. Special kit — Faith Leader orbit.",
+      "risk": "SAFE",
+      "kind": "ally",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CON",
+        "DIP"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_FAITH_LEADER"
+      ],
+      "deck": "main"
+    },
+    {
+      "id": "MV08",
+      "name": "Run the slate hard",
+      "tagline": "orbit movement",
+      "description": "Half the primary votes from a printed card. Special kit — Slate-Maker orbit. His marker was already on it.",
+      "risk": "SAFE",
+      "kind": "ally",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CRA",
+        "DIP"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_SLATE_MAKER"
+      ],
+      "deck": "main"
+    },
+    {
+      "id": "MV09",
+      "name": "Call the finance book",
+      "tagline": "orbit movement",
+      "description": "The Finance Chair opens the call sheet. Special kit — money spine, not a free weekly drip forever.",
+      "risk": "SAFE",
+      "kind": "ally",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CRA",
+        "CLO"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_FINANCE_CHAIR"
+      ],
+      "deck": "main"
+    },
+    {
+      "id": "MV10",
+      "name": "Take the drive-time slot",
+      "tagline": "orbit movement",
+      "description": "Open mic between farm reports and the noon news. Special kit — Radio Host orbit. Name heat, not an endorsement.",
+      "risk": "SAFE",
+      "kind": "ally",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA",
+        "CRA"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_RADIO_HOST"
+      ],
+      "deck": "main"
+    },
+    {
+      "id": "MV11",
+      "name": "Spend the access map",
+      "tagline": "orbit movement",
+      "description": "A junior lobbyist with a conscience walks you the side door. Special kit — access, not a vote.",
+      "risk": "SAFE",
+      "kind": "ally",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP",
+        "CRA"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_JUNIOR_LOBBYIST"
+      ],
+      "deck": "main"
+    },
+    {
+      "id": "MV12",
+      "name": "Spend the plant-gate nod",
+      "tagline": "orbit movement",
+      "description": "The local president puts a hand on your shoulder at shift change. Special kit — Union orbit. Volunteers and doors.",
+      "risk": "SAFE",
+      "kind": "ally",
+      "trap": false,
+      "field": true,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO",
+        "DIP"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_UNION_LOCAL_PRES"
+      ],
+      "deck": "main"
+    },
+    {
+      "id": "MV13",
+      "name": "Work the chicken circuit",
+      "tagline": "orbit movement",
+      "description": "Rubber chicken, name tags, reliable voters. Special kit — Chamber orbit. Money and polite weight.",
+      "risk": "SAFE",
+      "kind": "ally",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP",
+        "CHA"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_CHAMBER_EXEC"
+      ],
+      "deck": "main"
+    },
+    {
+      "id": "MV14",
+      "name": "Sit the feed-store bench",
+      "tagline": "orbit movement",
+      "description": "Unofficial senate on the bench out front. Special kit — Feed-Store orbit. Rumor is infrastructure.",
+      "risk": "SAFE",
+      "kind": "ally",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA",
+        "CON"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_FEED_STORE"
+      ],
+      "deck": "main"
+    },
+    {
+      "id": "SS01",
+      "name": "File the Bill",
+      "tagline": "H.B. ____",
+      "description": "Your name, your issue, a number. It exists now, which is more than most ideas get.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "INK"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_FRESHMAN_MEMBER",
+        "ENT_STATE_REP"
+      ],
+      "deck": "session"
+    },
+    {
+      "id": "SS02",
+      "name": "Seek Referral",
+      "tagline": "the Speaker's desk",
+      "description": "Bills go where the Speaker sends them. (Opens wk 2.) If the PAC holds a claim, they collect before the desk moves.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_FRESHMAN_MEMBER",
+        "ENT_STATE_REP"
+      ],
+      "deck": "session"
+    },
+    {
+      "id": "SS_PAC",
+      "name": "Refuse the PAC Call",
+      "tagline": "the string pulls",
+      "description": "They want an aye on a quiet association bill. Refuse and keep your district — pay in heat and ink.",
+      "risk": "VOL",
+      "kind": "bargain",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 0,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CON"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_FRESHMAN_MEMBER",
+        "ENT_STATE_REP"
+      ],
+      "deck": "session"
+    },
+    {
+      "id": "SS03",
+      "name": "Court the Chair",
+      "tagline": "the gatekeeper",
+      "description": "The chair decides what gets heard. (Hearings open wk 4.) Kitchen-table rules, marble floors.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_FRESHMAN_MEMBER",
+        "ENT_STATE_REP"
+      ],
+      "deck": "session"
+    },
+    {
+      "id": "SS04",
+      "name": "Committee Testimony",
+      "tagline": "on the record",
+      "description": "Witnesses, a timer, members reading their phones. (Votes-out open wk 6.)",
+      "risk": "VOL",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CON",
+        "CHA"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_FRESHMAN_MEMBER",
+        "ENT_STATE_REP"
+      ],
+      "deck": "session"
+    },
+    {
+      "id": "SS05",
+      "name": "Beg a Calendar Slot",
+      "tagline": "the narrowest door",
+      "description": "Calendars decides what the House even sees. (Opens wk 9.) Favor is the only currency here.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CRA",
+        "DIP"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_FRESHMAN_MEMBER",
+        "ENT_STATE_REP"
+      ],
+      "deck": "session"
+    },
+    {
+      "id": "SS06",
+      "name": "Floor Fight",
+      "tagline": "the whole House watching",
+      "description": "Amendments fly, points of order lurk, the back mic is loaded. (Floor opens wk 11.)",
+      "risk": "VOL",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CRA",
+        "CLO"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_FRESHMAN_MEMBER",
+        "ENT_STATE_REP"
+      ],
+      "deck": "session"
+    },
+    {
+      "id": "SS07",
+      "name": "Work the Senate",
+      "tagline": "the other chamber",
+      "description": "Thirty-one senators, the Lt. Governor, and the Tag in wait. (Opens wk 13.)",
+      "risk": "VOL",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "INK",
+        "DIP"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_FRESHMAN_MEMBER",
+        "ENT_STATE_REP"
+      ],
+      "deck": "session"
+    },
+    {
+      "id": "SS08",
+      "name": "District Casework",
+      "tagline": "the home fires",
+      "description": "A veteran's benefits, a stop-sign petition, a widow's property line. The seat is kept here, not in Austin.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_FRESHMAN_MEMBER",
+        "ENT_STATE_REP"
+      ],
+      "deck": "session"
+    },
+    {
+      "id": "SS09",
+      "name": "The Speaker's Errand",
+      "tagline": "favor for favor",
+      "description": "Carry a small unpleasant thing for leadership. It costs your name a little; it buys your bill a lot.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_FRESHMAN_MEMBER",
+        "ENT_STATE_REP"
+      ],
+      "deck": "session"
+    },
+    {
+      "id": "SS10",
+      "name": "Whip a Vote Trade",
+      "tagline": "the favor economy",
+      "description": "Your aye for his, payable when called. The whole building runs on this ledger.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CRA"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_FRESHMAN_MEMBER",
+        "ENT_STATE_REP"
+      ],
+      "deck": "session"
+    },
+    {
+      "id": "SS12",
+      "name": "Study the Rules",
+      "tagline": "the manual",
+      "description": "Most members never read them. The ones who do own the ones who don't.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "INK"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_FRESHMAN_MEMBER",
+        "ENT_STATE_REP"
+      ],
+      "deck": "session"
+    },
+    {
+      "id": "SS13",
+      "name": "Play the Writ",
+      "tagline": "the Old Bull's gift",
+      "description": "One procedural miracle, pre-paid. Spend it where the session bends.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 0,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "INK"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_FRESHMAN_MEMBER",
+        "ENT_STATE_REP"
+      ],
+      "deck": "session"
+    },
+    {
+      "id": "WA01",
+      "name": "Work the List",
+      "tagline": "waiting",
+      "description": "Call the names that still pick up. The county forgets slower when you dial.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "LOOP_WAITING_PERENNIAL",
+        "LOOP_WAITING_ADVOCATE",
+        "LOOP_WAITING_HOME"
+      ],
+      "deck": "waiting"
+    },
+    {
+      "id": "WA02",
+      "name": "Host an Issue Forum",
+      "tagline": "waiting",
+      "description": "The candidate lost; the cause did not. Folding chairs and a sharp message.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CON",
+        "CHA"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "LOOP_WAITING_ADVOCATE"
+      ],
+      "deck": "waiting"
+    },
+    {
+      "id": "WA03",
+      "name": "Carry the Bag",
+      "tagline": "waiting",
+      "description": "Two years inside. Briefs, desks, and where the levers hide.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "INK",
+        "CRA"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "LOOP_WAITING_STAFFER"
+      ],
+      "deck": "waiting"
+    },
+    {
+      "id": "WA04",
+      "name": "Mend the Fence",
+      "tagline": "waiting",
+      "description": "Fix what broke. Coach the team. Let the mailers fade a little.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "LOOP_WAITING_HOME"
+      ],
+      "deck": "waiting"
+    },
+    {
+      "id": "WA05",
+      "name": "Lunch the Lobby",
+      "tagline": "waiting",
+      "description": "Title still warm. Doors still open. No vote — only lunch.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP",
+        "CRA"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "LOOP_WAITING_EXMEMBER",
+        "LOOP_ELECTED_HIGHER_SENATE"
+      ],
+      "deck": "waiting"
+    },
+    {
+      "id": "WA06",
+      "name": "Keep the Rolodex Warm",
+      "tagline": "waiting",
+      "description": "Birthdays, funerals, fish fries you are not running. Yet.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [],
+      "deck": "waiting"
+    },
+    {
+      "id": "WA07",
+      "name": "Quiet Money",
+      "tagline": "waiting",
+      "description": "A retainer, a speech fee, a board. Not a campaign — not yet.",
+      "risk": "STD",
+      "kind": "bargain",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CRA"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [],
+      "deck": "waiting"
+    },
+    {
+      "id": "WA08",
+      "name": "Draft the Brief",
+      "tagline": "waiting",
+      "description": "White paper, memo, bill draft that waits for a sponsor.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "INK",
+        "CON"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [],
+      "deck": "waiting"
+    },
+    {
+      "id": "WA09",
+      "name": "Test the Waters",
+      "tagline": "waiting",
+      "description": "Quiet calls about a larger map. Senate row or the statewide ballot.",
+      "risk": "VOL",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP",
+        "CLO"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [],
+      "deck": "waiting"
+    }
+  ],
+  "personas": [
+    {
+      "id": "veteran",
+      "name": "The Veteran",
+      "tagline": "bio armor",
+      "description": "Two tours and a flag on the porch. Bio is armor.",
+      "attrs": {
+        "CON": 3,
+        "CLO": 2,
+        "CHA": 1
+      }
+    },
+    {
+      "id": "teacher",
+      "name": "The Teacher",
+      "tagline": "the rooms",
+      "description": "Twenty years of parent-teacher nights. You know the rooms.",
+      "attrs": {
+        "CHA": 3,
+        "DIP": 2,
+        "CON": 1
+      }
+    },
+    {
+      "id": "preacher",
+      "name": "The Preacher",
+      "tagline": "pulpit precinct",
+      "description": "A pulpit is a precinct. Sundays are turnout.",
+      "attrs": {
+        "CHA": 3,
+        "CLO": 2,
+        "DIP": 1
+      }
+    },
+    {
+      "id": "smallbiz",
+      "name": "The Feed-Store Owner",
+      "tagline": "credit and favors",
+      "description": "Everyone owes you credit or a favor.",
+      "attrs": {
+        "CRA": 3,
+        "DIP": 2,
+        "CLO": 1
+      }
+    },
+    {
+      "id": "PA_CLO",
+      "name": "The Powerhouse",
+      "tagline": "fills the room",
+      "description": "A presence that fills a room and a turnout operation to match. You win by showing up bigger than anyone.",
+      "attrs": {
+        "CLO": 5
+      }
+    },
+    {
+      "id": "PA_CON",
+      "name": "The True Believer",
+      "tagline": "message discipline",
+      "description": "The message arrives pre-sharpened and never wavers. Discipline is your whole discipline.",
+      "attrs": {
+        "CON": 5
+      }
+    },
+    {
+      "id": "PA_CRA",
+      "name": "The Operator",
+      "tagline": "knows an angle",
+      "description": "You know whose cousin owes whom, and when to move. The angle is always there if you look.",
+      "attrs": {
+        "CRA": 5
+      }
+    },
+    {
+      "id": "PA_INK",
+      "name": "The Parliamentarian",
+      "tagline": "reads the rules twice",
+      "description": "You read the rules twice. Process is a weapon that never jams.",
+      "attrs": {
+        "INK": 5
+      }
+    },
+    {
+      "id": "PA_DIP",
+      "name": "The Coalition-Builder",
+      "tagline": "rooms open for you",
+      "description": "You can seat the rancher next to the union man and make them both feel heard. Rooms open for you.",
+      "attrs": {
+        "DIP": 5
+      }
+    },
+    {
+      "id": "PA_CHA",
+      "name": "The Natural",
+      "tagline": "doors open wider",
+      "description": "Every door opens a little wider. People just take to you, and you know exactly what to do with that.",
+      "attrs": {
+        "CHA": 5
+      }
+    },
+    {
+      "id": "PA_CLO_CON",
+      "name": "The Movement Champion",
+      "tagline": "crowd and discipline",
+      "description": "Conviction with muscle behind it. You bring the crowd and you keep them in line.",
+      "attrs": {
+        "CLO": 3,
+        "CON": 3
+      }
+    },
+    {
+      "id": "PA_CLO_CRA",
+      "name": "The Bare-Knuckle Populist",
+      "tagline": "fights dirty when it must",
+      "description": "You go out loud and you fight dirty when you must. The establishment never sees the elbow coming.",
+      "attrs": {
+        "CLO": 3,
+        "CRA": 3
+      }
+    },
+    {
+      "id": "PA_CLO_INK",
+      "name": "The Workhorse",
+      "tagline": "grind plus rules",
+      "description": "You outwork everyone and you know the process cold. Grind plus rules is a hard thing to beat.",
+      "attrs": {
+        "CLO": 3,
+        "INK": 3
+      }
+    },
+    {
+      "id": "PA_CLO_DIP",
+      "name": "The Rural Patriarch",
+      "tagline": "two grounds start warm",
+      "description": "Your name means something here, and the chairs already wave. Two grounds start warm.",
+      "attrs": {
+        "CLO": 3,
+        "DIP": 3
+      }
+    },
+    {
+      "id": "PA_CLO_CHA",
+      "name": "The Local Legend",
+      "tagline": "the county's been rooting for you",
+      "description": "Star quarterback, then feed-store owner, now this. The county has been rooting for you for decades.",
+      "attrs": {
+        "CLO": 3,
+        "CHA": 3
+      }
+    },
+    {
+      "id": "PA_CON_CRA",
+      "name": "The Insurgent",
+      "tagline": "a knife for the primary",
+      "description": "A disciplined message and a knife for the primary. You are exactly as angry as you choose to be.",
+      "attrs": {
+        "CON": 3,
+        "CRA": 3
+      }
+    },
+    {
+      "id": "PA_CON_INK",
+      "name": "The Reform Crusader",
+      "tagline": "straight shooter, week one",
+      "description": "A cause and the rulebook to advance it. Straight Shooter before week one.",
+      "attrs": {
+        "CON": 3,
+        "INK": 3
+      }
+    },
+    {
+      "id": "PA_CON_DIP",
+      "name": "The Statesman",
+      "tagline": "trusted across the aisle",
+      "description": "Steady, principled, trusted across the aisle. The kind they call \"serious.\"",
+      "attrs": {
+        "CON": 3,
+        "DIP": 3
+      }
+    },
+    {
+      "id": "PA_CRA_INK",
+      "name": "The Fixer",
+      "tagline": "bends the rules cleanly",
+      "description": "You know the rules AND how to bend them. Dangerous in a committee, deadly near a deadline.",
+      "attrs": {
+        "CRA": 3,
+        "INK": 3
+      }
+    },
+    {
+      "id": "PA_CRA_DIP",
+      "name": "The Wheeler-Dealer",
+      "tagline": "a price on everything",
+      "description": "Two of everything and a price on each. You can trade your way out of almost anything.",
+      "attrs": {
+        "CRA": 3,
+        "DIP": 3
+      }
+    },
+    {
+      "id": "PA_CRA_CHA",
+      "name": "The Showman",
+      "tagline": "made for the cameras",
+      "description": "Timing and charm: you know the line AND the moment to land it. Made for the cameras.",
+      "attrs": {
+        "CRA": 3,
+        "CHA": 3
+      }
+    },
+    {
+      "id": "PA_INK_DIP",
+      "name": "The Committee Chair-in-Waiting",
+      "tagline": "leadership is watching this profile",
+      "description": "Process mastery and the relationships to use it. Leadership is watching this profile.",
+      "attrs": {
+        "INK": 3,
+        "DIP": 3
+      }
+    },
+    {
+      "id": "PA_INK_CHA",
+      "name": "The Homegrown Wonk",
+      "tagline": "smart and likeable is rare",
+      "description": "You explain the water district budget so plainly people thank you for it. Smart and likeable is rare.",
+      "attrs": {
+        "INK": 3,
+        "CHA": 3
+      }
+    },
+    {
+      "id": "PA_DIP_CHA",
+      "name": "The Dealmaker's Heir",
+      "tagline": "the family reputation opens doors",
+      "description": "A known name and a gift for people. Doors open on the family reputation; you keep them open on your own.",
+      "attrs": {
+        "DIP": 3,
+        "CHA": 3
+      }
+    }
+  ],
+  "issues": [
+    {
+      "id": "taxes",
+      "name": "Property taxes",
+      "tagline": "taxes",
+      "description": "Appraisal districts, school M&O, the levy that never sleeps."
+    },
+    {
+      "id": "water",
+      "name": "Water rights",
+      "tagline": "water",
+      "description": "Groundwater districts, river authorities, and drought maps."
+    },
+    {
+      "id": "schools",
+      "name": "School finance",
+      "tagline": "schools",
+      "description": "Formulas, facilities, and Friday nights."
+    },
+    {
+      "id": "border",
+      "name": "The border",
+      "tagline": "border",
+      "description": "Federal failure, local consequence. Easy to shout; hard to govern."
+    },
+    {
+      "id": "hospitals",
+      "name": "Rural hospitals",
+      "tagline": "hospitals",
+      "description": "OB deserts, ambulance miles, and the last ER light."
+    },
+    {
+      "id": "land",
+      "name": "Eminent domain",
+      "tagline": "land",
+      "description": "Pipelines, corridors, and ranch gates."
+    },
+    {
+      "id": "tolls",
+      "name": "Highway tolls",
+      "tagline": "tolls",
+      "description": "They promised the tolls would come off when the road was paid. The road is paid."
+    },
+    {
+      "id": "teacherpay",
+      "name": "Teacher pay",
+      "tagline": "teacherpay",
+      "description": "Twenty years in a classroom and a second job at the feed store. The room already agrees; make it vote."
+    },
+    {
+      "id": "ag-subsidies",
+      "name": "Ag subsidies & crop insurance",
+      "tagline": "ag-subsidies",
+      "description": "One hailstorm from foreclosure, every single year. The FM roads know the arithmetic."
+    },
+    {
+      "id": "corruption",
+      "name": "Courthouse corruption",
+      "tagline": "corruption",
+      "description": "The commissioners' court has been a family business for forty years. Naming it takes nerve."
+    },
+    {
+      "id": "broadband",
+      "name": "Rural broadband",
+      "tagline": "broadband",
+      "description": "Kids do homework in the church parking lot for the wifi. The future has a dead zone."
+    },
+    {
+      "id": "bail-reform",
+      "name": "Prison & bail reform",
+      "tagline": "bail-reform",
+      "description": "The unit is the county's biggest employer and its heaviest silence. Careful, serious ground."
+    },
+    {
+      "id": "mental-health",
+      "name": "Mental health funding",
+      "tagline": "mental-health",
+      "description": "The sheriff runs the largest psychiatric facility in three counties: his jail. Even he says so."
+    },
+    {
+      "id": "veterans",
+      "name": "Veterans' services",
+      "tagline": "veterans",
+      "description": "The Legion hall knows every name on the waiting list. Show up and listen first."
+    },
+    {
+      "id": "grid",
+      "name": "Rural grid reliability",
+      "tagline": "grid",
+      "description": "Everyone remembers the freeze. Every generator in every barn is a campaign memorial."
+    },
+    {
+      "id": "payday-lending",
+      "name": "Payday lending",
+      "tagline": "payday-lending",
+      "description": "Four storefronts by the plant gate, 400% APR. The math preys on shift workers by design."
+    },
+    {
+      "id": "vouchers",
+      "name": "Public school vouchers",
+      "tagline": "vouchers",
+      "description": "The church wants them; the small towns fear them — the district IS the school. A knife-edge issue."
+    },
+    {
+      "id": "election-integrity",
+      "name": "Election integrity",
+      "tagline": "election-integrity",
+      "description": "The county clerk is tired, honest, and yelled at from both directions. Order-flavored, radioactive, real."
+    }
+  ],
+  "districts": [
+    {
+      "id": "open",
+      "name": "Open seat, safe district",
+      "description": "Incumbent retired. Crowded field.",
+      "align": "safe",
+      "incumbent": false,
+      "trap": false
+    },
+    {
+      "id": "incumb",
+      "name": "Safe district, entrenched incumbent",
+      "description": "Twelve years and a war chest.",
+      "align": "safe",
+      "incumbent": true,
+      "trap": false
+    },
+    {
+      "id": "comp",
+      "name": "Competitive district, open primary",
+      "description": "Primary then general. Two fights.",
+      "align": "competitive",
+      "incumbent": false,
+      "trap": false
+    },
+    {
+      "id": "wrong",
+      "name": "Wrong-party district",
+      "description": "Bravery is not arithmetic.",
+      "align": "wrong",
+      "incumbent": false,
+      "trap": true
+    }
+  ],
+  "regions": [
+    {
+      "id": "east",
+      "name": "East Texas pine belt",
+      "description": "Church calendars run the week.",
+      "hook": "east"
+    },
+    {
+      "id": "valley",
+      "name": "Rio Grande Valley",
+      "description": "Colonias, citrus, late turnout machines.",
+      "hook": "valley"
+    },
+    {
+      "id": "hill",
+      "name": "Hill Country",
+      "description": "Property taxes and water wars.",
+      "hook": "hill"
+    },
+    {
+      "id": "panhandle",
+      "name": "Panhandle / High Plains",
+      "description": "Wind, feedlots, long miles.",
+      "hook": "panhandle"
+    },
+    {
+      "id": "metro",
+      "name": "Metro suburban ring",
+      "description": "HOAs, new money, endless mail.",
+      "hook": "metro"
+    },
+    {
+      "id": "gulf",
+      "name": "Gulf Coast",
+      "description": "Refineries, ports, unions.",
+      "hook": "gulf"
+    },
+    {
+      "id": "west",
+      "name": "West Texas oil & ranch",
+      "description": "Permian money and nameless gates.",
+      "hook": "permian"
+    }
+  ],
+  "grounds": [
+    {
+      "id": "GR01",
+      "name": "Courthouse Square",
+      "pool": 120,
+      "prop": 0.9,
+      "aff": "O,G"
+    },
+    {
+      "id": "GR02",
+      "name": "The FM Roads",
+      "pool": 420,
+      "prop": 0.7,
+      "aff": "G,T"
+    },
+    {
+      "id": "GR03",
+      "name": "The New Subdivisions",
+      "pool": 460,
+      "prop": 0.28,
+      "aff": "F,P"
+    },
+    {
+      "id": "GR04",
+      "name": "Church Corridor",
+      "pool": 260,
+      "prop": 0.72,
+      "aff": "T,G"
+    },
+    {
+      "id": "GR05",
+      "name": "The Plant Gate",
+      "pool": 240,
+      "prop": 0.5,
+      "aff": "T,O"
+    },
+    {
+      "id": "GR06",
+      "name": "VFW & Legion Halls",
+      "pool": 110,
+      "prop": 0.92,
+      "aff": "G,T"
+    },
+    {
+      "id": "GR07",
+      "name": "Lake Country",
+      "pool": 230,
+      "prop": 0.55,
+      "aff": "L,G"
+    },
+    {
+      "id": "GR08",
+      "name": "Southside Blocks",
+      "pool": 430,
+      "prop": 0.3,
+      "aff": "T,F"
+    }
+  ]
+}

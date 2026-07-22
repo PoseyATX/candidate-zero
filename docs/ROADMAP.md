@@ -568,10 +568,30 @@ shipped as the host binding boundary:
   can't rot. Verified headless in Node.
 - Contract doc: **`docs/ENGINE-API.md`**.
 
-**Next for this phase (the actual Unity work, unchanged):** stand up the
-Unity project that embeds the bundle and renders `view()` — presentation,
-input, audio, persistence, and the Chronicle live in Unity; **no rules**.
-Full vertical slice still waits for Session shape to fully settle.
+**✅ Content → ScriptableObjects bridge — DONE 2026-07-19.** The other half
+of the Unity binding (the first was the engine bundle): content is now a
+pure, presentation-only export that Unity ingests as ScriptableObjects.
+
+- `src/data/manifest.ts` — `buildContentManifest()`: every card (66),
+  persona (24), issue, district, region, ground as pure data with the
+  **rules stripped** (odds/run/show functions never leave the engine).
+- `npm run export:content` → `unity/content/candidate-zero-content.json`
+  (deterministic, committed, diffable). `npm run harness:content` guards it
+  — CI fails if a card is added in code but not re-exported (no silent drift).
+- Unity scaffold (`unity/Scripts/`): `CardDefinition.cs` (ScriptableObject),
+  `Editor/ContentImporter.cs` (JSON → SO assets, idempotent), `EngineBridge.cs`
+  (engine-bundle call pattern). Reference C# to verify in the Unity project.
+- Card presentation direction captured: **card face = name + art + cost +
+  kind tint; description is tap-to-reveal data, not drawn on the face.**
+- Contract doc: **`docs/UNITY-BRIDGE.md`**.
+
+**Next for this phase (the actual Unity project):** stand up the Unity
+project that (a) runs the content importer to generate the card SOs and
+(b) embeds the engine bundle behind `EngineBridge` and renders `view()` —
+presentation, input, audio, persistence, and the Chronicle live in Unity;
+**no rules**. An open Unity-project decision: which embedded JS runtime
+(Jint / ClearScript / Puerts) hosts the engine bundle — see
+`docs/UNITY-BRIDGE.md`.
 
 Swift-native remains a possible *future* rewrite of the same pure engine —
 not the near-term store path.
