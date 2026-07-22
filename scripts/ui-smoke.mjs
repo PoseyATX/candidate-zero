@@ -105,7 +105,7 @@ async function main() {
     // Calendar week ("W3/14") from the ledger — proves End Week actually
     // advances state, not just that the button was clickable.
     const readWeek = async () => {
-      const txt = await page.locator('#ledger').innerText().catch(() => '');
+      const txt = await page.locator('#hud').innerText().catch(() => '');
       const m = txt.match(/\bW(\d+)\s*\/\s*\d+/);
       if (m) maxWeek = Math.max(maxWeek, Number(m[1]));
     };

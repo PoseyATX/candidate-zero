@@ -1418,8 +1418,29 @@ function applyStageChrome(): void {
   }
 }
 
+/** One-handed mobile tabs (Play / Dossier / Log). Presentation only — the
+    engine render targets live inside the panels and are untouched. */
+function switchTab(name: string): void {
+  const game = document.getElementById('game');
+  if (game) game.className = game.className.replace(/\btab-\w+\b/g, '').trim() + ` tab-${name}`;
+  document.querySelectorAll<HTMLElement>('.mtab-panel').forEach(p =>
+    p.classList.toggle('active', p.dataset.tab === name)
+  );
+  document.querySelectorAll<HTMLElement>('.mnav-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.gototab === name)
+  );
+}
+
+function wireTabs(): void {
+  document.querySelectorAll<HTMLElement>('.mnav-btn').forEach(btn =>
+    btn.addEventListener('click', () => switchTab(btn.dataset.gototab || 'play'))
+  );
+  switchTab('play');
+}
+
 function boot(): void {
   fillSelects();
+  wireTabs();
   ['sel-persona', 'sel-issue', 'sel-district', 'sel-region'].forEach(id => {
     $(id).addEventListener('change', updateBlurb);
   });

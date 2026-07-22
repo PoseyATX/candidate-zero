@@ -2,12 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#1a130d" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#14100c" />
     <title>Candidate Zero — Alpha</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700;800&family=Merriweather:wght@400;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet" />
   </head>
   <body>
     <div id="app">
@@ -185,23 +185,38 @@
             <div id="gp-list" class="gp-list"></div>
           </div>
         </div>
-        <section id="ledger" class="ledger" aria-label="Campaign dossier"></section>
-        <section class="panels">
-          <div class="panel panel-actions">
-            <h2 id="actions-heading">Actions</h2>
-            <!-- Reserved height so text swaps never shove the card grid -->
-            <p id="week-hint" class="hint week-hint" aria-live="polite"></p>
-            <div id="draft" class="card-grid"></div>
-            <div id="playables" class="card-grid"></div>
-            <div class="row-actions">
-              <button type="button" id="btn-end" class="btn btn-gold">End week</button>
+        <!-- One-handed mobile IA: Play / Dossier / Log tabs over the same
+             render targets the engine writes into (#ledger, #playables,
+             #draft, #log). Bottom nav toggles which panel is visible. -->
+        <div class="mtabs">
+          <section id="tab-play" class="mtab-panel active" data-tab="play">
+            <div class="panel panel-actions">
+              <h2 id="actions-heading">Actions</h2>
+              <!-- Reserved height so text swaps never shove the card grid -->
+              <p id="week-hint" class="hint week-hint" aria-live="polite"></p>
+              <div id="draft" class="card-grid"></div>
+              <div id="playables" class="card-grid"></div>
             </div>
-          </div>
-          <div class="panel panel-log">
-            <h2 id="log-heading">Log</h2>
-            <div id="log" class="log" role="log"></div>
-          </div>
-        </section>
+          </section>
+          <section id="tab-dossier" class="mtab-panel" data-tab="dossier">
+            <section id="ledger" class="ledger" aria-label="Campaign dossier"></section>
+          </section>
+          <section id="tab-log" class="mtab-panel" data-tab="log">
+            <div class="panel panel-log">
+              <h2 id="log-heading">Log</h2>
+              <div id="log" class="log" role="log"></div>
+            </div>
+          </section>
+        </div>
+        <!-- Thumb-reach primary action, pinned above the nav on the Play tab. -->
+        <div id="play-footer" class="play-footer">
+          <button type="button" id="btn-end" class="btn btn-gold">End week</button>
+        </div>
+        <nav class="mbottom-nav" aria-label="Sections">
+          <button type="button" class="mnav-btn active" data-gototab="play">Play</button>
+          <button type="button" class="mnav-btn" data-gototab="dossier">Dossier</button>
+          <button type="button" class="mnav-btn" data-gototab="log">Log</button>
+        </nav>
       </section>
       <!-- Fixed toasts — never reflow the play surface (Phase 6 / UI-IA) -->
       <div id="toast-host" class="toast-host" aria-live="assertive" aria-atomic="false"></div>
