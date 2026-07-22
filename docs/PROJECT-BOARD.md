@@ -31,7 +31,7 @@ become a second rules implementation.
 | **DONE** | [#8](https://github.com/PoseyATX/candidate-zero/issues/8) | Phase 4 — Session stage (bill lifecycle) |
 | **DONE** | [#9](https://github.com/PoseyATX/candidate-zero/issues/9) | Phase 5 — Balance breadth |
 | **DONE** | [#17](https://github.com/PoseyATX/candidate-zero/issues/17) / [#18](https://github.com/PoseyATX/candidate-zero/issues/18) | Starmap — catalog + templates through MV14 |
-| **DONE** | [#10](https://github.com/PoseyATX/candidate-zero/issues/10) | Phase 6 — UI hierarchy + toasts (core); a11y CI residual |
+| **DONE** | [#10](https://github.com/PoseyATX/candidate-zero/issues/10) | Phase 6 — UI hierarchy + toasts (core); **e2e UI smoke in CI done** (`smoke:ui`); WCAG a11y residual |
 | **DONE** | — | Outside weather UI surface (`pendingOutside`) |
 | **RESTING** | — | Package clean — see [`RESTING.md`](./RESTING.md); wake: templates *or* P7 prep *or* a11y residual |
 | PLANNED | [#11](https://github.com/PoseyATX/candidate-zero/issues/11) | Phase 7 — Honest v0.1 label |

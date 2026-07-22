@@ -480,11 +480,22 @@ Concretely still open:
 - No accessibility pass (color contrast, keyboard nav for the card grid,
   `aria-live` regions exist on log/juice but haven't been screen-reader
   tested).
-- No visual regression / e2e test in CI — Phase 0 added a CI gate for
-  typecheck+harness+build, but a headless click-through (the kind used to
-  verify the index.html fix and the Vite 8 upgrade this session) isn't
-  automated yet. Worth adding once the UI is a real target for iteration
-  rather than a recently-repaired one.
+- ~~No visual regression / e2e test in CI~~ **DONE 2026-07-19.** The engine
+  had 24 harnesses; the UI had zero automated coverage — the exact blind
+  spot behind the UI-regression class of bug (dead End Week button, field
+  card hidden by a stale "No AP left"). Added `scripts/ui-smoke.mjs`
+  (`npm run smoke:ui`): a headless Playwright drive of the real built app
+  through the full critical path — title → setup → seeded run → play cards
+  → ground picker → dismiss act/outside modals → end weeks → reach a
+  terminal with forward choices — asserting screen transitions, that plays
+  actually resolve, that the calendar week advances (reads `W{n}/14`, not
+  just button clicks), and **zero console/page errors**. Wired into
+  `ci.yml` after build (`npx playwright install --with-deps chromium` +
+  `npm run smoke:ui`); `playwright` pinned to `1.56.1` as a devDep.
+  **Proven to have teeth:** temporarily unwiring the End Week handler makes
+  it fail directly ("End Week advances the calendar (reached week W1)") and
+  fast (~32s), then reverted. This is the guardrail that turns "did the UI
+  break?" from a manual screenshot worry into a CI gate.
 - ~~Card art is still typographic-only~~ Addressed (2026-07-17, same-day
   follow-up after direct feedback that the cards hadn't visibly improved
   since the 2:3 change): every card now has a real anatomy — centered

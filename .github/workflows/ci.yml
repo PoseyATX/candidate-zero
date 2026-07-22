@@ -32,3 +32,9 @@ jobs:
 
       - name: Build (catches broken/orphaned index.html, missing UI bundle, etc.)
         run: npm run build
+
+      - name: Install Playwright browser (for UI smoke)
+        run: npx playwright install --with-deps chromium
+
+      - name: UI smoke test (drives the real built app; catches dead buttons, stuck modals, console errors)
+        run: npm run smoke:ui
