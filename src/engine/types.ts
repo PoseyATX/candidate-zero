@@ -222,6 +222,9 @@ export interface GameState {
   rivals: { id: string; n: string }[];
   tier: number;
   persona: string | null;
+  /** Persona id from setup (e.g. 'PA_CHA') — the id, not the display name.
+      Used for persona-gated content (signature cards, future unlock paths). */
+  personaId: string | null;
   issue: string | null;
   district: DistrictInfo | null;
   eventsFired: Record<string, boolean>;

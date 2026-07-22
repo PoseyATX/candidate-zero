@@ -577,6 +577,28 @@ engine with **near-zero reconciliation**.
   axe-core 0 critical/serious across 7 states (adds card-detail + ground
   sheets); full harness (127) green; screenshot-verified at 390×844.
 
+## ✅ Signature cards — persona-exclusive "special rare" plays (DONE 2026-07-22)
+
+One signature card per persona (`src/data/signature-plays.ts`, SIG01–SIG21),
+gated so it only ever appears for its persona. Two independent guarantees:
+(1) it is injected into **only** that persona's draw pile at `createCampaign`
+and is never in `ALL_PLAYS`/drafts, so no other persona can draw it; (2) a
+`req`/`show` gate on the new `GameState.personaId` (the id, not the display
+name) blocks play defensively. One copy per run → reads as a rare high point,
+not a staple. Non-field, immediate-resolve, normal RNG/tier resolution.
+
+`PA_CON_CHA` (The Preacher) maps to the shipped named persona `preacher`;
+teacher/veteran/smallbiz are starter personas with no signature card.
+Exported to the Unity manifest as `deck: 'signature'`; `harness:content`
+covers them. Verified: exclusive + reachable + playable (isPlayable true when
+phase-legal and affordable).
+
+**Next project — unlock "paths":** cards earned by performing prerequisite
+plays (combo-gated unlocks surfaced via lore toasts), e.g. university-intern
+volunteers after specific campus plays. `personaId` on state is the first
+hook toward that content-gating system. This is the balanced-expandability
+engine the card catalog will grow through.
+
 ## Phase 8 — Ship path: TS engine → Unity presentation → iOS / App Store
 
 **Owner direction (2026-07-19):** ship through Unity as presentation shell

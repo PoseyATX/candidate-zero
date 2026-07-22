@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "counts": {
-    "cards": 66,
+    "cards": 87,
     "personas": 24,
     "issues": 18,
     "districts": 4,
@@ -2033,6 +2033,613 @@
       "control": "player",
       "entityScope": [],
       "deck": "waiting"
+    },
+    {
+      "id": "SIG01",
+      "name": "Fill the Square",
+      "tagline": "signature — The Powerhouse",
+      "description": "You do not ask for the room. You fill it, and the turnout operation fills the rest.",
+      "risk": "VOL",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 2,
+        "money": 0,
+        "vol": 3,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "signature"
+    },
+    {
+      "id": "SIG02",
+      "name": "The Unbending Line",
+      "tagline": "signature — The True Believer",
+      "description": "The message arrives pre-sharpened and never wavers. You say the same true thing until it is the only thing.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CON"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "signature"
+    },
+    {
+      "id": "SIG03",
+      "name": "Call In a Marker",
+      "tagline": "signature — The Operator",
+      "description": "Someone owes you, and today is the day. The angle was always there.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 1
+      },
+      "attrs": [
+        "CRA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "signature"
+    },
+    {
+      "id": "SIG04",
+      "name": "The Airtight Filing",
+      "tagline": "signature — The Parliamentarian",
+      "description": "Every box checked, every deadline beaten. The clerk finds nothing because there is nothing to find.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "INK"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "signature"
+    },
+    {
+      "id": "SIG05",
+      "name": "Broker the Grand Bargain",
+      "tagline": "signature — The Coalition-Builder",
+      "description": "You seat the rancher next to the union man and both leave thinking they won.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "signature"
+    },
+    {
+      "id": "SIG06",
+      "name": "Remember Every Name",
+      "tagline": "signature — The Natural",
+      "description": "The kid, the dog, the surgery last spring. You remember, and they never forget that you did.",
+      "risk": "VOL",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 1,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "signature"
+    },
+    {
+      "id": "SIG07",
+      "name": "March on the Capitol Steps",
+      "tagline": "signature — The Movement Champion",
+      "description": "Conviction with muscle behind it — a crowd that showed up angry and organized.",
+      "risk": "VOL",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 2,
+        "money": 0,
+        "vol": 2,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO",
+        "CON"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "signature"
+    },
+    {
+      "id": "SIG08",
+      "name": "The Elbow",
+      "tagline": "signature — The Bare-Knuckle Populist",
+      "description": "Loud out front, and an elbow the establishment never sees coming.",
+      "risk": "VOL",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO",
+        "CRA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "signature"
+    },
+    {
+      "id": "SIG09",
+      "name": "Outwork the Field",
+      "tagline": "signature — The Workhorse",
+      "description": "Grind plus the rulebook. You are still knocking when the others go home.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 2,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO",
+        "INK"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "signature"
+    },
+    {
+      "id": "SIG10",
+      "name": "The Family Name Opens the Gate",
+      "tagline": "signature — The Rural Patriarch",
+      "description": "Your name means something here. The chairs already wave you through.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO",
+        "DIP"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "signature"
+    },
+    {
+      "id": "SIG11",
+      "name": "The Homecoming",
+      "tagline": "signature — The Local Legend",
+      "description": "Star quarterback, then feed-store owner, now this. The county has rooted for you for decades.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO",
+        "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "signature"
+    },
+    {
+      "id": "SIG12",
+      "name": "Burn It Down to Build It Up",
+      "tagline": "signature — The Insurgent",
+      "description": "A disciplined message and a knife for the primary. You are exactly as angry as you choose to be.",
+      "risk": "VOL",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CON",
+        "CRA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "signature"
+    },
+    {
+      "id": "SIG13",
+      "name": "File the Whistleblower Complaint",
+      "tagline": "signature — The Reform Crusader",
+      "description": "A cause and the rulebook to advance it. You file, and the file has teeth.",
+      "risk": "VOL",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CON",
+        "INK"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "signature"
+    },
+    {
+      "id": "SIG14",
+      "name": "Cross the Aisle",
+      "tagline": "signature — The Statesman",
+      "description": "Steady, principled, trusted across the aisle — the kind they call \"serious.\"",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CON",
+        "DIP"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "signature"
+    },
+    {
+      "id": "SIG15",
+      "name": "Revival Weekend",
+      "tagline": "signature — The Preacher",
+      "description": "A pulpit is a precinct and Sundays are turnout. You move people, and you mean it.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 2,
+        "money": 0,
+        "vol": 1,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CON",
+        "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "signature"
+    },
+    {
+      "id": "SIG16",
+      "name": "Work the System",
+      "tagline": "signature — The Fixer",
+      "description": "You know the rules AND how to bend them. Dangerous in a committee, deadly near a deadline.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CRA",
+        "INK"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "signature"
+    },
+    {
+      "id": "SIG17",
+      "name": "The Grand Trade",
+      "tagline": "signature — The Wheeler-Dealer",
+      "description": "Two of everything and a price on each. You can trade your way out of almost anything.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CRA",
+        "DIP"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "signature"
+    },
+    {
+      "id": "SIG18",
+      "name": "Steal the Cycle",
+      "tagline": "signature — The Showman",
+      "description": "Timing and charm: you know the line AND the moment to land it. Made for the cameras.",
+      "risk": "VOL",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 400,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CRA",
+        "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "signature"
+    },
+    {
+      "id": "SIG19",
+      "name": "The Speaker's Ear",
+      "tagline": "signature — The Committee Chair-in-Waiting",
+      "description": "Process mastery and the relationships to use it. Leadership is watching this profile.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "INK",
+        "DIP"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "signature"
+    },
+    {
+      "id": "SIG20",
+      "name": "Explain It Like It's Simple",
+      "tagline": "signature — The Homegrown Wonk",
+      "description": "You explain the water-district budget so plainly people thank you for it.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 2,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "INK",
+        "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "signature"
+    },
+    {
+      "id": "SIG21",
+      "name": "Call In the Family Rolodex",
+      "tagline": "signature — The Dealmaker's Heir",
+      "description": "A known name and a gift for people. Doors open on the family reputation; you keep them open on your own.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP",
+        "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "signature"
     }
   ],
   "personas": [
