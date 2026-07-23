@@ -6,21 +6,22 @@
 **Live alpha:** https://poseyatx.github.io/candidate-zero/  
 **Repo:** https://github.com/PoseyATX/candidate-zero  
 
-**Last updated:** 2026-07-19 (**RESTING** — floors swept)  
+**Last updated:** 2026-07-23 (**catch-up** after post-rest PRs #21–#32)  
 
 Related docs:
 
 | Doc | Role |
 |---|---|
-| [`RESTING.md`](./RESTING.md) | End-of-night package snapshot |
+| [`RESTING.md`](./RESTING.md) | Current package snapshot (post-sleep) |
+| [`V0.1-EVIDENCE.md`](./V0.1-EVIDENCE.md) | Why package is 0.1.0 |
+| [`ENGINE-API.md`](./ENGINE-API.md) | Host binding contract |
+| [`PATHS.md`](./PATHS.md) | Unlock pathways |
+| [`UNITY-SETUP.md`](./UNITY-SETUP.md) | Unity editor next steps |
 | [`PROJECT-BOARD.md`](./PROJECT-BOARD.md) | Ops roadmap mirror of Project #2 |
 | [`ROADMAP.md`](./ROADMAP.md) | Evidence log (what shipped + harness proof) |
 | [`GAME-FLOW.md`](./GAME-FLOW.md) | Current player-facing loop |
 | [`UI-IA.md`](./UI-IA.md) | Information architecture — Phase 6 |
 | [`CARD-RESIDENCY.md`](./CARD-RESIDENCY.md) | Main / Special / Outside deck architecture law |
-| [`CARD-TAXONOMY.md`](./CARD-TAXONOMY.md) | Kind/risk visual channels (orthogonal to residency) |
-| [`SRD-NOTES.md`](./SRD-NOTES.md) | Design law recovered from archive |
-| [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Layers + ship path |
 | Issues #4–#20 | Phase tickets + meta + Stupid Ideas park |
 
 ---
@@ -29,16 +30,16 @@ Related docs:
 
 Over this workstream we:
 
-1. **Verified Phase 1** (grounds) and **implemented Phase 2–6 core** (allies → debt → Session → balance → UI hierarchy).
-2. **Rejected bad designs** (debt→odds tax; Claude’s false “session already thin-done”).
-3. **Starmap** to 14 playable templates; **Outside** to 16 events + weather UI.
-4. **Waiting season** + Chronicle bridge; rival teeth; residency law.
-5. **Hardened** harness suite, Pages path, and end-of-night resting package.
-6. **Documented** flow; **#20 Stupid Ideas** parks ADD without derailing NEXT.
+1. **Phases 0–7 in code** — through honest **0.1.0** evidence (`V0.1-EVIDENCE.md`).
+2. **Phase 8 prep in-repo** — frozen `api.ts`, engine bundle, content→Unity JSON, Jint scaffold.
+3. **Card library** grew to **113** (signatures, unlock paths, wave 5–6 session/waiting).
+4. **UI** mobile redesign + a11y CI + full-feature restore + one-handed tabs.
+5. **Persistence** — waiting season re-files same persona (no setup).
+6. **#20 Stupid Ideas** still parks ADD; board catch-up 2026-07-23.
 
-**Ship path (owner direction):** pure TypeScript engine → Unity presentation shell → iOS / App Store.  
+**Ship path:** pure TypeScript engine → Unity presentation → iOS.  
 **Non-negotiable:** no second rules engine in C#/Unity.  
-**Package:** `0.0.1` — not v0.1 yet.
+**Package:** **`0.1.0`** baseline — not App Store “done.”
 
 ---
 
@@ -601,4 +602,21 @@ Makes pack #1–2 readable without burying weather in the log only.
 | Package note | [`docs/RESTING.md`](./RESTING.md) |
 
 Dogs fed. County still there tomorrow.
+
+---
+
+## Post-sleep catch-up (2026-07-23)
+
+While resting (`718f820`), remote advanced ~43 commits (PRs **#21–#32**). Agent rehydrated on `7328c86`.
+
+| Theme | Tip evidence |
+|---|---|
+| a11y + smoke CI | `npm run a11y` · `npm run smoke:ui` |
+| v0.1 | package **0.1.0** · `docs/V0.1-EVIDENCE.md` |
+| Unity bridge | `api.ts` · `unity/` · `export:content` (113 cards) |
+| Unlock paths | `paths.ts` · 7 pathways · `harness:paths` |
+| Catalog | 113 cards · 21 Outside · residency audit green |
+| Re-file | waiting → same persona, skip setup |
+
+Hygiene: board + RESTING rewritten to stop lying. Issues #10/#11 titles still lag on GitHub until owner closes.
 

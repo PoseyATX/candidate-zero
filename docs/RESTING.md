@@ -1,95 +1,88 @@
-# Resting snapshot — floors swept
+# Catch-up snapshot — post-sleep state
 
-**Date:** 2026-07-19 (end of night)  
-**Tip commit:** `20e8f3c` on `claude/fable-build-cleanup-balance-rnlqgb` (local `fable-pages`)  
-**Package:** `0.0.1` — **not** v0.1 (honest versioning; Phase 7 still planned)  
+**Date:** 2026-07-23 (agent rehydrate after 2026-07-19 rest)  
+**Tip (fable branch):** `7328c86` — *Persistence: re-file as the same persona after waiting*  
+**`origin/main`:** `20cf044` — merge PR #32 (same tip + merge commit)  
+**Package:** **`0.1.0`** (Phase 7 evidence; baseline label, not “done”)  
 **Live alpha:** https://poseyatx.github.io/candidate-zero/  
-*(Pages may lag until workflow_dispatch / next deploy — tip is on the deploy branch.)*
 
-This file is the **put the dogs out and turn off the lights** note. Rehydrate here first, then board + work log.
+Previous resting note (2026-07-19, tip `718f820` / package `0.0.1`) is **superseded**. ~43 commits landed while agents slept.
 
 ---
 
 ## What this package is
 
-A playable **Texas Legislature roguelike deckbuilder** with:
+A playable **Texas Legislature roguelike deckbuilder**:
 
 | Layer | State |
 |--------|--------|
-| Pure TS engine | SoT for rules — campaign → general → session → waiting |
-| Vite presentation | Phase 6 hierarchy, toasts, Outside weather modal |
-| Harnesses | Full suite green at rest |
-| Ship path | TS engine → Unity shell → iOS (no second rules engine) |
+| Pure TS engine | Rules SoT + frozen **host API** (`src/engine/api.ts` v1.0.0) |
+| Vite UI | Full features restored + one-handed tab IA + a11y gates |
+| Content | **113** cards (signatures, unlock paths, wave 5–6) · **21** Outside · starmap MV01–14 |
+| Unity scaffold | Engine bundle + content JSON + Jint bridge scripts (no second rules engine) |
+| Harnesses | Full suite + `api` / `paths` / `content` |
+| Ship path | TS engine → Unity presentation → iOS |
 
 ---
 
-## Shipped this long stream (honest inventory)
+## What landed after the 2026-07-19 rest (PR themes)
 
-### Phases
-- **0–5** foundation through balance matrix — **DONE**
-- **6 core** UI hierarchy + identity/attrs + toasts + setup nameplate — **DONE**
-- **6 residual** WCAG deep audit, screenshot CI, formal phone sign-off — **open**
-- **7** honest v0.1 label — **PLANNED** (needs evidence + residual polish)
-- **8** Unity → iOS — **PLANNED**
+| Area | Evidence |
+|------|----------|
+| Phase 6 residual | `smoke:ui`, `a11y` (axe WCAG), card desc off-face, mobile playability |
+| Phase 7 | `docs/V0.1-EVIDENCE.md` · version **0.1.0** |
+| Phase 8 prep | `ENGINE-API.md`, `UNITY-*`, `build:engine`, `export:content`, `unity/` |
+| UI | Mobile redesign → regression → **full UI restore** → bottom-nav tabs |
+| Cards | SIG01–21 · unlock paths (66→90) · wave5 (→105) · wave6 (→113) |
+| Persistence | Waiting → re-file **same persona** (no setup) |
+| Outside | Pack growth (heat dome, plant layoff, smear, club rallies, early vote, …) |
 
-### Systems
-- Grounds + rival teeth · shop · obligations · debt (no odds tax)
-- Session bill pipeline + teeth · general kit gravity
-- Starmap catalog + **14** playable templates (MV01–14)
-- Outside deck **16** events + **weather UI** (`pendingOutside`, never hand)
-- Waiting season (Act IV) + Chronicle bridge + higher-office paths
-- Card residency law (Main / Special / Outside)
-
-### QoL / hygiene
-- GR08: Barrio Blocks → **Southside Blocks**
-- Strategies no longer free-farm Specials on empty-hand fallback
-- Balance hygiene post-feature stack (labor/money/outside rates)
-- Stupid Ideas **#20** parked as ADD sink (rate only)
+Merged PR trail: **#21–#32** (plus reconcile #19 family).
 
 ---
 
-## How to verify after sleep
+## Honest phase status (code wins over stale issue titles)
+
+| Phase | Code truth | GitHub issue lag |
+|-------|------------|------------------|
+| 0–5 | DONE | Closed |
+| 6 | Core + CI a11y/smoke **done**; formal phone sign-off / residual polish may remain | #10 still OPEN “BLOCKED” — **title stale** |
+| 7 | Evidence + **0.1.0** **done** | #11 still OPEN “PLANNED” — **close when owner confirms** |
+| 8 | Engine API + content bridge + Jint scaffold **done in repo** | #12 OPEN NEXT — **Unity editor track** remains |
+
+---
+
+## How to verify
 
 ```bash
 npm run typecheck
-npm run harness      # full suite
+npm run harness          # includes api + paths + content
+npm run smoke:ui         # headless critical path
+npm run a11y             # axe WCAG
 npm run build
-npm run dev          # local alpha
 ```
 
-Deploy: GitHub Actions `deploy.yml` on branch `claude/fable-build-cleanup-balance-rnlqgb` (workflow_dispatch if auto-fire still broken — issue #14).
-
 ---
 
-## Explicit non-goals until next session
+## Wake / NEXT (owner pick)
 
-- No new features “just because”
-- No v0.1 marketing label without Phase 7 evidence
-- No Unity rules reimplementation
-- #20 ideas stay parked until owner promotes one
-
----
-
-## Wake-up NEXT (owner pick)
-
-1. More starmap templates (kitchen cabinet / old bull / …)  
-2. Phase 7 honesty prep (AC evidence bundle)  
-3. Phase 6 residual a11y / screenshot CI  
-4. Outside flavor / more weather (keep Outside law)  
-5. Unity API freeze notes (doc only)
+1. Issue hygiene — close/retitle #10/#11; rephrase #12 as “Unity editor vertical slice”  
+2. Balance after catalog jump 66→113  
+3. Unity editor: `docs/UNITY-SETUP.md` Track A/B  
+4. Content: more pathways / Outside flavor  
+5. #20 Stupid Ideas — rate only, never auto-NEXT  
 
 ---
 
 ## Doc map
 
-| Doc | Use |
-|-----|-----|
-| [`PROJECT-BOARD.md`](./PROJECT-BOARD.md) | Status table |
-| [`WORK-LOG.md`](./WORK-LOG.md) | What we did |
-| [`GAME-FLOW.md`](./GAME-FLOW.md) | Player loop |
-| [`UI-IA.md`](./UI-IA.md) | UI furniture law |
-| [`STARMAP.md`](./STARMAP.md) | Entity templates |
-| [`CARD-RESIDENCY.md`](./CARD-RESIDENCY.md) | Deck architecture |
-| [`BALANCE-NOTES.md`](./BALANCE-NOTES.md) | Balance snapshots |
+| Doc | Role |
+|-----|------|
+| [`PROJECT-BOARD.md`](./PROJECT-BOARD.md) | Ops mirror |
+| [`V0.1-EVIDENCE.md`](./V0.1-EVIDENCE.md) | Why 0.1.0 |
+| [`ENGINE-API.md`](./ENGINE-API.md) | Host binding |
+| [`UNITY-SETUP.md`](./UNITY-SETUP.md) / [`UNITY-BRIDGE.md`](./UNITY-BRIDGE.md) | Ship path |
+| [`PATHS.md`](./PATHS.md) | Unlock pathways |
+| [`WORK-LOG.md`](./WORK-LOG.md) | Narrative log |
 
-**Rest well. The county will still be there in the morning.**
+**Ship covenant unchanged:** no second rules engine in Unity.

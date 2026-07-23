@@ -4,10 +4,11 @@
 **Evidence log:** [`docs/ROADMAP.md`](./ROADMAP.md) (what shipped + harness proof)  
 **Workstream log:** [`docs/WORK-LOG.md`](./WORK-LOG.md) · issue #16  
 **Player flow:** [`docs/GAME-FLOW.md`](./GAME-FLOW.md)  
-**UI / IA:** [`docs/UI-IA.md`](./UI-IA.md) (Phase 6 core shipped)  
-**Resting package:** [`docs/RESTING.md`](./RESTING.md) — floors swept, tip `20e8f3c`  
+**Catch-up snapshot:** [`docs/RESTING.md`](./RESTING.md) — tip `7328c86` · package **0.1.0**  
+**v0.1 evidence:** [`docs/V0.1-EVIDENCE.md`](./V0.1-EVIDENCE.md)  
+**Engine host API:** [`docs/ENGINE-API.md`](./ENGINE-API.md)  
 **Live alpha:** https://poseyatx.github.io/candidate-zero/  
-**Snapshot date:** 2026-07-19 (**RESTING** — end of night)
+**Snapshot date:** 2026-07-23 (**post-sleep catch-up** — PRs #21–#32)
 
 This file is the agent-readable mirror of the GitHub Project. When project API
 scopes are missing, **update this file + the linked issues** so work stays
@@ -31,11 +32,13 @@ become a second rules implementation.
 | **DONE** | [#8](https://github.com/PoseyATX/candidate-zero/issues/8) | Phase 4 — Session stage (bill lifecycle) |
 | **DONE** | [#9](https://github.com/PoseyATX/candidate-zero/issues/9) | Phase 5 — Balance breadth |
 | **DONE** | [#17](https://github.com/PoseyATX/candidate-zero/issues/17) / [#18](https://github.com/PoseyATX/candidate-zero/issues/18) | Starmap — catalog + templates through MV14 |
-| **DONE** | [#10](https://github.com/PoseyATX/candidate-zero/issues/10) | Phase 6 — UI hierarchy + toasts (core); **e2e UI smoke in CI done** (`smoke:ui`); a11y: axe WCAG audit built, all contrast AA fixed; scrollable-desc card-layout call open |
-| **DONE** | — | Outside weather UI surface (`pendingOutside`) |
-| **RESTING** | — | Package clean — see [`RESTING.md`](./RESTING.md); wake: templates *or* P7 prep *or* a11y residual |
-| PLANNED | [#11](https://github.com/PoseyATX/candidate-zero/issues/11) | Phase 7 — Honest v0.1 label |
-| PLANNED | [#12](https://github.com/PoseyATX/candidate-zero/issues/12) | Phase 8 — TS → Unity → iOS / App Store · **DONE: engine API + seed contract** (`api.ts`, `harness:api`, `build:engine`) **+ content→ScriptableObjects bridge** (`manifest.ts`, `export:content`, `harness:content`, `unity/`, `docs/UNITY-BRIDGE.md`); Unity project (importer + engine host) next |
+| **DONE** | [#10](https://github.com/PoseyATX/candidate-zero/issues/10) | Phase 6 — hierarchy + toasts + a11y CI + smoke:ui + mobile tabs (issue title may still say BLOCKED — code done) |
+| **DONE** | — | Outside weather UI + Outside pack growth (21 events) |
+| **DONE** | [#11](https://github.com/PoseyATX/candidate-zero/issues/11) | Phase 7 — **0.1.0** + [`V0.1-EVIDENCE.md`](./V0.1-EVIDENCE.md) (close issue when owner confirms) |
+| **DONE** | — | Card library waves: signatures · unlock paths · wave5/6 → **113** cards |
+| **DONE** | — | Waiting → re-file same persona (PR #32) |
+| **PARTIAL** | [#12](https://github.com/PoseyATX/candidate-zero/issues/12) | Phase 8 — **repo** engine API + Unity scaffold done; **NEXT:** Unity editor vertical slice |
+| **NEXT** | — | Balance after 113-card jump *or* Unity editor *or* issue hygiene close #10/#11 |
 | META | [#13](https://github.com/PoseyATX/candidate-zero/issues/13) | Board hygiene rules |
 | BUG | [#14](https://github.com/PoseyATX/candidate-zero/issues/14) | Pages deploy auto-fire / workflow scope |
 | PLANNED | [#15](https://github.com/PoseyATX/candidate-zero/issues/15) | AC1 archive yield-table full compare |
