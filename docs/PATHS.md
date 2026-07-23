@@ -36,13 +36,26 @@ That's it — `buildCatalog`, the Unity manifest (`deck: 'path'`),
 `harness:content`, and `harness:paths` pick it up automatically. Trigger ids
 must be real cards in the live catalog.
 
-## Shipped pathways (v1)
+## Shipped pathways
 
 | Path | Requires | Unlocks |
 |---|---|---|
 | The Campus Machine | Block Walk · Phone Bank · Town Hall | **Outsource Petition Drive to University Interns** — signatures at scale |
 | The Bundler's Rolodex | Filing Fee · Fish Fry · Yard Signs | **Work the Bundler's List** — bundled money |
 | The County Machine | Kitchen-Table · Court the Chairs · Straw Poll | **Turn Out the Precinct Captains** — endorsements + GOTV |
+| The Press Machine | Earned Media · Press Release · Candidate Forum | **The Anchor Takes Your Call** — name-ID engine |
+| The Field Army | Block Walk · Recruit Volunteers · Canvass Captain | **Stand Up a Turf Operation** — contacts + GOTV |
+
+A card may feed more than one path at once (e.g. Block Walk advances both the
+Campus Machine and the Field Army) — that is intended.
+
+## Card rarity (acquisition)
+
+`PlayCard.rarity` (`common` | `uncommon` | `rare`, default common) weights the
+phase-draft pool in `deck.ts buildPhaseDraft` (common 6 · uncommon 2 · rare 1),
+so uncommon and rare cards are a genuine find when drafting. Signature and
+path-reward cards are separate acquisition channels and stay out of the draft
+pool. See `src/data/plays-wave5.ts` for the first uncommon/rare batch.
 
 ## Design intent
 

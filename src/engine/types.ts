@@ -119,6 +119,13 @@ export interface PlayCard {
   /** Card family for tint/recognizability (default 'action'). See CardKind. */
   kind?: CardKind;
   /**
+   * Acquisition rarity (default 'common'). Weights the phase-draft pool so
+   * uncommon/rare cards are genuinely harder to acquire (see buildPhaseDraft
+   * in deck.ts). Orthogonal to CardKind and RiskClass. Signature/path-reward
+   * cards are their own acquisition channels and stay outside the draft pool.
+   */
+  rarity?: 'common' | 'uncommon' | 'rare';
+  /**
    * Devil's-bargain flag — drives balance/audit tooling only. The
    * player-facing tell is now the `kind: 'bargain'` frame, NOT a label
    * (the "TRAP" stamp was retired). Kept separate from `kind` because a

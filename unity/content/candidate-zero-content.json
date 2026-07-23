@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "counts": {
-    "cards": 90,
+    "cards": 105,
     "personas": 24,
     "issues": 18,
     "districts": 4,
@@ -1333,6 +1333,372 @@
       "entityScope": [
         "ENT_FEED_STORE"
       ],
+      "deck": "main"
+    },
+    {
+      "id": "PL80",
+      "name": "Grocery-Store Handshakes",
+      "tagline": "the parking lot",
+      "description": "An hour at the exit doors. Cheap, endless, and it actually works.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL81",
+      "name": "Church Bulletin Ad",
+      "tagline": "the back page",
+      "description": "A quarter page next to the potluck schedule. The congregation notices who shows up in print.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 80,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL82",
+      "name": "Little-League Sponsorship",
+      "tagline": "name on the jersey",
+      "description": "Your name on forty small backs, every Saturday, all season. Turnout starts young — through the parents.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 120,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL83",
+      "name": "Letter to the Editor",
+      "tagline": "the op-ed page",
+      "description": "Three hundred words, tightly argued. The people who vote in primaries read the paper.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "INK"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL84",
+      "name": "Coffee-Shop Sit-Down",
+      "tagline": "the corner booth",
+      "description": "One table, four regulars, refills on the house. Retail politics at its most literal.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL85",
+      "name": "Union Hall Endorsement",
+      "tagline": "the locals sign on",
+      "description": "The business agent likes you enough to put it in writing. Stewards walk turf you never could.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 1
+      },
+      "attrs": [
+        "DIP"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL86",
+      "name": "Targeted Digital Buy",
+      "tagline": "the feed",
+      "description": "Lookalike audiences, dayparted, A/B tested. The consultant swears by the dashboard.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 700,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CRA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL87",
+      "name": "Charter the Senior Vans",
+      "tagline": "the surest voters",
+      "description": "The seniors vote at ninety percent and love a ride. Turnout you can schedule.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 2,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL88",
+      "name": "Opposition Tracker",
+      "tagline": "the guy with the camera",
+      "description": "A kid with a camcorder at every rival event, waiting for the gaffe. Sometimes it comes.",
+      "risk": "VOL",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 400,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CRA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL89",
+      "name": "Megachurch Sunday",
+      "tagline": "the big room",
+      "description": "Three thousand seats and a pastor who might, or might not, wave you up front.",
+      "risk": "VOL",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL90",
+      "name": "Statewide Figure Endorses",
+      "tagline": "the big name",
+      "description": "A name people know from television deigns to say yours. The bump is real; so is the debt.",
+      "risk": "VOL",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 1
+      },
+      "attrs": [
+        "DIP"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL91",
+      "name": "The Viral Moment",
+      "tagline": "lightning in a bottle",
+      "description": "You say the exact right thing at the exact right second and the internet decides to care.",
+      "risk": "VOL",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL92",
+      "name": "Machine Turnout Blitz",
+      "tagline": "the whole apparatus",
+      "description": "Every captain, every van, every list, one weekend. When the machine moves as one, the count moves with it.",
+      "risk": "VOL",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        3
+      ],
+      "cost": {
+        "ap": 2,
+        "money": 0,
+        "vol": 3,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
       "deck": "main"
     },
     {
@@ -2722,6 +3088,65 @@
       "attrs": [
         "DIP",
         "CLO"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "path"
+    },
+    {
+      "id": "RW_ANCHOR",
+      "name": "The Anchor Takes Your Call",
+      "tagline": "the evening desk",
+      "description": "A friendly anchor and a standing invitation. When you have something to say, the county hears it that night.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA",
+        "CRA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "path"
+    },
+    {
+      "id": "RW_TURF",
+      "name": "Stand Up a Turf Operation",
+      "tagline": "boots with a plan",
+      "description": "Captains, turfs, cut lists. The volunteers you recruited become a machine that runs without you.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 1,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO",
+        "DIP"
       ],
       "residency": "main",
       "control": "player",

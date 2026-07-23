@@ -20,6 +20,11 @@ export const STARTER_DECK_IDS: string[] = [
   'PL10',
   'PL13', 'PL13', 'PL13',
   'PL08'
+  // NOTE: the starter deck is tuned for ballot-access density (petition /
+  // filing-fee draw timing). Adding cards here dilutes that and can make the
+  // money path miss the ballot — see harness:full "money should usually clear
+  // ballot". New commons reach the deck via drafts / weekly growth instead;
+  // expanding the *opening* deck needs a deliberate ballot-access rebalance.
 ];
 
 export function createDeckState(cardIds: string[] = STARTER_DECK_IDS): DeckState {
@@ -130,13 +135,23 @@ function warmAllyBonus(state: GameState): boolean {
  * Build a 3-card draft from the unowned pool for a phase turn.
  * Does not mutate ownership until resolvePhaseDraft.
  */
+/** Draft draw-weight by rarity — uncommon/rare are genuinely harder to land. */
+const RARITY_WEIGHT: Record<string, number> = { common: 6, uncommon: 2, rare: 1 };
+const rarityOf = (id: string): string => PLAYS.find(p => p.id === id)?.rarity ?? 'common';
+
 export function buildPhaseDraft(state: GameState, count = 3): { phase: number; options: string[] } {
-  const pool = getAvailableNewCards(state);
   const options: string[] = [];
-  const working = [...pool];
+  const working = getAvailableNewCards(state);
   while (options.length < count && working.length > 0) {
-    const idx = Math.floor(random() * working.length);
-    const [id] = working.splice(idx, 1);
+    // Weighted pick: sum weights, roll, walk. Keeps rares rare in the draft.
+    const total = working.reduce((s, id) => s + (RARITY_WEIGHT[rarityOf(id)] ?? 6), 0);
+    let roll = random() * total;
+    let idx = 0;
+    for (; idx < working.length; idx++) {
+      roll -= RARITY_WEIGHT[rarityOf(working[idx])] ?? 6;
+      if (roll <= 0) break;
+    }
+    const [id] = working.splice(Math.min(idx, working.length - 1), 1);
     if (id) options.push(id);
   }
   return { phase: 0, options };
