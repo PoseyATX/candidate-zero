@@ -670,3 +670,15 @@ Writer/reviewer loop closed with **0 open issues** (rev 3).
 - Vite-first; goal strip; card face discipline; full `main.ts` extract PR map
 - Aligns Anvil greybox + BASE_URL art helpers (K15)
 
+### PR-1 leaf extract (2026-07-23)
+
+Behavior-identical module split (no visual change intended):
+
+| Module | Role |
+|---|---|
+| `src/ui/card-face.ts` | `CardFaceView`, `cardInner`/`cardHtml` + escaped names |
+| `src/ui/act-shell.ts` | `ACT_SHELLS`, splash, stage chrome |
+| `src/ui/tabs.ts` | bottom-nav wire |
+
+`main.ts` ~1147 lines (was ~1466). typecheck · harness · smoke:ui · a11y green.
+

@@ -22,7 +22,7 @@ import {
 } from '../engine/loop.js';
 import { getPhase, stageLabel, stageWeek } from '../engine/state.js';
 import { STAMPS } from '../engine/resolve.js';
-import { pickDefaultGround, cardAttrMod, isPhaseLegal, isVisible, canAfford } from '../engine/play.js';
+import { isPhaseLegal, isVisible, canAfford } from '../engine/play.js';
 import type { PlayFeedback } from '../engine/feedback.js';
 import {
   PERSONAS,
@@ -48,8 +48,15 @@ import {
 } from '../engine/legacy.js';
 import { enterWaiting, finishWaiting, WAITING_WEEKS } from '../engine/waiting.js';
 import type { CampaignOutcome, Ground, LegacyState, PlayCard, PlayOutcome, TraitId } from '../engine/types.js';
-import { emblemFor, emblem, kindMark, KIND_META } from './card-art.js';
-import { cardArtPlateHtml } from '../lib/anvil-port/index.js';
+import { emblem } from './card-art.js';
+import { cardHtml, cardInner, cardClasses } from './card-face.js';
+import {
+  ACT_SHELLS,
+  actFromStage,
+  openActSplash as openActSplashShell,
+  applyStageChrome as applyStageChromeShell
+} from './act-shell.js';
+import { wireTabs } from './tabs.js';
 import './styles.css';
 
 let campaign: Campaign | null = null;
@@ -75,108 +82,6 @@ function attrChipsHtml(attrs: Record<string, number>): string {
 let legacy: LegacyState = loadLegacy();
 let terminalKind: CampaignOutcome | null = null;
 let terminalShare = 0;
-
-/** Ceremony shell — which act of the run the player is in. */
-type ActId = 'primary' | 'general' | 'session' | 'waiting';
-
-interface ActShellDef {
-  id: ActId;
-  actNum: string;
-  title: string;
-  /** Short line on persistent banner */
-  bannerSub: string;
-  /** Static splash body (detail line appended when engine provides text) */
-  splashBody: string;
-  splashHint: string;
-  cta: string;
-  endWeekLabel: string;
-  actionsTitle: string;
-  logTitle: string;
-  tag: string;
-  /** Hand / motions section label inside playables */
-  kitLabel: string;
-}
-
-/**
- * Presentation-only act shells. Rules stay in the engine; this is the
- * unmistakable stage boundary the player asked for (not a soft re-skin).
- */
-const ACT_SHELLS: Record<ActId, ActShellDef> = {
-  primary: {
-    id: 'primary',
-    actNum: 'Act I',
-    title: 'The Primary',
-    bannerSub: 'Ballot · doors · force',
-    splashBody:
-      'Eight weeks. Make the ballot or the primary goes on without you. ' +
-      'Petition labor or filing fee — pick a door. Field work needs a ground.',
-    splashHint:
-      'Main Deck campaign verbs. Shop is 0 AP. Once: Self-Fund · Once: PAC Check (Session will collect).',
-    cta: 'File the papers',
-    endWeekLabel: 'End campaign week',
-    actionsTitle: 'Campaign hand',
-    logTitle: 'Campaign log',
-    tag: 'Primary',
-    kitLabel: 'Campaign plays'
-  },
-  general: {
-    id: 'general',
-    actNum: 'Act II',
-    title: 'The General',
-    bannerSub: 'GOTV · turnout · November',
-    splashBody:
-      'You survived the primary. Same run — new clock. Six weeks to November. ' +
-      'Primary rapport seeds GOTV on the grounds that know you. Block walks and phones now bank turnout, not just introductions. Kitchen-table club math is closed.',
-    splashHint:
-      'GOTV Weekend is in your hand. Field work converts to conversion %. Flatbed (A06) unlocks Rides to the Polls. November is arithmetic — contacts alone will not save you.',
-    cta: 'Take the field',
-    endWeekLabel: 'End general week',
-    actionsTitle: 'General field',
-    logTitle: 'Campaign log',
-    tag: 'General',
-    kitLabel: 'Turnout kit · GOTV is the lever'
-  },
-  session: {
-    id: 'session',
-    actNum: 'Act III',
-    title: 'You are sworn in',
-    bannerSub: 'Bill pipeline · sine die',
-    splashBody:
-      'The general is won. You are a member now — still THIS run, not a new campaign. ' +
-      'Campaign cards leave the table. Legislative motions (Special kit) only.',
-    splashHint:
-      'File your bill. One pipeline motion per week. Casework keeps the seat. Clock ends at sine die — then reelection is a NEW cycle.',
-    cta: 'Enter the chamber',
-    endWeekLabel: 'End legislative week',
-    actionsTitle: 'Legislative motions',
-    logTitle: 'Chamber log',
-    tag: 'Session',
-    kitLabel: 'Session Special kit · not Main Deck'
-  },
-  waiting: {
-    id: 'waiting',
-    actNum: 'Act IV',
-    title: 'The Waiting Season',
-    bannerSub: 'Interim orbit · next filing',
-    splashBody:
-      'The race ended. The climb did not. Four compressed weeks — one action each. ' +
-      'What you bank rides into the next campaign. No true game over; only redirection.',
-    splashHint: 'Special waiting verbs only (WA*). Path-scoped kit. Then setup for the next filing.',
-    cta: 'Begin the interim',
-    endWeekLabel: 'End interim week',
-    actionsTitle: 'Interim orbit',
-    logTitle: 'Waiting log',
-    tag: 'Waiting',
-    kitLabel: 'Waiting Special kit · bank for next cycle'
-  }
-};
-
-function actFromStage(stage: string | undefined): ActId {
-  if (stage === 'waiting') return 'waiting';
-  if (stage === 'session') return 'session';
-  if (stage === 'general') return 'general';
-  return 'primary';
-}
 
 function $(id: string): HTMLElement {
   const el = document.getElementById(id);
@@ -456,7 +361,7 @@ function renderDraft(): void {
         if (!card) return '';
         return `
         <button type="button" class="${cardClasses(card)} draft-card" data-draft="${i}">
-          ${cardInner(card)}
+          ${cardInner(campaign!.state, card)}
         </button>`;
       })
       .join('');
@@ -466,120 +371,6 @@ function renderDraft(): void {
       paint();
     });
   });
-}
-
-/** Primary cost for the seal + any secondary costs for the sub-stamp row. */
-function costParts(card: PlayCard): { seal: string; subs: string[] } {
-  const c = card.cost;
-  const all: string[] = [];
-  if (c.a) all.push(`${c.a} AP`);
-  if (c.$) all.push(`$${c.$}`);
-  if (c.vp) all.push(`${c.vp} vol`);
-  if (c.m) all.push(`${c.m} mom`);
-  if (c.fav) all.push(`${c.fav} fav`);
-  if (!all.length) return { seal: 'free', subs: [] };
-  return { seal: all[0]!, subs: all.slice(1) };
-}
-
-/**
- * Shared card body — the one card anatomy every surface uses (hand, camp
- * actions, phase drafts). Name banner, deco divider, engraved emblem with
- * a cost seal stamped over it, tagline, body text, ticket-stub footer.
- */
-function cardInner(
-  card: PlayCard,
-  opts: { camp?: boolean; shop?: boolean; locked?: boolean; lockReason?: string } = {}
-): string {
-  const state = campaign!.state;
-  const g = pickDefaultGround(state);
-  const base = card.odds?.(state, g);
-  const mod = cardAttrMod(state, card);
-  const p = base !== undefined ? Math.max(0.02, Math.min(0.95, base + mod)) : undefined;
-  const odds = p !== undefined ? `p≈${(p * 100).toFixed(0)}%` : '';
-  const meter =
-    p !== undefined
-      ? `<span class="odds-meter"><i style="width:${Math.round(p * 100)}%"></i></span>`
-      : '';
-  const attr = card.attrs?.length ? card.attrs.join(' · ') : '';
-  const { seal, subs } = costParts(card);
-  const stamp = opts.shop
-    ? '<span class="stamp stamp-shop">Shop</span>'
-    : opts.camp
-      ? '<span class="stamp stamp-camp">Camp</span>'
-      : '';
-  // Kind seal (top-left, mirroring the cost seal): a subtle corner glyph
-  // marking the card's family. No verdict text — the category name lives
-  // in title/aria only. `action` cards carry no mark (unmarked default).
-  const kind = card.kind ?? 'action';
-  const mark = kindMark(kind);
-  const meta = KIND_META[kind];
-  const kindSeal = mark
-    ? `<span class="kind-seal" role="img" title="${meta?.label ?? ''} — ${meta?.blurb ?? ''}" aria-label="${meta?.label ?? ''}">${mark}</span>`
-    : '';
-  // Art plate: Anvil-style greybox until real assets land (no full-bleed product photos).
-  // Emblem sits on top of the plate so faces stay readable without raster art.
-  const artPlate = cardArtPlateHtml(card.id);
-  return `
-    ${kindSeal}
-    <span class="name">${card.n}</span>
-    <span class="orn"><i></i>&#10022;<i></i></span>
-    <span class="card-art">${artPlate}<span class="card-emblem">${emblemFor(card.id)}</span>${stamp}</span>
-    <span class="cost-seal">${seal}</span>
-    ${subs.length ? `<span class="cost-subs">${subs.map(s => `<span>${s}</span>`).join('')}</span>` : ''}
-    <span class="tagline">${card.tag}</span>
-    ${opts.locked && opts.lockReason ? `<span class="locked-reason">${opts.lockReason}</span>` : ''}
-    <span class="card-footer">
-      <span class="risk-tag">${card.risk}</span>
-      ${odds ? `<span class="odds">${odds}</span>` : ''}
-    </span>
-    ${meter}
-    ${attr ? `<span class="attrs">${attr}</span>` : ''}
-  `;
-}
-
-function cardClasses(
-  card: PlayCard,
-  opts: { camp?: boolean; shop?: boolean; locked?: boolean } = {}
-): string {
-  const kind = card.kind ?? 'action';
-  return [
-    'play-card',
-    `risk-${card.risk.toLowerCase()}`,
-    kind !== 'action' ? `kind-${kind}` : '',
-    opts.shop ? 'shop' : '',
-    opts.camp && !opts.shop ? 'camp' : '',
-    opts.locked ? 'locked' : ''
-  ]
-    .filter(Boolean)
-    .join(' ');
-}
-
-/** Escape a string for safe use inside a double-quoted HTML attribute. */
-function attrEscape(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
-
-function cardHtml(
-  card: PlayCard,
-  index: number,
-  opts: { camp?: boolean; shop?: boolean; locked?: boolean; lockReason?: string }
-): string {
-  // Description is data revealed on demand — not drawn on the card face.
-  // It lives in the button's accessible name (screen readers) and title
-  // (hover tooltip), so the face stays name + art + cost + kind tint.
-  const desc = attrEscape(card.d);
-  const label = `${attrEscape(card.n)} — ${desc}`;
-  return `
-    <button type="button" class="${cardClasses(card, opts)}" data-idx="${index}"
-      title="${desc}" aria-label="${label}"
-      ${opts.locked ? 'disabled aria-disabled="true"' : ''}>
-      ${cardInner(card, opts)}
-    </button>
-  `;
 }
 
 function lockReason(card: PlayCard): string {
@@ -642,7 +433,7 @@ function renderPlayables(): void {
         .map(({ index, card }) => {
           const free = (card.cost.a ?? 0) === 0;
           const locked = !free && apExhausted;
-          return cardHtml(card, index, {
+          return cardHtml(state, card, index, {
             camp: true,
             locked,
             lockReason: locked ? 'No AP left' : undefined
@@ -672,7 +463,7 @@ function renderPlayables(): void {
       playable
         .map(({ index, card }) => {
           const locked = apExhausted && (card.cost.a ?? 0) > 0;
-          return cardHtml(card, index, {
+          return cardHtml(state, card, index, {
             camp: true,
             locked,
             lockReason: locked ? 'No AP left' : undefined
@@ -705,19 +496,19 @@ function renderPlayables(): void {
     handCards
       .map(({ index, card }) => {
         const locked = apExhausted || !playableIdx.has(index);
-        return cardHtml(card, index, {
+        return cardHtml(state, card, index, {
           locked,
           lockReason: locked ? (apExhausted ? 'No AP left' : lockReason(card)) : undefined
         });
       })
       .join('') +
-    campCards.map(({ index, card }) => cardHtml(card, index, { camp: true })).join('') +
+    campCards.map(({ index, card }) => cardHtml(state, card, index, { camp: true })).join('') +
     (shopCards.length
       ? `<p class="hint shop-hint">Campaign shop — 0 AP · money or volunteers · Main unlocks</p>` +
         shopCards
           .map(({ index, card }) => {
             const locked = !playableIdx.has(index);
-            return cardHtml(card, index, {
+            return cardHtml(state, card, index, {
               shop: true,
               locked,
               lockReason: locked ? lockReason(card) : undefined
@@ -725,7 +516,6 @@ function renderPlayables(): void {
           })
           .join('')
       : '');
-
   grid.querySelectorAll<HTMLButtonElement>('.play-card:not(.locked)').forEach(btn => {
     btn.addEventListener('click', () => {
       if (!campaign) return;
@@ -1324,125 +1114,16 @@ function openOutsideWeather(
   }
 }
 
-/**
- * Full-screen act handoff. Primary / General / Session all use this shell
- * so stage changes cannot be missed or mistaken for a soft reset.
- */
-function openActSplash(actId: ActId, engineDetail?: string): void {
-  const act = ACT_SHELLS[actId];
-  let root = document.getElementById('act-splash');
-  if (!root) {
-    root = document.createElement('div');
-    root.id = 'act-splash';
-    root.className = 'act-splash';
-    root.setAttribute('role', 'dialog');
-    root.setAttribute('aria-modal', 'true');
-    root.innerHTML = `
-      <div class="act-splash-panel">
-        <p class="eyebrow act-splash-num"></p>
-        <h2 class="act-splash-title"></h2>
-        <p class="act-splash-body"></p>
-        <p class="hint act-splash-hint"></p>
-        <button type="button" class="btn btn-gold" id="act-splash-ok">Continue</button>
-      </div>`;
-    document.getElementById('game')?.appendChild(root);
-  }
-  root.dataset.act = actId;
-  root.className = `act-splash act-splash-${actId}`;
-  const num = root.querySelector('.act-splash-num');
-  const title = root.querySelector('.act-splash-title');
-  const body = root.querySelector('.act-splash-body');
-  const hint = root.querySelector('.act-splash-hint');
-  const ok = root.querySelector('#act-splash-ok') as HTMLButtonElement | null;
-  if (num) num.textContent = act.actNum;
-  if (title) title.textContent = act.title;
-  if (body) {
-    body.textContent = engineDetail?.trim()
-      ? `${engineDetail.trim()}\n\n${act.splashBody}`
-      : act.splashBody;
-  }
-  if (hint) hint.textContent = act.splashHint;
-  if (ok) ok.textContent = act.cta;
-  root.classList.remove('hidden');
-  if (ok) {
-    ok.onclick = () => {
-      root!.classList.add('hidden');
-      paint();
-    };
-  }
+function openActSplash(
+  actId: Parameters<typeof openActSplashShell>[0],
+  engineDetail?: string
+): void {
+  openActSplashShell(actId, engineDetail, () => paint());
 }
 
-/** Persistent stage chrome: banner, tint, verbs, panel titles, masthead tag. */
 function applyStageChrome(): void {
   if (!campaign) return;
-  const s = campaign.state;
-  const act = ACT_SHELLS[actFromStage(s.stage)];
-  const game = document.getElementById('game');
-  if (game) {
-    game.classList.remove('stage-primary', 'stage-general', 'stage-session');
-    game.classList.add(`stage-${act.id}`);
-  }
-
-  const endBtn = document.getElementById('btn-end');
-  if (endBtn) endBtn.textContent = act.endWeekLabel;
-
-  const actionsH = document.getElementById('actions-heading');
-  if (actionsH) actionsH.textContent = act.actionsTitle;
-  const logH = document.getElementById('log-heading');
-  if (logH) logH.textContent = act.logTitle;
-
-  // Persistent act banner
-  const banner = document.getElementById('act-banner');
-  if (banner) {
-    banner.hidden = false;
-    banner.dataset.act = act.id;
-    banner.className = `act-banner act-banner-${act.id}`;
-    const num = banner.querySelector('.act-banner-num');
-    const title = banner.querySelector('.act-banner-title');
-    const sub = banner.querySelector('.act-banner-sub');
-    if (num) num.textContent = act.actNum;
-    if (title) title.textContent = act.tag;
-    if (sub) {
-      const weekBit =
-        s.stage === 'session'
-          ? ` · W${s.week}/${s.weeksTotal} sine die`
-          : ` · W${stageWeek(s)} · cal ${s.week}/${s.weeksTotal}`;
-      sub.textContent = `${act.bannerSub}${weekBit}`;
-    }
-  }
-
-  // Masthead stage tag (single, always current)
-  const h1 = document.querySelector('#topbar h1');
-  if (h1) {
-    document.querySelector('#topbar .stage-tag')?.remove();
-    // legacy session-tag cleanup
-    document.querySelector('#topbar .session-tag')?.remove();
-    const tag = document.createElement('span');
-    tag.className = `alpha-tag stage-tag stage-tag-${act.id}`;
-    tag.textContent = act.tag;
-    h1.appendChild(document.createTextNode(' '));
-    h1.appendChild(tag);
-  }
-}
-
-/** One-handed mobile tabs (Play / Dossier / Log). Presentation only — the
-    engine render targets live inside the panels and are untouched. */
-function switchTab(name: string): void {
-  const game = document.getElementById('game');
-  if (game) game.className = game.className.replace(/\btab-\w+\b/g, '').trim() + ` tab-${name}`;
-  document.querySelectorAll<HTMLElement>('.mtab-panel').forEach(p =>
-    p.classList.toggle('active', p.dataset.tab === name)
-  );
-  document.querySelectorAll<HTMLElement>('.mnav-btn').forEach(b =>
-    b.classList.toggle('active', b.dataset.gototab === name)
-  );
-}
-
-function wireTabs(): void {
-  document.querySelectorAll<HTMLElement>('.mnav-btn').forEach(btn =>
-    btn.addEventListener('click', () => switchTab(btn.dataset.gototab || 'play'))
-  );
-  switchTab('play');
+  applyStageChromeShell(campaign.state);
 }
 
 function boot(): void {
