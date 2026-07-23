@@ -618,5 +618,15 @@ While resting (`718f820`), remote advanced ~43 commits (PRs **#21–#32**). Agen
 | Catalog | 113 cards · 21 Outside · residency audit green |
 | Re-file | waiting → same persona, skip setup |
 
-Hygiene: board + RESTING rewritten to stop lying. Issues #10/#11 titles still lag on GitHub until owner closes.
+Hygiene: board + RESTING rewritten to stop lying.
+
+### Step A applied (2026-07-23)
+
+| Issue | Action |
+|---|---|
+| #11 | **Closed** — 0.1.0 evidence shipped |
+| #10 | Retitled **RESIDUAL** (phone sign-off / screenshot only) |
+| #12 | Retitled **ON HOLD** — Unity editor paused; no agent C# |
+
+**NEXT code (when picked):** B signature fairness → C refile harness → D balance post-113. Unity stays parked.
 

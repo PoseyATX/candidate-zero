@@ -46,9 +46,9 @@ Merged PR trail: **#21–#32** (plus reconcile #19 family).
 | Phase | Code truth | GitHub issue lag |
 |-------|------------|------------------|
 | 0–5 | DONE | Closed |
-| 6 | Core + CI a11y/smoke **done**; formal phone sign-off / residual polish may remain | #10 still OPEN “BLOCKED” — **title stale** |
-| 7 | Evidence + **0.1.0** **done** | #11 still OPEN “PLANNED” — **close when owner confirms** |
-| 8 | Engine API + content bridge + Jint scaffold **done in repo** | #12 OPEN NEXT — **Unity editor track** remains |
+| 6 | Core + CI a11y/smoke **done** | #10 OPEN **RESIDUAL** only (phone sign-off / screenshot CI) |
+| 7 | Evidence + **0.1.0** **done** | #11 **CLOSED** 2026-07-23 |
+| 8 | Engine API + content bridge + Jint scaffold **done in repo** | #12 **ON HOLD** — Unity editor (no agent free-flight) |
 
 ---
 
