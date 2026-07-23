@@ -1227,14 +1227,24 @@ function endWeek(): void {
   if (transition.kind === 'waiting_complete') {
     const fin = finishWaiting(campaign.state, legacy);
     saveLegacy(legacy);
-    campaign.state.log.push({
-      week: campaign.state.week,
-      kind: 'note',
-      text: fin.text
-    });
-    // Season done — next filing at setup (carry has waiting banks)
-    showSetup();
-    renderChronicle();
+    // Persistent run: the wheel turns to the next filing as the SAME person.
+    // You chose your identity once — you do not become a different candidate by
+    // filing again. Re-file directly into the next primary with the locked
+    // persona/issue/district/region (createCampaign reuses campaign.setup), the
+    // waiting banks carried via applyLegacy. The identity/"File the Nameplate"
+    // screen is only for a fresh start or a deliberate start-over (New Run).
+    const prevSetup = campaign.setup;
+    const seed = (Date.now() % 1_000_000) || 1;
+    campaign = createCampaign({ seed, setup: prevSetup });
+    applyLegacy(campaign.state, legacy);
+    weekPlays = [];
+    startWeek(campaign);
+    showGame();
+    applyStageChrome();
+    paint();
+    campaign.state.log.push({ week: campaign.state.week, kind: 'note', text: fin.text });
+    // Next cycle, same name on the ballot — Act I ceremony carries the news.
+    openActSplash('primary', fin.text);
     return;
   }
   if (campaign.state.over) {
