@@ -615,7 +615,7 @@ h1 {
   background: linear-gradient(to right, transparent, #9a824f 30%, #9a824f 70%, transparent);
 }
 
-/* --- Emblem plate --- */
+/* --- Emblem plate (Anvil-style greybox under emblem until raster art ships) --- */
 .play-card .card-art {
   position: relative;
   height: 30%;
@@ -631,11 +631,53 @@ h1 {
     linear-gradient(180deg, #ecdfc0, #e5d5b1);
   overflow: hidden;
 }
-.play-card .card-art svg {
+.play-card .card-art .art-plate {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  overflow: hidden;
+}
+.play-card .card-art .art-greybox {
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0.55;
+}
+.play-card .card-art .art-raster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  z-index: 1;
+  pointer-events: none;
+}
+.play-card .card-art .art-plate.art-miss .art-raster {
+  display: none;
+}
+.play-card .card-art .card-emblem {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 46%;
   height: 82%;
+  pointer-events: none;
+}
+.play-card .card-art .card-emblem svg,
+.play-card .card-art > svg {
+  width: 100%;
+  height: 100%;
   color: #5d452a;
   filter: drop-shadow(0 1px 0 rgba(255, 250, 235, 0.6));
+}
+/* Legacy: direct svg child without plate wrapper */
+.play-card .card-art > svg {
+  width: 46%;
+  height: 82%;
 }
 
 /* --- Cost seal: a notary-stamp circle overlapping the emblem plate. --- */

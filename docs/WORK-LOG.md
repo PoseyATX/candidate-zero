@@ -644,3 +644,19 @@ Misread of owner “A” = Accept fixed; sequence B→C→D after A hygiene.
 
 Content export **116** cards. Unity still on hold.
 
+---
+
+## Anvil port (2026-07-23)
+
+Borrowed **MIT** code/patterns from [7etsuo/anvil](https://github.com/7etsuo/anvil) (public use):
+
+| Piece | Path |
+|---|---|
+| Greybox + card art plate | `src/lib/anvil-port/greybox.ts`, `cardAssets.ts` |
+| Campaign observe/diff | `src/lib/anvil-port/observe.ts` |
+| UI wire | `cardInner` uses art plate under emblem |
+| Harness | `npm run harness:observe` |
+| Docs | `docs/ANVIL.md`, `src/lib/anvil-port/NOTICE.md` |
+
+**Not** adopted: Phaser, full kernel, StS `genre-card` Battle rules. Pure engine remains SoT.
+

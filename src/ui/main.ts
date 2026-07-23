@@ -49,6 +49,7 @@ import {
 import { enterWaiting, finishWaiting, WAITING_WEEKS } from '../engine/waiting.js';
 import type { CampaignOutcome, Ground, LegacyState, PlayCard, PlayOutcome, TraitId } from '../engine/types.js';
 import { emblemFor, emblem, kindMark, KIND_META } from './card-art.js';
+import { cardArtPlateHtml } from '../lib/anvil-port/index.js';
 import './styles.css';
 
 let campaign: Campaign | null = null;
@@ -515,11 +516,14 @@ function cardInner(
   const kindSeal = mark
     ? `<span class="kind-seal" role="img" title="${meta?.label ?? ''} — ${meta?.blurb ?? ''}" aria-label="${meta?.label ?? ''}">${mark}</span>`
     : '';
+  // Art plate: Anvil-style greybox until real assets land (no full-bleed product photos).
+  // Emblem sits on top of the plate so faces stay readable without raster art.
+  const artPlate = cardArtPlateHtml(card.id);
   return `
     ${kindSeal}
     <span class="name">${card.n}</span>
     <span class="orn"><i></i>&#10022;<i></i></span>
-    <span class="card-art">${emblemFor(card.id)}${stamp}</span>
+    <span class="card-art">${artPlate}<span class="card-emblem">${emblemFor(card.id)}</span>${stamp}</span>
     <span class="cost-seal">${seal}</span>
     ${subs.length ? `<span class="cost-subs">${subs.map(s => `<span>${s}</span>`).join('')}</span>` : ''}
     <span class="tagline">${card.tag}</span>

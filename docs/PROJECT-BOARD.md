@@ -39,7 +39,8 @@ become a second rules implementation.
 | **DONE** | — | Waiting → re-file same persona (PR #32) |
 | **ON HOLD** | [#12](https://github.com/PoseyATX/candidate-zero/issues/12) | Phase 8 — repo bridge done; **Unity editor on hold** (no agent C# free-flight) |
 | **DONE** | — | Plan B–D: SIG22–24 coverage · refile seed/harness · balance note post-catalog |
-| **NEXT** | — | Human playtest · path UI crumb · #10 residual · or lift Unity hold |
+| **DONE** | — | Anvil MIT port: greybox card plates + campaign observe (`docs/ANVIL.md`) |
+| **NEXT** | — | UI/gameplay flow redesign · human playtest · or lift Unity hold |
 | META | [#13](https://github.com/PoseyATX/candidate-zero/issues/13) | Board hygiene rules |
 | BUG | [#14](https://github.com/PoseyATX/candidate-zero/issues/14) | Pages deploy auto-fire / workflow scope |
 | PLANNED | [#15](https://github.com/PoseyATX/candidate-zero/issues/15) | AC1 archive yield-table full compare |
