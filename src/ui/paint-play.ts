@@ -10,8 +10,9 @@ import {
   snapshot,
   type Campaign
 } from '../engine/loop.js';
-import { isPhaseLegal, isVisible, canAfford } from '../engine/play.js';
-import type { Ground, PlayCard } from '../engine/types.js';
+import { isPhaseLegal, isVisible, canAfford, cardAttrMod } from '../engine/play.js';
+import { getGroundPenalty, rivalOddsPenalty } from '../engine/calendar.js';
+import type { GameState, Ground, PlayCard } from '../engine/types.js';
 import {
   cardHtml,
   cardInner,
@@ -32,6 +33,23 @@ export type PlayCommit = (index: number, ground?: Ground) => void;
 export type AfterPaint = () => void;
 
 let pendingGroundIndex: number | null = null;
+let pendingGroundCard: PlayCard | null = null;
+
+/**
+ * Effective success odds for the pending field card on a specific ground —
+ * the SAME formula executePlay resolves with (base card odds + attr synergy +
+ * repeat-ground familiarity bonus − rival opposition penalty). So the number
+ * on the button is exactly what the roll will use. This is the ground/odds
+ * literacy fix: the player can see opposition presence actually cost them.
+ */
+function groundOdds(s: GameState, card: PlayCard, g: Ground): number {
+  const base = card.odds ? card.odds(s, g) : 0.5;
+  const attr = cardAttrMod(s, card);
+  const prior = s.groundPlays?.[g.id] ?? 0;
+  const bonus = card.field && prior > 0 ? getGroundPenalty(s, g, prior).oddsBonus : 0;
+  const rivalPen = card.field ? rivalOddsPenalty(g) : 0;
+  return Math.max(0.02, Math.min(0.95, base + attr + bonus - rivalPen));
+}
 let detailIndex: number | null = null;
 let detailCampaign: Campaign | null = null;
 let commitHook: PlayCommit | null = null;
@@ -450,6 +468,7 @@ function renderWaitingPlayables(
 
 export function openGroundPicker(campaign: Campaign, index: number, card: PlayCard): void {
   pendingGroundIndex = index;
+  pendingGroundCard = card;
   $('gp-title').textContent = `${card.n} — where do you work it?`;
   renderGroundPicker(campaign);
   $('ground-picker').classList.remove('hidden');
@@ -457,20 +476,43 @@ export function openGroundPicker(campaign: Campaign, index: number, card: PlayCa
 
 export function closeGroundPicker(): void {
   pendingGroundIndex = null;
+  pendingGroundCard = null;
   $('ground-picker').classList.add('hidden');
 }
 
 export function renderGroundPicker(campaign: Campaign): void {
   const s = campaign.state;
   const last = s.lastGround;
+  const card = pendingGroundCard;
+  // Best available odds → highlight the smart pick.
+  const bestPct = card
+    ? Math.max(...s.groundsArr.map(g => Math.round(groundOdds(s, card, g) * 100)))
+    : -1;
+  // Plain-English rule, once, so opposition presence is legible (owner ask).
+  const sub = $('gp-sub');
+  if (sub) {
+    sub.textContent =
+      'Odds are for THIS play on each ground. Rivals working a ground drag your ' +
+      'chances down there; fresh ground pays full rapport, a repeat this week is ' +
+      'easier but banks half.';
+  }
   $('gp-list').innerHTML = s.groundsArr
     .map(g => {
       const rap = Math.round(g.rapport || 0);
       const rival = Math.round(g.rivalRap || 0);
       const workedThisWeek = (s.groundPlays?.[g.id] ?? 0) > 0;
+      const pct = card ? Math.round(groundOdds(s, card, g) * 100) : null;
+      const rivalPen = card && card.field ? Math.round(rivalOddsPenalty(g) * 100) : 0;
+      const oddsHtml =
+        pct !== null
+          ? `<span class="gp-odds${pct === bestPct ? ' gp-odds-best' : ''}" ` +
+            `title="Effective odds for ${attrEscape(card!.n)} here${rivalPen > 0 ? ` — rivals cost you ~${rivalPen}%` : ''}">` +
+            `p≈${pct}%${pct === bestPct ? ' · best' : ''}${rivalPen > 0 ? ` <span class="gp-pen">−${rivalPen}% rival</span>` : ''}</span>`
+          : '';
       return `
         <button type="button" class="gp-ground${g.id === last ? ' gp-last' : ''}" data-ground="${g.id}">
           <span class="gp-name">${g.n}${g.id === last ? ' <span class="gp-tag">last</span>' : ''}</span>
+          ${oddsHtml}
           <span class="gp-meters">
             <span class="gp-meter" title="Your rapport on this ground — banks when you work here">
               <span class="gp-mlabel">you</span>

@@ -1539,6 +1539,22 @@ h1 {
   padding: 0 0.25rem;
   vertical-align: 0.1em;
 }
+.gp-odds {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--parchment);
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3rem;
+}
+.gp-odds-best { color: var(--gold); }
+.gp-pen {
+  font-size: 0.62rem;
+  font-weight: 500;
+  color: #d98a6a;
+  letter-spacing: 0.02em;
+}
 .gp-meters { display: flex; flex-direction: column; gap: 0.28rem; }
 .gp-meter { display: grid; grid-template-columns: 1.7rem 1fr 1.6rem; align-items: center; gap: 0.35rem; }
 .gp-mlabel {
