@@ -630,3 +630,17 @@ Hygiene: board + RESTING rewritten to stop lying.
 
 **NEXT code (when picked):** B signature fairness → C refile harness → D balance post-113. Unity stays parked.
 
+---
+
+## Plan B–D executed (2026-07-23) — accept full diagnostic
+
+Misread of owner “A” = Accept fixed; sequence B→C→D after A hygiene.
+
+| Step | Shipped |
+|---|---|
+| **B** | SIG22 teacher, SIG23 veteran, SIG24 smallbiz · `harness:signatures` 24/24 |
+| **C** | `nextCycleSeed` + `continueAfterWaiting` · waiting harness refile e2e · UI uses deterministic seed |
+| **D** | BALANCE-NOTES: strategies under-sample 116-card catalog; no retune |
+
+Content export **116** cards. Unity still on hold.
+

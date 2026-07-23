@@ -8,7 +8,7 @@
 **v0.1 evidence:** [`docs/V0.1-EVIDENCE.md`](./V0.1-EVIDENCE.md)  
 **Engine host API:** [`docs/ENGINE-API.md`](./ENGINE-API.md)  
 **Live alpha:** https://poseyatx.github.io/candidate-zero/  
-**Snapshot date:** 2026-07-23 (**post-sleep catch-up** — PRs #21–#32)
+**Snapshot date:** 2026-07-23 (**Step A hygiene** — #11 closed, #10 residual, #12 on hold)
 
 This file is the agent-readable mirror of the GitHub Project. When project API
 scopes are missing, **update this file + the linked issues** so work stays
@@ -38,7 +38,8 @@ become a second rules implementation.
 | **DONE** | — | Card library waves: signatures · unlock paths · wave5/6 → **113** cards |
 | **DONE** | — | Waiting → re-file same persona (PR #32) |
 | **ON HOLD** | [#12](https://github.com/PoseyATX/candidate-zero/issues/12) | Phase 8 — repo bridge done; **Unity editor on hold** (no agent C# free-flight) |
-| **NEXT** | — | **B** signature fairness (teacher/veteran/smallbiz) *or* **C** refile harness *or* **D** balance post-113 |
+| **DONE** | — | Plan B–D: SIG22–24 coverage · refile seed/harness · balance note post-catalog |
+| **NEXT** | — | Human playtest · path UI crumb · #10 residual · or lift Unity hold |
 | META | [#13](https://github.com/PoseyATX/candidate-zero/issues/13) | Board hygiene rules |
 | BUG | [#14](https://github.com/PoseyATX/candidate-zero/issues/14) | Pages deploy auto-fire / workflow scope |
 | PLANNED | [#15](https://github.com/PoseyATX/candidate-zero/issues/15) | AC1 archive yield-table full compare |

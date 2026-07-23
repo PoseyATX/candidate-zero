@@ -167,6 +167,10 @@ export function createCampaign(overrides: CreateCampaignOptions = {}): Campaign 
   // deck ever contains it) and reachable (shuffled into the draw pile).
   const sigId = SIGNATURE_BY_PERSONA[setup.personaId];
   if (sigId) injectIntoDrawPile(deckState, state, [sigId]);
+  // Persist seed on state for multi-cycle deterministic re-file.
+  if (stateOverrides.seed !== undefined) {
+    state.seed = Number(stateOverrides.seed) >>> 0 || 1;
+  }
   return {
     state,
     deck: deckState,
@@ -175,6 +179,31 @@ export function createCampaign(overrides: CreateCampaignOptions = {}): Campaign 
     filingDeadline: PRIMARY_WEEKS,
     setup
   };
+}
+
+/**
+ * Deterministic next-cycle seed (LCG step). Prefer this over Date.now() so
+ * multi-run careers stay reproducible when a seed is carried on state.
+ */
+export function nextCycleSeed(prevSeed: number): number {
+  const s = (Number(prevSeed) >>> 0) || 1;
+  return ((s * 1103515245 + 12345) >>> 0) || 1;
+}
+
+/**
+ * After waiting season: re-file as the same persona/issue/district/region.
+ * Applies legacy carry (waiting banks, traits, debt). Does not open setup.
+ */
+export function continueAfterWaiting(
+  prev: Campaign,
+  legacy: LegacyState,
+  seed?: number
+): Campaign {
+  const prevSeed = prev.state.seed ?? 1;
+  const nextSeed = seed ?? nextCycleSeed(prevSeed);
+  const next = createCampaign({ seed: nextSeed, setup: prev.setup });
+  applyLegacy(next.state, legacy);
+  return next;
 }
 
 /**

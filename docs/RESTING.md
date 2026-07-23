@@ -18,7 +18,7 @@ A playable **Texas Legislature roguelike deckbuilder**:
 |--------|--------|
 | Pure TS engine | Rules SoT + frozen **host API** (`src/engine/api.ts` v1.0.0) |
 | Vite UI | Full features restored + one-handed tab IA + a11y gates |
-| Content | **113** cards (signatures, unlock paths, wave 5–6) · **21** Outside · starmap MV01–14 |
+| Content | **116** cards (SIG01–24 all personas, unlock paths, wave 5–6) · **21** Outside · starmap MV01–14 |
 | Unity scaffold | Engine bundle + content JSON + Jint bridge scripts (no second rules engine) |
 | Harnesses | Full suite + `api` / `paths` / `content` |
 | Ship path | TS engine → Unity presentation → iOS |

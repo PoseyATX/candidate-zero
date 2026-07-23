@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "counts": {
-    "cards": 113,
+    "cards": 116,
     "personas": 24,
     "issues": 18,
     "districts": 4,
@@ -3196,6 +3196,95 @@
       "attrs": [
         "DIP",
         "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "signature"
+    },
+    {
+      "id": "SIG22",
+      "name": "Parent-Teacher Circuit",
+      "tagline": "signature — The Teacher",
+      "description": "Twenty years of cafeteria nights. You work the rooms that already know your name.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA",
+        "DIP"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "signature"
+    },
+    {
+      "id": "SIG23",
+      "name": "Halls of Honor",
+      "tagline": "signature — The Veteran",
+      "description": "The VFW and Legion still stand when the cameras leave. Bio is armor; the halls are turnout.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CON",
+        "CLO"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "signature"
+    },
+    {
+      "id": "SIG24",
+      "name": "Call In the Store Credit",
+      "tagline": "signature — The Feed-Store Owner",
+      "description": "Everyone still owes you a favor or a bag of feed. You cash favors before cash.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CRA",
+        "DIP"
       ],
       "residency": "main",
       "control": "player",
