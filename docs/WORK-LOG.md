@@ -26,6 +26,12 @@ Related docs:
 
 ---
 
+## 2026-07-23 — Human playtest pack + Pages deploy
+
+- `docs/PLAYTEST.md` — 10-min phone/wide checklist + seed 4242.
+- `smoke:ui` extended: HUD persona/$/week, goal strip without Dossier, tabs on phone + wide (no dual layout).
+- Preflight gates green; merge to `main` for GitHub Pages deploy → https://poseyatx.github.io/candidate-zero/
+
 ## 2026-07-23 — PR-7 docs hygiene
 
 - **UI-IA.md:** current module tree + bands + goal strip + tabs-all-widths; pre-Phase-6 diagnosis archived as historical only.

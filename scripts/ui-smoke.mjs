@@ -132,6 +132,30 @@ async function main() {
       'camp section has a label'
     );
 
+    // Human playtest checklist (automated slice) — phone 390×844 default
+    const hudText = await page.locator('#hud').innerText().catch(() => '');
+    assert(/Teacher|teacher|\$|W\d+/i.test(hudText), 'HUD shows persona cue / $ / week without Dossier');
+    assert(
+      (await page.locator('#goal-strip').isVisible()) &&
+        !(await page.locator('#tab-dossier').evaluate((el) => el.classList.contains('active'))),
+      'goal strip readable on Play tab without opening Dossier'
+    );
+    assert(
+      (await page.locator('.mbottom-nav').isVisible()) &&
+        (await page.locator('.mnav-btn').count()) >= 3,
+      'bottom nav tabs present (tabs-for-all-widths on phone)'
+    );
+    // Wide viewport still tabs, not dual Play+Dossier columns
+    await page.setViewportSize({ width: 1100, height: 800 });
+    await page.waitForTimeout(80);
+    assert(
+      (await page.locator('.mbottom-nav').isVisible()) &&
+        (await page.locator('#tab-play').isVisible()),
+      'wide viewport: bottom nav + Play tab still the IA (no dual layout)'
+    );
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.waitForTimeout(40);
+
     // 3. Play through several weeks: resolve field plays via the ground
     //    picker, everything else directly; drafts auto-first; end weeks.
     let playsResolved = 0;

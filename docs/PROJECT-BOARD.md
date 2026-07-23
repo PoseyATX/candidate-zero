@@ -48,7 +48,8 @@ become a second rules implementation.
 | **DONE** | — | Design PR-3.5 card zone CSS freeze · PR-4 kit emblems + `check:card-art` |
 | **DONE** | — | Design PR-5 ceremony queue/focus/picker truth · PR-6 tutorial Act IV |
 | **DONE** | — | Design PR-7 docs hygiene (UI-IA · RESTING · GAME-FLOW · art status) |
-| **NEXT** | — | Human playtest · #10 residual · optional PR-8 engine-bridge |
+| **SHIP** | — | Human playtest pack + deploy to Pages ([PLAYTEST.md](./PLAYTEST.md)) |
+| **NEXT** | — | Owner phone sign-off · #10 residual · optional PR-8 engine-bridge |
 | META | [#13](https://github.com/PoseyATX/candidate-zero/issues/13) | Board hygiene rules |
 | BUG | [#14](https://github.com/PoseyATX/candidate-zero/issues/14) | Pages deploy auto-fire / workflow scope |
 | PLANNED | [#15](https://github.com/PoseyATX/candidate-zero/issues/15) | AC1 archive yield-table full compare |
