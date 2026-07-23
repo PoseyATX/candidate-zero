@@ -1,8 +1,12 @@
+**RECOVERY SHIPPED (product, not PR alphabet):** inspect→PLAY; HUD Teacher; Goal/Now/Next; setup How to Play; Rival = lower field odds; no clicker face-commit.
+
 # Human playtest — UI redesign ship
 
 **Live alpha:** https://poseyatx.github.io/candidate-zero/  
-**Branch tip:** redesign PR-1…PR-7 on `main` after this deploy  
-**Automated preflight:** `npm run typecheck && npm run harness && npm run build && npm run smoke:ui && npm run a11y` — green before deploy  
+**Owner pass (2026-07-23):** 1 fail · 2 fail · 3–6 pass · 7 fail · 8 pass · 9 fail · 10 pass  
+**Fix ship:** HUD persona (not “The”), labeled sticky goal strip, rival picker copy, setup How to Play, **tap card → detail → PLAY** restored.
+
+**Automated preflight:** `npm run typecheck && npm run build && npm run smoke:ui && npm run a11y`
 
 Use a **phone** (or browser 390×844) first, then a **wide** window.
 
@@ -10,20 +14,21 @@ Use a **phone** (or browser 390×844) first, then a **wide** window.
 
 ## 10-minute checklist
 
-| # | Check | Pass? |
+| # | Check | Notes |
 |---|--------|-------|
-| 1 | Persona readable from **HUD** without opening Dossier | |
-| 2 | Ballot / sigs / next action readable from **goal strip** alone | |
-| 3 | `$` and AP visible without scrolling Machine | |
-| 4 | Cards **do not jump** when play toasts fire | |
-| 5 | At AP=0, **Shop** still findable (or End Week clear) | |
-| 6 | If Outside weather appears: dismiss **before** act splash | |
-| 7 | Ground picker: opp meter says contested turf **taxes field odds** | |
-| 8 | Wide window: still **Play / Dossier / Log** tabs (not side-by-side dual layout) | |
-| 9 | Tutorial: **Act IV Waiting** + goal strip mentioned | |
-| 10 | Full run to terminal: path/waiting or reelect choices, not a dead end | |
+| 1 | Persona readable from **HUD** without Dossier | Should show **Teacher** (not “The”) + issue line |
+| 2 | Ballot / sigs / next from **goal strip** alone | Labeled **Goal / Now / Next**, sticky on Play |
+| 3 | `$` and AP without scrolling Machine | |
+| 4 | Cards stable when toasts fire | |
+| 5 | Shop findable at AP=0 | |
+| 6 | Weather before act splash | |
+| 7 | Ground picker **Rival** = higher makes field odds harder | Not vague “opp” |
+| 8 | Wide = still three tabs | |
+| 9 | **How to Play** on setup (and masthead) · Act IV in tutorial | |
+| 10 | Terminal has a next move | |
+| 11 | **First tap** card = detail sheet with full text + **Play** | Second action commits |
 
-**Suggested seed:** `4242` on setup (deterministic smoke seed).
+**Suggested seed:** `4242` on setup.
 
 ---
 

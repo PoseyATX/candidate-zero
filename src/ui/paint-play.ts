@@ -1,6 +1,6 @@
 /**
- * Play surface: draft, sectioned playables, ground picker — leaf (no session/main).
- * PR-3: Camp → Hand → Shop order; session/waiting kit sections; draft focus.
+ * Play surface: draft, sectioned playables, ground picker, card detail sheet.
+ * First tap opens detail (full card.d + odds); PLAY commits (or opens ground picker).
  */
 
 import {
@@ -12,7 +12,14 @@ import {
 } from '../engine/loop.js';
 import { isPhaseLegal, isVisible, canAfford } from '../engine/play.js';
 import type { Ground, PlayCard } from '../engine/types.js';
-import { cardHtml, cardInner, cardClasses } from './card-face.js';
+import {
+  cardHtml,
+  cardInner,
+  cardClasses,
+  costParts,
+  computeCardFaceView,
+  attrEscape
+} from './card-face.js';
 import { ACT_SHELLS, actFromStage } from './act-shell.js';
 
 function $(id: string): HTMLElement {
@@ -25,6 +32,8 @@ export type PlayCommit = (index: number, ground?: Ground) => void;
 export type AfterPaint = () => void;
 
 let pendingGroundIndex: number | null = null;
+let detailIndex: number | null = null;
+let detailCampaign: Campaign | null = null;
 let commitHook: PlayCommit | null = null;
 let afterPaintHook: AfterPaint | null = null;
 
@@ -92,21 +101,98 @@ function sectionHtml(
     </section>`;
 }
 
-function wirePlayCards(root: HTMLElement, campaign: Campaign, fieldAware: boolean): void {
-  root.querySelectorAll<HTMLButtonElement>('.play-card:not(.locked)').forEach(btn => {
+/**
+ * Tap any face (including locked) → detail sheet.
+ * PLAY in the sheet commits (or opens ground picker for field cards).
+ */
+function wirePlayCards(root: HTMLElement, campaign: Campaign, _fieldAware: boolean): void {
+  root.querySelectorAll<HTMLButtonElement>('.play-card').forEach(btn => {
     btn.addEventListener('click', () => {
       const index = Number(btn.dataset.idx);
       if (Number.isNaN(index)) return;
-      if (fieldAware) {
-        const card = cardForIndex(campaign, index);
-        if (card?.field) {
-          openGroundPicker(campaign, index, card);
-          return;
-        }
-      }
-      commitHook?.(index);
+      openCardDetail(campaign, index);
     });
   });
+}
+
+export function closeCardDetail(): void {
+  detailIndex = null;
+  detailCampaign = null;
+  const root = document.getElementById('card-detail');
+  if (root) root.classList.add('hidden');
+}
+
+export function openCardDetail(campaign: Campaign, index: number): void {
+  const card = cardForIndex(campaign, index);
+  if (!card) return;
+  detailIndex = index;
+  detailCampaign = campaign;
+  const state = campaign.state;
+  const faceBtn = document.querySelector(
+    `#playables .play-card[data-idx="${index}"]`
+  ) as HTMLElement | null;
+  const locked =
+    !!faceBtn?.classList.contains('locked') || faceBtn?.getAttribute('data-locked') === '1';
+  let whyLocked = '';
+  const faceReason = faceBtn?.querySelector('.locked-reason');
+  if (faceReason) whyLocked = faceReason.textContent || '';
+  if (locked && !whyLocked) whyLocked = lockReason(campaign, card);
+
+  const view = computeCardFaceView(state, card);
+  const { seal, subs } = costParts(card);
+  const costLabel = [seal, ...subs].filter(Boolean).join(' · ') || 'free';
+
+  const root = $('card-detail');
+  root.classList.remove('hidden');
+  const title = root.querySelector('#detail-title');
+  const tagline = root.querySelector('#detail-tagline');
+  const desc = root.querySelector('#detail-desc');
+  const stats = root.querySelector('#detail-stats');
+  const playBtn = root.querySelector('#btn-play-detail') as HTMLButtonElement | null;
+
+  if (title) title.textContent = card.n;
+  if (tagline) tagline.textContent = card.tag || '';
+  if (desc) desc.textContent = card.d || card.tag || 'No further detail on file.';
+  if (stats) {
+    const odds =
+      view.oddsPct !== undefined
+        ? `<span class="detail-stat"><strong>p≈${Math.round(view.oddsPct * 100)}%</strong> odds now</span>`
+        : `<span class="detail-stat">No roll odds</span>`;
+    const risk = `<span class="detail-risk risk-${card.risk.toLowerCase()}">${attrEscape(card.risk)}</span>`;
+    const field = card.field
+      ? `<span class="detail-stat">Field — pick a ground after Play</span>`
+      : '';
+    const lock = locked
+      ? `<span class="detail-stat detail-locked">${attrEscape(whyLocked || 'Locked')}</span>`
+      : '';
+    stats.innerHTML = `${odds}${risk}<span class="detail-stat">Cost ${attrEscape(costLabel)}</span>${field}${lock}`;
+  }
+  if (playBtn) {
+    playBtn.disabled = locked;
+    playBtn.setAttribute('aria-disabled', locked ? 'true' : 'false');
+    playBtn.textContent = locked
+      ? whyLocked || 'Unavailable'
+      : card.field
+        ? `Play — choose ground · ${costLabel}`
+        : `Play — ${costLabel}`;
+    playBtn.onclick = () => {
+      if (detailIndex === null || !detailCampaign || locked) return;
+      const idx = detailIndex;
+      const camp = detailCampaign;
+      const c = cardForIndex(camp, idx);
+      closeCardDetail();
+      if (c?.field) {
+        openGroundPicker(camp, idx, c);
+      } else {
+        commitHook?.(idx);
+      }
+    };
+    try {
+      playBtn.focus({ preventScroll: true });
+    } catch {
+      playBtn.focus();
+    }
+  }
 }
 
 export function renderDraft(campaign: Campaign): void {
@@ -386,13 +472,13 @@ export function renderGroundPicker(campaign: Campaign): void {
         <button type="button" class="gp-ground${g.id === last ? ' gp-last' : ''}" data-ground="${g.id}">
           <span class="gp-name">${g.n}${g.id === last ? ' <span class="gp-tag">last</span>' : ''}</span>
           <span class="gp-meters">
-            <span class="gp-meter" title="Your rapport">
+            <span class="gp-meter" title="Your rapport on this ground — banks when you work here">
               <span class="gp-mlabel">you</span>
               <span class="gp-bar"><i class="gp-you" style="width:${Math.min(100, rap)}%"></i></span>
               <span class="gp-num">${rap}</span>
             </span>
-            <span class="gp-meter" title="Opposition presence (taxes field odds on contested turf)">
-              <span class="gp-mlabel">opp</span>
+            <span class="gp-meter" title="Rival opposition — higher = lower field-play odds here">
+              <span class="gp-mlabel">rival</span>
               <span class="gp-bar"><i class="gp-opp" style="width:${Math.min(100, rival)}%"></i></span>
               <span class="gp-num">${rival}</span>
             </span>

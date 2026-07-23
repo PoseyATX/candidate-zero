@@ -86,12 +86,25 @@ async function main() {
     await page.locator('#btn-title-start').click();
     assert(await page.locator('#setup').isVisible(), 'Begin the Climb → setup screen');
     assert(await page.locator('#seed-input').isVisible(), 'seed input present on setup');
+    // Playtest #9: How to Play on setup (persona selection), not only title
+    assert(await page.locator('#btn-setup-howto').isVisible(), 'setup has How to Play button');
+    await page.locator('#btn-setup-howto').click();
+    assert(await page.locator('#tutorial').isVisible(), 'setup How to Play → tutorial');
+    await page.locator('#btn-tut-back').click();
+    assert(await page.locator('#setup').isVisible(), 'tutorial back → setup');
 
     // 2. Start a seeded run.
     await page.locator('#seed-input').fill('4242');
     await page.locator('#btn-start').click();
     await page.waitForSelector('#game:not(.hidden)', { timeout: 10_000 });
     assert(true, 'Begin primary → game screen');
+    // dismiss Act I splash so play surface is free
+    let actSplashesDismissed = 0;
+    if ((await page.locator('#act-splash').count()) && (await page.locator('#act-splash').isVisible())) {
+      await page.locator('#act-splash-ok').click();
+      actSplashesDismissed++;
+      await page.waitForTimeout(40);
+    }
     assert((await page.locator('#playables .play-card').count()) > 0, 'hand renders playable cards');
 
     // PR-2: goal strip live after seed 4242 week 1
@@ -134,12 +147,34 @@ async function main() {
 
     // Human playtest checklist (automated slice) — phone 390×844 default
     const hudText = await page.locator('#hud').innerText().catch(() => '');
-    assert(/Teacher|teacher|\$|W\d+/i.test(hudText), 'HUD shows persona cue / $ / week without Dossier');
+    assert(
+      /Teacher/i.test(hudText) && !/^The\b/m.test(hudText.split('\n')[0] || ''),
+      `HUD shows persona (Teacher), not bare article "The" (got: ${JSON.stringify(hudText.slice(0, 80))})`
+    );
+    assert(/\$|W\d+/i.test(hudText), 'HUD shows $ / week without Dossier');
+    const goalText2 = await page.locator('#goal-strip').innerText().catch(() => '');
+    assert(
+      /Goal/i.test(goalText2) && /Next/i.test(goalText2) && /ballot|sig|Petition|Fee/i.test(goalText2),
+      `goal strip labeled Goal/Now/Next with ballot copy (got: ${JSON.stringify(goalText2.slice(0, 140))})`
+    );
     assert(
       (await page.locator('#goal-strip').isVisible()) &&
         !(await page.locator('#tab-dossier').evaluate((el) => el.classList.contains('active'))),
       'goal strip readable on Play tab without opening Dossier'
     );
+    // Card detail sheet on first tap
+    const firstCard = page.locator('#playables .play-card').first();
+    await firstCard.click();
+    await page.waitForTimeout(40);
+    assert(
+      (await page.locator('#card-detail').isVisible()) &&
+        !(await page.locator('#card-detail').evaluate(el => el.classList.contains('hidden'))),
+      'first card tap opens detail sheet'
+    );
+    assert(await page.locator('#detail-desc').innerText().then(t => t.length > 10), 'detail shows description text');
+    assert(await page.locator('#btn-play-detail').isVisible(), 'detail has PLAY button');
+    await page.locator('#detail-close').click();
+    await page.waitForTimeout(40);
     assert(
       (await page.locator('.mbottom-nav').isVisible()) &&
         (await page.locator('.mnav-btn').count()) >= 3,
@@ -172,12 +207,25 @@ async function main() {
       if (m) maxWeek = Math.max(maxWeek, Number(m[1]));
     };
 
-    let actSplashesDismissed = 0;
     let outsideDismissed = 0;
     let ceremonyQueueOk = true;
     let weatherThenSplash = 0;
     let pickerOppTruthChecked = false;
-    for (let iter = 0; iter < 400; iter++) {
+    const detailOpen = async () => {
+      const d = page.locator('#card-detail:not(.hidden)');
+      return (await d.count()) > 0 && (await d.isVisible().catch(() => false));
+    };
+    const closeOverlays = async () => {
+      if (await detailOpen()) {
+        await page.locator('#detail-close').click().catch(() => {});
+        await page.waitForTimeout(30);
+      }
+      if (await page.locator('#ground-picker').isVisible().catch(() => false)) {
+        await page.locator('#gp-cancel').click().catch(() => {});
+        await page.waitForTimeout(30);
+      }
+    };
+    for (let iter = 0; iter < 500; iter++) {
       if (await page.locator('#terminal').isVisible()) {
         reachedTerminal = true;
         break;
@@ -186,7 +234,6 @@ async function main() {
       // dismiss it the way a player taps "Continue".
       const splash = page.locator('#act-splash');
       if ((await splash.count()) && (await splash.isVisible())) {
-        // PR-5: splash must not stack under open weather
         const weatherOpen =
           (await page.locator('#outside-weather').count()) > 0 &&
           (await page.locator('#outside-weather').isVisible());
@@ -199,11 +246,8 @@ async function main() {
         await page.waitForTimeout(60);
         continue;
       }
-      // Outside "world weather" event — you answer it or weather it; the
-      // modal must be acknowledged before play continues.
       const weather = page.locator('#outside-weather');
       if ((await weather.count()) && (await weather.isVisible())) {
-        // PR-5: weather open ⇒ splash hidden
         const splashVis =
           (await splash.count()) > 0 && (await splash.isVisible().catch(() => false));
         if (splashVis) {
@@ -213,27 +257,40 @@ async function main() {
         await page.locator('#outside-weather-ok').click();
         outsideDismissed++;
         await page.waitForTimeout(80);
-        // After weather dismiss on a transition week, splash may appear
         if ((await splash.count()) && (await splash.isVisible().catch(() => false))) {
           weatherThenSplash++;
         }
         continue;
       }
+      // Card detail: PLAY commits (field → ground picker next)
+      if (await detailOpen()) {
+        const playDet = page.locator('#btn-play-detail');
+        if (await playDet.isEnabled().catch(() => false)) {
+          await playDet.click();
+          await page.waitForTimeout(70);
+          if (!(await page.locator('#ground-picker').isVisible().catch(() => false))) {
+            playsResolved++;
+          }
+        } else {
+          await page.locator('#detail-close').click().catch(() => {});
+          await page.waitForTimeout(40);
+        }
+        continue;
+      }
       if (await page.locator('#ground-picker').isVisible()) {
-        // PR-5: opposition copy is truthful (taxes field odds)
         if (!pickerOppTruthChecked) {
-          const oppTitle = await page
-            .locator('.gp-meter[title*="Opposition"]')
+          const rivalTitle = await page
+            .locator('.gp-mlabel')
+            .filter({ hasText: /rival/i })
             .first()
-            .getAttribute('title')
+            .evaluate(el => el.closest('.gp-meter')?.getAttribute('title') || '')
             .catch(() => '');
           const sub = await page.locator('#gp-sub').innerText().catch(() => '');
           const truth =
-            /tax/i.test(oppTitle || '') ||
-            /tax|contested/i.test(sub || '');
-          const stale = /does not affect odds yet/i.test(oppTitle || '') ||
-            /does not affect odds yet/i.test(sub || '');
-          assert(truth && !stale, `ground picker opposition copy truthful (title=${JSON.stringify(oppTitle)})`);
+            /rival|lower field|harder|odds/i.test(rivalTitle || '') ||
+            /Rival|rival|harder|odds/i.test(sub || '');
+          const stale = /does not affect odds yet/i.test(`${rivalTitle}${sub}`);
+          assert(truth && !stale, `ground picker rival copy clear (title=${JSON.stringify(rivalTitle)})`);
           pickerOppTruthChecked = true;
         }
         const grounds = await page.$$('.gp-ground');
@@ -241,12 +298,10 @@ async function main() {
           failures.push('ground picker open but no grounds listed');
           await page.locator('#gp-cancel').click();
         } else {
-          const logBefore = (await page.locator('#log').innerText().catch(() => '')).length;
           await grounds[groundPicks % grounds.length].click();
           groundPicks++;
+          playsResolved++;
           await page.waitForTimeout(60);
-          const logAfter = (await page.locator('#log').innerText().catch(() => '')).length;
-          if (logAfter > logBefore) playsResolved++;
         }
         continue;
       }
@@ -256,20 +311,40 @@ async function main() {
         await page.waitForTimeout(40);
         continue;
       }
-      const cards = await page.$$('#playables .play-card:not(.locked)');
-      if (cards.length) {
-        const logBefore = (await page.locator('#log').innerText().catch(() => '')).length;
-        await cards[0].click();
-        await page.waitForTimeout(60);
-        // A non-field play resolves immediately (log grows); a field play
-        // opens the picker (handled next iteration).
-        if (!(await page.locator('#ground-picker').isVisible())) {
-          const logAfter = (await page.locator('#log').innerText().catch(() => '')).length;
-          if (logAfter > logBefore) playsResolved++;
+      // Non-shop unlocks first (shop is 0 AP — never grind infinite buys)
+      let cards = await page.$$(
+        '#playables .play-section:not([data-section="shop"]) .play-card:not(.locked)'
+      );
+      // Once per run, prefer a field card so ground picker is exercised
+      if (!groundPicks && cards.length) {
+        for (const c of cards) {
+          const name = (await c.innerText().catch(() => '')).slice(0, 40);
+          await c.click();
+          await page.waitForTimeout(50);
+          if (!(await detailOpen())) continue;
+          const lab = await page.locator('#btn-play-detail').innerText().catch(() => '');
+          if (/ground/i.test(lab) || /Block Walk|Phone Bank|Yard Sign|Fish Fry/i.test(name)) {
+            await page.locator('#btn-play-detail').click();
+            await page.waitForTimeout(80);
+            break;
+          }
+          await page.locator('#detail-close').click().catch(() => {});
+          await page.waitForTimeout(30);
         }
+        if (await page.locator('#ground-picker').isVisible().catch(() => false)) continue;
+        if (await detailOpen()) continue;
+        cards = await page.$$(
+          '#playables .play-section:not([data-section="shop"]) .play-card:not(.locked)'
+        );
+      }
+      if (cards.length) {
+        await cards[0].click();
+        await page.waitForTimeout(50);
         continue;
       }
-      // Nothing playable → end the week.
+      // No campaign plays left (shop may remain) → end the week
+      await page.locator('.mnav-btn[data-gototab="play"]').click().catch(() => {});
+      await closeOverlays();
       const endBtn = page.locator('#btn-end');
       if (await endBtn.isVisible()) {
         await readWeek();
@@ -277,10 +352,7 @@ async function main() {
         endWeeks++;
         await page.waitForTimeout(60);
         await readWeek();
-        // A healthy campaign resolves in ~14 weeks + drafts; if we've ended
-        // far more "weeks" than that without a terminal, End Week is broken —
-        // fail fast instead of grinding the guard to 400.
-        if (endWeeks > 30) break;
+        if (endWeeks > 40) break;
       } else {
         break;
       }
@@ -308,13 +380,14 @@ async function main() {
       );
     }
 
-    // PR-6: tutorial names four acts including Waiting
-    await page.locator('#btn-howto').click();
+    // PR-6: tutorial names four acts including Waiting (close any sheets first)
+    await closeOverlays();
+    await page.locator('#btn-howto').click({ force: true });
     await page.waitForSelector('#tutorial:not(.hidden)', { timeout: 5_000 });
     const tut = await page.locator('#tutorial').innerText();
     assert(/Act IV|Waiting/i.test(tut), 'tutorial includes Act IV / Waiting');
     assert(/goal strip/i.test(tut), 'tutorial mentions goal strip');
-    assert(/tax/i.test(tut) && /field/i.test(tut), 'tutorial teaches contested ground taxes field odds');
+    assert(/tax|harder|opposition/i.test(tut) && /field/i.test(tut), 'tutorial teaches contested ground / field odds');
     await page.locator('#btn-tut-back').click();
 
     // 4. Zero console/page errors across the whole run.

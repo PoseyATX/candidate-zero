@@ -26,6 +26,15 @@ Related docs:
 
 ---
 
+## 2026-07-23 — Product recovery (inspect loop)
+
+Owner playtest failed 1,2,7,9 + missing inspect sheet. Recovery (no alphabet PRs):
+
+- **Inspect→PLAY:** first tap opens detail (`card.d` + odds + Play); no face-click commit; field Play → ground.
+- **HUD:** Teacher (not "The"); issue line; goal strip Goal/Now/Next sticky.
+- **Setup How to Play**; ground **Rival** = lower field odds; larger card names.
+- Smoke/a11y updated for detail path; shop spam removed from automation.
+
 ## 2026-07-23 — Human playtest pack + Pages deploy
 
 - `docs/PLAYTEST.md` — 10-min phone/wide checklist + seed 4242.

@@ -21,6 +21,7 @@ import {
   closeGroundPicker,
   openSetupWithChronicle
 } from './session.js';
+import { closeCardDetail } from './paint-play.js';
 import './styles.css';
 
 function $(id: string): HTMLElement {
@@ -89,11 +90,21 @@ function boot(): void {
   $('btn-title-start').addEventListener('click', () => openSetupWithChronicle());
   $('btn-title-howto').addEventListener('click', () => showTutorial());
   $('btn-howto').addEventListener('click', () => showTutorial());
+  const setupHowto = document.getElementById('btn-setup-howto');
+  if (setupHowto) setupHowto.addEventListener('click', () => showTutorial());
   $('btn-tut-back').addEventListener('click', () => backFromTutorial());
   $('btn-start').addEventListener('click', () => onStartRun());
   $('btn-new').addEventListener('click', () => requestNewRun());
   $('btn-end').addEventListener('click', () => endWeek());
   $('gp-cancel').addEventListener('click', () => closeGroundPicker());
+  const detailClose = document.getElementById('detail-close');
+  if (detailClose) detailClose.addEventListener('click', () => closeCardDetail());
+  const cardDetail = document.getElementById('card-detail');
+  if (cardDetail) {
+    cardDetail.addEventListener('click', e => {
+      if (e.target === cardDetail) closeCardDetail();
+    });
+  }
   showTitle();
 }
 

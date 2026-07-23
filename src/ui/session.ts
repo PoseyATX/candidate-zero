@@ -39,6 +39,7 @@ import {
   renderDraft,
   renderPlayables,
   closeGroundPicker,
+  closeCardDetail,
   setPlayHooks
 } from './paint-play.js';
 import { renderLog, showJuice } from './paint-log.js';
@@ -63,6 +64,8 @@ function ensurePlayHooks(): void {
 export function paint(): void {
   ensurePlayHooks();
   if (!campaign) return;
+  // Close inspect sheet on full repaint so it never blocks End Week / ceremony
+  closeCardDetail();
   renderHud(campaign);
   renderLedger(campaign);
   renderDraft(campaign);

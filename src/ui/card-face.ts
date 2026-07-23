@@ -222,10 +222,12 @@ export function cardHtml(
 ): string {
   const desc = attrEscape(card.d);
   const label = `${attrEscape(card.n)} — ${desc}`;
+  // Locked faces stay clickable for inspect (detail sheet); PLAY is disabled there.
+  // Do not use HTML disabled — it blocks the first-tap reveal.
   return `
     <button type="button" class="${cardClasses(card, opts)}" data-idx="${index}"
       title="${desc}" aria-label="${label}"
-      ${opts.locked ? 'disabled aria-disabled="true"' : ''}>
+      ${opts.locked ? 'aria-disabled="true" data-locked="1"' : ''}>
       ${cardInner(state, card, opts)}
     </button>
   `;

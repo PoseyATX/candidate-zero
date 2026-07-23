@@ -170,7 +170,10 @@
           </label>
         </div>
         <p id="setup-blurb" class="hint"></p>
-        <button type="button" id="btn-start" class="btn btn-gold">Begin primary</button>
+        <div class="setup-actions">
+          <button type="button" id="btn-start" class="btn btn-gold">Begin primary</button>
+          <button type="button" id="btn-setup-howto" class="btn">How to Play</button>
+        </div>
         <div id="chronicle" class="chronicle hidden"></div>
       </section>
       <section id="game" class="game hidden">
@@ -187,8 +190,25 @@
               <h3 id="gp-title">Where do you work it?</h3>
               <button type="button" id="gp-cancel" class="btn" aria-label="Cancel">Cancel</button>
             </div>
-            <p class="hint" id="gp-sub">Pick the ground for this play. Rapport banks where you show up; the same ground twice in a week yields less. Contested grounds (high opp) tax field odds.</p>
+            <p class="hint" id="gp-sub">
+              <b>You</b> = your rapport on that ground (banks when you work it).
+              <b>Rival</b> = opposition presence — higher rival makes field plays harder to land (lower odds).
+              Same ground twice in a week yields half rapport.
+            </p>
             <div id="gp-list" class="gp-list"></div>
+          </div>
+        </div>
+        <!-- Tap-to-reveal card detail: full description + PLAY (never on face) -->
+        <div id="card-detail" class="card-detail hidden" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+          <div class="detail-panel">
+            <div class="detail-header">
+              <h3 id="detail-title" class="detail-title"></h3>
+              <button type="button" class="detail-close" id="detail-close" aria-label="Close">✕</button>
+            </div>
+            <p class="detail-tagline" id="detail-tagline"></p>
+            <p class="detail-desc" id="detail-desc"></p>
+            <div class="detail-stats" id="detail-stats"></div>
+            <button type="button" class="btn btn-gold btn-large" id="btn-play-detail">Play</button>
           </div>
         </div>
         <!-- One-handed mobile IA: Play / Dossier / Log tabs over the same
@@ -198,11 +218,20 @@
           <section id="tab-play" class="mtab-panel active" data-tab="play">
             <div class="panel panel-actions">
               <h2 id="actions-heading">Actions</h2>
-              <!-- Goal strip: fixed 3-line slot (PR-2) — never collapse / thrash cards -->
+              <!-- Goal strip: labeled 3-line slot — always first on Play -->
               <div id="goal-strip" class="goal-strip" aria-live="polite">
-                <div class="goal-primary"></div>
-                <div class="goal-progress"></div>
-                <div class="goal-next"></div>
+                <div class="goal-row goal-primary">
+                  <span class="goal-label">Goal</span>
+                  <span class="goal-primary-text"></span>
+                </div>
+                <div class="goal-row goal-progress">
+                  <span class="goal-label">Now</span>
+                  <span class="goal-progress-text"></span>
+                </div>
+                <div class="goal-row goal-next">
+                  <span class="goal-label">Next</span>
+                  <span class="goal-next-text"></span>
+                </div>
               </div>
               <div id="draft" class="card-grid"></div>
               <div id="playables" class="card-grid"></div>

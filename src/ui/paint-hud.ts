@@ -78,8 +78,15 @@ export function renderHud(campaign: Campaign): void {
       : s.stage === 'waiting'
         ? `<span class="chip chip-act chip-act-waiting" title="Waiting season">WAIT</span>`
         : ballotBit;
-  const who = (s.persona ?? '—').split(' ')[0] ?? '—';
+  // "The Teacher" → show "Teacher" (not the article "The"); full string in title
+  const personaFull = s.persona ?? '—';
+  const who = personaFull.replace(/^The\s+/i, '').trim() || personaFull;
+  const issueBit = s.issue ? ` · ${s.issue}` : '';
   $('hud').innerHTML = `
+    <span class="hud-item hud-who" title="${personaFull}${issueBit}">
+      <span class="hud-who-name">${who}</span>
+      ${s.issue ? `<span class="hud-who-issue">${s.issue}</span>` : ''}
+    </span>
     <span class="hud-item">${actChip}</span>
     <span class="hud-item"><span class="pips" title="Action points">${pips}</span>${fieldChip}</span>
     <span class="hud-item hud-cash" title="Cash on hand">$${snap.money}${debtChip}${oblChip}</span>
@@ -88,7 +95,6 @@ export function renderHud(campaign: Campaign): void {
       <span class="hud-meter hud-meter-week"><i style="width:${weekPct}%"></i></span>
     </span>
     <span class="hud-item">${ballotHud}</span>
-    <span class="hud-item hud-who" title="${s.persona ?? ''} · ${s.issue ?? ''}">${who}</span>
   `;
 }
 

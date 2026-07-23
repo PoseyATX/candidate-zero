@@ -276,11 +276,23 @@ export function formatGoalStrip(input: GoalStripInput): {
 export function renderGoalStrip(input: GoalStripInput): void {
   const root = document.getElementById('goal-strip');
   if (!root) return;
-  const { primary, progress, next } = formatGoalStrip(input);
-  const p = root.querySelector('.goal-primary');
-  const g = root.querySelector('.goal-progress');
-  const n = root.querySelector('.goal-next');
-  if (p) p.textContent = primary;
-  if (g) g.textContent = progress;
-  if (n) n.textContent = next;
+  const { primary, progress, next, key } = formatGoalStrip(input);
+  root.dataset.goalKey = key;
+  // Support either bare text children or labeled rows (.goal-primary-text, etc.)
+  const setLine = (sel: string, text: string) => {
+    const el = root.querySelector(sel);
+    if (el) el.textContent = text;
+  };
+  setLine('.goal-primary-text', primary);
+  setLine('.goal-progress-text', progress);
+  setLine('.goal-next-text', next);
+  // Fallback: legacy three bare divs
+  if (!root.querySelector('.goal-primary-text')) {
+    const p = root.querySelector('.goal-primary');
+    const g = root.querySelector('.goal-progress');
+    const n = root.querySelector('.goal-next');
+    if (p) p.textContent = primary;
+    if (g) g.textContent = progress;
+    if (n) n.textContent = next;
+  }
 }

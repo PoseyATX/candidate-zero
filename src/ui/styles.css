@@ -372,12 +372,33 @@ h1 {
 }
 .hud-who {
   font-family: Cinzel, serif;
-  font-size: 0.68rem;
-  letter-spacing: 0.06em;
-  color: var(--parchment-dim);
-  max-width: 5.5rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  max-width: 7.5rem;
+  min-width: 4rem;
+  line-height: 1.15;
+}
+.hud-who-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--parchment, #f0e6d2);
+  max-width: 7.5rem;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hud-who-issue {
+  font-size: 0.58rem;
+  letter-spacing: 0.03em;
+  color: var(--gold-dim, #a88b4a);
+  max-width: 7.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-transform: none;
+  font-family: Inter, system-ui, sans-serif;
 }
 .hud-sub {
   font-size: 0.62rem;
@@ -394,31 +415,161 @@ h1 {
   line-height: 1.35;
 }
 
-/* PR-2 Goal strip — three-line reserved box (UI-IA toast law) */
+/* Goal strip — labeled 3-line box, sticky at top of Play scroll */
 .goal-strip {
-  min-height: 3.6em;
-  margin: 0 0 0.65rem;
-  padding: 0.45rem 0.55rem;
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  min-height: 4.2em;
+  margin: 0 0 0.75rem;
+  padding: 0.55rem 0.65rem;
   line-height: 1.35;
-  font-size: 0.85rem;
-  border-left: 3px solid var(--gold-dim, #a88b4a);
-  background: rgba(20, 16, 12, 0.35);
+  font-size: 0.9rem;
+  border-left: 3px solid var(--gold, #c9a84c);
+  background: rgba(26, 19, 13, 0.96);
   border-radius: 0 4px 4px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
+.goal-row {
+  display: grid;
+  grid-template-columns: 2.6rem 1fr;
+  gap: 0.4rem;
+  align-items: baseline;
+  margin-top: 0.15rem;
+}
+.goal-row:first-child { margin-top: 0; }
+.goal-label {
+  font-family: Cinzel, serif;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-dim, #a88b4a);
+}
+.goal-primary-text,
 .goal-primary {
   font-weight: 700;
   color: var(--parchment, #f0e6d2);
   letter-spacing: 0.01em;
+  font-size: 0.95rem;
 }
+.goal-progress-text,
 .goal-progress {
   color: var(--gold, #c9a84c);
-  font-size: 0.82rem;
-  margin-top: 0.12rem;
+  font-size: 0.88rem;
 }
+.goal-next-text,
 .goal-next {
-  color: var(--ink-muted, #b8a890);
-  font-size: 0.78rem;
-  margin-top: 0.1rem;
+  color: var(--parchment-dim, #cfc0a8);
+  font-size: 0.84rem;
+}
+
+/* Setup: Begin + How to Play side by side when space allows */
+.setup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+.setup-actions .btn { min-width: 8rem; }
+
+/* ===== Card detail sheet (tap face → read desc → PLAY) ===== */
+.card-detail {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  padding: 0;
+}
+.card-detail.hidden { display: none !important; }
+.detail-panel {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--walnut-2, #1f1815);
+  border-top: 1px solid var(--gold-dim, #a88b4a);
+  border-radius: 16px 16px 0 0;
+  padding: 1.25rem 1.35rem 1.5rem;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.45);
+}
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+.detail-title {
+  font-family: Cinzel, Merriweather, serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--parchment, #f0e6d2);
+  line-height: 1.2;
+}
+.detail-close {
+  background: none;
+  border: none;
+  color: var(--parchment-dim, #b8a890);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.detail-tagline {
+  font-style: italic;
+  font-size: 0.88rem;
+  color: #d4c09a; /* WCAG AA on walnut panel */
+  margin: 0 0 0.65rem;
+}
+.detail-desc {
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--parchment, #f0e6d2);
+  margin: 0 0 1rem;
+}
+.detail-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+  margin-bottom: 1.15rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid rgba(154, 130, 79, 0.45);
+}
+.detail-stat {
+  font-size: 0.88rem;
+  color: var(--parchment-dim, #cfc0a8);
+}
+.detail-stat strong { color: var(--gold, #c9a84c); font-weight: 700; }
+.detail-stat.detail-locked { color: #c07060; }
+.detail-risk {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  align-self: center;
+}
+.detail-risk.risk-safe { color: #4a9a4a; }
+.detail-risk.risk-std { color: var(--gold, #c9a84c); }
+.detail-risk.risk-vol { color: #c06040; }
+.detail-risk.risk-choice { color: #6a8ab0; }
+#btn-play-detail {
+  width: 100%;
+  padding: 0.95rem 1rem;
+  font-size: 1.05rem;
+}
+#btn-play-detail:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 .shop-hint {
   grid-column: 1 / -1;
@@ -678,11 +829,11 @@ h1 {
 .play-card .name {
   font-family: Cinzel, serif;
   font-weight: 700;
-  font-size: 0.78rem;
-  line-height: 1.14;
+  font-size: 0.88rem; /* legibility first — inspect still has full title */
+  line-height: 1.15;
   text-align: center;
-  letter-spacing: 0.02em;
-  margin: 0.15rem 0.1rem 0;
+  letter-spacing: 0.01em;
+  margin: 0.2rem 0.15rem 0;
   color: var(--ink);
   text-shadow: 0 1px 0 rgba(255, 250, 235, 0.5);
   display: -webkit-box;
@@ -690,10 +841,10 @@ h1 {
   -webkit-line-clamp: 2;
   line-clamp: 2;
   overflow: hidden;
-  max-height: 2.28em; /* 2 × line-height */
-  min-height: 1.14em;
+  max-height: 2.3em;
+  min-height: 1.15em;
   word-break: break-word;
-  padding: 0 0.15rem;
+  padding: 0 0.2rem 0 1.4rem; /* leave room for kind seal */
 }
 
 /* Deco divider: hairlines flanking a small diamond. */

@@ -121,11 +121,35 @@ function main() {
       await page.waitForSelector('#playables .play-card');
       byState['game'] = await runAxe(page);
 
-      // --- Ground picker (open on a field card) ---
-      const cards = await page.$$('#playables .play-card:not(.locked)');
+      // --- Card detail sheet (tap-to-inspect) ---
+      const firstCard = page.locator('#playables .play-card').first();
+      await safeClick(firstCard);
+      await page.waitForTimeout(80);
+      if (await page.locator('#card-detail:not(.hidden)').isVisible().catch(() => false)) {
+        byState['card-detail'] = await runAxe(page);
+        await safeClick(page.locator('#detail-close'));
+        await page.waitForTimeout(40);
+      }
+
+      // --- Ground picker (field → detail PLAY → ground) ---
+      const cards = await page.$$(
+        '#playables .play-section:not([data-section="shop"]) .play-card:not(.locked)'
+      );
       for (const c of cards) {
         await safeClick(c);
-        await page.waitForTimeout(80);
+        await page.waitForTimeout(60);
+        const det = page.locator('#card-detail:not(.hidden)');
+        if (await det.isVisible().catch(() => false)) {
+          const lab = await page.locator('#btn-play-detail').innerText().catch(() => '');
+          if (/ground/i.test(lab)) {
+            await safeClick(page.locator('#btn-play-detail'));
+            await page.waitForTimeout(80);
+            if (await page.locator('#ground-picker').isVisible()) break;
+          } else {
+            await safeClick(page.locator('#detail-close'));
+            await page.waitForTimeout(30);
+          }
+        }
         if (await page.locator('#ground-picker').isVisible()) break;
       }
       if (await page.locator('#ground-picker').isVisible()) {
@@ -133,8 +157,8 @@ function main() {
         await page.locator('#gp-cancel').click();
       }
 
-      // --- Terminal (drive to a run end) ---
-      for (let iter = 0; iter < 400; iter++) {
+      // --- Terminal (inspect→PLAY; never spam 0-AP shop) ---
+      for (let iter = 0; iter < 500; iter++) {
         if (await page.locator('#terminal').isVisible()) break;
         for (const id of ['#act-splash', '#outside-weather']) {
           const m = page.locator(id);
@@ -142,6 +166,14 @@ function main() {
             await safeClick(page.locator(`${id}-ok`));
             await page.waitForTimeout(50);
           }
+        }
+        const detOpen = await page.locator('#card-detail:not(.hidden)').isVisible().catch(() => false);
+        if (detOpen) {
+          const playBtn = page.locator('#btn-play-detail');
+          if (await playBtn.isEnabled().catch(() => false)) await safeClick(playBtn);
+          else await safeClick(page.locator('#detail-close'));
+          await page.waitForTimeout(40);
+          continue;
         }
         if (await page.locator('#ground-picker').isVisible()) {
           const gs = await page.$$('.gp-ground');
@@ -152,7 +184,9 @@ function main() {
         }
         const drafts = await page.$$('#draft .play-card');
         if (drafts.length) { await safeClick(drafts[0]); await page.waitForTimeout(30); continue; }
-        const play = await page.$$('#playables .play-card:not(.locked)');
+        const play = await page.$$(
+          '#playables .play-section:not([data-section="shop"]) .play-card:not(.locked)'
+        );
         if (play.length) { await safeClick(play[0]); await page.waitForTimeout(30); continue; }
         const end = page.locator('#btn-end');
         if (await end.isVisible()) { await safeClick(end); await page.waitForTimeout(30); }
