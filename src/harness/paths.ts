@@ -50,9 +50,11 @@ assert(deck.draw.includes(campus.reward), 'reward card injected into the draw pi
 assert(isVisible(state, rewardCard), 'reward is visible/playable once unlocked');
 
 // Lore toasts fired (>= 3 steps + 1 unlock line).
-// A 3-card combo fires 2 step toasts + 1 unlock toast (the final card unlocks).
+// A 3-card combo fires >=2 step toasts + 1 unlock toast. (>= because a shared
+// trigger card can also advance another path — e.g. PL01 feeds P_CAMPUS AND
+// P_FIELD — which is intended; a card may progress multiple paths at once.)
 const toasts = state.log.slice(logBefore).filter(e => e.kind === 'note');
-assert(toasts.length === 3, `lore toasts fired for steps + unlock (${toasts.length})`);
+assert(toasts.length >= 3, `lore toasts fired for steps + unlock (${toasts.length})`);
 assert(toasts.some(t => /interns/i.test(t.text)), 'unlock toast names the reward');
 
 // Determinism: identical sequence on a fresh state → identical unlock outcome.

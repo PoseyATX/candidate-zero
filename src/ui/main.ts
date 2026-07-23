@@ -1283,10 +1283,10 @@ function openOutsideWeather(
     root.setAttribute('aria-labelledby', 'outside-weather-title');
     root.innerHTML = `
       <div class="outside-weather-panel">
-        <p class="eyebrow outside-weather-tag">Outside · world weather</p>
+        <p class="eyebrow outside-weather-tag">Outside · a world event</p>
         <h2 id="outside-weather-title" class="outside-weather-title"></h2>
         <p class="outside-weather-body"></p>
-        <p class="hint outside-weather-hint">You cannot play this card. You answer it — or you weather it.</p>
+        <p class="hint outside-weather-hint">An event card — you cannot play it. You answer it, or you ride it out.</p>
         <button type="button" class="btn btn-gold" id="outside-weather-ok">Understood</button>
       </div>`;
     document.getElementById('game')?.appendChild(root);

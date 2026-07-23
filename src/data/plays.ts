@@ -15,6 +15,7 @@ import { addAlly, warm, allyWarmAtGround } from '../engine/reputation.js';
 import { WAVE4_PLAYS } from './plays-wave4.js';
 import { allShopPlayTemplates } from './assets.js';
 import { STARMAP_PLAYS } from './plays-starmap.js';
+import { WAVE5_PLAYS } from './plays-wave5.js';
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
@@ -391,7 +392,7 @@ export const SHOP_PLAYS: PlayCard[] = tagMainPlayer(allShopPlayTemplates());
  * those are camp actions, not deck plays; see SHOP_PLAYS + buildCatalog).
  * Starmap pilot verbs (MV01) included — tightly show-gated; Special residency.
  */
-export const ALL_PLAYS: PlayCard[] = [...CORE_PLAYS, ...WAVE4_PLAYS, ...STARMAP_PLAYS];
+export const ALL_PLAYS: PlayCard[] = [...CORE_PLAYS, ...WAVE4_PLAYS, ...STARMAP_PLAYS, ...WAVE5_PLAYS];
 
 /** Alias used by weekly-draw pool filters. */
 export const PLAYS = ALL_PLAYS;

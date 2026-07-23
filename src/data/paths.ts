@@ -71,6 +71,32 @@ export const PATHS: PathDef[] = [
     ],
     unlockToast:
       'The precinct captains fall in line — the machine turns for you now. New play unlocked: Turn Out the Precinct Captains.'
+  },
+  {
+    id: 'P_PRESS',
+    name: 'The Press Machine',
+    requires: ['PL09', 'PL10', 'PL07'], // Earned Media + Press Release + Candidate Forum
+    reward: 'RW_ANCHOR',
+    stepToasts: [
+      'A reporter saves your number instead of losing it.',
+      'The assignment desk starts calling you for quotes.',
+      'You handle the forum well enough that the anchor notices.'
+    ],
+    unlockToast:
+      'The evening anchor takes your call now. New play unlocked: The Anchor Takes Your Call.'
+  },
+  {
+    id: 'P_FIELD',
+    name: 'The Field Army',
+    requires: ['PL01', 'PL16', 'PL21B'], // Block Walk + Recruit Volunteers + Canvass Captain
+    reward: 'RW_TURF',
+    stepToasts: [
+      'A block walk turns up three people who want to knock too.',
+      'The volunteer list is long enough to organize now.',
+      'A captain steps up to run a turf of their own.'
+    ],
+    unlockToast:
+      'Your volunteers become an operation with a spine. New play unlocked: Stand Up a Turf Operation.'
   }
 ];
 
@@ -176,6 +202,28 @@ export const PATH_REWARDS: PlayCard[] = [
       if (o.tier === 1) { s.endorsePts += 2; s.groundsArr.slice(0, 2).forEach(g => (g.gotv += 0.06)); return '+2 endorsement points and turnout up where it counts.'; }
       if (o.tier === 2) { s.endorsePts += 1; return 'A few captains hang back. +1 endorsement point.'; }
       return 'A captain plays both sides. Nothing moves this week.';
+    }
+  }),
+  reward({
+    id: 'RW_ANCHOR', pathId: 'P_PRESS', n: 'The Anchor Takes Your Call',
+    attrs: ['CHA', 'CRA'], risk: 'STD', cost: { a: 1 }, ph: [2, 3], tag: 'the evening desk',
+    d: 'A friendly anchor and a standing invitation. When you have something to say, the county hears it that night.',
+    odds: (s) => clamp(0.66 + (s.messageSharp ? 0.08 : 0), 0.05, 0.95),
+    run: (s, o) => {
+      if (o.tier === 0) { s.nameID += 7; s.momentum += 2; return 'Lead story, your framing. +7 name ID, +2 momentum.'; }
+      if (o.tier === 1) { s.nameID += 4; s.momentum += 1; return 'A fair, favorable segment. +4 name ID, +1 momentum.'; }
+      if (o.tier === 2) { s.nameID += 1; return 'A brief mention at the bottom of the hour. +1 name ID.'; }
+      return 'A rival feeds the desk a better story. You get bumped.';
+    }
+  }),
+  reward({
+    id: 'RW_TURF', pathId: 'P_FIELD', n: 'Stand Up a Turf Operation',
+    attrs: ['CLO', 'DIP'], risk: 'SAFE', cost: { a: 1, vp: 1 }, ph: [1, 2, 3], tag: 'boots with a plan',
+    d: 'Captains, turfs, cut lists. The volunteers you recruited become a machine that runs without you.',
+    odds: (s) => clamp(0.72 + s.volPool * 0.02, 0.05, 0.95),
+    run: (s, o) => {
+      if (o.tier <= 1) { const c = 30 + Math.floor(random() * 16); s.contacts += c; s.volPool += 1; if (s.stage === 'general') s.groundsArr.slice(0, 3).forEach(g => (g.gotv += 0.06)); return `The operation hums. +${c} contacts, a volunteer${s.stage === 'general' ? ', turnout banked' : ''}.`; }
+      s.contacts += 12; return 'A steady day from the turfs. +12 contacts.';
     }
   })
 ];

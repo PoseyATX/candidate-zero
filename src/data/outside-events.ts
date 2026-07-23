@@ -460,7 +460,74 @@ export const EV_RURAL_HOSPITAL: OutsideEvent = {
 };
 
 /** Full Outside catalog. */
+/** Heat dome — a real Texas summer that keeps people (and canvassers) inside. */
+export const EV_HEAT_DOME: OutsideEvent = {
+  id: 'EV_HEAT_DOME', n: 'Heat Dome', kind: 'liability',
+  d: 'A hundred and nine for ten days straight. Nobody answers the door; nobody wants a flyer.',
+  residency: 'outside', control: 'world', stages: ['primary', 'general'], w: 3,
+  apply: s => {
+    s.momentum = Math.max(0, s.momentum - 1);
+    for (const g of s.groundsArr) g.rapport = clamp(g.rapport - 2, 0, 100);
+    return 'OUTSIDE — HEAT DOME. The doors stay shut and the volunteers wilt. Rapport softens across the map; spend momentum before it evaporates.';
+  }
+};
+
+/** Plant layoff — sudden economic anxiety reshapes the race's mood. */
+export const EV_PLANT_LAYOFF: OutsideEvent = {
+  id: 'EV_PLANT_LAYOFF', n: 'The Plant Lays Off', kind: 'liability',
+  d: 'Four hundred jobs, gone by Friday. The district wants to know whose side you are on.',
+  residency: 'outside', control: 'world', stages: ['primary', 'general'], once: true, w: 2,
+  apply: s => {
+    s.faces.O += 2;
+    if (s.messageSharp) { s.momentum += 1; return 'OUTSIDE — THE PLANT LAYS OFF. Anxiety grips the county — but your message is sharp enough to meet it. Momentum holds.'; }
+    s.momentum = Math.max(0, s.momentum - 1);
+    return 'OUTSIDE — THE PLANT LAYS OFF. The mood curdles and you have no ready answer. Momentum slips; the pressure is on.';
+  }
+};
+
+/** Whisper campaign against you — a smear you did not start. */
+export const EV_WHISPER_SMEAR: OutsideEvent = {
+  id: 'EV_WHISPER_SMEAR', n: 'A Whisper Starts', kind: 'blackmail',
+  d: 'Something ugly and unattributed makes the rounds at the coffee shops. You never said it. It does not matter.',
+  residency: 'outside', control: 'world', stages: ['primary', 'general'], once: true, w: 2,
+  show: s => s.faces.O >= 2 || s.hitPieces > 0,
+  apply: s => {
+    s.nameID += 2; s.faces.O += 2; s.momentum = Math.max(0, s.momentum - 1);
+    return 'OUTSIDE — A WHISPER STARTS. Name ID up, the wrong way. Someone is working you over in the dark — and the county half-believes it.';
+  }
+};
+
+/** Spontaneous club endorsement — the rare kind wind. */
+export const EV_CLUB_RALLIES: OutsideEvent = {
+  id: 'EV_CLUB_RALLIES', n: 'A Club Rallies to You', kind: 'ally',
+  d: 'Word of your kitchen-table work reaches the right room, and the room decides it likes you.',
+  residency: 'outside', control: 'world', stages: ['primary', 'general'], once: true, w: 2,
+  show: s => s.endorsePts >= 2 || s.contacts >= 200,
+  apply: s => {
+    s.endorsePts += 2; s.momentum += 1;
+    return 'OUTSIDE — A CLUB RALLIES TO YOU. Unbidden, a club puts its people behind you. +2 endorsement points and a gust of momentum.';
+  }
+};
+
+/** Early-vote surge — turnout weather in the general's home stretch. */
+export const EV_EARLY_VOTE_SURGE: OutsideEvent = {
+  id: 'EV_EARLY_VOTE_SURGE', n: 'Early Vote Surges', kind: 'location',
+  d: 'The lines wrap the courthouse on day one. Whoever banked turnout is about to find out if it was enough.',
+  residency: 'outside', control: 'world', stages: ['general'], once: true, w: 3,
+  apply: s => {
+    const banked = s.groundsArr.reduce((t, g) => t + (g.gotv || 0), 0);
+    if (banked > 0.4) { s.momentum += 2; return 'OUTSIDE — EARLY VOTE SURGES. Your banked turnout meets the moment. The lines are full of your people. +2 momentum.'; }
+    s.momentum = Math.max(0, s.momentum - 1);
+    return 'OUTSIDE — EARLY VOTE SURGES. The lines are long and mostly strangers. You did not bank enough turnout for this. Momentum slips.';
+  }
+};
+
 export const OUTSIDE_EVENTS: OutsideEvent[] = [
+  EV_HEAT_DOME,
+  EV_PLANT_LAYOFF,
+  EV_WHISPER_SMEAR,
+  EV_CLUB_RALLIES,
+  EV_EARLY_VOTE_SURGE,
   EV_SCREWWORM,
   EV_REDISTRICT_RUMOR,
   EV_ETHICS_COMPLAINT,
