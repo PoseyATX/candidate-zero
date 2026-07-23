@@ -45,7 +45,8 @@ become a second rules implementation.
 | **DONE** | — | Design PR-2 goal strip (`#goal-strip` · GOAL_COPY · smoke seed 4242) |
 | **DONE** | — | Design PR-3 play sectioning (Camp→Hand→Shop · session/waiting kits · draft focus) |
 | **DONE** | — | Design PR-3.5 card zone CSS freeze · PR-4 kit emblems + `check:card-art` |
-| **NEXT** | — | Design PR-5 ceremony/smoke · PR-6 tutorial Act IV · human playtest |
+| **DONE** | — | Design PR-5 ceremony queue/focus/picker truth · PR-6 tutorial Act IV |
+| **NEXT** | — | Design PR-7 docs hygiene · human playtest |
 | META | [#13](https://github.com/PoseyATX/candidate-zero/issues/13) | Board hygiene rules |
 | BUG | [#14](https://github.com/PoseyATX/candidate-zero/issues/14) | Pages deploy auto-fire / workflow scope |
 | PLANNED | [#15](https://github.com/PoseyATX/candidate-zero/issues/15) | AC1 archive yield-table full compare |

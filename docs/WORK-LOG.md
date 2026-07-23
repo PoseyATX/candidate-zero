@@ -26,6 +26,12 @@ Related docs:
 
 ---
 
+## 2026-07-23 — PR-5 + PR-6 (ceremony + tutorial)
+
+- **PR-5:** weather never stacks under splash; deferred splash flush; `recoverPlayFocus` after dismiss; ground picker opp copy *taxes field odds*; smoke ceremony + picker truth asserts.
+- **PR-6:** tutorial Four Acts (+ Waiting), goal strip literacy, contested-ground taxes; terminal path/waiting copy; act splash bodies ≤3 lines; waiting re-file hint (same persona).
+- Gates green.
+
 ## 2026-07-23 — PR-3.5 + PR-4 (card zones + art gate)
 
 - **PR-3.5:** name 2-line clamp, art plate fixed ~30% height, cost seal fixed size, tagline 3-line clamp, `.has-raster img { object-fit: contain }`.

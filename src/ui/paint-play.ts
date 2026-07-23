@@ -391,7 +391,7 @@ export function renderGroundPicker(campaign: Campaign): void {
               <span class="gp-bar"><i class="gp-you" style="width:${Math.min(100, rap)}%"></i></span>
               <span class="gp-num">${rap}</span>
             </span>
-            <span class="gp-meter" title="Opposition presence (does not affect odds yet)">
+            <span class="gp-meter" title="Opposition presence (taxes field odds on contested turf)">
               <span class="gp-mlabel">opp</span>
               <span class="gp-bar"><i class="gp-opp" style="width:${Math.min(100, rival)}%"></i></span>
               <span class="gp-num">${rival}</span>

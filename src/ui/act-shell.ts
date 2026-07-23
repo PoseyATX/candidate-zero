@@ -1,11 +1,11 @@
 /**
  * Act ceremony shells + stage chrome — pure leaf (no main.ts imports).
- * openActSplash takes onDismiss so paint() stays in the orchestrator.
- * PR-1 behavior-identical extract.
+ * PR-5/6: short splash bodies (≤3 lines), focus recovery, weather-safe open.
  */
 
 import type { GameState } from '../engine/types.js';
 import { stageWeek } from '../engine/state.js';
+import { recoverPlayFocus } from './tabs.js';
 
 export type ActId = 'primary' | 'general' | 'session' | 'waiting';
 
@@ -24,6 +24,7 @@ export interface ActShellDef {
   kitLabel: string;
 }
 
+/** Splash bodies kept to ≤3 short lines (+ optional engine detail above). */
 export const ACT_SHELLS: Record<ActId, ActShellDef> = {
   primary: {
     id: 'primary',
@@ -31,10 +32,10 @@ export const ACT_SHELLS: Record<ActId, ActShellDef> = {
     title: 'The Primary',
     bannerSub: 'Ballot · doors · force',
     splashBody:
-      'Eight weeks. Make the ballot or the primary goes on without you. ' +
-      'Petition labor or filing fee — pick a door. Field work needs a ground.',
-    splashHint:
-      'Main Deck campaign verbs. Shop is 0 AP. Once: Self-Fund · Once: PAC Check (Session will collect).',
+      'Eight weeks. Make the ballot or the primary goes on without you.\n' +
+      'Petition labor or filing fee — pick a door.\n' +
+      'Field work needs a ground.',
+    splashHint: 'Shop is 0 AP. Watch the goal strip for ballot doors.',
     cta: 'File the papers',
     endWeekLabel: 'End campaign week',
     actionsTitle: 'Campaign hand',
@@ -48,10 +49,10 @@ export const ACT_SHELLS: Record<ActId, ActShellDef> = {
     title: 'The General',
     bannerSub: 'GOTV · turnout · November',
     splashBody:
-      'You survived the primary. Same run — new clock. Six weeks to November. ' +
-      'Primary rapport seeds GOTV on the grounds that know you. Block walks and phones now bank turnout, not just introductions. Kitchen-table club math is closed.',
-    splashHint:
-      'GOTV Weekend is in your hand. Field work converts to conversion %. Flatbed (A06) unlocks Rides to the Polls. November is arithmetic — contacts alone will not save you.',
+      'Six weeks to November — same run, new clock.\n' +
+      'Field banks GOTV on grounds that know you.\n' +
+      'Kitchen-table club math is closed.',
+    splashHint: 'GOTV Weekend · turnout is the lever. Goal strip tracks banked GOTV.',
     cta: 'Take the field',
     endWeekLabel: 'End general week',
     actionsTitle: 'General field',
@@ -65,10 +66,10 @@ export const ACT_SHELLS: Record<ActId, ActShellDef> = {
     title: 'You are sworn in',
     bannerSub: 'Bill pipeline · sine die',
     splashBody:
-      'The general is won. You are a member now — still THIS run, not a new campaign. ' +
-      'Campaign cards leave the table. Legislative motions (Special kit) only.',
-    splashHint:
-      'File your bill. One pipeline motion per week. Casework keeps the seat. Clock ends at sine die — then reelection is a NEW cycle.',
+      'Still this run — campaign cards leave the table.\n' +
+      'Legislative motions only. One pipeline advance per week.\n' +
+      'Casework holds the seat until sine die.',
+    splashHint: 'Reelection after sine die is a NEW cycle. Goal strip tracks bill stage.',
     cta: 'Enter the chamber',
     endWeekLabel: 'End legislative week',
     actionsTitle: 'Legislative motions',
@@ -82,9 +83,10 @@ export const ACT_SHELLS: Record<ActId, ActShellDef> = {
     title: 'The Waiting Season',
     bannerSub: 'Interim orbit · next filing',
     splashBody:
-      'The race ended. The climb did not. Four compressed weeks — one action each. ' +
-      'What you bank rides into the next campaign. No true game over; only redirection.',
-    splashHint: 'Special waiting verbs only (WA*). Path-scoped kit. Then setup for the next filing.',
+      'Four compressed weeks — one action each.\n' +
+      'What you bank rides into the next filing.\n' +
+      'No true game over; only redirection.',
+    splashHint: 'WA* kit only. Then re-file as the same persona — not a blank setup.',
     cta: 'Begin the interim',
     endWeekLabel: 'End interim week',
     actionsTitle: 'Interim orbit',
@@ -102,13 +104,22 @@ export function actFromStage(stage: string | undefined): ActId {
 }
 
 /**
- * Full-screen act handoff. onDismiss replaces paint() callback from main.
+ * Full-screen act handoff. Never stacks under open weather (PR-5 queue).
+ * onDismiss runs after hide + play-tab focus recovery.
  */
 export function openActSplash(
   actId: ActId,
   engineDetail?: string,
   onDismiss?: () => void
 ): void {
+  const weather = document.getElementById('outside-weather');
+  if (weather && !weather.classList.contains('hidden')) {
+    // Ceremony queue: weather first — stash and show when weather clears.
+    (weather as HTMLElement & { __pendingSplash?: () => void }).__pendingSplash = () =>
+      openActSplash(actId, engineDetail, onDismiss);
+    return;
+  }
+
   const act = ACT_SHELLS[actId];
   let root = document.getElementById('act-splash');
   if (!root) {
@@ -147,8 +158,14 @@ export function openActSplash(
   if (ok) {
     ok.onclick = () => {
       root!.classList.add('hidden');
+      recoverPlayFocus();
       onDismiss?.();
     };
+    try {
+      ok.focus({ preventScroll: true });
+    } catch {
+      ok.focus();
+    }
   }
 }
 
@@ -157,7 +174,12 @@ export function applyStageChrome(state: GameState): void {
   const act = ACT_SHELLS[actFromStage(state.stage)];
   const game = document.getElementById('game');
   if (game) {
-    game.classList.remove('stage-primary', 'stage-general', 'stage-session');
+    game.classList.remove(
+      'stage-primary',
+      'stage-general',
+      'stage-session',
+      'stage-waiting'
+    );
     game.classList.add(`stage-${act.id}`);
   }
 

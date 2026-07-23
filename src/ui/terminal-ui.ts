@@ -67,10 +67,10 @@ export function renderTerminalOutcome(ctx: TerminalRenderCtx): void {
   const nextHint = sessionWin
     ? 'Sine die. You finished Session on this run. Reelection starts a NEW election cycle (incumbent primary) — not a Session skip.'
     : kind === 'session_primaried'
-      ? 'The gavel fell and the seat broke. Two years until you can file again.'
+      ? 'The gavel fell and the seat broke. Choose a waiting path — Act IV banks for the next filing as the same persona.'
       : kind === 'won_general'
         ? 'Bug: general win should enter Session in-engine. Report if you see this screen without Session.'
-        : 'Two years until the next filing deadline. How do you spend them?';
+        : 'Two years until the next filing. Choose a path — Act IV Waiting, then re-file as the same persona.';
 
   $('terminal-head').innerHTML = `
     <h2>${titles[kind]}</h2>

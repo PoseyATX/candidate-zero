@@ -1,6 +1,6 @@
 /**
  * One-handed tabs (Play / Dossier / Log) — presentation only.
- * PR-1 behavior-identical extract from main.ts.
+ * PR-5: recoverPlayFocus after ceremony dismiss.
  */
 
 /** Switch in-game tab panel. */
@@ -15,6 +15,23 @@ export function switchTab(name: string): void {
   document.querySelectorAll<HTMLElement>('.mnav-btn').forEach(b =>
     b.classList.toggle('active', b.dataset.gototab === name)
   );
+}
+
+/**
+ * After weather/splash dismiss: Play tab + focus first unlocked card or End Week.
+ */
+export function recoverPlayFocus(): void {
+  switchTab('play');
+  const card = document.querySelector<HTMLButtonElement>(
+    '#playables .play-card:not(.locked):not([disabled])'
+  );
+  const end = document.getElementById('btn-end') as HTMLButtonElement | null;
+  const target = card ?? end;
+  try {
+    target?.focus({ preventScroll: true });
+  } catch {
+    target?.focus();
+  }
 }
 
 /** Wire bottom-nav buttons; default to Play. */

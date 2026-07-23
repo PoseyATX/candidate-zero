@@ -1,7 +1,9 @@
 /**
  * Outside weather modal — leaf (no session/main imports).
- * Clears pending via callback so the orchestrator owns campaign state.
+ * PR-5: weather z>splash; never leave splash visible underneath; focus on dismiss.
  */
+
+import { recoverPlayFocus } from './tabs.js';
 
 export interface OutsideNotice {
   id: string;
@@ -9,18 +11,23 @@ export interface OutsideNotice {
   text: string;
 }
 
+type WeatherEl = HTMLElement & { __pendingSplash?: () => void };
+
 /**
  * Outside weather surface — world pressure the player does not play.
- * Fixed modal (not hand, not toast). Dismiss clears pendingOutside via onClear.
+ * Fixed modal (not hand, not toast). Hides any open act-splash while open.
  */
 export function openOutsideWeather(
   notice: OutsideNotice,
   onClear: () => void,
   onDone?: () => void
 ): void {
-  let root = document.getElementById('outside-weather');
+  // Never stack splash under weather
+  document.getElementById('act-splash')?.classList.add('hidden');
+
+  let root = document.getElementById('outside-weather') as WeatherEl | null;
   if (!root) {
-    root = document.createElement('div');
+    root = document.createElement('div') as WeatherEl;
     root.id = 'outside-weather';
     root.className = 'outside-weather';
     root.setAttribute('role', 'dialog');
@@ -50,13 +57,27 @@ export function openOutsideWeather(
   const dismiss = (): void => {
     root!.classList.add('hidden');
     onClear();
-    ok?.removeEventListener('click', dismiss);
+    const pending = root!.__pendingSplash;
+    delete root!.__pendingSplash;
+    // Session afterWeather may open act splash (transition path)
     onDone?.();
+    const splash = document.getElementById('act-splash');
+    const splashOpen = !!(splash && !splash.classList.contains('hidden'));
+    // Flush deferred openActSplash only if onDone did not already open one
+    if (pending && !splashOpen) pending();
+    const splash2 = document.getElementById('act-splash');
+    if (!splash2 || splash2.classList.contains('hidden')) {
+      recoverPlayFocus();
+    }
   };
   if (ok) {
     ok.replaceWith(ok.cloneNode(true));
     const fresh = root.querySelector('#outside-weather-ok') as HTMLButtonElement;
     fresh.addEventListener('click', dismiss);
-    fresh.focus();
+    try {
+      fresh.focus({ preventScroll: true });
+    } catch {
+      fresh.focus();
+    }
   }
 }
