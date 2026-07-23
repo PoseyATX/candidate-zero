@@ -1,12 +1,11 @@
-# Catch-up snapshot — post-sleep state
+# Catch-up snapshot — post redesign
 
-**Date:** 2026-07-23 (agent rehydrate after 2026-07-19 rest)  
-**Tip (fable branch):** `7328c86` — *Persistence: re-file as the same persona after waiting*  
-**`origin/main`:** `20cf044` — merge PR #32 (same tip + merge commit)  
-**Package:** **`0.1.0`** (Phase 7 evidence; baseline label, not “done”)  
+**Date:** 2026-07-23  
+**Tip (`fable-pages`):** see `git log -1` — design PR-1…PR-7 UI/gameplay flow  
+**Package:** **`0.1.0`** (Phase 7 evidence; baseline label, not “game done”)  
 **Live alpha:** https://poseyatx.github.io/candidate-zero/  
 
-Previous resting note (2026-07-19, tip `718f820` / package `0.0.1`) is **superseded**. ~43 commits landed while agents slept.
+Previous resting notes (2026-07-19 tip `718f820`; mid-2026-07-23 tip `7328c86`) are **superseded** for UI module layout and goal strip.
 
 ---
 
@@ -17,38 +16,40 @@ A playable **Texas Legislature roguelike deckbuilder**:
 | Layer | State |
 |--------|--------|
 | Pure TS engine | Rules SoT + frozen **host API** (`src/engine/api.ts` v1.0.0) |
-| Vite UI | Full features restored + one-handed tab IA + a11y gates |
-| Content | **116** cards (SIG01–24 all personas, unlock paths, wave 5–6) · **21** Outside · starmap MV01–14 |
-| Unity scaffold | Engine bundle + content JSON + Jint bridge scripts (no second rules engine) |
-| Harnesses | Full suite + `api` / `paths` / `content` |
+| Vite UI | Extracted modules · goal strip · Camp→Hand→Shop · ceremony queue · a11y/smoke |
+| Content | **116** cards · **21** Outside · starmap MV01–14 · SIG01–24 |
+| Unity scaffold | Engine bundle + content JSON + Jint (on hold for editor free-flight) |
 | Ship path | TS engine → Unity presentation → iOS |
 
 ---
 
-## What landed after the 2026-07-19 rest (PR themes)
+## UI module tree (post extract)
 
-| Area | Evidence |
-|------|----------|
-| Phase 6 residual | `smoke:ui`, `a11y` (axe WCAG), card desc off-face, mobile playability |
-| Phase 7 | `docs/V0.1-EVIDENCE.md` · version **0.1.0** |
-| Phase 8 prep | `ENGINE-API.md`, `UNITY-*`, `build:engine`, `export:content`, `unity/` |
-| UI | Mobile redesign → regression → **full UI restore** → bottom-nav tabs |
-| Cards | SIG01–21 · unlock paths (66→90) · wave5 (→105) · wave6 (→113) |
-| Persistence | Waiting → re-file **same persona** (no setup) |
-| Outside | Pack growth (heat dome, plant layoff, smear, club rallies, early vote, …) |
+```
+src/ui/
+  main.ts           # boot/wire only
+  session.ts        # campaign owner + paint orchestration
+  paint-hud.ts · paint-play.ts · paint-log.ts
+  goal-strip.ts · act-shell.ts · outside-ui.ts
+  card-face.ts · card-art.ts · screens.ts · tabs.ts · terminal-ui.ts
+  styles.css
+```
 
-Merged PR trail: **#21–#32** (plus reconcile #19 family).
+Art: `CARD_ART` in **card-face.ts** (empty); gate `npm run check:card-art`.  
+Design: [`DESIGN-UI-GAMEPLAY-FLOW.md`](./DESIGN-UI-GAMEPLAY-FLOW.md) (PR-1…PR-7).  
+IA: [`UI-IA.md`](./UI-IA.md) (corrected PR-7).
 
 ---
 
-## Honest phase status (code wins over stale issue titles)
+## Honest phase status
 
-| Phase | Code truth | GitHub issue lag |
-|-------|------------|------------------|
+| Phase | Code truth | Issue lag |
+|-------|------------|-----------|
 | 0–5 | DONE | Closed |
-| 6 | Core + CI a11y/smoke **done** | #10 OPEN **RESIDUAL** only (phone sign-off / screenshot CI) |
-| 7 | Evidence + **0.1.0** **done** | #11 **CLOSED** 2026-07-23 |
-| 8 | Engine API + content bridge + Jint scaffold **done in repo** | #12 **ON HOLD** — Unity editor (no agent free-flight) |
+| 6 | Core + CI a11y/smoke **done** | #10 OPEN **RESIDUAL** (phone sign-off / screenshot CI) |
+| 7 | Evidence + **0.1.0** **done** | #11 **CLOSED** |
+| 8 | Repo bridge **done** | #12 **ON HOLD** — Unity editor |
+| UI redesign | PR-1…PR-7 **done** | Human playtest next |
 
 ---
 
@@ -56,33 +57,32 @@ Merged PR trail: **#21–#32** (plus reconcile #19 family).
 
 ```bash
 npm run typecheck
-npm run harness          # includes api + paths + content
-npm run smoke:ui         # headless critical path
-npm run a11y             # axe WCAG
+npm run harness          # includes card-art helpers + check:card-art
+npm run smoke:ui
+npm run a11y
 npm run build
 ```
 
 ---
 
-## Wake / NEXT (owner pick)
+## Wake / NEXT
 
-1. Issue hygiene — close/retitle #10/#11; rephrase #12 as “Unity editor vertical slice”  
-2. Balance after catalog jump 66→113  
-3. Unity editor: `docs/UNITY-SETUP.md` Track A/B  
-4. Content: more pathways / Outside flavor  
-5. #20 Stupid Ideas — rate only, never auto-NEXT  
+1. Human phone playtest (checklist in design doc)  
+2. #10 residual screenshot CI if wanted  
+3. Balance / content as owner directs  
+4. Unity editor when unblocked (`UNITY-SETUP.md`)  
+5. Optional PR-8 `engine-bridge` re-exports only — deferred  
 
 ---
 
 ## Doc map
 
 | Doc | Role |
-|-----|------|
-| [`PROJECT-BOARD.md`](./PROJECT-BOARD.md) | Ops mirror |
+|------|------|
+| [`DESIGN-UI-GAMEPLAY-FLOW.md`](./DESIGN-UI-GAMEPLAY-FLOW.md) | UI redesign SoT + PR map |
+| [`UI-IA.md`](./UI-IA.md) | Information architecture (current) |
+| [`GAME-FLOW.md`](./GAME-FLOW.md) | Player loop + four acts |
+| [`CARD-ART-STATUS.md`](./CARD-ART-STATUS.md) | Raster map + gate |
+| [`PROJECT-BOARD.md`](./PROJECT-BOARD.md) | Ops roadmap |
 | [`V0.1-EVIDENCE.md`](./V0.1-EVIDENCE.md) | Why 0.1.0 |
 | [`ENGINE-API.md`](./ENGINE-API.md) | Host binding |
-| [`UNITY-SETUP.md`](./UNITY-SETUP.md) / [`UNITY-BRIDGE.md`](./UNITY-BRIDGE.md) | Ship path |
-| [`PATHS.md`](./PATHS.md) | Unlock pathways |
-| [`WORK-LOG.md`](./WORK-LOG.md) | Narrative log |
-
-**Ship covenant unchanged:** no second rules engine in Unity.

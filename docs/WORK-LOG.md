@@ -26,6 +26,14 @@ Related docs:
 
 ---
 
+## 2026-07-23 — PR-7 docs hygiene
+
+- **UI-IA.md:** current module tree + bands + goal strip + tabs-all-widths; pre-Phase-6 diagnosis archived as historical only.
+- **GAME-FLOW.md:** four-act ceremony; correct `src/ui/*` paths; weather→splash queue; goal strip.
+- **RESTING.md:** post-redesign snapshot (PR-1…PR-7); verify commands include art gate.
+- **DESIGN / board / CARD-ART-STATUS:** hygiene notes closed; accept checklist checked except human playtest.
+- Doc-only; no code change required for accept.
+
 ## 2026-07-23 — PR-5 + PR-6 (ceremony + tutorial)
 
 - **PR-5:** weather never stacks under splash; deferred splash flush; `recoverPlayFocus` after dismiss; ground picker opp copy *taxes field odds*; smoke ceremony + picker truth asserts.

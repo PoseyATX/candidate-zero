@@ -1,11 +1,22 @@
 # UI / information architecture plan
 
-**Status:** **Phase 6 implement shipped** (2026-07-19) — hierarchy, label diet, toasts, setup nameplate.  
-**Audience:** Phase 6 (#10) + Unity presentation later.  
-**Captured:** 2026-07-19 (owner play notes).  
-**Code:** `index.html`, `src/ui/main.ts` (`renderHud`, `renderLedger`, `showJuice` toasts), `src/ui/styles.css`.
+**Status:** **Phase 6 hierarchy shipped** · **UI redesign PR-1…PR-6 landed** (2026-07-23).  
+**Audience:** Agents + Unity presentation later.  
+**Code (live):** `index.html`, `src/ui/styles.css`, module tree below — **not** a single mega-`main.ts`.
 
-> Goal: know **what** information the player needs, **where** it lives, and **how loud** it is — so layout work is rearranging furniture, not inventing rooms while guests are at the door.
+| Module | Owns |
+|--------|------|
+| `main.ts` | Boot / DOM wire only (~100 lines) |
+| `session.ts` | Mutable campaign, `paint()`, endWeek, terminal entry |
+| `paint-hud.ts` | HUD + dossier ledger + goal-strip hook |
+| `paint-play.ts` | Draft, sectioned playables, ground picker |
+| `paint-log.ts` | Log + toast juice |
+| `goal-strip.ts` | `GoalStripInput`, `GOAL_COPY`, render |
+| `act-shell.ts` / `outside-ui.ts` | Ceremony queue |
+| `card-face.ts` / `card-art.ts` | Faces, emblems, optional `CARD_ART` |
+| `screens.ts` / `tabs.ts` / `terminal-ui.ts` | Screens, tabs, terminal |
+
+> Prefer **live code** over narrative below that is marked historical. Design SoT: [`DESIGN-UI-GAMEPLAY-FLOW.md`](./DESIGN-UI-GAMEPLAY-FLOW.md).
 
 ---
 
@@ -14,262 +25,177 @@
 | Note | Implication |
 |------|-------------|
 | First screen is a **stark contrast** from the rest of the game | Title ceremony ≠ in-run chrome; shared palette/type alone is not enough continuity |
-| In-game stats are **cluttery** | Ledger is a flat grid of equal cells — no hierarchy |
-| **Identity** must not sit randomly between ballot signatures and attributes | Current order dumps Identity after Ballot mid-list; Attrs trail as one more row |
-| **Identity + Attributes** should be more prominent | Who you are and how you tilt plays are first-class chrome, not footnotes |
+| In-game stats are **cluttery** | Ledger needs bands, not equal-weight cells |
+| **Identity** must not sit randomly between ballot signatures and attributes | Identity band first in dossier |
+| **Identity + Attributes** should be more prominent | Character chrome ≠ board meters |
 | Drop redundant labels (e.g. **MONEY** before `$200`) | Currency/symbol-bearing values speak for themselves |
-| Focus on needed info + best placement | Inventory + zones before polish pixels |
-| **Toasts** OK to bring back if the small info bar above cards thrash-moves | Transient feedback must not reflow the card grid |
+| **Toasts** for juice | Transient feedback must not reflow the card grid |
+| Tabs on all widths | No dual desktop Play+Dossier path (K5) |
 
 ---
 
-## 2. Diagnosis (as shipped)
+## 2. Historical diagnosis (pre–Phase 6) — do not implement from this
 
-### Title vs rest of game
+> **Struck for implementers.** The following described the flat ledger **before** `.ledger-identity` / force / vitals / machine bands and the redesign goal strip. Kept only as archive of *why* Phase 6 happened.
 
-| Surface | Mood | Structure |
-|---------|------|-----------|
-| **Title** (`#title`) | Full-bleed ceremony: double gold rules, giant Cinzel wordmark, sunburst, emblem, long tag | One focal column, almost no chrome |
-| **Setup / game / terminal** | Utility panels, dense ledger grid, card grids, log | Masthead + actions; functional, not ceremonial |
-| **Act splash** | Brief ceremony (shell titles) | Closer to title than to ledger |
+<details>
+<summary>Pre-band ledger order (obsolete)</summary>
 
-Problem is not “title is pretty.” Problem is the **jump**: ceremony → spreadsheet. Players should feel one product with intensity that changes by screen, not two skins.
+Rough primary-stage order once shipped as a flat grid:
 
-### Ledger order today (`renderLedger`)
+1. Stage · Phase · Week · AP · Money · Force stats · **Ballot** · **Identity** jammed mid-list · Attrs · Machine  
 
-Rough primary-stage order (session branch strips campaign stats):
+Auto-fit CSS made every cell the same weight. HUD lacked identity. `#week-hint` / in-flow juice reflowed cards.
 
-1. Stage · Phase  
-2. Week  
-3. AP  
-4. **Money** (label + `$N`)  
-5. Spendable / Debt (conditional)  
-6. Contacts · Name ID · Vols · Momentum · Endorse  
-7. **Ballot** (ON / `N/M` sigs)  
-8. **Identity** ← jammed here  
-9. **Attrs** ← equal weight to everything else  
-10. Session block (capital / favor / …) when in session  
-11. Allies · Assets · Obligations (wide)  
-12. Outcome if over  
+</details>
 
-Auto-fit CSS grid (`minmax(140px, 1fr)`) makes every cell the same visual weight. Order is implementation order, not reading order.
+### As shipped now (trust code)
 
-### HUD today (`renderHud`, ≤800px)
-
-Already leaner and better: act chip · AP pips · `$N` (+ debt/obl chips) · week meter · ballot/seat.  
-Does **not** surface Identity or Attrs. Mobile never sees who you are without scrolling the ledger.
-
-### Labels that fight the value
-
-- `Money` + `$200` → `$200` is enough (HUD already does `$` + number).  
-- `Attrs` as a cryptic abbreviation next to a wall of `charm+1 grit-1 …`.  
-- Repeated Stage/Week/AP/Money that the HUD or act banner already shows (desktop still shows full ledger; mobile shows both when you scroll).
+| Surface | Truth |
+|---------|--------|
+| **Dossier ledger** | Bands: identity → force/chamber/waiting bank → vitals → machine (`paint-hud.ts` `renderLedger`) |
+| **HUD** | Always on in-game: act · AP pips · `$` · week · ballot/seat · persona chip |
+| **Play tab** | Goal strip (`#goal-strip`) · draft exclusive · **Camp → Hand → Shop** sections · session pipeline/chamber · waiting orbit |
+| **Tabs** | Play / Dossier / Log **all viewport widths**; bottom nav always in-game |
+| **Juice** | `#toast-host` fixed overlay (`paint-log.ts` `showJuice`) |
+| **Ceremony** | Weather (z85) then act splash (z80); ground picker z100 in-week only |
 
 ---
 
 ## 3. Principles
 
-1. **One product, staged intensity** — title / splash / play share materials (walnut, gold, Cinzel/Source Serif, oxblood); only density and ceremony change.  
-2. **Need first, label second** — if the glyph or unit is unambiguous (`$`, AP pips, `W3/8`), drop the uppercase label.  
-3. **Who you are is not a stat** — Identity and Attributes are *character chrome*; campaign meters are *board state*. Different zone or visual weight.  
-4. **Stage-conditional furniture** — Primary ballot meter dies after ballot; Session bill/capital replace Contacts/Vols; Waiting shows banked carry, not petition.  
-5. **No equal-weight laundry list** — group into bands; promote 2–3 primary reads; demote inventory.  
-6. **HUD = vitals; ledger = dossier** — HUD answers “can I act this second?”; ledger answers “who am I and what’s my machine?”  
-7. **Don’t invent new numbers** — this pass is placement and hierarchy only. Engine snapshots stay as-is.
+1. **One product, staged intensity** — title / splash / play share materials; density changes.  
+2. **Need first, label second** — `$`, AP pips, `W3/8` speak for themselves.  
+3. **Who you are is not a stat** — Identity + Attributes = character chrome.  
+4. **Stage-conditional furniture** — ballot meter dies after ON; Session bill; Waiting bank.  
+5. **HUD = vitals; ledger = dossier; goal strip = what/why/next.**  
+6. **Tabs-for-all-widths** — same IA desktop/mobile; density only.  
+7. **Don’t invent engine numbers in UI** — presentation reads `GameState` / snapshots.
 
 ---
 
-## 4. Information inventory
+## 4. Information inventory (current homes)
 
 ### Always (any live run)
 
-| Info | Need | Best home | Loudness |
-|------|------|-----------|----------|
-| **Identity** (persona · issue) | Constant self-check; setup payoff | Ledger **identity band** (top); optional compact HUD subtitle on mobile | **High** |
-| **Attributes** | Play tilt / strategy | Same identity band, second line or chips | **High** |
-| **AP** (+ field) | Action economy | HUD primary; ledger optional / omitted if HUD visible | High on HUD |
-| **Cash** (`$N`) | Afford shop / fees | HUD; ledger without “Money” label | High |
-| **Week / calendar** | Deadline pressure | HUD meter + act banner; ledger only if desktop no-HUD | High |
-| **Act / stage** | Narrative frame | Act chip + banner; not a ledger row | Medium |
-| **Debt / spendable** | When debt > 0 | Chip on `$`; detail on demand or second line | Medium (conditional) |
-| **Obligations count** | Drag awareness | Chip `OB×N`; full ids in inventory | Medium |
-| **Allies / assets / obl list** | Inventory | Collapsed “Machine” or wide footer; not mid-vitals | Low–medium |
+| Info | Best home | Loudness |
+|------|-----------|----------|
+| Identity (persona · issue) | Ledger identity band; HUD who chip | High |
+| Attributes | Identity band chips | High |
+| AP / field | HUD pips | High |
+| Cash `$N` | HUD; ledger vitals | High |
+| Week / calendar | HUD + act banner | High |
+| Act / stage | Act chip + banner | Medium |
+| Debt / spendable | Chips when debt > 0 | Conditional |
+| Allies / assets / obls | Machine band | Low–medium |
 
-### Act I–II (Primary / General) — campaign force
+### Goals / next actions
 
-| Info | Need | Best home | Loudness |
-|------|------|-----------|----------|
-| **Ballot / signatures** | Act I gate | HUD meter until ON; then quiet “ON” chip or hide | **High** until on ballot |
-| Contacts | Primary/general odds fuel | Force cluster (mid ledger) | Medium |
-| Name ID | Same | Force cluster | Medium |
-| Vols | Same | Force cluster | Medium |
-| Momentum | Soft lever | Force cluster or secondary | Lower |
-| Endorse | Soft lever | Force cluster or secondary | Lower |
-
-### Act III (Session)
-
-| Info | Need | Best home | Loudness |
-|------|------|-----------|----------|
-| Seat (not ballot) | Confirm stage | HUD chip | Medium |
-| Bill status + stage | Core session goal | Ledger **bill band** (wide, prominent) | **High** |
-| Capital / Favor / District | Session economy | Session cluster near bill | High |
-| Committee | Context | Under bill or machine | Medium |
-| PAC claim flag | Consequence cue | One muted line when true | Medium when true |
+| Stage | Goal strip primary / progress / next |
+|-------|--------------------------------------|
+| Primary pre-ballot | Make ballot · sigs · Petition/Fee |
+| Primary on ballot | Survive primary · contacts/name |
+| General | Bank GOTV · field/GOTV Weekend |
+| Session | Bill stage / freeze · pipeline or casework |
+| Waiting | Bank for next filing · path + banks |
+| Draft / over / AP=0 | Dedicated `GOAL_COPY` keys |
 
 ### Act IV (Waiting)
 
-| Info | Need | Best home | Loudness |
-|------|------|-----------|----------|
-| Path / orbit id | Which climb | Identity-adjacent or week-hint | Medium |
-| Banked contacts / name | Payoff preview | Force-or-bank cluster | Medium |
-| 1 AP/week rule | Constraint | Week-hint (already) | Low chrome |
+| Info | Home |
+|------|------|
+| Path / orbit | Ledger waiting bank + goal strip + orbit section |
+| Banked contacts / name | Ledger + goal progress |
+| 1 AP/week | Goal next + kit label |
 
-### Never permanent chrome (log / juice / splash only)
+### Transient
 
-- Per-play resolve text, juice banners, act splash copy  
-- Full obligation prose, ally ground lists (expandable later)  
-- Seed, district/region names after setup (setup screen owns them; optional tiny footer if needed for support)
-
-### Transient feedback — toasts as layout safety
-
-**Problem:** `#week-hint` and `#juice` sit **above** the card grids. When they show/hide or change height, the playables grid jumps. That is worse on mobile than a missing celebration.
-
-**Archive had it right (partially):** prototype `toast()` was `position: fixed` — overlay, no layout thrash. Modular UI replaced that with an in-flow juice banner (headline only). ROADMAP already flags a fuller toast stack as polish.
-
-**Plan rule (owner 2026-07-19):** **Bring toasts back** when implementing Phase 6 (or sooner if juice/hint thrash is already annoying):
-
-| Signal | Where | Layout effect |
-|--------|--------|----------------|
-| Week guidance (`week-hint`) | Prefer stable one-line slot **or** only change text, never collapse to zero height | Minimal reflow |
-| Play juice / milestones / big beats | **Fixed/stacked toasts** (overlay, auto-dismiss ~2.5–3s) | **None** on card grid |
-| Persistent log | `#log` as now | Scrolls independently |
-
-- Juice banner can shrink to a reserved min-height or move entirely into toasts.  
-- Do not put expanding multi-line copy in the bar above cards.  
-- `aria-live` still fires on toast insert (a11y stays).  
-- Reference: `archive/prototype-single-file.html` `.toast` + `toast()` — re-skin to current walnut/gold, do not revive whole prototype.
+| Signal | Where | Layout |
+|--------|--------|--------|
+| Play juice | Fixed toasts | None on cards |
+| Goal guidance | `#goal-strip` reserved min-height | No thrash |
+| Log | Log tab | Independent scroll |
 
 ---
 
-## 5. Target layout (furniture map)
+## 5. Target layout (as shipped)
 
-### A. Title screen — continuity, not clone
-
-Keep the ceremony. Soften the cliff:
-
-- Shared **material language** into setup/game (same paper grain / rule motif / button grammar already partial).  
-- Optional: thin **continuous masthead** strip (eyebrow only) so “Begin the Climb” doesn’t teleport into a different app.  
-- Setup should feel like **filling the nameplate**, not a form dump after a poster.  
-- Act splash already bridges narrative — keep; ensure palette matches title rules, not a third style.
-
-*Not required for v0 furniture:* full motion, audio, new art. Continuity is hierarchy + materials.
-
-### B. In-run zones (top → bottom)
+### In-run zones (top → bottom) — Play tab
 
 ```
 ┌─────────────────────────────────────────────┐
-│ HUD (mobile always; desktop optional slim)  │  vitals: AP · $ · W · gate
+│ HUD (always on in-game)                     │  AP · $ · W · gate · who
 ├─────────────────────────────────────────────┤
-│ Act banner (existing)                       │  narrative frame
+│ Act banner                                  │  narrative frame
 ├─────────────────────────────────────────────┤
-│ IDENTITY BAND                               │  persona · issue
-│   Attributes as chips / scored row          │  high contrast, not grid cell
+│ #goal-strip (3 lines, reserved height)      │  primary · progress · next
 ├─────────────────────────────────────────────┤
-│ FORCE / SESSION CLUSTER (stage-conditional) │  the “board”
-│   Primary: contacts name vols [mom end]     │
-│   + ballot only if not ON                   │
-│   Session: capital favor district · BILL    │
+│ #draft (exclusive when pending)             │
+│ .play-section camp → hand → shop            │  primary/general
+│   (session: pipeline · chamber)             │
+│   (waiting: orbit)                          │
 ├─────────────────────────────────────────────┤
-│ MACHINE (allies · assets · obligations)     │  quieter, full width
-├─────────────────────────────────────────────┤
-│ Actions / cards · week-hint · log           │  play surface
+│ End week (play footer) · bottom nav         │  Play | Dossier | Log
 └─────────────────────────────────────────────┘
 ```
 
-### C. Ledger reorder (desktop dossier)
+### Dossier tab (ledger)
 
-Proposed primary-stage order:
+1. **Identity band** — persona · issue · attr chips  
+2. **Force / Chamber / Waiting bank** — stage-conditional  
+3. **Vitals** — `$` · AP · week (desktop/dossier depth)  
+4. **Machine** — allies · assets · obligations  
 
-1. **Identity band** (persona · issue) — full width, larger type  
-2. **Attributes** — full width, chips or `+N` tokens, not `Attrs` dump  
-3. Force: Contacts · Name · Vols · (Momentum · Endorse secondary)  
-4. Gate: Ballot **only if not on**; if on, omit or one quiet chip  
-5. Resources: `$N` (no Money label) · AP only if no HUD · Week only if no HUD  
-6. Conditional: Debt / Spendable  
-7. Machine: Allies · Assets · Obligations  
-8. Outcome if over  
+### Explicit non-goals
 
-Session: after Identity/Attrs → Bill band → Capital/Favor/District → Machine.  
-Drop duplicate Stage row if act banner + HUD already say it.
-
-### D. HUD (mobile vitals)
-
-Keep lean. Add **one** character cue if possible without clutter:
-
-- Primary row: act · AP pips · `$N` · week · ballot/seat  
-- Optional second line (tiny): `persona` truncated · 2–3 attr peaks — **or** rely on identity band stuck under HUD  
-
-Prefer sticky **identity band under HUD** over cramming attrs into chips if space is tight.
-
-### E. Label diet
-
-| Instead of | Prefer |
-|------------|--------|
-| `Money` `$200` | `$200` |
-| `AP` `2/3` on HUD | pips (label optional) |
-| `Week` `3 (cal 3/8)` | `W3/8` + meter |
-| `Attrs` `charm+1 …` | chips: Charm **+1** or icons later |
-| `Ballot` `12/50 sigs` | meter + `12/50` (HUD already) |
-| `Identity` as equal cell | band title omitted; show the names as the header |
-
-Keep labels when the value is **ambiguous** without them: Contacts, Name ID, Capital, Favor (not self-describing numbers).
+- Side-by-side Play + Dossier desktop layout  
+- Fourth Shop tab  
+- Dual mobile/desktop CSS IAs  
 
 ---
 
-## 6. Streamlining backlog (small, concrete)
+## 6. Streamlining backlog (historical → mostly done)
 
-When implementing (Phase 6 or a thin “ledger hierarchy” slice):
+Phase 6 + redesign closed the furniture list:
 
-1. **Reorder ledger HTML** — Identity + Attrs first; ballot out of the middle.  
-2. **CSS bands** — `.ledger-identity`, `.ledger-force`, `.ledger-machine` with different type scale / border; kill equal-cell sameness.  
-3. **Drop `Money` label**; match HUD `$` convention.  
-4. **Stage-conditional rows** — hide ballot after ON; hide campaign force in session; hide bill outside session.  
-5. **Deduplicate HUD vs ledger** on narrow screens (don’t show Stage/Week/AP/Money twice at full weight).  
-6. **Title → setup continuity** — one shared frame element; setup as “nameplate fill.”  
-7. **Attr chips** — readable at a glance; persona imprint from setup stays visible all run.  
-8. **Toasts for transient juice** — fixed overlay; stop card-grid jump when feedback appears. Stabilize or reserve height for `week-hint`.  
-9. **Playtest checklist** (10 min, phone): can you name your persona without hunting? Know ballot status without reading five labels? Know `$` and AP without scrolling past allies? Cards stay put when juice fires?
+- [x] Ledger bands + identity first  
+- [x] Label diet (`$` without MONEY)  
+- [x] Stage-conditional force/session/waiting  
+- [x] Fixed toasts; reserved goal strip  
+- [x] Tabs-for-all-widths  
+- [x] Camp → Hand → Shop; session kit labels  
+- [x] Module extract; card face zone CSS; art gate  
+
+**Still open (polish / residual #10):** phone playtest sign-off, screenshot CI, optional inspect sheet for full `card.d`.
 
 ---
 
-## 7. Out of scope (this plan)
+## 7. Out of scope (this IA doc)
 
-- New engine stats or renaming attributes  
-- Full Unity HUD (this doc informs it later)  
-- Card art / Outside event presentation redesign  
-- WCAG / screenshot CI (still Phase 6 #10; complementary, not replaced)  
-- Implementation until owner says execute
+- New engine stats  
+- Full Unity HUD (informs later hosts via `ENGINE-API.md`)  
+- Raster art content (gate only — `CARD-ART-STATUS.md`)  
 
 ---
 
 ## 8. Done when
 
-- [x] Identity + Attributes are the first readable block after act chrome  
-- [x] Ballot is not sandwiched between force stats and identity (sigs only if not ON)  
-- [x] No bare `MONEY`/`Money` label in front of `$N`  
-- [x] Title → setup → play shares materials (setup nameplate panel + double rules)  
-- [x] Mobile: sticky identity under HUD; persona chip on HUD  
-- [x] Stage-conditional chrome: force / chamber / waiting bank  
-- [x] Transient juice = fixed toasts; week-hint reserved height  
-- [x] This doc marked shipped  
+- [x] Identity + Attributes first in dossier  
+- [x] Ballot not sandwiched mid-force  
+- [x] Toasts + goal strip do not thrash cards  
+- [x] Tabs all widths; no dual layout  
+- [x] Goal strip live from `GOAL_COPY`  
+- [x] Module tree; `main.ts` boot-only  
+- [x] This doc corrected (PR-7)  
 
-**Still open (polish / CI):** full WCAG audit pass, visual regression screenshot CI, 10-min mobile playtest sign-off.
+**Residual:** #10 phone sign-off / screenshot CI.
 
 ---
 
 ## 9. Links
 
-- Phase 6 issue: [#10](https://github.com/PoseyATX/candidate-zero/issues/10)  
-- Board mirror: [`PROJECT-BOARD.md`](./PROJECT-BOARD.md)  
+- Design + PR map: [`DESIGN-UI-GAMEPLAY-FLOW.md`](./DESIGN-UI-GAMEPLAY-FLOW.md)  
+- Card art: [`CARD-ART-STATUS.md`](./CARD-ART-STATUS.md)  
 - Player flow: [`GAME-FLOW.md`](./GAME-FLOW.md)  
-- Render sites: `src/ui/main.ts` · `src/ui/styles.css` · `index.html`
+- Phase 6 residual: [#10](https://github.com/PoseyATX/candidate-zero/issues/10)  
+- Board: [`PROJECT-BOARD.md`](./PROJECT-BOARD.md)  

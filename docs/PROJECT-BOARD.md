@@ -4,11 +4,12 @@
 **Evidence log:** [`docs/ROADMAP.md`](./ROADMAP.md) (what shipped + harness proof)  
 **Workstream log:** [`docs/WORK-LOG.md`](./WORK-LOG.md) · issue #16  
 **Player flow:** [`docs/GAME-FLOW.md`](./GAME-FLOW.md)  
-**Catch-up snapshot:** [`docs/RESTING.md`](./RESTING.md) — tip `7328c86` · package **0.1.0**  
+**Catch-up snapshot:** [`docs/RESTING.md`](./RESTING.md) — package **0.1.0** · UI redesign PR-1…PR-7  
+**Design SoT:** [`docs/DESIGN-UI-GAMEPLAY-FLOW.md`](./DESIGN-UI-GAMEPLAY-FLOW.md)  
 **v0.1 evidence:** [`docs/V0.1-EVIDENCE.md`](./V0.1-EVIDENCE.md)  
 **Engine host API:** [`docs/ENGINE-API.md`](./ENGINE-API.md)  
 **Live alpha:** https://poseyatx.github.io/candidate-zero/  
-**Snapshot date:** 2026-07-23 (**Step A hygiene** — #11 closed, #10 residual, #12 on hold)
+**Snapshot date:** 2026-07-23 (**PR-7 docs hygiene** — #11 closed, #10 residual, #12 on hold)
 
 This file is the agent-readable mirror of the GitHub Project. When project API
 scopes are missing, **update this file + the linked issues** so work stays
@@ -46,7 +47,8 @@ become a second rules implementation.
 | **DONE** | — | Design PR-3 play sectioning (Camp→Hand→Shop · session/waiting kits · draft focus) |
 | **DONE** | — | Design PR-3.5 card zone CSS freeze · PR-4 kit emblems + `check:card-art` |
 | **DONE** | — | Design PR-5 ceremony queue/focus/picker truth · PR-6 tutorial Act IV |
-| **NEXT** | — | Design PR-7 docs hygiene · human playtest |
+| **DONE** | — | Design PR-7 docs hygiene (UI-IA · RESTING · GAME-FLOW · art status) |
+| **NEXT** | — | Human playtest · #10 residual · optional PR-8 engine-bridge |
 | META | [#13](https://github.com/PoseyATX/candidate-zero/issues/13) | Board hygiene rules |
 | BUG | [#14](https://github.com/PoseyATX/candidate-zero/issues/14) | Pages deploy auto-fire / workflow scope |
 | PLANNED | [#15](https://github.com/PoseyATX/candidate-zero/issues/15) | AC1 archive yield-table full compare |

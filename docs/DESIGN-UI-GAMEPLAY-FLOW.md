@@ -5,13 +5,13 @@
 | **Title** | UI + Gameplay Flow Redesign |
 | **Author** | (design / agent draft) |
 | **Date** | 2026-07-23 |
-| **Status** | Draft (rev 3) · **PR-1…PR-6 landed** (PR-7 docs hygiene next) |
+| **Status** | Draft (rev 3) · **PR-1…PR-7 landed** (optional PR-8 deferred) |
 | **Package** | 0.1.0 |
 | **Surface** | Vite web UI (Unity **on hold** — out of critical path) |
 | **Live alpha** | https://poseyatx.github.io/candidate-zero/ |
 | **Related** | `docs/UI-IA.md`, `docs/GAME-FLOW.md`, `docs/CARD-TAXONOMY.md`, `docs/CARD-ART-STATUS.md`, `docs/RESTING.md` |
 
-> **Doc hygiene:** Prefer **live code** over stale narrative in older docs. `docs/UI-IA.md` still contains a long pre-band “Diagnosis (as shipped)” that describes ledger order *before* Phase 6 bands landed — implementers must follow `renderLedger()` in `main.ts`, not that diagnosis section. `docs/CARD-ART-STATUS.md` claims `CARD_ART` lives in `main.ts`; **false today** — no `CARD_ART` map exists; emblems only via `card-art.ts`. Fix both in PR-7.
+> **Doc hygiene (PR-7 done):** Prefer **live code**. `docs/UI-IA.md` now states current bands + goal strip + module tree; pre-Phase-6 diagnosis is archived as historical only. `docs/CARD-ART-STATUS.md`: `CARD_ART` lives in `src/ui/card-face.ts` (empty until rasters); emblems in `card-art.ts`; gate `check:card-art`.
 
 ---
 
@@ -1016,7 +1016,7 @@ Card-face and goal-strip APIs as specified above. **No `engine-bridge` in PR-1.*
 | `/home/posey/candidate-zero/docs/GAME-FLOW.md` | Loop, acts, rivalRap teeth |
 | `/home/posey/candidate-zero/docs/CARD-TAXONOMY.md` | Kind vs risk |
 | `/home/posey/candidate-zero/docs/CARD-RESIDENCY.md` | Main / Special / Outside |
-| `/home/posey/candidate-zero/docs/CARD-ART-STATUS.md` | Raster 0; **stale CARD_ART path** — fix PR-7 |
+| `/home/posey/candidate-zero/docs/CARD-ART-STATUS.md` | Raster 0; CARD_ART in card-face.ts; gate green |
 | `/home/posey/candidate-zero/docs/RESTING.md` | 0.1.0; Unity hold |
 | `/home/posey/candidate-zero/src/engine/loop.ts` | `LedgerSnapshot` (no gotv/sigNeed); Campaign |
 | `/home/posey/candidate-zero/src/engine/feedback.ts` | `totalGotv` pattern |
@@ -1031,19 +1031,19 @@ Card-face and goal-strip APIs as specified above. **No `engine-bridge` in PR-1.*
 
 ## Success criteria (design done when shipped)
 
-- [ ] Player states act + week goal from Play without Dossier  
-- [ ] `#goal-strip` live from `GoalStripInput` + full GOAL_COPY (incl. session matrix, waiting, draft, AP=0)  
-- [ ] Card faces legible at 320px; kit prefix emblems non-star; art optional + CI gate  
-- [ ] Art URLs use `BASE_URL` (`/candidate-zero/assets/cards/…` on Pages); allowlist matches  
-- [ ] Camp before Hand on primary; shop sectioned; End Week thumb-reachable  
-- [ ] Ceremony queue + in-week overlays documented; smoke order asserts  
-- [ ] Ground picker opp copy matches engine teeth  
-- [ ] Tutorial includes Act IV Waiting  
-- [ ] Module tree landed; `main.ts` ≤ ~300 lines boot/wire; **no paint→session imports** (K14)  
-- [ ] Tabs-for-all-widths preserved (no dual desktop layout)  
-- [ ] harness + smoke:ui + a11y + `check:card-art` green (missing dir OK)  
-- [ ] UI-IA + CARD-ART-STATUS corrected (BASE_URL + no stale CARD_ART-in-main.ts)  
-- [ ] No Unity work on critical path  
+- [ ] Player states act + week goal from Play without Dossier *(human playtest)*  
+- [x] `#goal-strip` live from `GoalStripInput` + full GOAL_COPY (incl. session matrix, waiting, draft, AP=0)  
+- [x] Card faces legible at 320px; kit prefix emblems non-star; art optional + CI gate  
+- [x] Art URLs use `BASE_URL` (`/candidate-zero/assets/cards/…` on Pages); allowlist matches  
+- [x] Camp before Hand on primary; shop sectioned; End Week thumb-reachable  
+- [x] Ceremony queue + in-week overlays documented; smoke order asserts  
+- [x] Ground picker opp copy matches engine teeth  
+- [x] Tutorial includes Act IV Waiting  
+- [x] Module tree landed; `main.ts` ≤ ~300 lines boot/wire; **no paint→session imports** (K14)  
+- [x] Tabs-for-all-widths preserved (no dual desktop layout)  
+- [x] harness + smoke:ui + a11y + `check:card-art` green (missing dir OK)  
+- [x] UI-IA + CARD-ART-STATUS corrected (BASE_URL + no stale CARD_ART-in-main.ts)  
+- [x] No Unity work on critical path  
 
 ---
 
