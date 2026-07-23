@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "counts": {
-    "cards": 105,
+    "cards": 113,
     "personas": 24,
     "issues": 18,
     "districts": 4,
@@ -1702,6 +1702,102 @@
       "deck": "main"
     },
     {
+      "id": "SS27",
+      "name": "Ribbon-Cutting Circuit",
+      "tagline": "the home fires",
+      "description": "A new bridge, a clinic wing, a fire truck. You hold the giant scissors and the district sees you deliver.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_FRESHMAN_MEMBER",
+        "ENT_STATE_REP"
+      ],
+      "deck": "session"
+    },
+    {
+      "id": "SS28",
+      "name": "Interim Charity Gala",
+      "tagline": "favor for favor",
+      "description": "A good cause, a ballroom, and every lobbyist in town buying a table. Goodwill and debts, exchanged over rubber chicken.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_FRESHMAN_MEMBER",
+        "ENT_STATE_REP"
+      ],
+      "deck": "session"
+    },
+    {
+      "id": "SS29",
+      "name": "Face Down the Primary Threat",
+      "tagline": "the burned bridge",
+      "description": "A challenger is testing the waters back home. You can ignore it — or plant your flag and stare them down.",
+      "risk": "VOL",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CON"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_FRESHMAN_MEMBER",
+        "ENT_STATE_REP"
+      ],
+      "deck": "session"
+    },
+    {
       "id": "SS01",
       "name": "File the Bill",
       "tagline": "H.B. ____",
@@ -2120,6 +2216,105 @@
         "ENT_STATE_REP"
       ],
       "deck": "session"
+    },
+    {
+      "id": "WA10",
+      "name": "Teach a Night Class",
+      "tagline": "waiting",
+      "description": "Civics at the community college, two evenings a week. Thirty adults who now know your name and your handshake.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "LOOP_WAITING_PERENNIAL",
+        "LOOP_WAITING_ADVOCATE",
+        "LOOP_WAITING_HOME"
+      ],
+      "deck": "waiting"
+    },
+    {
+      "id": "WA11",
+      "name": "Write the Weekly Column",
+      "tagline": "waiting",
+      "description": "A standing byline in the county paper. Slow, unglamorous, and it keeps your name in print between the elections.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "INK"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "LOOP_WAITING_PERENNIAL",
+        "LOOP_WAITING_ADVOCATE",
+        "LOOP_WAITING_HOME"
+      ],
+      "deck": "waiting"
+    },
+    {
+      "id": "WA12",
+      "name": "Run the Charity 5K",
+      "tagline": "waiting",
+      "description": "A bib, a starting pistol, and a banner with your name over the finish line. Good works, well photographed.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "LOOP_WAITING_PERENNIAL",
+        "LOOP_WAITING_ADVOCATE",
+        "LOOP_WAITING_HOME"
+      ],
+      "deck": "waiting"
     },
     {
       "id": "WA01",
@@ -3146,6 +3341,63 @@
       },
       "attrs": [
         "CLO",
+        "DIP"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "path"
+    },
+    {
+      "id": "RW_REGULAR",
+      "name": "Become a Fixture",
+      "tagline": "one of us",
+      "description": "You are not campaigning anymore; you are just around, the way the weather is around. People vote for the weather they know.",
+      "risk": "SAFE",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "path"
+    },
+    {
+      "id": "RW_KINGMAKER",
+      "name": "Cash the Kingmaker's Chit",
+      "tagline": "your turn",
+      "description": "The people who decide have decided it is your turn. One call, and the slate rearranges itself around you.",
+      "risk": "STD",
+      "kind": "action",
+      "trap": false,
+      "field": false,
+      "phases": [
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
         "DIP"
       ],
       "residency": "main",

@@ -421,8 +421,55 @@ export const SS13_PlayWrit: PlayCard = {
  */
 const SESSION_ENTITY_SCOPE = ['ENT_FRESHMAN_MEMBER', 'ENT_STATE_REP'] as const;
 
+// --- Wave: more session survival plays (non-pipeline). Match the SS idiom:
+//     show gated to stage==='session'; standing / challenger / favors. ---
+export const SS27_RibbonCircuit: PlayCard = {
+  id: 'SS27', n: 'Ribbon-Cutting Circuit', cost: { a: 1 }, risk: 'SAFE', ph: [1, 2, 3],
+  tag: 'the home fires', attrs: ['CHA'],
+  d: 'A new bridge, a clinic wing, a fire truck. You hold the giant scissors and the district sees you deliver.',
+  show: s => s.stage === 'session',
+  odds: () => 0.85,
+  run: (s, o) => {
+    const g = o.tier === 0 ? 6 : 4;
+    s.districtStanding = clamp(s.districtStanding + g, 0, 100);
+    s.nameID += 2;
+    return `Scissors, cameras, a check with your name near it. Standing +${g}, +2 name ID.`;
+  }
+};
+export const SS28_CharityGala: PlayCard = {
+  id: 'SS28', n: 'Interim Charity Gala', cost: { a: 1 }, risk: 'STD', ph: [1, 2, 3],
+  tag: 'favor for favor', attrs: ['DIP'],
+  d: 'A good cause, a ballroom, and every lobbyist in town buying a table. Goodwill and debts, exchanged over rubber chicken.',
+  show: s => s.stage === 'session',
+  odds: () => 0.7,
+  run: (s, o) => {
+    s.sessionFlags = s.sessionFlags || {};
+    if (o.tier <= 1) { s.favors += 1; s.districtStanding = clamp(s.districtStanding + 3, 0, 100); return 'The room is generous. +1 favor and the district notices the marquee.'; }
+    if (o.tier === 2) { s.districtStanding = clamp(s.districtStanding + 1, 0, 100); return 'A thin crowd, a polite night. Standing +1.'; }
+    return 'A donor photo goes sideways in the paper. The gala costs you more than it gave.';
+  }
+};
+export const SS29_FaceThreat: PlayCard = {
+  id: 'SS29', n: 'Face Down the Primary Threat', cost: { a: 1 }, risk: 'VOL', ph: [1, 2, 3],
+  tag: 'the burned bridge', attrs: ['CON'],
+  d: 'A challenger is testing the waters back home. You can ignore it — or plant your flag and stare them down.',
+  show: s => s.stage === 'session' && Number((s.sessionFlags?.challengerHeat) || 0) > 0,
+  odds: (s) => clamp(0.55 + s.districtStanding * 0.003, 0, 0.9),
+  run: (s, o) => {
+    s.sessionFlags = s.sessionFlags || {};
+    const ch = Number(s.sessionFlags.challengerHeat || 0);
+    if (o.tier === 0) { s.sessionFlags.challengerHeat = Math.max(0, ch - 2); s.momentum += 1; return 'You call the bluff in public. The challenger backs off — heat down two, momentum up.'; }
+    if (o.tier === 1) { s.sessionFlags.challengerHeat = Math.max(0, ch - 1); return 'A firm word in the right ears. Challenger heat eases one notch.'; }
+    if (o.tier === 2) { return 'A standoff. Nothing settled, nothing lost.'; }
+    s.sessionFlags.challengerHeat = ch + 1; return 'You punch down and legitimize them. The threat grows.';
+  }
+};
+
 export const SESSION_PLAYS: PlayCard[] = (() => {
   const cards: PlayCard[] = [
+    SS27_RibbonCircuit,
+    SS28_CharityGala,
+    SS29_FaceThreat,
     SS01_FileBill,
     SS02_SeekReferral,
     SS_PAC_Refuse,

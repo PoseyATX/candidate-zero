@@ -45,6 +45,8 @@ must be real cards in the live catalog.
 | The County Machine | Kitchen-Table · Court the Chairs · Straw Poll | **Turn Out the Precinct Captains** — endorsements + GOTV |
 | The Press Machine | Earned Media · Press Release · Candidate Forum | **The Anchor Takes Your Call** — name-ID engine |
 | The Field Army | Block Walk · Recruit Volunteers · Canvass Captain | **Stand Up a Turf Operation** — contacts + GOTV |
+| The Retail Grind | Block Walk · Town Hall · Grocery-Store Handshakes | **Become a Fixture** — familiarity engine |
+| Climb the Ladder | Club Speech · Prayer Breakfast · Court the Chairs | **Cash the Kingmaker's Chit** — endorsement engine |
 
 A card may feed more than one path at once (e.g. Block Walk advances both the
 Campus Machine and the Field Army) — that is intended.

@@ -97,6 +97,32 @@ export const PATHS: PathDef[] = [
     ],
     unlockToast:
       'Your volunteers become an operation with a spine. New play unlocked: Stand Up a Turf Operation.'
+  },
+  {
+    id: 'P_RETAIL',
+    name: 'The Retail Grind',
+    requires: ['PL01', 'PL06', 'PL80'], // Block Walk + Town Hall + Grocery-Store Handshakes
+    reward: 'RW_REGULAR',
+    stepToasts: [
+      'The same faces start showing up at your events.',
+      'A diner names a booth after your Tuesday visits.',
+      'The regulars decide you are one of them.'
+    ],
+    unlockToast:
+      'You are a fixture now, not a candidate. New play unlocked: Become a Fixture.'
+  },
+  {
+    id: 'P_LADDER',
+    name: 'Climb the Ladder',
+    requires: ['PL12', 'PL30', 'PL14'], // Club Speech + Prayer Breakfast + Court the Chairs
+    reward: 'RW_KINGMAKER',
+    stepToasts: [
+      'A club president takes your call the first time now.',
+      'The corridor of pastors and chairs opens a little wider.',
+      'The people who pick winners start picking you.'
+    ],
+    unlockToast:
+      'The kingmakers decide it is your turn. New play unlocked: Cash the Kingmaker’s Chit.'
   }
 ];
 
@@ -224,6 +250,28 @@ export const PATH_REWARDS: PlayCard[] = [
     run: (s, o) => {
       if (o.tier <= 1) { const c = 30 + Math.floor(random() * 16); s.contacts += c; s.volPool += 1; if (s.stage === 'general') s.groundsArr.slice(0, 3).forEach(g => (g.gotv += 0.06)); return `The operation hums. +${c} contacts, a volunteer${s.stage === 'general' ? ', turnout banked' : ''}.`; }
       s.contacts += 12; return 'A steady day from the turfs. +12 contacts.';
+    }
+  }),
+  reward({
+    id: 'RW_REGULAR', pathId: 'P_RETAIL', n: 'Become a Fixture',
+    attrs: ['CHA'], risk: 'SAFE', cost: { a: 1 }, ph: [1, 2, 3], tag: 'one of us',
+    d: 'You are not campaigning anymore; you are just around, the way the weather is around. People vote for the weather they know.',
+    odds: () => 0.85,
+    run: (s, o) => {
+      if (o.tier <= 1) { const c = 22 + Math.floor(random() * 12); s.contacts += c; s.nameID += 3; s.momentum += 1; return `Familiarity does the work. +${c} contacts, +3 name ID, momentum.`; }
+      s.contacts += 10; return 'A quiet, friendly day among the regulars. +10 contacts.';
+    }
+  }),
+  reward({
+    id: 'RW_KINGMAKER', pathId: 'P_LADDER', n: "Cash the Kingmaker's Chit",
+    attrs: ['DIP'], risk: 'STD', cost: { a: 1 }, ph: [2, 3], tag: 'your turn',
+    d: 'The people who decide have decided it is your turn. One call, and the slate rearranges itself around you.',
+    odds: (s) => clamp(0.64 + s.endorsePts * 0.01, 0.05, 0.95),
+    run: (s, o) => {
+      if (o.tier === 0) { s.endorsePts += 4; s.favors += 1; s.momentum += 1; return 'The slate falls in behind you. +4 endorsement points, +1 favor, momentum.'; }
+      if (o.tier === 1) { s.endorsePts += 2; return 'A firm word from on high. +2 endorsement points.'; }
+      if (o.tier === 2) { s.endorsePts += 1; return 'A hedged blessing. +1 endorsement point.'; }
+      return 'A rival calls in an older chit. The kingmakers wait and see.';
     }
   })
 ];

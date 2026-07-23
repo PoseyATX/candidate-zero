@@ -230,7 +230,52 @@ export const WA09_TestWaters: PlayCard = {
   }
 };
 
+// --- Wave: more interim verbs. Bank progress toward the next filing. ---
+const WAIT_SCOPE = ['LOOP_WAITING_PERENNIAL', 'LOOP_WAITING_ADVOCATE', 'LOOP_WAITING_HOME'];
+
+export const WA10_NightClass: PlayCard = {
+  id: 'WA10', n: 'Teach a Night Class', cost: { a: 1 }, risk: 'SAFE', ph: [1, 2, 3],
+  tag: 'waiting', kind: 'action', residency: 'special', control: 'player',
+  entityScope: WAIT_SCOPE, attrs: ['CHA'],
+  d: 'Civics at the community college, two evenings a week. Thirty adults who now know your name and your handshake.',
+  show: s => waitingShow(s),
+  odds: () => 0.9,
+  run: (s, o) => {
+    const n = o.tier === 0 ? 28 : o.tier === 1 ? 18 : 9;
+    bankWaiting(s, { contacts: n });
+    return `Chalkboard and coffee. +${n} contacts banked for the next filing.`;
+  }
+};
+export const WA11_WeeklyColumn: PlayCard = {
+  id: 'WA11', n: 'Write the Weekly Column', cost: { a: 1 }, risk: 'STD', ph: [1, 2, 3],
+  tag: 'waiting', kind: 'action', residency: 'special', control: 'player',
+  entityScope: WAIT_SCOPE, attrs: ['INK'],
+  d: 'A standing byline in the county paper. Slow, unglamorous, and it keeps your name in print between the elections.',
+  show: s => waitingShow(s),
+  odds: () => 0.7,
+  run: (s, o) => {
+    const n = o.tier === 0 ? 4 : o.tier === 1 ? 2 : 1;
+    bankWaiting(s, { nameID: n });
+    return `A column that gets read. +${n} name ID banked for the next filing.`;
+  }
+};
+export const WA12_CharityRun: PlayCard = {
+  id: 'WA12', n: 'Run the Charity 5K', cost: { a: 1 }, risk: 'SAFE', ph: [1, 2, 3],
+  tag: 'waiting', kind: 'action', residency: 'special', control: 'player',
+  entityScope: WAIT_SCOPE, attrs: ['CHA'],
+  d: 'A bib, a starting pistol, and a banner with your name over the finish line. Good works, well photographed.',
+  show: s => waitingShow(s),
+  odds: () => 0.9,
+  run: (s, o) => {
+    bankWaiting(s, { contacts: o.tier <= 1 ? 16 : 8, nameID: o.tier === 0 ? 2 : 1 });
+    return 'Sneakers and goodwill. Contacts and a little name ID banked for the next filing.';
+  }
+};
+
 export const WAITING_PLAYS: PlayCard[] = [
+  WA10_NightClass,
+  WA11_WeeklyColumn,
+  WA12_CharityRun,
   WA01_WorkTheList,
   WA02_IssueForum,
   WA03_CarryTheBag,
