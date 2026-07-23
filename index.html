@@ -192,8 +192,12 @@
           <section id="tab-play" class="mtab-panel active" data-tab="play">
             <div class="panel panel-actions">
               <h2 id="actions-heading">Actions</h2>
-              <!-- Reserved height so text swaps never shove the card grid -->
-              <p id="week-hint" class="hint week-hint" aria-live="polite"></p>
+              <!-- Goal strip: fixed 3-line slot (PR-2) — never collapse / thrash cards -->
+              <div id="goal-strip" class="goal-strip" aria-live="polite">
+                <div class="goal-primary"></div>
+                <div class="goal-progress"></div>
+                <div class="goal-next"></div>
+              </div>
               <div id="draft" class="card-grid"></div>
               <div id="playables" class="card-grid"></div>
             </div>

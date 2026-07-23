@@ -6,7 +6,7 @@
 **Live alpha:** https://poseyatx.github.io/candidate-zero/  
 **Repo:** https://github.com/PoseyATX/candidate-zero  
 
-**Last updated:** 2026-07-23 (**catch-up** after post-rest PRs #21–#32)  
+**Last updated:** 2026-07-23 (**PR-1b/1c extract + PR-2 goal strip**)  
 
 Related docs:
 

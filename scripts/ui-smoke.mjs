@@ -94,6 +94,20 @@ async function main() {
     assert(true, 'Begin primary → game screen');
     assert((await page.locator('#playables .play-card').count()) > 0, 'hand renders playable cards');
 
+    // PR-2: goal strip live after seed 4242 week 1
+    const goalExists = (await page.locator('#goal-strip').count()) > 0;
+    assert(goalExists, '#goal-strip exists');
+    const goalText = goalExists
+      ? await page.locator('#goal-strip').innerText().catch(() => '')
+      : '';
+    assert(
+      /ballot|sig|Petition|Fee/i.test(goalText),
+      `goal strip week1 matches ballot/sig/Petition/Fee (got: ${JSON.stringify(goalText.slice(0, 120))})`
+    );
+    const live = await page.locator('#goal-strip').getAttribute('aria-live');
+    assert(live === 'polite', '#goal-strip aria-live=polite');
+
+
     // 3. Play through several weeks: resolve field plays via the ground
     //    picker, everything else directly; drafts auto-first; end weeks.
     let playsResolved = 0;

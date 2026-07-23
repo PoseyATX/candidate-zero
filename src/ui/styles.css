@@ -387,11 +387,38 @@ h1 {
   margin-left: 0.2rem;
 }
 
-/* Week guidance — reserved height so copy swaps don't shove cards */
+/* Week guidance (legacy) — reserved height; replaced by goal-strip */
 .week-hint {
   min-height: 2.75em;
   margin: 0 0 0.65rem;
   line-height: 1.35;
+}
+
+/* PR-2 Goal strip — three-line reserved box (UI-IA toast law) */
+.goal-strip {
+  min-height: 3.6em;
+  margin: 0 0 0.65rem;
+  padding: 0.45rem 0.55rem;
+  line-height: 1.35;
+  font-size: 0.85rem;
+  border-left: 3px solid var(--gold-dim, #a88b4a);
+  background: rgba(20, 16, 12, 0.35);
+  border-radius: 0 4px 4px 0;
+}
+.goal-primary {
+  font-weight: 700;
+  color: var(--parchment, #f0e6d2);
+  letter-spacing: 0.01em;
+}
+.goal-progress {
+  color: var(--gold, #c9a84c);
+  font-size: 0.82rem;
+  margin-top: 0.12rem;
+}
+.goal-next {
+  color: var(--ink-muted, #b8a890);
+  font-size: 0.78rem;
+  margin-top: 0.1rem;
 }
 .shop-hint {
   grid-column: 1 / -1;

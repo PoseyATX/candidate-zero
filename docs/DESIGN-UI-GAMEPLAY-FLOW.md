@@ -5,7 +5,7 @@
 | **Title** | UI + Gameplay Flow Redesign |
 | **Author** | (design / agent draft) |
 | **Date** | 2026-07-23 |
-| **Status** | Draft (rev 3) · **PR-1 extract landed** |
+| **Status** | Draft (rev 3) · **PR-1 + 1b + 1c + PR-2 landed** |
 | **Package** | 0.1.0 |
 | **Surface** | Vite web UI (Unity **on hold** — out of critical path) |
 | **Live alpha** | https://poseyatx.github.io/candidate-zero/ |

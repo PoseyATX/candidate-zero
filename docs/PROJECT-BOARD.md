@@ -41,7 +41,9 @@ become a second rules implementation.
 | **DONE** | — | Plan B–D: SIG22–24 coverage · refile seed/harness · balance note post-catalog |
 | **DONE** | — | Anvil MIT port: greybox card plates + campaign observe (`docs/ANVIL.md`) |
 | **DONE** | — | Design PR-1 leaf extract (`card-face` / `act-shell` / `tabs`) |
-| **NEXT** | — | Design PR-1b paint extract · PR-2 goal strip · human playtest |
+| **DONE** | — | Design PR-1b/1c full extract (`session` · paint-* · screens · terminal · outside) · `main.ts` ~100 lines |
+| **DONE** | — | Design PR-2 goal strip (`#goal-strip` · GOAL_COPY · smoke seed 4242) |
+| **NEXT** | — | Design PR-3 play sectioning · human playtest |
 | META | [#13](https://github.com/PoseyATX/candidate-zero/issues/13) | Board hygiene rules |
 | BUG | [#14](https://github.com/PoseyATX/candidate-zero/issues/14) | Pages deploy auto-fire / workflow scope |
 | PLANNED | [#15](https://github.com/PoseyATX/candidate-zero/issues/15) | AC1 archive yield-table full compare |
