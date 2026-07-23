@@ -660,3 +660,13 @@ Borrowed **MIT** code/patterns from [7etsuo/anvil](https://github.com/7etsuo/anv
 
 **Not** adopted: Phaser, full kernel, StS `genre-card` Battle rules. Pure engine remains SoT.
 
+---
+
+## Design: UI + Gameplay Flow (2026-07-23)
+
+Writer/reviewer loop closed with **0 open issues** (rev 3).
+
+- Spec: [`docs/DESIGN-UI-GAMEPLAY-FLOW.md`](./DESIGN-UI-GAMEPLAY-FLOW.md)
+- Vite-first; goal strip; card face discipline; full `main.ts` extract PR map
+- Aligns Anvil greybox + BASE_URL art helpers (K15)
+

@@ -36,6 +36,38 @@ export function clearMissingCardArt(): void {
 }
 
 /**
+ * Vite Pages base (e.g. `/candidate-zero/`). Design K15: never bare `/assets/…`.
+ */
+export function cardArtBaseUrl(): string {
+  try {
+    // Vite injects import.meta.env.BASE_URL
+    const b = (import.meta as ImportMeta & { env?: { BASE_URL?: string } }).env
+      ?.BASE_URL;
+    if (b && typeof b === 'string') return b.endsWith('/') ? b : b + '/';
+  } catch {
+    /* non-vite */
+  }
+  return '/';
+}
+
+/** Resolved public URL for a relative asset path under base. */
+export function cardArtUrl(relPath: string): string {
+  const rel = relPath.replace(/^\/+/, '');
+  return cardArtBaseUrl() + rel;
+}
+
+/**
+ * Allowlist: must stay under BASE_URL + assets/cards/, no .., no remote.
+ */
+export function isSafeCardArtUrl(url: string): boolean {
+  if (!url || /https?:\/\//i.test(url)) return false;
+  if (url.includes('..')) return false;
+  const base = cardArtBaseUrl();
+  const prefix = base + 'assets/cards/';
+  return url.startsWith(prefix) || url.startsWith('/assets/cards/');
+}
+
+/**
  * Browser: we cannot fs.stat. Prefer emblem+greybox unless CARD_ART_PATH is
  * set (opt-in load). Call noteMissing when a registered img onerror fires.
  * Unregistered cards use quiet greybox — not listed as ASSET_MISSING spam.
@@ -43,10 +75,14 @@ export function clearMissingCardArt(): void {
 export function resolveCardArt(cardId: string): CardArtHandle {
   const rel = cardArtRelPath(cardId);
   if (CARD_ART_PATH[cardId]) {
+    const url = cardArtUrl(rel);
+    if (!isSafeCardArtUrl(url)) {
+      return noteMissing(rel);
+    }
     return {
       kind: 'texture',
       path: rel,
-      url: '/' + rel.replace(/^\/+/, '')
+      url
     };
   }
   return {

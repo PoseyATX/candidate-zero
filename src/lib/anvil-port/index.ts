@@ -6,9 +6,12 @@
 export { colorFromPath, greyboxSvg, labelFromPath } from './greybox.js';
 export {
   CARD_ART_PATH,
+  cardArtBaseUrl,
   cardArtPlateHtml,
   cardArtRelPath,
+  cardArtUrl,
   clearMissingCardArt,
+  isSafeCardArtUrl,
   missingCardArt,
   noteMissing,
   resolveCardArt,
