@@ -7,7 +7,6 @@
 import type { GameState, Ground, PlayCard } from '../engine/types.js';
 import { pickDefaultGround, cardAttrMod } from '../engine/play.js';
 import { emblemFor, kindMark, KIND_META } from './card-art.js';
-import { cardArtPlateHtml } from '../lib/anvil-port/index.js';
 
 export interface CardFaceOpts {
   camp?: boolean;
@@ -65,8 +64,12 @@ export function isSafeCardArtUrl(url: string): boolean {
 }
 
 /**
- * Art plate HTML: registered CARD_ART raster (contain) or Anvil greybox plate.
- * Emblem is layered separately by cardInner.
+ * Art plate HTML: a registered CARD_ART raster if one exists, otherwise
+ * EMPTY — the engraved emblem (layered separately by cardInner) stands alone
+ * on the parchment face. The Anvil hash-colored greybox plate was retired:
+ * the owner (issue #33 §3.3/§9-P1) called the clashing colored boxes ugly and
+ * asked for emblem-only until real rasters ship. `cardArtPlateHtml` stays
+ * available in the anvil-port for tooling, just not on the player-facing card.
  */
 export function artPlateHtml(cardId: string): string {
   const entry = CARD_ART[cardId];
@@ -81,7 +84,7 @@ export function artPlateHtml(cardId: string): string {
       );
     }
   }
-  return cardArtPlateHtml(cardId);
+  return '';
 }
 
 /** Precomputed face data (odds resolved against state). */
