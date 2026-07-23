@@ -60,11 +60,12 @@ export function cardArtUrl(relPath: string): string {
  * Allowlist: must stay under BASE_URL + assets/cards/, no .., no remote.
  */
 export function isSafeCardArtUrl(url: string): boolean {
-  if (!url || /https?:\/\//i.test(url)) return false;
+  if (!url || /^(https?:)?\/\//i.test(url)) return false;
   if (url.includes('..')) return false;
   const base = cardArtBaseUrl();
   const prefix = base + 'assets/cards/';
-  return url.startsWith(prefix) || url.startsWith('/assets/cards/');
+  // K15: must use BASE_URL prefix (Pages: /candidate-zero/assets/cards/…)
+  return url.startsWith(prefix);
 }
 
 /**

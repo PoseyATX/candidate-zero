@@ -26,6 +26,12 @@ Related docs:
 
 ---
 
+## 2026-07-23 — PR-3.5 + PR-4 (card zones + art gate)
+
+- **PR-3.5:** name 2-line clamp, art plate fixed ~30% height, cost seal fixed size, tagline 3-line clamp, `.has-raster img { object-fit: contain }`.
+- **PR-4:** kit emblems SS/WA/MV/SIG/BUY (gavel/hourglass/network/seal/coin); `CARD_ART` + `cardArtUrl` / `isSafeCardArtUrl` / `artPlateHtml` in card-face; `npm run check:card-art` (missing dir or empty dir OK; >50KB fails); harness:card-art; anvil isSafe BASE_URL-only. No sample rasters.
+- CARD-ART-STATUS rewritten to truth. Gates green.
+
 ## 2026-07-23 — PR-3 play sectioning
 
 - **Camp → Hand → Shop** on primary/general (K10). Ballot doors (PL04/PL05) promote into Camp even when drawn into hand so doors-first scan holds.

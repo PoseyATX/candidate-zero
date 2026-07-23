@@ -82,7 +82,20 @@ const EMBLEMS: Record<string, string> = {
   pennant: '<path d="M6 3v18"/><path d="M6 4.5h12l-3 4 3 4H6"/>',
   handshake:
     '<path d="M2.5 7l4-2 5 2.5L16 5l5.5 2.5v6L16 18l-4.5-2.5L7 18l-4.5-4z"/>' +
-    '<path d="M11.5 7.5L8 11c1.5 1.5 3 1.5 4.5 0l1-1"/>'
+    '<path d="M11.5 7.5L8 11c1.5 1.5 3 1.5 4.5 0l1-1"/>',
+  /* PR-4 kit defaults */
+  gavel:
+    '<path d="M14 4l4 4-7 7-4-4z"/><path d="M7 15l-3 5"/><path d="M3.5 18.5h7"/>' +
+    '<path d="M15.5 5.5l2.5-2.5"/>',
+  hourglass:
+    '<path d="M7 3.5h10"/><path d="M7 20.5h10"/><path d="M8 3.5c0 3.2 2 5 4 6.5 2-1.5 4-3.3 4-6.5"/>' +
+    '<path d="M8 20.5c0-3.2 2-5 4-6.5 2 1.5 4 3.3 4 6.5"/><path d="M10.5 12h3"/>',
+  network:
+    '<circle cx="12" cy="5.5" r="2"/><circle cx="5.5" cy="17" r="2"/><circle cx="18.5" cy="17" r="2"/>' +
+    '<path d="M12 7.5v3.5M10.5 12.5L7 15.5M13.5 12.5L17 15.5"/><circle cx="12" cy="12.5" r="1.4"/>',
+  seal:
+    '<circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="5"/>' +
+    '<path d="M12 7.5v9M8.5 9.5l7 5M15.5 9.5l-7 5"/>'
 };
 
 /** Per-card emblem assignments — iconic where the card is iconic. */
@@ -113,9 +126,23 @@ const CARD_EMBLEM: Record<string, string> = {
   PL39: 'clipboard'
 };
 
-/** Emblem SVG markup for a card id, with a safe generic fallback. */
+/**
+ * Kit prefix defaults (PR-4 / K12): SS→gavel, WA→hourglass, MV→network,
+ * SIG→seal, BUY→coin. Per-id CARD_EMBLEM wins. Unmapped → star.
+ */
+export function emblemKeyFor(cardId: string): string {
+  if (CARD_EMBLEM[cardId]) return CARD_EMBLEM[cardId]!;
+  if (cardId.startsWith('SS')) return 'gavel';
+  if (cardId.startsWith('WA')) return 'hourglass';
+  if (cardId.startsWith('MV')) return 'network';
+  if (cardId.startsWith('SIG')) return 'seal';
+  if (cardId.startsWith('BUY')) return 'coin';
+  return 'star';
+}
+
+/** Emblem SVG markup for a card id, with kit-prefix then star fallback. */
 export function emblemFor(cardId: string): string {
-  const key = CARD_EMBLEM[cardId] ?? 'star';
+  const key = emblemKeyFor(cardId);
   return WRAP_OPEN + (EMBLEMS[key] ?? EMBLEMS.star) + WRAP_CLOSE;
 }
 

@@ -1,7 +1,7 @@
 /**
  * Card face rendering — pure leaf (no imports from main.ts).
  * Design: CardFaceView + computeCardFaceView; odds need GameState.
- * PR-1 behavior-identical extract from main.ts.
+ * PR-4: CARD_ART map + BASE_URL-safe art helpers (no raster samples until gate).
  */
 
 import type { GameState, Ground, PlayCard } from '../engine/types.js';
@@ -14,6 +14,74 @@ export interface CardFaceOpts {
   shop?: boolean;
   locked?: boolean;
   lockReason?: string;
+}
+
+/** Filename under public/assets/cards/ — never a remote URL. */
+export type CardArtEntry = { file: string };
+
+/**
+ * Optional map: cardId → file under public/assets/cards/.
+ * Empty until real assets ship + check:card-art is green.
+ */
+export const CARD_ART: Record<string, CardArtEntry> = {
+  // e.g. PL01: { file: 'PL01.webp' },
+};
+
+/** Vite base (e.g. '/candidate-zero/' on Pages). */
+export function cardArtBase(): string {
+  try {
+    const b = (import.meta as ImportMeta & { env?: { BASE_URL?: string } }).env
+      ?.BASE_URL;
+    if (b && typeof b === 'string') return b.endsWith('/') ? b : `${b}/`;
+  } catch {
+    /* non-vite */
+  }
+  return '/';
+}
+
+/**
+ * Build browser URL with Vite base. Accepts filename or assets/cards/… relative.
+ * Rejects `..` and remote schemes → empty string.
+ */
+export function cardArtUrl(file: string): string {
+  if (!file || /^(https?:)?\/\//i.test(file) || file.includes('://') || file.includes('..')) {
+    return '';
+  }
+  const cleaned = file.replace(/^\/+/, '').replace(/^assets\/cards\//, '');
+  if (!cleaned || cleaned.includes('..') || cleaned.includes('/') && cleaned.split('/').some(p => p === '..')) {
+    return '';
+  }
+  // single path segment preferred; allow nested under cards only via cleaned name
+  if (cleaned.includes('\\')) return '';
+  return `${cardArtBase()}assets/cards/${cleaned}`;
+}
+
+/** Allowlist: must stay under BASE_URL + assets/cards/, no .., no remote. */
+export function isSafeCardArtUrl(url: string): boolean {
+  if (!url || /^(https?:)?\/\//i.test(url) || url.includes('..')) return false;
+  const base = cardArtBase();
+  const prefix = `${base}assets/cards/`;
+  return url.startsWith(prefix);
+}
+
+/**
+ * Art plate HTML: registered CARD_ART raster (contain) or Anvil greybox plate.
+ * Emblem is layered separately by cardInner.
+ */
+export function artPlateHtml(cardId: string): string {
+  const entry = CARD_ART[cardId];
+  if (entry?.file) {
+    const url = cardArtUrl(entry.file);
+    if (isSafeCardArtUrl(url)) {
+      const src = attrEscape(url);
+      return (
+        `<span class="art-plate has-raster" data-art="${attrEscape(entry.file)}">` +
+        `<img class="art-raster" src="${src}" alt="" loading="lazy" width="120" height="90" decoding="async" />` +
+        `</span>`
+      );
+    }
+  }
+  return cardArtPlateHtml(cardId);
 }
 
 /** Precomputed face data (odds resolved against state). */
@@ -89,7 +157,7 @@ export function computeCardFaceView(
     oddsPct: p,
     stampHtml: stamp,
     kindSealHtml: kindSeal,
-    artPlateHtml: cardArtPlateHtml(card.id),
+    artPlateHtml: artPlateHtml(card.id),
     emblemHtml: emblemFor(card.id),
     lockReason: opts.lockReason ?? '',
     locked: !!opts.locked

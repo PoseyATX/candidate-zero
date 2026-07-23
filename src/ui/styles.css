@@ -674,7 +674,7 @@ h1 {
 }
 .play-card .kind-seal svg { width: 74%; height: 74%; }
 
-/* --- Name banner --- */
+/* --- Name banner (PR-3.5: 2-line clamp, no overflow at 320px) --- */
 .play-card .name {
   font-family: Cinzel, serif;
   font-weight: 700;
@@ -685,6 +685,15 @@ h1 {
   margin: 0.15rem 0.1rem 0;
   color: var(--ink);
   text-shadow: 0 1px 0 rgba(255, 250, 235, 0.5);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  max-height: 2.28em; /* 2 × line-height */
+  min-height: 1.14em;
+  word-break: break-word;
+  padding: 0 0.15rem;
 }
 
 /* Deco divider: hairlines flanking a small diamond. */
@@ -704,11 +713,13 @@ h1 {
   background: linear-gradient(to right, transparent, #9a824f 30%, #9a824f 70%, transparent);
 }
 
-/* --- Emblem plate (Anvil-style greybox under emblem until raster art ships) --- */
+/* --- Emblem / art plate (PR-3.5 zone freeze: fixed ~30% height, contain) --- */
 .play-card .card-art {
   position: relative;
   height: 30%;
-  flex: 0 0 auto;
+  min-height: 3.25rem;
+  max-height: 38%;
+  flex: 0 0 30%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -732,12 +743,17 @@ h1 {
   height: 100%;
   display: block;
   opacity: 0.55;
+  object-fit: contain;
 }
-.play-card .card-art .art-raster {
+.play-card .card-art .art-raster,
+.play-card .card-art.has-raster img,
+.play-card .card-art .has-raster img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
   object-position: center;
   z-index: 1;
@@ -754,7 +770,10 @@ h1 {
   justify-content: center;
   width: 46%;
   height: 82%;
+  max-width: 4.5rem;
+  max-height: 4.5rem;
   pointer-events: none;
+  flex-shrink: 0;
 }
 .play-card .card-art .card-emblem svg,
 .play-card .card-art > svg {
@@ -769,7 +788,7 @@ h1 {
   height: 82%;
 }
 
-/* --- Cost seal: a notary-stamp circle overlapping the emblem plate. --- */
+/* --- Cost seal: notary-stamp circle (PR-3.5: fixed size, never grow with name) --- */
 .play-card .cost-seal {
   position: absolute;
   top: 2.05rem;
@@ -777,6 +796,11 @@ h1 {
   z-index: 3;
   width: 2.15rem;
   height: 2.15rem;
+  min-width: 2.15rem;
+  min-height: 2.15rem;
+  max-width: 2.15rem;
+  max-height: 2.15rem;
+  box-sizing: border-box;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -792,6 +816,9 @@ h1 {
   box-shadow: inset 0 0 0 2.5px rgba(233, 220, 192, 0.9), inset 0 0 0 3.5px rgba(138, 47, 38, 0.45);
   background: radial-gradient(circle, #f0e4c8 55%, #e7d8b4);
   transform: rotate(8deg);
+  overflow: hidden;
+  padding: 0.1rem;
+  word-break: break-all;
 }
 
 .play-card .cost-subs {
@@ -1109,11 +1136,16 @@ h1 {
   border-color: var(--gold);
 }
 
-/* --- Body text --- */
+/* --- Body text (PR-3.5: clamp so long taglines never shove plate/footer) --- */
 .play-card .tagline {
   font-style: italic;
   font-size: 0.66rem;
   text-align: center;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
   color: #6a5426;
   margin-bottom: 0.25rem;
 }
