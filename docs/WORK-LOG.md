@@ -26,6 +26,14 @@ Related docs:
 
 ---
 
+## 2026-07-23 — PR-1b + PR-1c + PR-2 (batched)
+
+Owner demand: finish all alphabet extract subgroups and land goal strip without serial cost-slicing.
+
+- **PR-1b/1c extract:** `session.ts`, `paint-hud.ts`, `paint-play.ts`, `paint-log.ts`, `outside-ui.ts`, `screens.ts`, `terminal-ui.ts`; `main.ts` ≈100 lines boot/wire (≤300). K14: no paint/outside/terminal → session imports.
+- **PR-2 goal strip:** `goal-strip.ts` (`GoalStripInput`, full `GOAL_COPY`, `buildGoalStripInput`, `renderGoalStrip`); `#goal-strip` in `index.html` (replaces `#week-hint`); CSS reserved min-height; smoke asserts seed 4242 week1 ballot/sig/Petition copy + `aria-live=polite`.
+- **Gates:** typecheck · harness · build · smoke:ui · a11y — green.
+
 ## Executive summary
 
 Over this workstream we:
