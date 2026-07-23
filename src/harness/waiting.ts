@@ -15,7 +15,13 @@ import { executePlay } from '../engine/play.js';
 import { advanceCampaignWeek } from '../engine/calendar.js';
 import { emptyLegacy, buildPaths, PATH_TO_WAITING_LOOP } from '../engine/legacy.js';
 import { LOOPS } from '../data/starmap/loops.js';
-import { createCampaign, listPlayableHand, type Campaign } from '../engine/loop.js';
+import {
+  createCampaign,
+  continueAfterWaiting,
+  nextCycleSeed,
+  listPlayableHand,
+  type Campaign
+} from '../engine/loop.js';
 import { createRng, setDefaultSeed, useRng } from '../engine/rng.js';
 
 function assert(cond: boolean, msg: string): void {
@@ -111,6 +117,37 @@ assert(WAITING_WEEKS === 4, 'compressed season');
   assert(playable.length > 0, 'waiting plays');
   assert(playable.every(p => p.card.id.startsWith('WA')), 'WA* only');
   console.log('PASSED: listPlayableHand waiting kit');
+}
+
+// Re-file after waiting: same persona, banks applied, deterministic seed
+{
+  useRng(createRng(7));
+  setDefaultSeed(7);
+  const c0 = createCampaign({
+    seed: 7,
+    setup: { personaId: 'teacher', issueId: 'taxes', districtId: 'open', regionId: 'east' }
+  });
+  assert(c0.state.seed === 7, 'seed stored on state');
+  assert(c0.state.personaId === 'teacher', 'teacher setup');
+  enterWaiting(c0.state, 'perennial');
+  bankWaiting(c0.state, { contacts: 40, nameID: 5, money: 100 });
+  const leg = emptyLegacy();
+  finishWaiting(c0.state, leg);
+  assert(leg.carry.waitingContacts === 40, 'banked contacts');
+  const nextSeed = nextCycleSeed(7);
+  assert(nextSeed !== 7 && nextSeed > 0, 'nextCycleSeed advances');
+  assert(nextCycleSeed(7) === nextSeed, 'nextCycleSeed pure');
+  const c1 = continueAfterWaiting(c0, leg);
+  assert(c1.setup.personaId === 'teacher', 'same persona setup');
+  assert(c1.state.personaId === 'teacher', 'same personaId on state');
+  assert(c1.state.seed === nextSeed, 'deterministic refile seed');
+  assert(c1.state.contacts >= 40, 'waiting contacts applied via applyLegacy');
+  assert(c1.state.nameID >= 5 + 2, 'waiting name applied (plus baseline)'); // baseline nameID 2 + bank
+  // Same inputs → same next seed / persona
+  const c2 = continueAfterWaiting(c0, leg);
+  assert(c2.state.seed === c1.state.seed, 'refile seed stable');
+  assert(c2.state.personaId === c1.state.personaId, 'refile persona stable');
+  console.log('PASSED: continueAfterWaiting re-file (same persona, banks, seed)');
 }
 
 console.log('\nWaiting season green.');

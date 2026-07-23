@@ -57,14 +57,20 @@
           six more to the general if you survive it. Before any of that counts, you must
           <b>make the ballot</b> by the end of week 8 — or the primary goes on without you.</p>
 
-          <h3>Three Acts (same run)</h3>
+          <h3>Four Acts (same climb)</h3>
           <ul class="tut-list">
-            <li><b>Act I — Primary</b> — campaign hand, doors, shop. Ballot or die.</li>
+            <li><b>Act I — Primary</b> — campaign hand, ballot doors, shop. Ballot or die.</li>
             <li><b>Act II — General</b> — still the same run. GOTV and contrast. Six weeks to November.</li>
             <li><b>Act III — Session</b> — still the same run after a general win. Legislative motions, not campaign cards. File a bill; sine die ends the clock.</li>
+            <li><b>Act IV — Waiting</b> — after a loss (or rest), four interim weeks on a path kit (WA*). What you bank rides into the next filing as the <i>same persona</i> — not a blank setup.</li>
           </ul>
           <p>Each act opens with a full-screen handoff and keeps its own chrome (banner, colors, verbs).
           Session is not a new campaign. Reelection after sine die <i>is</i> a new cycle.</p>
+
+          <h3>The Goal Strip</h3>
+          <p>Under the act banner, a fixed three-line strip always answers:
+          <b>what matters</b> · <b>how far you are</b> · <b>what to do next</b>.
+          Ballot doors, GOTV, bill stage, and waiting banks all live there — read it before you dig into the hand.</p>
 
           <h3>Your Week</h3>
           <p>Each week you get <b>2 action points</b> (AP) and a hand of cards. A card costs
@@ -112,7 +118,7 @@
           <h3>Where You Work</h3>
           <p>Field cards open a <b>ground picker</b>. Rapport banks on the ground you choose.
           Working the same ground twice in a week is easier but yields half the rapport.
-          Opposition presence shows in the picker — visible, not yet biting your odds.</p>
+          <b>Opposition presence taxes field-play odds</b> on contested turf — high opp is a harder door, not just flavor text.</p>
 
           <h3>Shop, Allies, Debt</h3>
           <p><b>Shop</b> cards (0 AP) buy assets — voter file, walk list, phone tree — with
@@ -130,10 +136,10 @@
 
           <h3>Losing Well</h3>
           <p>A run ending is not a reset. The <b>Chronicle</b> records every run as a ballad
-          entry. On a loss you choose how you spend the two years to the next filing deadline —
-          and the trait you take <b>persists across every future run</b>. On a win, the wheel
-          turns: stand for reelection as the incumbent, carrying your machine with you.
-          Lose better. It adds up.</p>
+          entry. On a loss you choose an interim path (Act IV — Waiting), take a trait that
+          <b>persists across every future run</b>, bank contacts and name, then re-file as
+          the same persona. On a Session win, the wheel turns: stand for reelection as the
+          incumbent, carrying your machine with you. Lose better. It adds up.</p>
 
           <div class="row-actions">
             <button type="button" id="btn-tut-back" class="btn btn-gold">Back</button>
@@ -181,7 +187,7 @@
               <h3 id="gp-title">Where do you work it?</h3>
               <button type="button" id="gp-cancel" class="btn" aria-label="Cancel">Cancel</button>
             </div>
-            <p class="hint" id="gp-sub">Pick the ground for this play. Rapport builds where you show up — and the same ground twice in a week banks less.</p>
+            <p class="hint" id="gp-sub">Pick the ground for this play. Rapport banks where you show up; the same ground twice in a week yields less. Contested grounds (high opp) tax field odds.</p>
             <div id="gp-list" class="gp-list"></div>
           </div>
         </div>
@@ -192,8 +198,12 @@
           <section id="tab-play" class="mtab-panel active" data-tab="play">
             <div class="panel panel-actions">
               <h2 id="actions-heading">Actions</h2>
-              <!-- Reserved height so text swaps never shove the card grid -->
-              <p id="week-hint" class="hint week-hint" aria-live="polite"></p>
+              <!-- Goal strip: fixed 3-line slot (PR-2) — never collapse / thrash cards -->
+              <div id="goal-strip" class="goal-strip" aria-live="polite">
+                <div class="goal-primary"></div>
+                <div class="goal-progress"></div>
+                <div class="goal-next"></div>
+              </div>
               <div id="draft" class="card-grid"></div>
               <div id="playables" class="card-grid"></div>
             </div>

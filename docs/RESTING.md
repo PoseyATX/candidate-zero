@@ -1,95 +1,88 @@
-# Resting snapshot — floors swept
+# Catch-up snapshot — post redesign
 
-**Date:** 2026-07-19 (end of night)  
-**Tip commit:** `20e8f3c` on `claude/fable-build-cleanup-balance-rnlqgb` (local `fable-pages`)  
-**Package:** `0.0.1` — **not** v0.1 (honest versioning; Phase 7 still planned)  
+**Date:** 2026-07-23  
+**Tip (`fable-pages`):** see `git log -1` — design PR-1…PR-7 UI/gameplay flow  
+**Package:** **`0.1.0`** (Phase 7 evidence; baseline label, not “game done”)  
 **Live alpha:** https://poseyatx.github.io/candidate-zero/  
-*(Pages may lag until workflow_dispatch / next deploy — tip is on the deploy branch.)*
 
-This file is the **put the dogs out and turn off the lights** note. Rehydrate here first, then board + work log.
+Previous resting notes (2026-07-19 tip `718f820`; mid-2026-07-23 tip `7328c86`) are **superseded** for UI module layout and goal strip.
 
 ---
 
 ## What this package is
 
-A playable **Texas Legislature roguelike deckbuilder** with:
+A playable **Texas Legislature roguelike deckbuilder**:
 
 | Layer | State |
 |--------|--------|
-| Pure TS engine | SoT for rules — campaign → general → session → waiting |
-| Vite presentation | Phase 6 hierarchy, toasts, Outside weather modal |
-| Harnesses | Full suite green at rest |
-| Ship path | TS engine → Unity shell → iOS (no second rules engine) |
+| Pure TS engine | Rules SoT + frozen **host API** (`src/engine/api.ts` v1.0.0) |
+| Vite UI | Extracted modules · goal strip · Camp→Hand→Shop · ceremony queue · a11y/smoke |
+| Content | **116** cards · **21** Outside · starmap MV01–14 · SIG01–24 |
+| Unity scaffold | Engine bundle + content JSON + Jint (on hold for editor free-flight) |
+| Ship path | TS engine → Unity presentation → iOS |
 
 ---
 
-## Shipped this long stream (honest inventory)
+## UI module tree (post extract)
 
-### Phases
-- **0–5** foundation through balance matrix — **DONE**
-- **6 core** UI hierarchy + identity/attrs + toasts + setup nameplate — **DONE**
-- **6 residual** WCAG deep audit, screenshot CI, formal phone sign-off — **open**
-- **7** honest v0.1 label — **PLANNED** (needs evidence + residual polish)
-- **8** Unity → iOS — **PLANNED**
+```
+src/ui/
+  main.ts           # boot/wire only
+  session.ts        # campaign owner + paint orchestration
+  paint-hud.ts · paint-play.ts · paint-log.ts
+  goal-strip.ts · act-shell.ts · outside-ui.ts
+  card-face.ts · card-art.ts · screens.ts · tabs.ts · terminal-ui.ts
+  styles.css
+```
 
-### Systems
-- Grounds + rival teeth · shop · obligations · debt (no odds tax)
-- Session bill pipeline + teeth · general kit gravity
-- Starmap catalog + **14** playable templates (MV01–14)
-- Outside deck **16** events + **weather UI** (`pendingOutside`, never hand)
-- Waiting season (Act IV) + Chronicle bridge + higher-office paths
-- Card residency law (Main / Special / Outside)
-
-### QoL / hygiene
-- GR08: Barrio Blocks → **Southside Blocks**
-- Strategies no longer free-farm Specials on empty-hand fallback
-- Balance hygiene post-feature stack (labor/money/outside rates)
-- Stupid Ideas **#20** parked as ADD sink (rate only)
+Art: `CARD_ART` in **card-face.ts** (empty); gate `npm run check:card-art`.  
+Design: [`DESIGN-UI-GAMEPLAY-FLOW.md`](./DESIGN-UI-GAMEPLAY-FLOW.md) (PR-1…PR-7).  
+IA: [`UI-IA.md`](./UI-IA.md) (corrected PR-7).
 
 ---
 
-## How to verify after sleep
+## Honest phase status
+
+| Phase | Code truth | Issue lag |
+|-------|------------|-----------|
+| 0–5 | DONE | Closed |
+| 6 | Core + CI a11y/smoke **done** | #10 OPEN **RESIDUAL** (phone sign-off / screenshot CI) |
+| 7 | Evidence + **0.1.0** **done** | #11 **CLOSED** |
+| 8 | Repo bridge **done** | #12 **ON HOLD** — Unity editor |
+| UI redesign | PR-1…PR-7 **done** | Human playtest next |
+
+---
+
+## How to verify
 
 ```bash
 npm run typecheck
-npm run harness      # full suite
+npm run harness          # includes card-art helpers + check:card-art
+npm run smoke:ui
+npm run a11y
 npm run build
-npm run dev          # local alpha
 ```
 
-Deploy: GitHub Actions `deploy.yml` on branch `claude/fable-build-cleanup-balance-rnlqgb` (workflow_dispatch if auto-fire still broken — issue #14).
-
 ---
 
-## Explicit non-goals until next session
+## Wake / NEXT
 
-- No new features “just because”
-- No v0.1 marketing label without Phase 7 evidence
-- No Unity rules reimplementation
-- #20 ideas stay parked until owner promotes one
-
----
-
-## Wake-up NEXT (owner pick)
-
-1. More starmap templates (kitchen cabinet / old bull / …)  
-2. Phase 7 honesty prep (AC evidence bundle)  
-3. Phase 6 residual a11y / screenshot CI  
-4. Outside flavor / more weather (keep Outside law)  
-5. Unity API freeze notes (doc only)
+1. Human phone playtest (checklist in design doc)  
+2. #10 residual screenshot CI if wanted  
+3. Balance / content as owner directs  
+4. Unity editor when unblocked (`UNITY-SETUP.md`)  
+5. Optional PR-8 `engine-bridge` re-exports only — deferred  
 
 ---
 
 ## Doc map
 
-| Doc | Use |
-|-----|-----|
-| [`PROJECT-BOARD.md`](./PROJECT-BOARD.md) | Status table |
-| [`WORK-LOG.md`](./WORK-LOG.md) | What we did |
-| [`GAME-FLOW.md`](./GAME-FLOW.md) | Player loop |
-| [`UI-IA.md`](./UI-IA.md) | UI furniture law |
-| [`STARMAP.md`](./STARMAP.md) | Entity templates |
-| [`CARD-RESIDENCY.md`](./CARD-RESIDENCY.md) | Deck architecture |
-| [`BALANCE-NOTES.md`](./BALANCE-NOTES.md) | Balance snapshots |
-
-**Rest well. The county will still be there in the morning.**
+| Doc | Role |
+|------|------|
+| [`DESIGN-UI-GAMEPLAY-FLOW.md`](./DESIGN-UI-GAMEPLAY-FLOW.md) | UI redesign SoT + PR map |
+| [`UI-IA.md`](./UI-IA.md) | Information architecture (current) |
+| [`GAME-FLOW.md`](./GAME-FLOW.md) | Player loop + four acts |
+| [`CARD-ART-STATUS.md`](./CARD-ART-STATUS.md) | Raster map + gate |
+| [`PROJECT-BOARD.md`](./PROJECT-BOARD.md) | Ops roadmap |
+| [`V0.1-EVIDENCE.md`](./V0.1-EVIDENCE.md) | Why 0.1.0 |
+| [`ENGINE-API.md`](./ENGINE-API.md) | Host binding |

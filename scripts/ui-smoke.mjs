@@ -94,6 +94,68 @@ async function main() {
     assert(true, 'Begin primary → game screen');
     assert((await page.locator('#playables .play-card').count()) > 0, 'hand renders playable cards');
 
+    // PR-2: goal strip live after seed 4242 week 1
+    const goalExists = (await page.locator('#goal-strip').count()) > 0;
+    assert(goalExists, '#goal-strip exists');
+    const goalText = goalExists
+      ? await page.locator('#goal-strip').innerText().catch(() => '')
+      : '';
+    assert(
+      /ballot|sig|Petition|Fee/i.test(goalText),
+      `goal strip week1 matches ballot/sig/Petition/Fee (got: ${JSON.stringify(goalText.slice(0, 120))})`
+    );
+    const live = await page.locator('#goal-strip').getAttribute('aria-live');
+    assert(live === 'polite', '#goal-strip aria-live=polite');
+
+    // PR-3: Camp section DOM before Hand; shop sectioned when present
+    const campIdx = await page
+      .locator('#playables .play-section[data-section="camp"]')
+      .evaluate((el) => {
+        const sections = [...el.parentElement.querySelectorAll('.play-section')];
+        return sections.indexOf(el);
+      })
+      .catch(() => -1);
+    const handIdx = await page
+      .locator('#playables .play-section[data-section="hand"]')
+      .evaluate((el) => {
+        const sections = [...el.parentElement.querySelectorAll('.play-section')];
+        return sections.indexOf(el);
+      })
+      .catch(() => -1);
+    assert(
+      campIdx >= 0 && handIdx >= 0 && campIdx < handIdx,
+      `Camp section before Hand (camp@${campIdx}, hand@${handIdx})`
+    );
+    assert(
+      (await page.locator('#playables .play-section[data-section="camp"] .play-section-label').count()) >
+        0,
+      'camp section has a label'
+    );
+
+    // Human playtest checklist (automated slice) — phone 390×844 default
+    const hudText = await page.locator('#hud').innerText().catch(() => '');
+    assert(/Teacher|teacher|\$|W\d+/i.test(hudText), 'HUD shows persona cue / $ / week without Dossier');
+    assert(
+      (await page.locator('#goal-strip').isVisible()) &&
+        !(await page.locator('#tab-dossier').evaluate((el) => el.classList.contains('active'))),
+      'goal strip readable on Play tab without opening Dossier'
+    );
+    assert(
+      (await page.locator('.mbottom-nav').isVisible()) &&
+        (await page.locator('.mnav-btn').count()) >= 3,
+      'bottom nav tabs present (tabs-for-all-widths on phone)'
+    );
+    // Wide viewport still tabs, not dual Play+Dossier columns
+    await page.setViewportSize({ width: 1100, height: 800 });
+    await page.waitForTimeout(80);
+    assert(
+      (await page.locator('.mbottom-nav').isVisible()) &&
+        (await page.locator('#tab-play').isVisible()),
+      'wide viewport: bottom nav + Play tab still the IA (no dual layout)'
+    );
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.waitForTimeout(40);
+
     // 3. Play through several weeks: resolve field plays via the ground
     //    picker, everything else directly; drafts auto-first; end weeks.
     let playsResolved = 0;
@@ -112,6 +174,9 @@ async function main() {
 
     let actSplashesDismissed = 0;
     let outsideDismissed = 0;
+    let ceremonyQueueOk = true;
+    let weatherThenSplash = 0;
+    let pickerOppTruthChecked = false;
     for (let iter = 0; iter < 400; iter++) {
       if (await page.locator('#terminal').isVisible()) {
         reachedTerminal = true;
@@ -121,6 +186,14 @@ async function main() {
       // dismiss it the way a player taps "Continue".
       const splash = page.locator('#act-splash');
       if ((await splash.count()) && (await splash.isVisible())) {
+        // PR-5: splash must not stack under open weather
+        const weatherOpen =
+          (await page.locator('#outside-weather').count()) > 0 &&
+          (await page.locator('#outside-weather').isVisible());
+        if (weatherOpen) {
+          ceremonyQueueOk = false;
+          failures.push('act-splash visible while outside-weather is open');
+        }
         await page.locator('#act-splash-ok').click();
         actSplashesDismissed++;
         await page.waitForTimeout(60);
@@ -130,12 +203,39 @@ async function main() {
       // modal must be acknowledged before play continues.
       const weather = page.locator('#outside-weather');
       if ((await weather.count()) && (await weather.isVisible())) {
+        // PR-5: weather open ⇒ splash hidden
+        const splashVis =
+          (await splash.count()) > 0 && (await splash.isVisible().catch(() => false));
+        if (splashVis) {
+          ceremonyQueueOk = false;
+          failures.push('outside-weather open but act-splash still visible');
+        }
         await page.locator('#outside-weather-ok').click();
         outsideDismissed++;
-        await page.waitForTimeout(60);
+        await page.waitForTimeout(80);
+        // After weather dismiss on a transition week, splash may appear
+        if ((await splash.count()) && (await splash.isVisible().catch(() => false))) {
+          weatherThenSplash++;
+        }
         continue;
       }
       if (await page.locator('#ground-picker').isVisible()) {
+        // PR-5: opposition copy is truthful (taxes field odds)
+        if (!pickerOppTruthChecked) {
+          const oppTitle = await page
+            .locator('.gp-meter[title*="Opposition"]')
+            .first()
+            .getAttribute('title')
+            .catch(() => '');
+          const sub = await page.locator('#gp-sub').innerText().catch(() => '');
+          const truth =
+            /tax/i.test(oppTitle || '') ||
+            /tax|contested/i.test(sub || '');
+          const stale = /does not affect odds yet/i.test(oppTitle || '') ||
+            /does not affect odds yet/i.test(sub || '');
+          assert(truth && !stale, `ground picker opposition copy truthful (title=${JSON.stringify(oppTitle)})`);
+          pickerOppTruthChecked = true;
+        }
         const grounds = await page.$$('.gp-ground');
         if (!grounds.length) {
           failures.push('ground picker open but no grounds listed');
@@ -190,12 +290,32 @@ async function main() {
     assert(groundPicks > 0, `ground picker opens and resolves for field plays (${groundPicks} picks)`);
     assert(maxWeek > 1, `End Week advances the calendar (reached week W${maxWeek}, ${endWeeks} end-week clicks)`);
     assert(actSplashesDismissed > 0, `act ceremony splash appears and dismisses (${actSplashesDismissed})`);
+    assert(ceremonyQueueOk, 'ceremony queue: weather never stacks under/over open splash incorrectly');
+    if (outsideDismissed > 0) {
+      log(true, `outside weather dismissed ${outsideDismissed}× (weather→splash seen ${weatherThenSplash})`);
+    }
+    assert(pickerOppTruthChecked, 'ground picker opened and opposition copy was checked');
     assert(reachedTerminal, 'a full campaign reaches a terminal screen');
 
     if (reachedTerminal) {
       const choices = await page.$$('#terminal-choices .play-card, #terminal-choices button');
       assert(choices.length > 0, 'terminal offers forward choices (no dead end)');
+      // PR-6: terminal hints Act IV / waiting or reelect path
+      const termText = await page.locator('#terminal').innerText().catch(() => '');
+      assert(
+        /path|Waiting|Reelect|reelection|interim|two years|Sine die/i.test(termText),
+        'terminal copy points at waiting path or reelect'
+      );
     }
+
+    // PR-6: tutorial names four acts including Waiting
+    await page.locator('#btn-howto').click();
+    await page.waitForSelector('#tutorial:not(.hidden)', { timeout: 5_000 });
+    const tut = await page.locator('#tutorial').innerText();
+    assert(/Act IV|Waiting/i.test(tut), 'tutorial includes Act IV / Waiting');
+    assert(/goal strip/i.test(tut), 'tutorial mentions goal strip');
+    assert(/tax/i.test(tut) && /field/i.test(tut), 'tutorial teaches contested ground taxes field odds');
+    await page.locator('#btn-tut-back').click();
 
     // 4. Zero console/page errors across the whole run.
     if (consoleErrors.length) {

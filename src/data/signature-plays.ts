@@ -12,7 +12,8 @@
  * (resolve immediately, no ground pick) to keep the special moment clean.
  *
  * Attrs / risk / cost / phase / flavor follow the uploaded card list; the IDs
- * are assigned here (SIG01–SIG21) rather than the list's PL57–PL77.
+ * are assigned here (SIG01–SIG24) rather than the list's PL57–PL77.
+ * Hand-authored classics teacher / veteran / smallbiz are SIG22–24.
  */
 
 import type { GameState, RollResult, PlayCard, AttrId } from '../engine/types.js';
@@ -309,6 +310,68 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
       if (o.tier <= 1) { s.endorsePts += 2; s.contacts += 14; s.favors += 1; return 'The old Rolodex still dials out. +2 endorsement points, +14 contacts, +1 favor.'; }
       if (o.tier === 2) { s.contacts += 8; return 'A few old friends answer. +8 contacts.'; }
       return 'The name is spent capital tonight. Nothing gained.';
+    }
+  }),
+  // ---- Hand-authored classics (must not lack a signature vs PA_* roster) ----
+  mk({
+    id: 'SIG22', persona: 'teacher', n: 'Parent-Teacher Circuit', attrs: ['CHA', 'DIP'], risk: 'SAFE',
+    cost: { a: 1 }, ph: [1, 2, 3], tag: 'signature — The Teacher',
+    d: 'Twenty years of cafeteria nights. You work the rooms that already know your name.',
+    odds: O(0.78),
+    run: (s, o) => {
+      if (o.tier <= 1) {
+        const c = 28 + Math.floor(random() * 14);
+        s.contacts += c;
+        s.nameID += 2;
+        s.volPool += 1;
+        return `The gym fills with familiar faces. +${c} contacts, +2 name ID, +1 volunteer.`;
+      }
+      s.contacts += 12;
+      return 'A solid night of handshakes. +12 contacts.';
+    }
+  }),
+  mk({
+    id: 'SIG23', persona: 'veteran', n: 'Halls of Honor', attrs: ['CON', 'CLO'], risk: 'STD',
+    cost: { a: 1 }, ph: [1, 2, 3], tag: 'signature — The Veteran',
+    d: 'The VFW and Legion still stand when the cameras leave. Bio is armor; the halls are turnout.',
+    odds: O(0.66),
+    run: (s, o) => {
+      if (o.tier <= 1) {
+        s.endorsePts += 1;
+        s.volPool += 2;
+        s.nameID += 2;
+        s.contacts += 16;
+        const hall = s.groundsArr.find(g => g.id === 'GR06');
+        if (hall) hall.rapport = Math.min(100, (hall.rapport || 0) + 8);
+        return 'The halls turn out. +1 endorsement, +2 volunteers, +2 name ID, +16 contacts, Legion rapport.';
+      }
+      if (o.tier === 2) {
+        s.volPool += 1;
+        s.contacts += 8;
+        return 'A respectful room. +1 volunteer, +8 contacts.';
+      }
+      return 'Empty chairs and old coffee. Nothing gained.';
+    }
+  }),
+  mk({
+    id: 'SIG24', persona: 'smallbiz', n: 'Call In the Store Credit', attrs: ['CRA', 'DIP'], risk: 'STD',
+    cost: { a: 1 }, ph: [1, 2], tag: 'signature — The Feed-Store Owner',
+    d: 'Everyone still owes you a favor or a bag of feed. You cash favors before cash.',
+    odds: O(0.68),
+    run: (s, o) => {
+      if (o.tier <= 1) {
+        s.money += 600;
+        s.favors += 1;
+        s.contacts += 12;
+        s.endorsePts += 1;
+        return 'The ledger of favors pays. +$600, +1 favor, +12 contacts, +1 endorsement.';
+      }
+      if (o.tier === 2) {
+        s.money += 250;
+        s.contacts += 6;
+        return 'A few tabs settled. +$250, +6 contacts.';
+      }
+      return 'They smile and change the subject. Nothing gained.';
     }
   })
 ];

@@ -6,39 +6,82 @@
 **Live alpha:** https://poseyatx.github.io/candidate-zero/  
 **Repo:** https://github.com/PoseyATX/candidate-zero  
 
-**Last updated:** 2026-07-19 (**RESTING** — floors swept)  
+**Last updated:** 2026-07-23 (**PR-1b/1c extract + PR-2 goal strip**)  
 
 Related docs:
 
 | Doc | Role |
 |---|---|
-| [`RESTING.md`](./RESTING.md) | End-of-night package snapshot |
+| [`RESTING.md`](./RESTING.md) | Current package snapshot (post-sleep) |
+| [`V0.1-EVIDENCE.md`](./V0.1-EVIDENCE.md) | Why package is 0.1.0 |
+| [`ENGINE-API.md`](./ENGINE-API.md) | Host binding contract |
+| [`PATHS.md`](./PATHS.md) | Unlock pathways |
+| [`UNITY-SETUP.md`](./UNITY-SETUP.md) | Unity editor next steps |
 | [`PROJECT-BOARD.md`](./PROJECT-BOARD.md) | Ops roadmap mirror of Project #2 |
 | [`ROADMAP.md`](./ROADMAP.md) | Evidence log (what shipped + harness proof) |
 | [`GAME-FLOW.md`](./GAME-FLOW.md) | Current player-facing loop |
 | [`UI-IA.md`](./UI-IA.md) | Information architecture — Phase 6 |
 | [`CARD-RESIDENCY.md`](./CARD-RESIDENCY.md) | Main / Special / Outside deck architecture law |
-| [`CARD-TAXONOMY.md`](./CARD-TAXONOMY.md) | Kind/risk visual channels (orthogonal to residency) |
-| [`SRD-NOTES.md`](./SRD-NOTES.md) | Design law recovered from archive |
-| [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Layers + ship path |
 | Issues #4–#20 | Phase tickets + meta + Stupid Ideas park |
 
 ---
+
+## 2026-07-23 — Human playtest pack + Pages deploy
+
+- `docs/PLAYTEST.md` — 10-min phone/wide checklist + seed 4242.
+- `smoke:ui` extended: HUD persona/$/week, goal strip without Dossier, tabs on phone + wide (no dual layout).
+- Preflight gates green; merge to `main` for GitHub Pages deploy → https://poseyatx.github.io/candidate-zero/
+
+## 2026-07-23 — PR-7 docs hygiene
+
+- **UI-IA.md:** current module tree + bands + goal strip + tabs-all-widths; pre-Phase-6 diagnosis archived as historical only.
+- **GAME-FLOW.md:** four-act ceremony; correct `src/ui/*` paths; weather→splash queue; goal strip.
+- **RESTING.md:** post-redesign snapshot (PR-1…PR-7); verify commands include art gate.
+- **DESIGN / board / CARD-ART-STATUS:** hygiene notes closed; accept checklist checked except human playtest.
+- Doc-only; no code change required for accept.
+
+## 2026-07-23 — PR-5 + PR-6 (ceremony + tutorial)
+
+- **PR-5:** weather never stacks under splash; deferred splash flush; `recoverPlayFocus` after dismiss; ground picker opp copy *taxes field odds*; smoke ceremony + picker truth asserts.
+- **PR-6:** tutorial Four Acts (+ Waiting), goal strip literacy, contested-ground taxes; terminal path/waiting copy; act splash bodies ≤3 lines; waiting re-file hint (same persona).
+- Gates green.
+
+## 2026-07-23 — PR-3.5 + PR-4 (card zones + art gate)
+
+- **PR-3.5:** name 2-line clamp, art plate fixed ~30% height, cost seal fixed size, tagline 3-line clamp, `.has-raster img { object-fit: contain }`.
+- **PR-4:** kit emblems SS/WA/MV/SIG/BUY (gavel/hourglass/network/seal/coin); `CARD_ART` + `cardArtUrl` / `isSafeCardArtUrl` / `artPlateHtml` in card-face; `npm run check:card-art` (missing dir or empty dir OK; >50KB fails); harness:card-art; anvil isSafe BASE_URL-only. No sample rasters.
+- CARD-ART-STATUS rewritten to truth. Gates green.
+
+## 2026-07-23 — PR-3 play sectioning
+
+- **Camp → Hand → Shop** on primary/general (K10). Ballot doors (PL04/PL05) promote into Camp even when drawn into hand so doors-first scan holds.
+- **Session:** Bill pipeline vs Chamber · seat sections (SS01–07 / rest).
+- **Waiting:** labeled orbit section with path id.
+- **Draft:** exclusive playables block + scroll/focus first draft card.
+- Smoke asserts camp section DOM before hand. Gates green.
+
+## 2026-07-23 — PR-1b + PR-1c + PR-2 (batched)
+
+Owner demand: finish all alphabet extract subgroups and land goal strip without serial cost-slicing.
+
+- **PR-1b/1c extract:** `session.ts`, `paint-hud.ts`, `paint-play.ts`, `paint-log.ts`, `outside-ui.ts`, `screens.ts`, `terminal-ui.ts`; `main.ts` ≈100 lines boot/wire (≤300). K14: no paint/outside/terminal → session imports.
+- **PR-2 goal strip:** `goal-strip.ts` (`GoalStripInput`, full `GOAL_COPY`, `buildGoalStripInput`, `renderGoalStrip`); `#goal-strip` in `index.html` (replaces `#week-hint`); CSS reserved min-height; smoke asserts seed 4242 week1 ballot/sig/Petition copy + `aria-live=polite`.
+- **Gates:** typecheck · harness · build · smoke:ui · a11y — green.
 
 ## Executive summary
 
 Over this workstream we:
 
-1. **Verified Phase 1** (grounds) and **implemented Phase 2–6 core** (allies → debt → Session → balance → UI hierarchy).
-2. **Rejected bad designs** (debt→odds tax; Claude’s false “session already thin-done”).
-3. **Starmap** to 14 playable templates; **Outside** to 16 events + weather UI.
-4. **Waiting season** + Chronicle bridge; rival teeth; residency law.
-5. **Hardened** harness suite, Pages path, and end-of-night resting package.
-6. **Documented** flow; **#20 Stupid Ideas** parks ADD without derailing NEXT.
+1. **Phases 0–7 in code** — through honest **0.1.0** evidence (`V0.1-EVIDENCE.md`).
+2. **Phase 8 prep in-repo** — frozen `api.ts`, engine bundle, content→Unity JSON, Jint scaffold.
+3. **Card library** grew to **113** (signatures, unlock paths, wave 5–6 session/waiting).
+4. **UI** mobile redesign + a11y CI + full-feature restore + one-handed tabs.
+5. **Persistence** — waiting season re-files same persona (no setup).
+6. **#20 Stupid Ideas** still parks ADD; board catch-up 2026-07-23.
 
-**Ship path (owner direction):** pure TypeScript engine → Unity presentation shell → iOS / App Store.  
+**Ship path:** pure TypeScript engine → Unity presentation → iOS.  
 **Non-negotiable:** no second rules engine in C#/Unity.  
-**Package:** `0.0.1` — not v0.1 yet.
+**Package:** **`0.1.0`** baseline — not App Store “done.”
 
 ---
 
@@ -601,4 +644,83 @@ Makes pack #1–2 readable without burying weather in the log only.
 | Package note | [`docs/RESTING.md`](./RESTING.md) |
 
 Dogs fed. County still there tomorrow.
+
+---
+
+## Post-sleep catch-up (2026-07-23)
+
+While resting (`718f820`), remote advanced ~43 commits (PRs **#21–#32**). Agent rehydrated on `7328c86`.
+
+| Theme | Tip evidence |
+|---|---|
+| a11y + smoke CI | `npm run a11y` · `npm run smoke:ui` |
+| v0.1 | package **0.1.0** · `docs/V0.1-EVIDENCE.md` |
+| Unity bridge | `api.ts` · `unity/` · `export:content` (113 cards) |
+| Unlock paths | `paths.ts` · 7 pathways · `harness:paths` |
+| Catalog | 113 cards · 21 Outside · residency audit green |
+| Re-file | waiting → same persona, skip setup |
+
+Hygiene: board + RESTING rewritten to stop lying.
+
+### Step A applied (2026-07-23)
+
+| Issue | Action |
+|---|---|
+| #11 | **Closed** — 0.1.0 evidence shipped |
+| #10 | Retitled **RESIDUAL** (phone sign-off / screenshot only) |
+| #12 | Retitled **ON HOLD** — Unity editor paused; no agent C# |
+
+**NEXT code (when picked):** B signature fairness → C refile harness → D balance post-113. Unity stays parked.
+
+---
+
+## Plan B–D executed (2026-07-23) — accept full diagnostic
+
+Misread of owner “A” = Accept fixed; sequence B→C→D after A hygiene.
+
+| Step | Shipped |
+|---|---|
+| **B** | SIG22 teacher, SIG23 veteran, SIG24 smallbiz · `harness:signatures` 24/24 |
+| **C** | `nextCycleSeed` + `continueAfterWaiting` · waiting harness refile e2e · UI uses deterministic seed |
+| **D** | BALANCE-NOTES: strategies under-sample 116-card catalog; no retune |
+
+Content export **116** cards. Unity still on hold.
+
+---
+
+## Anvil port (2026-07-23)
+
+Borrowed **MIT** code/patterns from [7etsuo/anvil](https://github.com/7etsuo/anvil) (public use):
+
+| Piece | Path |
+|---|---|
+| Greybox + card art plate | `src/lib/anvil-port/greybox.ts`, `cardAssets.ts` |
+| Campaign observe/diff | `src/lib/anvil-port/observe.ts` |
+| UI wire | `cardInner` uses art plate under emblem |
+| Harness | `npm run harness:observe` |
+| Docs | `docs/ANVIL.md`, `src/lib/anvil-port/NOTICE.md` |
+
+**Not** adopted: Phaser, full kernel, StS `genre-card` Battle rules. Pure engine remains SoT.
+
+---
+
+## Design: UI + Gameplay Flow (2026-07-23)
+
+Writer/reviewer loop closed with **0 open issues** (rev 3).
+
+- Spec: [`docs/DESIGN-UI-GAMEPLAY-FLOW.md`](./DESIGN-UI-GAMEPLAY-FLOW.md)
+- Vite-first; goal strip; card face discipline; full `main.ts` extract PR map
+- Aligns Anvil greybox + BASE_URL art helpers (K15)
+
+### PR-1 leaf extract (2026-07-23)
+
+Behavior-identical module split (no visual change intended):
+
+| Module | Role |
+|---|---|
+| `src/ui/card-face.ts` | `CardFaceView`, `cardInner`/`cardHtml` + escaped names |
+| `src/ui/act-shell.ts` | `ACT_SHELLS`, splash, stage chrome |
+| `src/ui/tabs.ts` | bottom-nav wire |
+
+`main.ts` ~1147 lines (was ~1466). typecheck · harness · smoke:ui · a11y green.
 

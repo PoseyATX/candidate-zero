@@ -387,11 +387,38 @@ h1 {
   margin-left: 0.2rem;
 }
 
-/* Week guidance — reserved height so copy swaps don't shove cards */
+/* Week guidance (legacy) — reserved height; replaced by goal-strip */
 .week-hint {
   min-height: 2.75em;
   margin: 0 0 0.65rem;
   line-height: 1.35;
+}
+
+/* PR-2 Goal strip — three-line reserved box (UI-IA toast law) */
+.goal-strip {
+  min-height: 3.6em;
+  margin: 0 0 0.65rem;
+  padding: 0.45rem 0.55rem;
+  line-height: 1.35;
+  font-size: 0.85rem;
+  border-left: 3px solid var(--gold-dim, #a88b4a);
+  background: rgba(20, 16, 12, 0.35);
+  border-radius: 0 4px 4px 0;
+}
+.goal-primary {
+  font-weight: 700;
+  color: var(--parchment, #f0e6d2);
+  letter-spacing: 0.01em;
+}
+.goal-progress {
+  color: var(--gold, #c9a84c);
+  font-size: 0.82rem;
+  margin-top: 0.12rem;
+}
+.goal-next {
+  color: var(--ink-muted, #b8a890);
+  font-size: 0.78rem;
+  margin-top: 0.1rem;
 }
 .shop-hint {
   grid-column: 1 / -1;
@@ -404,6 +431,68 @@ h1 {
 }
 .play-card .stamp-shop {
   color: #3d5a32;
+}
+
+/* PR-3 — Play tab sectioning (Camp → Hand → Shop) */
+#playables.card-grid {
+  /* Outer container stacks sections full-width; cards live in inner grids */
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+#playables .play-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+#playables .play-section-label,
+#draft .draft-heading {
+  margin: 0;
+  font-family: Cinzel, serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+#playables .play-section-sub {
+  margin: 0 0 0.2rem;
+  font-size: 0.78rem;
+  color: var(--parchment-dim);
+  line-height: 1.3;
+}
+#playables .play-section-cards,
+#draft .draft-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+  align-items: start;
+}
+@media (min-width: 560px) {
+  #playables .play-section-cards,
+  #draft .draft-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+#playables .play-section[data-section="camp"] .play-section-label {
+  color: var(--gold);
+}
+#playables .play-section[data-section="shop"] .play-section-label {
+  color: #8aaf72;
+}
+#playables .play-section[data-section="pipeline"] .play-section-label {
+  color: #c9a84c;
+}
+#playables .play-section[data-section="chamber"] .play-section-label,
+#playables .play-section[data-section="orbit"] .play-section-label {
+  color: #9ab0c4;
+}
+#playables .draft-block {
+  margin: 0;
+}
+#draft.draft-active {
+  margin-bottom: 0.5rem;
 }
 
 .panels {
@@ -585,7 +674,7 @@ h1 {
 }
 .play-card .kind-seal svg { width: 74%; height: 74%; }
 
-/* --- Name banner --- */
+/* --- Name banner (PR-3.5: 2-line clamp, no overflow at 320px) --- */
 .play-card .name {
   font-family: Cinzel, serif;
   font-weight: 700;
@@ -596,6 +685,15 @@ h1 {
   margin: 0.15rem 0.1rem 0;
   color: var(--ink);
   text-shadow: 0 1px 0 rgba(255, 250, 235, 0.5);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  max-height: 2.28em; /* 2 × line-height */
+  min-height: 1.14em;
+  word-break: break-word;
+  padding: 0 0.15rem;
 }
 
 /* Deco divider: hairlines flanking a small diamond. */
@@ -615,11 +713,13 @@ h1 {
   background: linear-gradient(to right, transparent, #9a824f 30%, #9a824f 70%, transparent);
 }
 
-/* --- Emblem plate --- */
+/* --- Emblem / art plate (PR-3.5 zone freeze: fixed ~30% height, contain) --- */
 .play-card .card-art {
   position: relative;
   height: 30%;
-  flex: 0 0 auto;
+  min-height: 3.25rem;
+  max-height: 38%;
+  flex: 0 0 30%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -631,14 +731,64 @@ h1 {
     linear-gradient(180deg, #ecdfc0, #e5d5b1);
   overflow: hidden;
 }
-.play-card .card-art svg {
+.play-card .card-art .art-plate {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  overflow: hidden;
+}
+.play-card .card-art .art-greybox {
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0.55;
+  object-fit: contain;
+}
+.play-card .card-art .art-raster,
+.play-card .card-art.has-raster img,
+.play-card .card-art .has-raster img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+  z-index: 1;
+  pointer-events: none;
+}
+.play-card .card-art .art-plate.art-miss .art-raster {
+  display: none;
+}
+.play-card .card-art .card-emblem {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 46%;
   height: 82%;
+  max-width: 4.5rem;
+  max-height: 4.5rem;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+.play-card .card-art .card-emblem svg,
+.play-card .card-art > svg {
+  width: 100%;
+  height: 100%;
   color: #5d452a;
   filter: drop-shadow(0 1px 0 rgba(255, 250, 235, 0.6));
 }
+/* Legacy: direct svg child without plate wrapper */
+.play-card .card-art > svg {
+  width: 46%;
+  height: 82%;
+}
 
-/* --- Cost seal: a notary-stamp circle overlapping the emblem plate. --- */
+/* --- Cost seal: notary-stamp circle (PR-3.5: fixed size, never grow with name) --- */
 .play-card .cost-seal {
   position: absolute;
   top: 2.05rem;
@@ -646,6 +796,11 @@ h1 {
   z-index: 3;
   width: 2.15rem;
   height: 2.15rem;
+  min-width: 2.15rem;
+  min-height: 2.15rem;
+  max-width: 2.15rem;
+  max-height: 2.15rem;
+  box-sizing: border-box;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -661,6 +816,9 @@ h1 {
   box-shadow: inset 0 0 0 2.5px rgba(233, 220, 192, 0.9), inset 0 0 0 3.5px rgba(138, 47, 38, 0.45);
   background: radial-gradient(circle, #f0e4c8 55%, #e7d8b4);
   transform: rotate(8deg);
+  overflow: hidden;
+  padding: 0.1rem;
+  word-break: break-all;
 }
 
 .play-card .cost-subs {
@@ -978,11 +1136,16 @@ h1 {
   border-color: var(--gold);
 }
 
-/* --- Body text --- */
+/* --- Body text (PR-3.5: clamp so long taglines never shove plate/footer) --- */
 .play-card .tagline {
   font-style: italic;
   font-size: 0.66rem;
   text-align: center;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
   color: #6a5426;
   margin-bottom: 0.25rem;
 }
@@ -1675,11 +1838,13 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   border-radius: 16px 16px 0 0;
 }
 
-/* Two-column hand, comfortable tap targets. */
-#playables.card-grid, #draft.card-grid {
+/* Draft grid (when not nested under .draft-cards) keeps 2-col fallback. */
+#draft.card-grid:not(:has(.draft-cards)) {
   grid-template-columns: 1fr 1fr;
   gap: 0.7rem;
 }
 @media (min-width: 560px) {
-  #playables.card-grid, #draft.card-grid { grid-template-columns: repeat(3, 1fr); }
+  #draft.card-grid:not(:has(.draft-cards)) {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }

@@ -126,20 +126,22 @@ Field AP (Canvass Captain / Field Director) is campaign-era only; Session uses l
 
 ---
 
-## Ceremony shells (three acts, same run)
+## Ceremony shells (four acts)
 
-Presentation layer (`src/ui/main.ts` + `styles.css`). Engine still owns transitions
-(`enter_general`, `enter_session`); the shell makes them **unmistakable**.
+Presentation layer (`src/ui/` — `act-shell.ts`, `session.ts`, `styles.css`; boot in `main.ts`).
+Engine owns transitions (`enter_general`, `enter_session`, waiting finish → re-file); the shell makes them **unmistakable**.
 
 | Act | Stage | Splash CTA | Persistent chrome | Kit feel |
 |---|---|---|---|---|
-| **I** | Primary | “File the papers” | Oxblood frame · banner · masthead **Primary** | Campaign hand + shop (Main) |
-| **II** | General | “Take the field” | Slate/blue frame · **General** | Turnout kit: GOTV in hand; field → GOTV; rapport seed; no kitchen-table |
-| **III** | Session | “Enter the chamber” | Gold frame · **Session** | Legislative SS* only (Special) |
+| **I** | Primary | “File the papers” | Oxblood frame · banner · masthead **Primary** | Camp doors → hand → shop (Main) |
+| **II** | General | “Take the field” | Slate/blue frame · **General** | Turnout kit: GOTV; field → GOTV; no kitchen-table |
+| **III** | Session | “Enter the chamber” | Gold frame · **Session** | Legislative SS* only (Special); pipeline · chamber sections |
+| **IV** | Waiting | “Begin the interim” | Waiting chrome · **Waiting** | WA* path kit; bank then re-file **same persona** |
 
-- Full-screen splash on: run start, primary win → general, general win → session, reelection start.  
-- Banner + end-week label + panel titles change with the act.  
-- Session is still **this run**. Reelection after sine die is a **new cycle** (Act I again).
+- Full-screen splash on: run start, primary→general, general→session, waiting entry, reelection / re-file start.  
+- **Ceremony queue:** outside weather first, then act splash (never stacked under weather).  
+- **Goal strip** under the act banner: primary goal · progress · next action (`goal-strip.ts`).  
+- Session is still **this run**. Reelection after sine die is a **new cycle** (Act I again). Waiting after loss is Act IV, not a soft reset.
 
 ## How to *see* Session as a player
 

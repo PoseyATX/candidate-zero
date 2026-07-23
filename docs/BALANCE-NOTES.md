@@ -168,6 +168,32 @@ full suite audit and retune. **No new features.**
 | Block Walk GAIN | +1 name ID | Labor name heat was starve (avg ~5) |
 | Money/labor ratio cap | 4.0× (teacher matrix cell) | Was 3.5×; N=30 noise + strategies no longer free-farm MV Specials |
 
+---
+
+## 2026-07-23 — Post-catalog jump (66 → 116 presentation cards)
+
+**Context:** After rest, signatures / unlock paths / wave5–6 landed. Content
+export is **116** cards (includes SIG + path rewards + session/waiting). Deck
+`ALL_PLAYS` spine is still smaller; SIGs inject per persona.
+
+**Instrumentation honesty (P1 from diagnostic):**
+- `harness:matrix` / `harness:full` strategies still prioritize classic PL01–39
+  spine. They **do not** systematically walk unlock paths or play SIGs.
+- Therefore matrix green ≠ “human power curve fully sampled.” New power
+  (SIG22–24 for teacher/veteran/smallbiz, path rewards, PL80–92) can snowball
+  in human hands while harness stays spine-ish.
+- **No retune this pass** unless soft-lock / free-win appears in play.
+  Flag remains: money `PA_DIP_CHA` wrong-district can soft-flag WRONG_TOO_EASY.
+
+**Mitigations shipped same day:**
+- Signature coverage 24/24 (SIG22 teacher, SIG23 veteran, SIG24 smallbiz)
+- `harness:signatures` in full suite
+- Waiting re-file uses `nextCycleSeed` (deterministic), `continueAfterWaiting`
+
+**If later human play soft-locks or free-wins:** sample path-aware strategy or
+cap path reward yields — do not blindly buff labor base without evidence.
+
+
 ### Snapshot (`harness:full` N=200, post-hygiene)
 | Strategy | Ballot | Reach gen | Overall win | Notes |
 |---|---|---|---|---|
