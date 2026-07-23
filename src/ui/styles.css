@@ -433,6 +433,68 @@ h1 {
   color: #3d5a32;
 }
 
+/* PR-3 — Play tab sectioning (Camp → Hand → Shop) */
+#playables.card-grid {
+  /* Outer container stacks sections full-width; cards live in inner grids */
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+#playables .play-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+#playables .play-section-label,
+#draft .draft-heading {
+  margin: 0;
+  font-family: Cinzel, serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+#playables .play-section-sub {
+  margin: 0 0 0.2rem;
+  font-size: 0.78rem;
+  color: var(--parchment-dim);
+  line-height: 1.3;
+}
+#playables .play-section-cards,
+#draft .draft-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+  align-items: start;
+}
+@media (min-width: 560px) {
+  #playables .play-section-cards,
+  #draft .draft-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+#playables .play-section[data-section="camp"] .play-section-label {
+  color: var(--gold);
+}
+#playables .play-section[data-section="shop"] .play-section-label {
+  color: #8aaf72;
+}
+#playables .play-section[data-section="pipeline"] .play-section-label {
+  color: #c9a84c;
+}
+#playables .play-section[data-section="chamber"] .play-section-label,
+#playables .play-section[data-section="orbit"] .play-section-label {
+  color: #9ab0c4;
+}
+#playables .draft-block {
+  margin: 0;
+}
+#draft.draft-active {
+  margin-bottom: 0.5rem;
+}
+
 .panels {
   display: grid;
   grid-template-columns: 1.2fr 0.9fr;
@@ -1744,11 +1806,13 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   border-radius: 16px 16px 0 0;
 }
 
-/* Two-column hand, comfortable tap targets. */
-#playables.card-grid, #draft.card-grid {
+/* Draft grid (when not nested under .draft-cards) keeps 2-col fallback. */
+#draft.card-grid:not(:has(.draft-cards)) {
   grid-template-columns: 1fr 1fr;
   gap: 0.7rem;
 }
 @media (min-width: 560px) {
-  #playables.card-grid, #draft.card-grid { grid-template-columns: repeat(3, 1fr); }
+  #draft.card-grid:not(:has(.draft-cards)) {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }

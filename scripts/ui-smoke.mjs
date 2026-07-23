@@ -107,6 +107,30 @@ async function main() {
     const live = await page.locator('#goal-strip').getAttribute('aria-live');
     assert(live === 'polite', '#goal-strip aria-live=polite');
 
+    // PR-3: Camp section DOM before Hand; shop sectioned when present
+    const campIdx = await page
+      .locator('#playables .play-section[data-section="camp"]')
+      .evaluate((el) => {
+        const sections = [...el.parentElement.querySelectorAll('.play-section')];
+        return sections.indexOf(el);
+      })
+      .catch(() => -1);
+    const handIdx = await page
+      .locator('#playables .play-section[data-section="hand"]')
+      .evaluate((el) => {
+        const sections = [...el.parentElement.querySelectorAll('.play-section')];
+        return sections.indexOf(el);
+      })
+      .catch(() => -1);
+    assert(
+      campIdx >= 0 && handIdx >= 0 && campIdx < handIdx,
+      `Camp section before Hand (camp@${campIdx}, hand@${handIdx})`
+    );
+    assert(
+      (await page.locator('#playables .play-section[data-section="camp"] .play-section-label').count()) >
+        0,
+      'camp section has a label'
+    );
 
     // 3. Play through several weeks: resolve field plays via the ground
     //    picker, everything else directly; drafts auto-first; end weeks.

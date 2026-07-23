@@ -26,6 +26,14 @@ Related docs:
 
 ---
 
+## 2026-07-23 — PR-3 play sectioning
+
+- **Camp → Hand → Shop** on primary/general (K10). Ballot doors (PL04/PL05) promote into Camp even when drawn into hand so doors-first scan holds.
+- **Session:** Bill pipeline vs Chamber · seat sections (SS01–07 / rest).
+- **Waiting:** labeled orbit section with path id.
+- **Draft:** exclusive playables block + scroll/focus first draft card.
+- Smoke asserts camp section DOM before hand. Gates green.
+
 ## 2026-07-23 — PR-1b + PR-1c + PR-2 (batched)
 
 Owner demand: finish all alphabet extract subgroups and land goal strip without serial cost-slicing.

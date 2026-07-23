@@ -43,7 +43,8 @@ become a second rules implementation.
 | **DONE** | — | Design PR-1 leaf extract (`card-face` / `act-shell` / `tabs`) |
 | **DONE** | — | Design PR-1b/1c full extract (`session` · paint-* · screens · terminal · outside) · `main.ts` ~100 lines |
 | **DONE** | — | Design PR-2 goal strip (`#goal-strip` · GOAL_COPY · smoke seed 4242) |
-| **NEXT** | — | Design PR-3 play sectioning · human playtest |
+| **DONE** | — | Design PR-3 play sectioning (Camp→Hand→Shop · session/waiting kits · draft focus) |
+| **NEXT** | — | Design PR-3.5 card zone CSS · PR-4 art gate · human playtest |
 | META | [#13](https://github.com/PoseyATX/candidate-zero/issues/13) | Board hygiene rules |
 | BUG | [#14](https://github.com/PoseyATX/candidate-zero/issues/14) | Pages deploy auto-fire / workflow scope |
 | PLANNED | [#15](https://github.com/PoseyATX/candidate-zero/issues/15) | AC1 archive yield-table full compare |
