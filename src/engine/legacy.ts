@@ -94,6 +94,7 @@ export function buildPaths(state: GameState, share: number): InterimPath[] {
     state.outcome === 'session_survived' ||
     state.outcome === 'session_primaried' ||
     state.stage === 'session';
+  const issueLabel = (state.issue ?? '').trim();
   const paths: (InterimPath & { gate: boolean })[] = [
     {
       id: 'perennial',
@@ -110,10 +111,14 @@ export function buildPaths(state: GameState, share: number): InterimPath[] {
     {
       id: 'advocate',
       n: 'The Advocate',
-      d: `The candidate lost; the issue didn’t. Build the organization "${state.issue ?? 'the cause'}" deserved.`,
+      d: issueLabel
+        ? `The race ended. ${issueLabel} did not. Build the organization the fight still needs.`
+        : 'The race ended. The issue did not. Build the organization the fight still needs.',
       traits: ['T_CRED', 'T_NORTH'],
       gate: !crisis,
-      interim: `Two years building the ${state.issue ?? 'issue'} organization.`
+      interim: issueLabel
+        ? `Two years building around ${issueLabel}.`
+        : 'Two years building the organization.'
     },
     {
       id: 'staffer',
@@ -201,7 +206,7 @@ export function applyLegacy(state: GameState, legacy: LegacyState): void {
     state.log.push({
       week: state.week,
       kind: 'note',
-      text: `WAITING ORBIT — last cycle's path still colors this climb (${legacy.carry.waitingLoopId.replace(/LOOP_WAITING_|LOOP_ELECTED_/g, '').toLowerCase()}). No true game over; only redirection.`
+      text: `Last cycle's path still colors this climb.`
     });
   }
   if (legacy.carry.waitingContacts) state.contacts += legacy.carry.waitingContacts;
@@ -216,7 +221,7 @@ export function applyLegacy(state: GameState, legacy: LegacyState): void {
     state.log.push({
       week: state.week,
       kind: 'note',
-      text: `HIGHER OFFICE RESIDUE — last cycle tested ${legacy.carry.higherOfficeFork} waters. The map is larger than one district.`
+      text: `Last cycle tested larger waters. The map is bigger than one district.`
     });
   }
   if (
