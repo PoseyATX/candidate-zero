@@ -65,12 +65,12 @@ export function renderTerminalOutcome(ctx: TerminalRenderCtx): void {
     ? `<p class="bill-epitaph"><b>Signature bill:</b> ${state.bill.title} — ${state.bill.status} (stage ${state.bill.pipelineStage}).</p>`
     : '';
   const nextHint = sessionWin
-    ? 'Sine die. You finished Session on this run. Reelection starts a NEW election cycle (incumbent primary) — not a Session skip.'
+    ? 'Sine die. Reelection is a new cycle — you skip petition as the incumbent.'
     : kind === 'session_primaried'
-      ? 'The gavel fell and the seat broke. Choose a waiting path — Act IV banks for the next filing as the same persona.'
+      ? 'The gavel fell and the seat broke. Choose how the next two years go.'
       : kind === 'won_general'
         ? 'Bug: general win should enter Session in-engine. Report if you see this screen without Session.'
-        : 'Two years until the next filing. Choose a path — Act IV Waiting, then re-file as the same persona.';
+        : 'Two years until the next filing. Choose how you spend them.';
 
   $('terminal-head').innerHTML = `
     <h2>${titles[kind]}</h2>
@@ -95,13 +95,13 @@ function renderTerminalWinChoices(ctx: TerminalRenderCtx): void {
       <span class="name">Stand for Reelection</span>
       <span class="orn"><i></i>&#10022;<i></i></span>
       <span class="card-art">${emblem('star')}</span>
-      <span class="desc">Next election cycle as incumbent — new primary (you skip petition). Session already finished.</span>
+      <span class="desc">Next cycle as incumbent — new primary; you skip petition.</span>
     </button>
     <button type="button" class="play-card choice-card" data-choice="rest">
       <span class="name">Close the book on this term</span>
       <span class="orn"><i></i>&#10022;<i></i></span>
       <span class="card-art">${emblem('cup')}</span>
-      <span class="desc">Back to setup. Chronicle keeps this ballad entry. Not a soft-reset mid-Session.</span>
+      <span class="desc">Step off the trail. The county keeps the record of this term.</span>
     </button>
   `;
   grid.querySelector('[data-choice="reelect"]')?.addEventListener('click', () => ctx.onReelect());
@@ -143,8 +143,7 @@ function renderTerminalPaths(ctx: TerminalRenderCtx): void {
 function renderTerminalTraits(ctx: TerminalRenderCtx, path: InterimPath): void {
   const grid = $('terminal-choices');
   grid.innerHTML =
-    `<p class="hint" style="grid-column:1/-1">The two years pass. What did they leave you? ` +
-    `(Choose one — it persists across every run to come.)</p>` +
+    `<p class="hint" style="grid-column:1/-1">Two years pass. What did they leave you?</p>` +
     path.traits
       .map(
         t => `
