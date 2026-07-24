@@ -92,7 +92,7 @@ export const PL02_PhoneBank: PlayCard = {
 };
 
 export const PL03_YardSignBlitz: PlayCard = {
-  id: 'PL03', n: 'Yard Sign Blitz', cost: { a:1, $:150 }, risk: 'SAFE', ph: [1,2], field: true, tag: 'visibility',
+  id: 'PL03', n: 'Yard Signs', cost: { a:1, $:150 }, risk: 'SAFE', ph: [1,2], field: true, tag: 'visibility',
   attrs: ['CLO'],
   d: 'A district that sees your name starts believing it belongs there.',
   odds: () => 0.8,
@@ -100,7 +100,7 @@ export const PL03_YardSignBlitz: PlayCard = {
 };
 
 export const PL04_PetitionDrive: PlayCard = {
-  id: 'PL04', n: 'Petition Drive', cost: { a:1 }, risk: 'STD', ph: [1], tag: 'the zero-dollar door',
+  id: 'PL04', n: 'Petitions', cost: { a:1 }, risk: 'STD', ph: [1], tag: 'the zero-dollar door',
   attrs: ['CLO'],
   d: 'Signatures instead of a fee. Labor is the currency you were born holding.',
   show: (s) => !s.ballot,
@@ -121,7 +121,7 @@ export const PL04_PetitionDrive: PlayCard = {
 };
 
 export const PL05_PayFilingFee: PlayCard = {
-  id: 'PL05', n: 'Pay the Filing Fee', cost: { $:1250 }, risk: 'SAFE', ph: [1], tag: 'the money door',
+  id: 'PL05', n: 'Filing Fee', cost: { $:1250 }, risk: 'SAFE', ph: [1], tag: 'the money door',
   attrs: ['CLO'],
   d: '$1,250 and it\'s done. Shame-free, story-free.', show: (s) => !s.ballot, odds: () => 0.99,
   run: (s) => { s.ballot = true; return 'Receipt in hand. You are on the ballot the expensive way.'; }
@@ -150,7 +150,7 @@ export const PL07_CandidateForum: PlayCard = {
 };
 
 /**
- * Kitchen-Table Meeting — archive PL08 (lines 581–582).
+ * Kitchen Table — archive PL08 (lines 581–582).
  *
  * Ally grant: AL01 on tier 0/1; AL02 when chairs(s) >= 3.
  * Archive chairs() = warm AL01 count + chairCount — NOT ground-scoped.
@@ -160,7 +160,7 @@ export const PL07_CandidateForum: PlayCard = {
  */
 export const PL08_KitchenTable: PlayCard = {
   // Kit gravity: primary club politics — not a November lever (ph 1–2 only).
-  id: 'PL08', n: 'Kitchen-Table Meeting', cost: { a:1 }, risk: 'STD', ph: [1,2], tag: 'pie is not optional',
+  id: 'PL08', n: 'Kitchen Table', cost: { a:1 }, risk: 'STD', ph: [1,2], tag: 'pie is not optional',
   attrs: ['DIP'],
   d: "A chair's kitchen, her rules. Bring pie; leave with a precinct or nothing. (Primary circuit — out of the general.)",
   odds: (s) => {
@@ -200,7 +200,7 @@ export const PL08_KitchenTable: PlayCard = {
 };
 
 export const PL09_EarnedMedia: PlayCard = {
-  id: 'PL09', n: 'Earned Media Pitch', cost: { a:1, m:1 }, risk: 'VOL', ph: [1,2,3], tag: 'the gallery',
+  id: 'PL09', n: 'Earned Media', cost: { a:1, m:1 }, risk: 'VOL', ph: [1,2,3], tag: 'the gallery',
   attrs: ['CHA'],
   d: 'A county weekly, a drive-time host, a stringer if you\'re lucky.',
   odds: (s) => clamp(0.3 + s.momentum*0.02 + s.faces.F*0.004 + (s.mediaBonus||0) + (warm(s,'AL05')?0.1:0) + (s.regionHook==='metro'?0.1:0), 0, 0.9),
@@ -319,7 +319,7 @@ export const PL17_DebatePrep: PlayCard = {
 };
 
 export const PL19_GOTVWeekend: PlayCard = {
-  id: 'PL19', n: 'GOTV Weekend', cost: { a:1, vp:1 }, risk: 'STD', ph: [3], field: true, tag: 'the point of it all',
+  id: 'PL19', n: 'Get Out the Vote', cost: { a:1, vp:1 }, risk: 'STD', ph: [3], field: true, tag: 'the point of it all',
   attrs: ['CLO'],
   d: 'Rapport is a promise. Turnout is the promise kept. One volunteer and a weekend. The general spine.',
   odds: (s, g) => clamp(0.58 + s.volPool*0.025 + (allyWarmAtGround(s,'AL09',g?.id)?0.1:0) + s.faces.T*0.002, 0, 0.95),
