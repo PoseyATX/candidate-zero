@@ -27,6 +27,7 @@ namespace CandidateZero.HostData
         public LedgerView ledger;
         public List<GroundView> grounds;
         public List<ActionView> actions;
+        public GoalView goal;
         public PendingDraftView pendingDraft;
         /// <summary>World weather chrome — host shows, then dismissOutside. Never a hand card.</summary>
         public PendingOutsideView pendingOutside;
@@ -107,6 +108,17 @@ namespace CandidateZero.HostData
         public string costLabel;
         /// <summary>effective success probability given current state, or null if odds-less.</summary>
         public float? approxOdds;
+    }
+
+    public sealed class GoalView
+    {
+        public string key;
+        /// <summary>What you're working toward this stage.</summary>
+        public string primary;
+        /// <summary>Live numbers for that goal (sigs/need, GOTV banked, bill stage, …).</summary>
+        public string progress;
+        /// <summary>The concrete next move — what to actually tap.</summary>
+        public string next;
     }
 
     public sealed class PendingDraftView

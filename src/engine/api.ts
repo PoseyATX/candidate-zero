@@ -36,6 +36,8 @@ import {
   maybeOfferPhaseDraft,
   pickPhaseDraft,
   campIndexToCardId,
+  CAMP_PETITION,
+  CAMP_FILING_FEE,
   type Campaign
 } from './loop.js';
 import { clearPendingOutside } from './outside.js';
@@ -52,6 +54,7 @@ import {
   type SetupSelection
 } from '../data/setup.js';
 import type { DeckState, GameState, PlayCard } from './types.js';
+import { buildGoalStripInput, formatGoalStrip, type GoalCopyKey } from '../ui/goal-strip.js';
 
 export const ENGINE_API_VERSION = '1.0.0';
 
@@ -99,6 +102,23 @@ export interface GroundView {
   gotv: number;
 }
 
+/**
+ * The one-glance answer to "what am I supposed to be doing right now" —
+ * ported from src/ui/goal-strip.ts (previously web-only) so every host gets
+ * it, not just the browser build. Pure derivation of existing GameState; no
+ * new rules, no new persisted fields. `key` lets a host branch on visual
+ * treatment (e.g. a freeze/urgency color) without parsing the copy text.
+ */
+export interface GoalView {
+  key: GoalCopyKey;
+  /** What you're working toward this stage. */
+  primary: string;
+  /** Live numbers for that goal (sigs/need, GOTV banked, bill stage, …). */
+  progress: string;
+  /** The concrete next move — what to actually tap. */
+  next: string;
+}
+
 export interface RenderView {
   v: string;
   over: boolean;
@@ -121,6 +141,7 @@ export interface RenderView {
   };
   grounds: GroundView[];
   actions: ActionOption[];
+  goal: GoalView;
   pendingDraft: { phase: number; options: { cardId: string; name: string; risk: string }[] } | null;
   /** World weather chrome — host shows, then dismissOutside. Never a hand card. */
   pendingOutside: { id: string; n: string; text: string } | null;
@@ -231,6 +252,12 @@ export function view(snap: EngineSnapshot): RenderView {
   const s = campaign.state;
   const base = ledgerSnapshot(s);
   const pd = s.pendingDraft;
+  const actions = legalActions(snap);
+  const goalInput = buildGoalStripInput(s, {
+    shopAvailable: actions.some(a => a.cardId.startsWith('BUY')),
+    campPetitionVisible: actions.some(a => a.handIndex === CAMP_PETITION),
+    campFeeVisible: actions.some(a => a.handIndex === CAMP_FILING_FEE)
+  });
   return {
     v: ENGINE_API_VERSION,
     over: s.over,
@@ -260,7 +287,8 @@ export function view(snap: EngineSnapshot): RenderView {
       rivalRap: Math.round(g.rivalRap || 0),
       gotv: g.gotv || 0
     })),
-    actions: legalActions(snap),
+    actions,
+    goal: formatGoalStrip(goalInput),
     pendingDraft: pd?.options.length
       ? {
           phase: pd.phase,
