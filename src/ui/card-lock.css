@@ -1,0 +1,84 @@
+/**
+ * HARD LOCK — every .play-card is 2:3. Art plate size never changes with title length.
+ * Loaded after styles.css. Do not reintroduce flex:1 on .card-art.
+ *
+ * Layout (portrait 2:3):
+ *   ┌─────────────┐
+ *   │   ART       │  ~62% of face (grid 1fr)
+ *   │   PLATE     │
+ *   ├─────────────┤
+ *   │   TITLE     │  fixed 2.55em
+ *   ├─────────────┤
+ *   │   COST      │  fixed 1.55em (choice cards: title only row)
+ *   └─────────────┘
+ *
+ * Source art: author full-bleed for the ART PLATE only.
+ * Plate at 172px card ≈ 156×160 CSS px. Production asset: 600×600 or 600×640, ≤50KB webp.
+ * CSS uses object-fit: cover so every raster fills the same box.
+ */
+
+.play-card {
+  aspect-ratio: 2 / 3 !important;
+  width: 100%;
+  max-width: 172px;
+  height: auto !important;
+  display: grid !important;
+  grid-template-rows: minmax(0, 1fr) 2.55em 1.55em !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  flex-direction: unset !important;
+  align-content: stretch !important;
+  box-sizing: border-box;
+}
+
+/* Choice / path / trait faces: no cost seal — two rows only */
+.play-card.choice-card {
+  grid-template-rows: minmax(0, 1fr) 2.8em !important;
+}
+
+.play-card .card-art {
+  grid-row: 1 !important;
+  grid-column: 1 !important;
+  order: unset !important;
+  flex: none !important;
+  width: auto !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin: 0.2rem 0.28rem 0 !important;
+  align-self: stretch !important;
+}
+
+/* Kill the old choice-card override that shrank art to 34% */
+.choice-card .card-art {
+  height: 100% !important;
+}
+
+.play-card .name {
+  grid-row: 2 !important;
+  grid-column: 1 !important;
+  order: unset !important;
+  flex: none !important;
+  margin: 0.1rem 0.2rem 0 !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  height: auto !important;
+  align-self: center !important;
+}
+
+.play-card .cost-seal {
+  grid-row: 3 !important;
+  grid-column: 1 !important;
+  order: unset !important;
+  flex: none !important;
+  margin: 0.05rem 0.3rem 0.18rem !important;
+  align-self: center !important;
+}
+
+/* Rasters always fill the same plate — no letterbox variance per asset */
+.play-card .card-art .art-raster,
+.play-card .card-art.has-raster img,
+.play-card .card-art .has-raster img,
+.play-card .card-art .art-plate img {
+  object-fit: cover !important;
+  object-position: center center !important;
+}
