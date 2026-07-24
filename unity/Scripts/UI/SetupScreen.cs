@@ -15,11 +15,13 @@ namespace CandidateZero.UI
         const int TitleSize = 52;
         const int StepSize = 34;
         const int BlurbSize = 30;
-        const int ChoiceNameSize = 36;
-        const int ChoiceDescSize = 28;
+        const int ChoiceNameSize = 40;
         const int SeedSize = 32;
-        const int ChoiceRowH = 200;
-        const int ChoiceRowHShort = 140;
+        // Rows are title-only, so they are short and uniform. Descriptions used
+        // to be crammed in here and clipped mid-sentence; they now compose into
+        // the running dossier bio below the list instead.
+        const int ChoiceRowH = 116;
+        const int BioSize = 27;
 
         private GameObject _canvasRoot;
         private RectTransform _safe;
@@ -37,6 +39,8 @@ namespace CandidateZero.UI
         private Text _continueLabel;
         private Text _seedLabel;
         private GameObject _seedRow;
+        private Text _bio;
+        private RectTransform _bioFrame;
 
         private SetupOptionsView _opts;
         private int _step;
@@ -145,7 +149,7 @@ namespace CandidateZero.UI
 
             // —— Choice list in deep glass ——
             var listFrame = CzChrome.DeepPanel(_safe, "ListFrame");
-            CzChrome.SetAnchors(listFrame, 0.035f, 0.215f, 0.965f, 0.785f);
+            CzChrome.SetAnchors(listFrame, 0.035f, 0.335f, 0.965f, 0.785f);
 
             var scrollGo = new GameObject("ListScroll");
             var srt = scrollGo.AddComponent<RectTransform>();
@@ -184,10 +188,24 @@ namespace CandidateZero.UI
             scroll.viewport = vprt;
             scroll.content = _listContent;
 
+            // —— Running dossier bio ——
+            // Each step's flavour text used to be crammed into its own row and
+            // clipped mid-sentence. Instead the rows carry only the name, and
+            // the prose composes here into one paragraph that grows as choices
+            // are made — so by the last step you're reading a candidate bio,
+            // not four truncated fragments.
+            _bioFrame = CzChrome.DeepPanel(_safe, "BioFrame");
+            CzChrome.SetAnchors(_bioFrame, 0.035f, 0.158f, 0.965f, 0.325f);
+            _bio = CzChrome.Label(_bioFrame, "Bio", "", CzFonts.Body, BioSize,
+                FontStyle.Normal, CzTheme.Parchment, TextAnchor.UpperLeft);
+            CzChrome.SetAnchors(_bio.rectTransform, 0.045f, 0.06f, 0.955f, 0.94f);
+            _bio.horizontalOverflow = HorizontalWrapMode.Wrap;
+            _bio.verticalOverflow = VerticalWrapMode.Truncate;
+
             // —— Seed strip ——
             _seedRow = CzChrome.HudPanel(_safe, "SeedRow").gameObject;
             var seedRt = _seedRow.GetComponent<RectTransform>();
-            CzChrome.SetAnchors(seedRt, 0.035f, 0.155f, 0.965f, 0.210f);
+            CzChrome.SetAnchors(seedRt, 0.035f, 0.158f, 0.965f, 0.216f);
             _seedLabel = CzChrome.Label(seedRt, "SeedLbl", "Seed 42", CzFonts.Title, SeedSize,
                 FontStyle.Bold, CzTheme.Parchment, TextAnchor.MiddleCenter);
             CzChrome.SetAnchors(_seedLabel.rectTransform, 0.18f, 0.1f, 0.62f, 0.9f);
@@ -257,6 +275,9 @@ namespace CandidateZero.UI
                 _seedRow.SetActive(_step >= 3);
                 if (_step >= 3) PaintSeed();
             }
+            // Seed strip only exists on the last step; the bio yields that band to it.
+            if (_bioFrame != null)
+                CzChrome.SetAnchors(_bioFrame, 0.035f, _step >= 3 ? 0.224f : 0.158f, 0.965f, 0.325f);
 
             List<SetupChoice> list = null;
             string selected = null;
@@ -265,22 +286,22 @@ namespace CandidateZero.UI
                 case 0:
                     list = _opts.personas;
                     selected = _personaId;
-                    _blurb.text = "Who walks the county? Persona locks after filing.";
+                    _blurb.text = "Who walks the county?";
                     break;
                 case 1:
                     list = _opts.issues;
                     selected = _issueId;
-                    _blurb.text = "What are you running on? Choices bind.";
+                    _blurb.text = "What are you running on?";
                     break;
                 case 2:
                     list = _opts.districts;
                     selected = _districtId;
-                    _blurb.text = "Where is the seat? Lean and traps matter.";
+                    _blurb.text = "Where is the seat?";
                     break;
                 default:
                     list = _opts.regions;
                     selected = _regionId;
-                    _blurb.text = "Region + seed. Seed locks the RNG for a fair replay.";
+                    _blurb.text = "Which country do you know?";
                     break;
             }
 
@@ -293,19 +314,84 @@ namespace CandidateZero.UI
                 return;
             }
 
+            // Title only. The prose lives in the dossier bio below.
             foreach (var choice in list)
             {
                 var id = choice.id;
-                var sel = id == selected;
-                var hasDesc = !string.IsNullOrEmpty(choice.d);
-                var rowH = hasDesc ? ChoiceRowH : ChoiceRowHShort;
-                var b = ChoiceRow(_listContent, id, choice.n ?? id, hasDesc ? Trunc(choice.d, 140) : null, rowH, sel);
+                var b = ChoiceRow(_listContent, id, choice.n ?? id, ChoiceRowH, id == selected);
                 b.onClick.AddListener(() =>
                 {
                     Select(id);
                     PaintStep();
                 });
             }
+
+            PaintBio();
+        }
+
+        private SetupChoice Find(List<SetupChoice> list, string id)
+        {
+            if (list == null || string.IsNullOrEmpty(id)) return null;
+            foreach (var c in list) if (c.id == id) return c;
+            return null;
+        }
+
+        /// <summary>
+        /// Compose the four choices into one candidate dossier paragraph.
+        /// Reads as prose ("THE VETERAN of the HILL COUNTRY. …") rather than
+        /// four separate clipped descriptions.
+        /// </summary>
+        private void PaintBio()
+        {
+            if (_bio == null) return;
+
+            var persona = Find(_opts.personas, _personaId);
+            var region = Find(_opts.regions, _regionId);
+            var issue = Find(_opts.issues, _issueId);
+            var district = Find(_opts.districts, _districtId);
+
+            if (persona == null)
+            {
+                _bio.text = "Choose a persona to begin the dossier.";
+                return;
+            }
+
+            var sb = new System.Text.StringBuilder(400);
+
+            // Opening line: who, and from where (region only once chosen).
+            sb.Append(Caps(persona.n));
+            if (region != null) sb.Append(" of the ").Append(Caps(region.n));
+            sb.Append('.');
+            if (!string.IsNullOrEmpty(persona.d)) sb.Append(' ').Append(Sentence(persona.d));
+            if (region != null && !string.IsNullOrEmpty(region.d))
+                sb.Append(' ').Append(Sentence(region.d));
+
+            if (issue != null)
+            {
+                sb.Append("\n\nRunning on ").Append(Caps(issue.n)).Append('.');
+                if (!string.IsNullOrEmpty(issue.d)) sb.Append(' ').Append(Sentence(issue.d));
+            }
+
+            if (district != null)
+            {
+                sb.Append("\n\nThe seat: ").Append(district.n).Append('.');
+                if (!string.IsNullOrEmpty(district.d)) sb.Append(' ').Append(Sentence(district.d));
+            }
+
+            _bio.text = sb.ToString();
+        }
+
+        private static string Caps(string s) =>
+            string.IsNullOrEmpty(s) ? "" : s.ToUpperInvariant();
+
+        /// <summary>Trim and guarantee terminal punctuation so clauses join cleanly.</summary>
+        private static string Sentence(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return "";
+            s = s.Trim();
+            if (s.Length == 0) return "";
+            var last = s[s.Length - 1];
+            return (last == '.' || last == '!' || last == '?' || last == '…') ? s : s + ".";
         }
 
         private void Select(string id)
@@ -362,14 +448,12 @@ namespace CandidateZero.UI
             OnBegin.Invoke(setup, _seed);
         }
 
-        private static string Trunc(string s, int n) =>
-            string.IsNullOrEmpty(s) ? "" : s.Length <= n ? s : s.Substring(0, n - 1) + "…";
-
         /// <summary>
         /// Dossier choice row: parchment face + dark ink. Selected = gold edge + oxblood bar.
+        /// Title only — descriptions compose into the bio panel below the list.
         /// Never gold text on red fill.
         /// </summary>
-        private static Button ChoiceRow(RectTransform parent, string name, string title, string desc,
+        private static Button ChoiceRow(RectTransform parent, string name, string title,
             float h, bool selected)
         {
             var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement));
@@ -415,23 +499,14 @@ namespace CandidateZero.UI
             var mark = CzChrome.Label(go.transform, "Mark", selected ? "●" : "○",
                 CzFonts.BodyBold, 32, FontStyle.Bold,
                 selected ? CzTheme.Oxblood : CzTheme.Ink, TextAnchor.MiddleCenter);
-            CzChrome.SetAnchors(mark.rectTransform, 0.04f, 0.55f, 0.12f, 0.92f);
+            CzChrome.SetAnchors(mark.rectTransform, 0.04f, 0.10f, 0.12f, 0.90f);
 
-            // Name — large Cinzel ink
+            // Name — large Cinzel ink, vertically centred (no description beneath)
             var nameT = CzChrome.Label(go.transform, "Name", title ?? "—",
                 CzFonts.Title, ChoiceNameSize, FontStyle.Bold, CzTheme.Ink, TextAnchor.MiddleLeft);
-            if (string.IsNullOrEmpty(desc))
-                CzChrome.SetAnchors(nameT.rectTransform, 0.13f, 0.15f, 0.96f, 0.85f);
-            else
-                CzChrome.SetAnchors(nameT.rectTransform, 0.13f, 0.48f, 0.96f, 0.92f);
-
-            if (!string.IsNullOrEmpty(desc))
-            {
-                var descT = CzChrome.Label(go.transform, "Desc", desc,
-                    CzFonts.Body, ChoiceDescSize, FontStyle.Normal,
-                    new Color(0.22f, 0.15f, 0.10f), TextAnchor.UpperLeft);
-                CzChrome.SetAnchors(descT.rectTransform, 0.13f, 0.08f, 0.95f, 0.50f);
-            }
+            CzChrome.SetAnchors(nameT.rectTransform, 0.13f, 0.10f, 0.96f, 0.90f);
+            nameT.horizontalOverflow = HorizontalWrapMode.Overflow;
+            nameT.verticalOverflow = VerticalWrapMode.Overflow;
 
             return btn;
         }

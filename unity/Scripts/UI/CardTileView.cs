@@ -1,6 +1,5 @@
 // Scripted card face: pool + Bind(data). Shared chrome + IconCatalog icons.
 // No per-card PNGs. Soft glossy chrome — not pixel art.
-using System.Collections.Generic;
 using CandidateZero.Content;
 using CandidateZero.HostData;
 using UnityEngine;
@@ -19,15 +18,9 @@ namespace CandidateZero.UI
         private Image _artPlate;
         private Image _emblemImg;
         private Image _costBg;
-        private Image _kindBg;
         private Image _namePlate;
-        private Image _footerBg;
-        private Text _kindMark;
         private Text _costSeal;
         private Text _name;
-        private Text _tag;
-        private Text _footer;
-        private Text _stamp;
         private Button _button;
         private LayoutElement _layout;
 
@@ -71,67 +64,44 @@ namespace CandidateZero.UI
             SetAnchors(_edge.rectTransform, 0.012f, 0.08f, 0.04f, 0.92f);
             _edge.raycastTarget = false;
 
-            _kindBg = ChildImage("KindBg", Color.white);
-            SetAnchors(_kindBg.rectTransform, 0.05f, 0.80f, 0.22f, 0.95f);
-            _kindBg.sprite = GothicArt.SealDisc;
-            _kindBg.preserveAspect = true;
-            _kindBg.raycastTarget = false;
-
-            _kindMark = ChildText("Kind", 22, FontStyle.Bold, CzTheme.Ink);
-            SetAnchors(_kindMark.rectTransform, 0.05f, 0.80f, 0.22f, 0.95f);
-            _kindMark.alignment = TextAnchor.MiddleCenter;
-            CzFonts.Apply(_kindMark, CzFonts.BodyBold, 22, FontStyle.Bold, CzTheme.Ink);
+            // ---- FACE CONTRACT ----------------------------------------------
+            // Title, AP cost, art. Nothing else. Risk / odds / tagline / kind /
+            // FIELD / CAMP all live behind the tap, in the inspect sheet.
+            // A hand of cards should read at a glance; anything you have to
+            // squint at on a phone belongs on the detail view.
+            // ------------------------------------------------------------------
 
             _costBg = ChildImage("CostBg", Color.white);
-            SetAnchors(_costBg.rectTransform, 0.68f, 0.78f, 0.96f, 0.96f);
+            SetAnchors(_costBg.rectTransform, 0.66f, 0.845f, 0.955f, 0.975f);
             _costBg.sprite = GothicArt.SealDisc;
             _costBg.preserveAspect = true;
             _costBg.raycastTarget = false;
 
-            _costSeal = ChildText("Cost", 22, FontStyle.Bold, CzTheme.Ink);
-            SetAnchors(_costSeal.rectTransform, 0.68f, 0.78f, 0.96f, 0.96f);
+            _costSeal = ChildText("Cost", 26, FontStyle.Bold, CzTheme.Ink);
+            SetAnchors(_costSeal.rectTransform, 0.66f, 0.845f, 0.955f, 0.975f);
             _costSeal.alignment = TextAnchor.MiddleCenter;
-            CzFonts.Apply(_costSeal, CzFonts.BodyBold, 22, FontStyle.Bold, CzTheme.Ink);
+            CzFonts.Apply(_costSeal, CzFonts.BodyBold, 26, FontStyle.Bold, CzTheme.Ink);
 
-            _stamp = ChildText("Stamp", 20, FontStyle.Bold, CzTheme.Oxblood);
-            SetAnchors(_stamp.rectTransform, 0.24f, 0.84f, 0.66f, 0.94f);
-            _stamp.alignment = TextAnchor.MiddleCenter;
-            CzFonts.Apply(_stamp, CzFonts.BodyBold, 20, FontStyle.Bold, CzTheme.Oxblood);
-
-            // Soft art plate (no outline)
+            // Art gets the room the metadata used to waste.
             _artPlate = ChildImage("ArtPlate", new Color(0.92f, 0.87f, 0.76f, 0.65f));
-            SetAnchors(_artPlate.rectTransform, 0.12f, 0.44f, 0.88f, 0.76f);
+            SetAnchors(_artPlate.rectTransform, 0.09f, 0.30f, 0.91f, 0.82f);
             _artPlate.raycastTarget = false;
 
             _emblemImg = ChildImage("EmblemImg", Color.white);
-            SetAnchors(_emblemImg.rectTransform, 0.28f, 0.48f, 0.72f, 0.72f);
+            SetAnchors(_emblemImg.rectTransform, 0.20f, 0.36f, 0.80f, 0.76f);
             _emblemImg.preserveAspect = true;
             _emblemImg.raycastTarget = false;
 
             _namePlate = ChildImage("NamePlate", new Color(0.97f, 0.93f, 0.84f, 0.96f));
-            SetAnchors(_namePlate.rectTransform, 0.06f, 0.18f, 0.94f, 0.42f);
+            SetAnchors(_namePlate.rectTransform, 0.06f, 0.06f, 0.94f, 0.27f);
             _namePlate.raycastTarget = false;
 
             _name = ChildText("Name", 28, FontStyle.Bold, CzTheme.Ink);
-            SetAnchors(_name.rectTransform, 0.07f, 0.19f, 0.93f, 0.41f);
+            SetAnchors(_name.rectTransform, 0.08f, 0.07f, 0.92f, 0.26f);
             _name.alignment = TextAnchor.MiddleCenter;
             CzFonts.Apply(_name, CzFonts.Title, CzFonts.CardName, FontStyle.Bold, CzTheme.Ink);
             _name.horizontalOverflow = HorizontalWrapMode.Wrap;
             _name.verticalOverflow = VerticalWrapMode.Truncate;
-
-            _tag = ChildText("Tag", 22, FontStyle.Normal, new Color(0.18f, 0.12f, 0.08f));
-            SetAnchors(_tag.rectTransform, 0.07f, 0.10f, 0.93f, 0.18f);
-            _tag.alignment = TextAnchor.MiddleCenter;
-            CzFonts.Apply(_tag, CzFonts.Body, CzFonts.CardMeta, FontStyle.Normal, new Color(0.18f, 0.12f, 0.08f));
-
-            _footerBg = ChildImage("FooterBg", new Color(0.12f, 0.08f, 0.05f, 0.90f));
-            SetAnchors(_footerBg.rectTransform, 0.05f, 0.02f, 0.95f, 0.10f);
-            _footerBg.raycastTarget = false;
-
-            _footer = ChildText("Footer", 20, FontStyle.Bold, CzTheme.Parchment);
-            SetAnchors(_footer.rectTransform, 0.06f, 0.02f, 0.94f, 0.10f);
-            _footer.alignment = TextAnchor.MiddleCenter;
-            CzFonts.Apply(_footer, CzFonts.BodyBold, CzFonts.CardMeta, FontStyle.Bold, CzTheme.Parchment);
 
             _button = gameObject.GetComponent<Button>() ?? gameObject.AddComponent<Button>();
             _button.targetGraphic = _bg;
@@ -164,7 +134,6 @@ namespace CandidateZero.UI
             var kindKey = !string.IsNullOrEmpty(action.kind)
                 ? action.kind
                 : def != null ? def.kind.ToString() : null;
-            var accent = KindAccent(kindKey);
 
             _bg.sprite = GothicArt.Parchment;
             _bg.type = Image.Type.Sliced;
@@ -182,63 +151,36 @@ namespace CandidateZero.UI
             _emblemImg.color = Color.white;
             _emblemImg.enabled = true;
 
-            _kindMark.text = KindMark(kindKey);
-            _kindMark.color = accent;
-            CzFonts.Apply(_kindMark, CzFonts.BodyBold, 22, FontStyle.Bold, accent);
-
+            // AP cost only. Full cost string, risk, odds, tagline, FIELD/CAMP —
+            // all of it is behind the tap, on the inspect sheet.
             var cost = action.costLabel;
             if (string.IsNullOrEmpty(cost) && def != null) cost = def.CostLabel;
-            _costSeal.text = string.IsNullOrEmpty(cost) ? "free" : ShortCost(cost);
-            CzFonts.Apply(_costSeal, CzFonts.BodyBold, 22, FontStyle.Bold, CzTheme.Ink);
+            _costSeal.text = ApOnly(cost);
+            CzFonts.Apply(_costSeal, CzFonts.BodyBold, 26, FontStyle.Bold, CzTheme.Ink);
 
             _name.text = action.name ?? def?.cardName ?? action.cardId ?? "?";
             CzFonts.Apply(_name, CzFonts.Title, CzFonts.CardName, FontStyle.Bold, CzTheme.Ink);
-
-            var tag = action.tag;
-            if (string.IsNullOrEmpty(tag) && def != null) tag = def.tagline;
-            _tag.text = string.IsNullOrEmpty(tag) ? "" : "\u201c" + Trunc(tag, 40) + "\u201d";
-            _tag.gameObject.SetActive(!string.IsNullOrEmpty(_tag.text));
-            if (_tag.gameObject.activeSelf)
-                CzFonts.Apply(_tag, CzFonts.Body, CzFonts.CardMeta, FontStyle.Normal, new Color(0.18f, 0.12f, 0.08f));
-
-            if (action.camp)
-            {
-                _stamp.text = "CAMP";
-                _stamp.gameObject.SetActive(true);
-                CzFonts.Apply(_stamp, CzFonts.BodyBold, 20, FontStyle.Bold, CzTheme.Oxblood);
-            }
-            else if (action.field)
-            {
-                _stamp.text = "FIELD";
-                _stamp.gameObject.SetActive(true);
-                CzFonts.Apply(_stamp, CzFonts.BodyBold, 20, FontStyle.Bold, CzTheme.Sage);
-            }
-            else _stamp.gameObject.SetActive(false);
-
-            var bits = new List<string>(4);
-            var risk = action.risk ?? def?.risk;
-            if (!string.IsNullOrEmpty(risk)) bits.Add(risk.ToUpperInvariant());
-            if (action.approxOdds.HasValue) bits.Add($"p≈{action.approxOdds.Value:0%}");
-            if (action.field) bits.Add("FIELD");
-            if (action.camp) bits.Add("CAMP");
-            _footer.text = bits.Count > 0 ? string.Join("  ·  ", bits) : "—";
-            CzFonts.Apply(_footer, CzFonts.BodyBold, CzFonts.CardMeta, FontStyle.Bold, CzTheme.Parchment);
 
             _button.onClick.RemoveAllListeners();
             if (onClick != null) _button.onClick.AddListener(onClick);
         }
 
-        static string ShortCost(string cost)
+        /// <summary>
+        /// Reduce a full cost label ("2 AP \u00b7 $40 \u00b7 1 fav") to just the AP term.
+        /// The card face advertises the only cost you spend every single turn;
+        /// the rest is on the inspect sheet where there is room to read it.
+        /// </summary>
+        static string ApOnly(string cost)
         {
-            if (string.IsNullOrEmpty(cost)) return "—";
-            if (cost.Length <= 10) return cost;
-            var parts = cost.Split(new[] { '·', '|', ',' }, System.StringSplitOptions.RemoveEmptyEntries);
-            var first = parts[0].Trim();
-            return first.Length <= 10 ? first : first.Substring(0, 9);
+            if (string.IsNullOrEmpty(cost)) return "0 AP";
+            foreach (var raw in cost.Split(new[] { '\u00b7', '|', ',' }, System.StringSplitOptions.RemoveEmptyEntries))
+            {
+                var part = raw.Trim();
+                if (part.EndsWith("AP", System.StringComparison.OrdinalIgnoreCase))
+                    return part;
+            }
+            return "0 AP";
         }
-
-        static string Trunc(string s, int n) =>
-            string.IsNullOrEmpty(s) ? "" : s.Length <= n ? s : s.Substring(0, n - 1) + "…";
 
         private Image ChildImage(string name, Color c)
         {
@@ -324,21 +266,5 @@ namespace CandidateZero.UI
             };
         }
 
-        private static string KindMark(string kind)
-        {
-            if (string.IsNullOrEmpty(kind)) return "★";
-            return kind.ToLowerInvariant() switch
-            {
-                "action" => "◆",
-                "bargain" => "§",
-                "ally" => "A",
-                "item" => "I",
-                "location" => "L",
-                "liability" => "!",
-                "blackmail" => "X",
-                "bill" => "¶",
-                _ => "★"
-            };
-        }
     }
 }

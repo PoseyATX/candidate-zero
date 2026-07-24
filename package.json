@@ -49,6 +49,7 @@
     "sync:unity:check": "node scripts/sync-unity-host.mjs --check",
     "unity": "npm run build:engine && npm run export:content && npm run gen:unity && npm run sync:unity",
     "build:engine": "vite build --config vite.engine.config.ts && node scripts/copy-engine-to-unity.mjs",
+    "build:engine:fallback": "node scripts/build-engine-fallback.mjs",
     "export:content": "npx tsx scripts/export-content.ts",
     "export:cards": "npx tsx scripts/export-cards-csv.ts",
     "harness:content": "npx tsx src/harness/content.ts",

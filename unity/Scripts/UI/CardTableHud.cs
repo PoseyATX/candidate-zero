@@ -30,8 +30,12 @@ namespace CandidateZero.UI
         private Text _ballotChip;
         private Text _status;
 
+        // Goal strip — "what am I supposed to do this week" (RenderView.goal)
+        private Text _goalPrimary;
+        private Text _goalProgress;
+        private Text _goalNext;
+
         // Hand
-        private Text _handHint;
         private RectTransform _handContent;
         private HorizontalLayoutGroup _handLayout;
         private CardTilePool _cardPool;
@@ -180,6 +184,7 @@ namespace CandidateZero.UI
             vigImg.raycastTarget = false;
 
             BuildStickyHud();
+            BuildGoalStrip();
             BuildHandStrip();
             BuildFeed();
             BuildThumbZone();
@@ -217,8 +222,14 @@ namespace CandidateZero.UI
             stageBg.SetSiblingIndex(_stageChip.rectTransform.GetSiblingIndex());
 
             // Vitals row: AP pips | cash | week | sig
+            // "AP" is spelled out — unlabelled gold discs directly under the
+            // issue name read as part of the issue, not as action points.
+            var apCaption = CzChrome.Label(hud, "ApCaption", "AP", CzFonts.BodyBold, 20, FontStyle.Bold,
+                CzTheme.GoldDim, TextAnchor.MiddleLeft);
+            CzChrome.SetAnchors(apCaption.rectTransform, 0.035f, 0.04f, 0.10f, 0.30f);
+
             _pipsRow = CzChrome.Panel(hud, "Pips", new Color(0, 0, 0, 0)).GetComponent<RectTransform>();
-            CzChrome.SetAnchors(_pipsRow, 0.03f, 0.04f, 0.34f, 0.30f);
+            CzChrome.SetAnchors(_pipsRow, 0.105f, 0.04f, 0.36f, 0.30f);
             var pipLayout = _pipsRow.gameObject.AddComponent<HorizontalLayoutGroup>();
             pipLayout.spacing = 6;
             pipLayout.childAlignment = TextAnchor.MiddleLeft;
@@ -244,7 +255,7 @@ namespace CandidateZero.UI
 
             _fieldAp = CzChrome.Label(hud, "FieldAp", "", CzFonts.BodyBold, 22, FontStyle.Bold,
                 CzTheme.SageLite, TextAnchor.MiddleLeft);
-            CzChrome.SetAnchors(_fieldAp.rectTransform, 0.34f, 0.04f, 0.48f, 0.30f);
+            CzChrome.SetAnchors(_fieldAp.rectTransform, 0.36f, 0.04f, 0.48f, 0.30f);
 
             _cash = CzChrome.Label(hud, "Cash", "$0", CzFonts.BodyBold, 34, FontStyle.Bold,
                 CzTheme.Parchment, TextAnchor.MiddleCenter);
@@ -281,14 +292,15 @@ namespace CandidateZero.UI
             wfrt.offsetMin = new Vector2(2, 2);
             wfrt.offsetMax = new Vector2(-2, -2);
 
-            // Status line under HUD
-            _status = CzChrome.Label(_safe, "Status", "", CzFonts.Body, 26, FontStyle.Normal,
+            // Status line under HUD. Sits in its own band — it used to overlap
+            // the signature strip and get clipped mid-word ("CAMPAIGN · SEED …").
+            _status = CzChrome.Label(_safe, "Status", "", CzFonts.Body, 24, FontStyle.Normal,
                 CzTheme.Good, TextAnchor.MiddleCenter);
-            CzChrome.SetAnchors(_status.rectTransform, 0.04f, 0.825f, 0.96f, 0.855f);
+            CzChrome.SetAnchors(_status.rectTransform, 0.04f, 0.822f, 0.96f, 0.852f);
 
             // Secondary strip: signatures / ballot
             var sub = CzChrome.DeepPanel(_safe, "SubHud");
-            CzChrome.SetAnchors(sub, 0.03f, 0.785f, 0.97f, 0.848f);
+            CzChrome.SetAnchors(sub, 0.03f, 0.762f, 0.97f, 0.818f);
 
             _sigLabel = CzChrome.Label(sub, "SigLbl", "Sig 0/0", CzFonts.Body, 26, FontStyle.Normal,
                 CzTheme.ParchmentDim, TextAnchor.MiddleLeft);
@@ -321,21 +333,67 @@ namespace CandidateZero.UI
             CzChrome.SetAnchors(_ballotChip.rectTransform, 0.74f, 0.1f, 0.98f, 0.9f);
         }
 
+        // ---------- goal strip (RenderView.goal — "what am I doing this week") ----------
+        //
+        // Owner's own bar for a legible build (docs/HANDOFF-2026-07-23.md §10):
+        // "Goal strip alone answers ballot week-1." Three lines, always visible,
+        // no tap required: what you're working toward, the live numbers for it,
+        // and the concrete next move. Copy comes verbatim from the engine
+        // (src/ui/goal-strip.ts, now on RenderView.goal) — this is layout only.
+        private void BuildGoalStrip()
+        {
+            var strip = CzChrome.DeepPanel(_safe, "GoalStrip");
+            CzChrome.SetAnchors(strip, 0.03f, 0.632f, 0.97f, 0.755f);
+            CzChrome.Outline(strip.gameObject, CzTheme.GoldDim, 1f);
+
+            _goalPrimary = CzChrome.Label(strip, "GoalPrimary", "", CzFonts.BodyBold, 27, FontStyle.Bold,
+                CzTheme.Gold, TextAnchor.MiddleLeft);
+            CzChrome.SetAnchors(_goalPrimary.rectTransform, 0.05f, 0.58f, 0.95f, 0.94f);
+
+            _goalProgress = CzChrome.Label(strip, "GoalProgress", "", CzFonts.Body, 21, FontStyle.Normal,
+                CzTheme.ParchmentDim, TextAnchor.MiddleLeft);
+            CzChrome.SetAnchors(_goalProgress.rectTransform, 0.05f, 0.30f, 0.95f, 0.58f);
+
+            _goalNext = CzChrome.Label(strip, "GoalNext", "", CzFonts.Body, 21, FontStyle.Italic,
+                CzTheme.SageLite, TextAnchor.MiddleLeft);
+            CzChrome.SetAnchors(_goalNext.rectTransform, 0.05f, 0.03f, 0.95f, 0.30f);
+        }
+
+        private void PaintGoalStrip()
+        {
+            var g = _view?.goal;
+            if (_goalPrimary == null) return;
+            if (g == null)
+            {
+                _goalPrimary.text = "";
+                _goalProgress.text = "";
+                _goalNext.text = "";
+                return;
+            }
+            _goalPrimary.text = g.primary ?? "";
+            _goalProgress.text = g.progress ?? "";
+            _goalNext.text = string.IsNullOrEmpty(g.next) ? "" : "→ " + g.next;
+        }
+
+        // Goal strip claims 0.635–0.750 (was part of the hand rail's slack — the
+        // rail was sized for far more headroom than a 420px card tile needs).
+        private const float HandRailTop = 0.625f;
+
         private void BuildHandStrip()
         {
-            _handHint = CzChrome.Label(_safe, "HandHint", "HAND", CzFonts.BodyBold, 26, FontStyle.Bold,
-                CzTheme.Gold, TextAnchor.MiddleLeft);
-            CzChrome.SetAnchors(_handHint.rectTransform, 0.05f, 0.755f, 0.95f, 0.785f);
+            // No "HAND · n playable · swipe · tap" caption. A row of cards is
+            // self-evidently a hand, and the goal strip above already says what
+            // to do — the caption was chrome explaining chrome.
 
             // Hand rail — deep glass strip
             var rail = CzChrome.DeepPanel(_safe, "HandRail");
-            CzChrome.SetAnchors(rail, 0.015f, 0.30f, 0.985f, 0.755f);
+            CzChrome.SetAnchors(rail, 0.015f, 0.30f, 0.985f, HandRailTop);
             rail.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0.72f);
 
             var scrollGo = new GameObject("HandScroll");
             var scrollRt = scrollGo.AddComponent<RectTransform>();
             scrollRt.SetParent(_safe, false);
-            CzChrome.SetAnchors(scrollRt, 0f, 0.30f, 1f, 0.755f);
+            CzChrome.SetAnchors(scrollRt, 0f, 0.30f, 1f, HandRailTop);
             var scroll = scrollGo.AddComponent<ScrollRect>();
             scroll.horizontal = true;
             scroll.vertical = false;
@@ -685,15 +743,7 @@ namespace CandidateZero.UI
                 _draftRoot.SetActive(false);
 
             PaintHud();
-
-            var n = _view.actions?.Count ?? 0;
-            var blocked = _view.pendingDraft != null || _view.pendingOutside != null
-                          || (_actRoot != null && _actRoot.activeSelf);
-            _handHint.text = blocked
-                ? "RESOLVE THE SHEET ABOVE"
-                : n == 0
-                    ? (_view.canEndWeek ? "HAND · empty — end the week" : "HAND · empty")
-                    : $"HAND · {n} playable · swipe · tap";
+            PaintGoalStrip();
 
             if (_endWeekLabel != null)
             {
