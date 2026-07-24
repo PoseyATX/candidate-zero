@@ -147,12 +147,20 @@ public class GameController : MonoBehaviour
             if (string.IsNullOrEmpty(_snapshot))
                 throw new System.Exception("newGame returned empty snapshot");
 
-            if (_hud != null) _hud.ResetStageTracking();
+            if (_hud != null)
+            {
+                _hud.ResetStageTracking();
+                _hud.ClearLog();   // a fresh campaign starts with a fresh record
+            }
             EnterPlay($"Campaign · seed {seed}");
             if (_hud != null)
             {
-                _hud.AppendLog($"newGame persona={setup?.personaId}");
-                _hud.ShowToast("Campaign open — swipe the hand, tap a card", 3f);
+                // The Record is in-fiction — no engine ids, no "newGame".
+                var who = _view?.identity?.persona;
+                _hud.AppendLog(string.IsNullOrEmpty(who)
+                    ? "The campaign opens."
+                    : $"{who} files to run.");
+                _hud.ShowToast("The campaign is open.", 2.6f);
             }
             Autosave();
         }
@@ -175,12 +183,16 @@ public class GameController : MonoBehaviour
             if (!CareerSave.HasSave) return;
             _snapshot = _engine.Deserialize(CareerSave.Read());
             seed = CareerSave.LastSeed;
-            if (_hud != null) _hud.ResetStageTracking();
+            if (_hud != null)
+            {
+                _hud.ResetStageTracking();
+                _hud.ClearLog();
+            }
             EnterPlay($"Resumed · seed {seed}");
             if (_hud != null)
             {
-                _hud.AppendLog("Loaded career save");
-                _hud.ShowToast("Career resumed", 2.5f);
+                _hud.AppendLog("The campaign resumes.");
+                _hud.ShowToast("Career resumed.", 2.4f);
             }
         }
         catch (System.Exception ex)

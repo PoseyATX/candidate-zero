@@ -60,6 +60,7 @@ namespace CandidateZero.UI
         private GameObject _actRoot;
         private Text _actTitle, _actBody;
         private Text _toast;
+        private CanvasGroup _toastGroup;
         private float _toastUntil;
 
         private ActionView _selected;
@@ -118,12 +119,20 @@ namespace CandidateZero.UI
                 if (_view != null) RebuildHandIfNeeded();
             }
 
-            if (_toast != null && Time.unscaledTime > _toastUntil)
+            // Toast: hold, then fade out over ~0.45s rather than vanishing.
+            if (_toastGroup != null && _toastGroup.gameObject.activeSelf)
             {
-                var panel = _toast.transform.parent != null
-                    ? _toast.transform.parent.gameObject
-                    : _toast.gameObject;
-                if (panel.activeSelf) panel.SetActive(false);
+                const float Fade = 0.45f;
+                float remaining = _toastUntil - Time.unscaledTime;
+                if (remaining <= 0f)
+                {
+                    _toastGroup.alpha = 0f;
+                    _toastGroup.gameObject.SetActive(false);
+                }
+                else
+                {
+                    _toastGroup.alpha = remaining < Fade ? Mathf.Clamp01(remaining / Fade) : 1f;
+                }
             }
         }
 
@@ -231,21 +240,33 @@ namespace CandidateZero.UI
             _pipsRow = CzChrome.Panel(hud, "Pips", new Color(0, 0, 0, 0)).GetComponent<RectTransform>();
             CzChrome.SetAnchors(_pipsRow, 0.105f, 0.04f, 0.36f, 0.30f);
             var pipLayout = _pipsRow.gameObject.AddComponent<HorizontalLayoutGroup>();
-            pipLayout.spacing = 6;
+            pipLayout.spacing = 10;
             pipLayout.childAlignment = TextAnchor.MiddleLeft;
+            // childControl* stays false so the group honours each pip's own rect
+            // rather than stretching them to fill the row.
             pipLayout.childControlWidth = false;
             pipLayout.childControlHeight = false;
             pipLayout.childForceExpandWidth = false;
             pipLayout.childForceExpandHeight = false;
+            const float PipSize = 38f;
             for (int i = 0; i < _pips.Length; i++)
             {
                 var go = new GameObject("Pip" + i, typeof(RectTransform), typeof(Image), typeof(LayoutElement));
                 go.transform.SetParent(_pipsRow, false);
+
+                // With childControlWidth/Height = false the layout group ignores
+                // LayoutElement and lays out the RectTransform's actual size — which
+                // defaults to 100x100. That is why the AP discs were rendering as
+                // giant blobs overflowing the vitals row. Set the rect explicitly.
+                var prt = go.GetComponent<RectTransform>();
+                prt.sizeDelta = new Vector2(PipSize, PipSize);
+
                 var le = go.GetComponent<LayoutElement>();
-                le.preferredWidth = 32;
-                le.preferredHeight = 32;
-                le.minWidth = 32;
-                le.minHeight = 32;
+                le.preferredWidth = PipSize;
+                le.preferredHeight = PipSize;
+                le.minWidth = PipSize;
+                le.minHeight = PipSize;
+
                 var img = go.GetComponent<Image>();
                 img.sprite = GothicArt.PipOff;
                 img.preserveAspect = true;
@@ -658,12 +679,22 @@ namespace CandidateZero.UI
 
         private void BuildToast()
         {
-            var toastPanel = CzChrome.Panel(_safe, "Toast", new Color(0.18f, 0.12f, 0.08f, 0.94f));
-            CzChrome.SetAnchors(toastPanel, 0.06f, 0.72f, 0.94f, 0.78f);
-            CzChrome.Outline(toastPanel.gameObject, CzTheme.GoldDim, 1f);
-            _toast = CzChrome.Label(toastPanel, "ToastTxt", "", CzFonts.Body, 26, FontStyle.Normal,
-                CzTheme.Gold, TextAnchor.MiddleCenter);
-            CzChrome.SetAnchors(_toast.rectTransform, 0.04f, 0.1f, 0.96f, 0.9f);
+            // Was a flat rectangle with a hard 1px outline parked on top of the
+            // goal strip. Now it uses the same rounded 9-slice glass + soft drop
+            // as every other panel, sits in dead space just above the thumb zone
+            // so it never covers the goal, and fades instead of blinking out.
+            var toastPanel = CzChrome.GlassPanel(_safe, "Toast");
+            CzChrome.SetAnchors(toastPanel, 0.10f, 0.158f, 0.90f, 0.218f);
+            _toastGroup = toastPanel.gameObject.AddComponent<CanvasGroup>();
+            _toastGroup.blocksRaycasts = false;
+            _toastGroup.interactable = false;
+
+            _toast = CzChrome.Label(toastPanel, "ToastTxt", "", CzFonts.Body, 25, FontStyle.Normal,
+                CzTheme.Parchment, TextAnchor.MiddleCenter);
+            CzChrome.SetAnchors(_toast.rectTransform, 0.05f, 0.12f, 0.95f, 0.88f);
+            _toast.horizontalOverflow = HorizontalWrapMode.Wrap;
+            _toast.verticalOverflow = VerticalWrapMode.Truncate;
+
             toastPanel.gameObject.SetActive(false);
         }
 
@@ -674,6 +705,12 @@ namespace CandidateZero.UI
             if (_status == null) return;
             _status.text = text ?? "";
             _status.color = ok ? CzTheme.Good : CzTheme.Bad;
+        }
+
+        /// <summary>Wipe the record. A new campaign should not inherit the last one's log.</summary>
+        public void ClearLog()
+        {
+            if (_log != null) _log.text = "";
         }
 
         public void AppendLog(string line)
@@ -707,6 +744,7 @@ namespace CandidateZero.UI
             if (_toast == null || string.IsNullOrEmpty(message)) return;
             var panel = _toast.transform.parent != null ? _toast.transform.parent.gameObject : _toast.gameObject;
             panel.SetActive(true);
+            if (_toastGroup != null) _toastGroup.alpha = 1f;
             _toast.text = message.Length > 120 ? message.Substring(0, 117) + "…" : message;
             _toastUntil = Time.unscaledTime + seconds;
         }

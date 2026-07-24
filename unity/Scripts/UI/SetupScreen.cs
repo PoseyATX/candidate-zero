@@ -41,6 +41,7 @@ namespace CandidateZero.UI
         private GameObject _seedRow;
         private Text _bio;
         private RectTransform _bioFrame;
+        private RectTransform _listFrame;
 
         private SetupOptionsView _opts;
         private int _step;
@@ -148,12 +149,12 @@ namespace CandidateZero.UI
             CzChrome.SetAnchors(_blurb.rectTransform, 0.06f, 0.790f, 0.94f, 0.840f);
 
             // —— Choice list in deep glass ——
-            var listFrame = CzChrome.DeepPanel(_safe, "ListFrame");
-            CzChrome.SetAnchors(listFrame, 0.035f, 0.335f, 0.965f, 0.785f);
+            _listFrame = CzChrome.DeepPanel(_safe, "ListFrame");
+            CzChrome.SetAnchors(_listFrame, 0.035f, 0.225f, 0.965f, 0.785f);
 
             var scrollGo = new GameObject("ListScroll");
             var srt = scrollGo.AddComponent<RectTransform>();
-            srt.SetParent(listFrame, false);
+            srt.SetParent(_listFrame, false);
             CzChrome.Stretch(srt);
             srt.offsetMin = new Vector2(10, 10);
             srt.offsetMax = new Vector2(-10, -10);
@@ -188,24 +189,25 @@ namespace CandidateZero.UI
             scroll.viewport = vprt;
             scroll.content = _listContent;
 
-            // —— Running dossier bio ——
-            // Each step's flavour text used to be crammed into its own row and
-            // clipped mid-sentence. Instead the rows carry only the name, and
-            // the prose composes here into one paragraph that grows as choices
-            // are made — so by the last step you're reading a candidate bio,
-            // not four truncated fragments.
+            // —— The dossier (step 5, after every choice is made) ——
+            // This is its own full-height screen, not a strip under the list.
+            // A partial bio ("THE TEACHER OF THE ..." before a region exists)
+            // is nonsense, and cramming four paragraphs into a 160px band just
+            // clips them. Nothing composes until all four choices are in.
             _bioFrame = CzChrome.DeepPanel(_safe, "BioFrame");
-            CzChrome.SetAnchors(_bioFrame, 0.035f, 0.158f, 0.965f, 0.325f);
+            CzChrome.SetAnchors(_bioFrame, 0.035f, 0.225f, 0.965f, 0.785f);
             _bio = CzChrome.Label(_bioFrame, "Bio", "", CzFonts.Body, BioSize,
                 FontStyle.Normal, CzTheme.Parchment, TextAnchor.UpperLeft);
-            CzChrome.SetAnchors(_bio.rectTransform, 0.045f, 0.06f, 0.955f, 0.94f);
+            CzChrome.SetAnchors(_bio.rectTransform, 0.055f, 0.04f, 0.945f, 0.96f);
             _bio.horizontalOverflow = HorizontalWrapMode.Wrap;
             _bio.verticalOverflow = VerticalWrapMode.Truncate;
+            _bio.lineSpacing = 1.15f;
+            _bioFrame.gameObject.SetActive(false);
 
             // —— Seed strip ——
             _seedRow = CzChrome.HudPanel(_safe, "SeedRow").gameObject;
             var seedRt = _seedRow.GetComponent<RectTransform>();
-            CzChrome.SetAnchors(seedRt, 0.035f, 0.158f, 0.965f, 0.216f);
+            CzChrome.SetAnchors(seedRt, 0.035f, 0.158f, 0.965f, 0.215f);
             _seedLabel = CzChrome.Label(seedRt, "SeedLbl", "Seed 42", CzFonts.Title, SeedSize,
                 FontStyle.Bold, CzTheme.Parchment, TextAnchor.MiddleCenter);
             CzChrome.SetAnchors(_seedLabel.rectTransform, 0.18f, 0.1f, 0.62f, 0.9f);
@@ -258,26 +260,38 @@ namespace CandidateZero.UI
                 _stepLabel.text = $"Region  ·  4 / 4  ·  seed {_seed}";
         }
 
+        private const int ReviewStep = 4;
+
         private void PaintStep()
         {
             var steps = new[] { "Persona", "Issue", "District", "Region" };
-            _stepLabel.text = $"{steps[_step]}  ·  {_step + 1} / 4";
+            bool review = _step >= ReviewStep;
+
+            _stepLabel.text = review ? "The dossier" : $"{steps[_step]}  ·  {_step + 1} / 4";
             _backBtn.interactable = _step > 0;
             if (_continueLabel != null)
             {
-                _continueLabel.text = _step >= 3 ? "BEGIN CAMPAIGN" : "Next";
+                _continueLabel.text = review ? "BEGIN CAMPAIGN" : "Next";
                 _continueLabel.fontSize = 32;
                 _continueLabel.font = CzFonts.BodyBold;
                 _continueLabel.color = CzTheme.Parchment;
             }
+
+            // Seed belongs with the final confirmation, not mid-pick.
             if (_seedRow != null)
             {
-                _seedRow.SetActive(_step >= 3);
-                if (_step >= 3) PaintSeed();
+                _seedRow.SetActive(review);
+                if (review) PaintSeed();
             }
-            // Seed strip only exists on the last step; the bio yields that band to it.
-            if (_bioFrame != null)
-                CzChrome.SetAnchors(_bioFrame, 0.035f, _step >= 3 ? 0.224f : 0.158f, 0.965f, 0.325f);
+            if (_bioFrame != null) _bioFrame.gameObject.SetActive(review);
+            if (_listFrame != null) _listFrame.gameObject.SetActive(!review);
+
+            if (review)
+            {
+                _blurb.text = "Your candidacy, on paper.";
+                PaintBio();
+                return;
+            }
 
             List<SetupChoice> list = null;
             string selected = null;
@@ -350,33 +364,25 @@ namespace CandidateZero.UI
             var issue = Find(_opts.issues, _issueId);
             var district = Find(_opts.districts, _districtId);
 
-            if (persona == null)
+            // Only ever composed once every choice exists — a half-written
+            // dossier is worse than none.
+            if (persona == null || region == null || issue == null || district == null)
             {
-                _bio.text = "Choose a persona to begin the dossier.";
+                _bio.text = "";
                 return;
             }
 
-            var sb = new System.Text.StringBuilder(400);
+            var sb = new System.Text.StringBuilder(600);
 
-            // Opening line: who, and from where (region only once chosen).
-            sb.Append(Caps(persona.n));
-            if (region != null) sb.Append(" of the ").Append(Caps(region.n));
-            sb.Append('.');
+            sb.Append(Caps(persona.n)).Append(" of the ").Append(Caps(region.n)).Append('.');
             if (!string.IsNullOrEmpty(persona.d)) sb.Append(' ').Append(Sentence(persona.d));
-            if (region != null && !string.IsNullOrEmpty(region.d))
-                sb.Append(' ').Append(Sentence(region.d));
+            if (!string.IsNullOrEmpty(region.d)) sb.Append(' ').Append(Sentence(region.d));
 
-            if (issue != null)
-            {
-                sb.Append("\n\nRunning on ").Append(Caps(issue.n)).Append('.');
-                if (!string.IsNullOrEmpty(issue.d)) sb.Append(' ').Append(Sentence(issue.d));
-            }
+            sb.Append("\n\nRunning on ").Append(Caps(issue.n)).Append('.');
+            if (!string.IsNullOrEmpty(issue.d)) sb.Append(' ').Append(Sentence(issue.d));
 
-            if (district != null)
-            {
-                sb.Append("\n\nThe seat: ").Append(district.n).Append('.');
-                if (!string.IsNullOrEmpty(district.d)) sb.Append(' ').Append(Sentence(district.d));
-            }
+            sb.Append("\n\nThe seat: ").Append(district.n).Append('.');
+            if (!string.IsNullOrEmpty(district.d)) sb.Append(' ').Append(Sentence(district.d));
 
             _bio.text = sb.ToString();
         }
@@ -416,7 +422,7 @@ namespace CandidateZero.UI
 
         private void OnNext()
         {
-            if (_step < 3)
+            if (_step < ReviewStep)
             {
                 _step++;
                 PaintStep();
