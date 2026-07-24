@@ -2,6 +2,36 @@
 .nameplate-draft {
   margin-top: 0.5rem;
 }
+.id-pips {
+  display: flex;
+  justify-content: center;
+  gap: 0.45rem;
+  margin: 0 0 0.55rem;
+}
+.id-pip {
+  width: 1.55rem;
+  height: 1.55rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-family: Cinzel, serif;
+  color: var(--parchment-dim);
+  border: 1px solid var(--gold-dim);
+  background: rgba(0, 0, 0, 0.25);
+}
+.id-pip.done {
+  color: var(--ink);
+  background: var(--gold-dim);
+  border-color: var(--gold);
+}
+.id-pip.active {
+  color: var(--ink);
+  background: var(--gold);
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px rgba(201, 162, 77, 0.35);
+}
 .id-step-label {
   font-family: Cinzel, serif;
   font-size: 0.78rem;

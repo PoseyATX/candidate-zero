@@ -77,7 +77,8 @@ function main() {
       if (spawnSync('npm', ['run', 'build'], { cwd: ROOT, stdio: 'inherit' }).status !== 0)
         throw new Error('build failed');
     }
-    const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], {
+    const viteBin = join(ROOT, 'node_modules', 'vite', 'bin', 'vite.js');
+    const server = spawn(process.execPath, [viteBin, 'preview', '--port', String(PORT), '--strictPort'], {
       cwd: ROOT,
       stdio: 'ignore'
     });
@@ -107,7 +108,17 @@ function main() {
       await page.waitForSelector('#setup:not(.hidden)');
       byState['setup'] = await runAxe(page);
 
-      // --- In-game (start a seeded run, clear the act splash) ---
+      // --- In-game (nameplate draft → seeded run, clear the act splash) ---
+      async function pickId(kind, id) {
+        const card = page.locator(`.id-card[data-kind="${kind}"][data-id="${id}"]`);
+        await card.waitFor({ state: 'visible', timeout: 10_000 });
+        await card.click();
+        await page.waitForTimeout(40);
+      }
+      await pickId('persona', 'teacher');
+      await pickId('issue', 'taxes');
+      await pickId('district', 'open');
+      await pickId('region', 'east');
       await page.locator('#seed-input').fill('4242');
       await page.locator('#btn-start').click();
       await page.waitForSelector('#game:not(.hidden)');

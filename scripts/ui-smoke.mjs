@@ -52,7 +52,9 @@ async function main() {
     if (b.status !== 0) throw new Error('build failed');
   }
 
-  const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], {
+  // Spawn vite directly so Windows does not need npx.cmd on PATH via shell.
+  const viteBin = join(ROOT, 'node_modules', 'vite', 'bin', 'vite.js');
+  const server = spawn(process.execPath, [viteBin, 'preview', '--port', String(PORT), '--strictPort'], {
     cwd: ROOT,
     stdio: 'ignore'
   });
@@ -93,8 +95,20 @@ async function main() {
     await page.locator('#btn-tut-back').click();
     assert(await page.locator('#setup').isVisible(), 'tutorial back → setup');
 
-    // 2. Start a seeded run.
+    // 2. Complete the 3-step nameplate draft (Teacher · taxes · open · east) + seed.
+    // Identity draft replaced the old form; seed + Begin primary live on step 3.
+    async function pickId(kind, id) {
+      const card = page.locator(`.id-card[data-kind="${kind}"][data-id="${id}"]`);
+      await card.waitFor({ state: 'visible', timeout: 10_000 });
+      await card.click();
+      await page.waitForTimeout(40);
+    }
+    await pickId('persona', 'teacher');
+    await pickId('issue', 'taxes');
+    await pickId('district', 'open');
+    await pickId('region', 'east');
     await page.locator('#seed-input').fill('4242');
+    assert(await page.locator('#btn-start').isVisible(), 'Begin primary on nameplate step 3');
     await page.locator('#btn-start').click();
     await page.waitForSelector('#game:not(.hidden)', { timeout: 10_000 });
     assert(true, 'Begin primary → game screen');

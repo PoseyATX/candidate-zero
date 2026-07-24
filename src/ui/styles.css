@@ -1655,6 +1655,33 @@ h1 {
   margin: 0.1rem 0 0.4rem;
 }
 
+.title-identity {
+  margin: 0.35rem 0 0.85rem;
+  padding: 0.55rem 0.75rem;
+  max-width: min(360px, 90vw);
+  border: 1px solid rgba(201, 162, 77, 0.45);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.28);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: var(--parchment);
+}
+.title-identity.hidden {
+  display: none;
+}
+.title-id-label {
+  display: block;
+  font-family: Cinzel, serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.2rem;
+}
+.title-id-who {
+  color: var(--parchment);
+}
+
 .title-actions {
   display: flex;
   flex-direction: column;

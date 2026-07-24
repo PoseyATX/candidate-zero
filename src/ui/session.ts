@@ -36,7 +36,13 @@ import type {
   PlayOutcome,
   TraitId
 } from '../engine/types.js';
-import type { SetupSelection } from '../data/setup.js';
+import {
+  PERSONAS,
+  ISSUES,
+  DISTRICTS,
+  REGIONS,
+  type SetupSelection
+} from '../data/setup.js';
 import { openActSplash as openActSplashShell, applyStageChrome as applyStageChromeShell } from './act-shell.js';
 import { renderHud, renderLedger } from './paint-hud.js';
 import {
@@ -136,6 +142,23 @@ export function startRun(setup: SetupSelection, seed: number, lockIdentity = fal
   openActSplash('primary');
 }
 
+/** Human-readable filed identity for title / HUD continuity. */
+export function filedIdentityLabel(): string | null {
+  legacy = loadLegacy();
+  const id = legacy.identity;
+  if (!id) return null;
+  const p = PERSONAS.find(x => x.id === id.personaId)?.n.replace(/^The /, '') ?? id.personaId;
+  const issue = ISSUES.find(x => x.id === id.issueId)?.n ?? id.issueId;
+  const dist = DISTRICTS.find(x => x.id === id.districtId)?.n ?? id.districtId;
+  const reg = REGIONS.find(x => x.id === id.regionId)?.n ?? id.regionId;
+  return `${p} · ${issue} · ${dist} · ${reg}`;
+}
+
+export function hasFiledIdentity(): boolean {
+  legacy = loadLegacy();
+  return !!legacy.identity;
+}
+
 /** Resume with filed identity — never opens the nameplate. */
 export function tryBeginClimb(): boolean {
   legacy = loadLegacy();
@@ -145,9 +168,30 @@ export function tryBeginClimb(): boolean {
   return true;
 }
 
+/**
+ * Clear only the filed identity so the player can pick a new nameplate.
+ * Keeps Chronicle runs/traits (ballad history) unless they burn separately.
+ */
+export function openRefile(): void {
+  if (campaign && !campaign.state.over) {
+    const ok = window.confirm(
+      'Leave this week and file as someone else? Your ballad stays; only who you are changes.'
+    );
+    if (!ok) return;
+  }
+  legacy = loadLegacy();
+  clearIdentity(legacy);
+  saveLegacy(legacy);
+  campaign = null;
+  weekPlays = [];
+  openSetupWithChronicle();
+}
+
 export function requestNewRun(): void {
   if (campaign && !campaign.state.over) {
-    const ok = window.confirm('Leave this week? Your filed identity stays — you will not re-pick who you are.');
+    const ok = window.confirm(
+      'Leave this week? Your filed identity stays — you will not re-pick who you are. Use File as someone else on the title screen to change identity.'
+    );
     if (!ok) return;
   }
   legacy = loadLegacy();
@@ -159,11 +203,12 @@ export function requestNewRun(): void {
   openSetupWithChronicle();
 }
 
-/** Nameplate only when no identity is filed (or after wipe). */
+/** Nameplate when no identity is filed (or after refile / burn). */
 export function openSetupWithChronicle(): void {
   legacy = loadLegacy();
   if (legacy.identity) {
     showTitle();
+    paintTitleIdentity();
     return;
   }
   showSetup();
@@ -181,6 +226,29 @@ export function openSetupWithChronicle(): void {
   );
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('cz-nameplate'));
+  }
+}
+
+/** Title strip: show locked identity + refile control when present. */
+export function paintTitleIdentity(): void {
+  const strip = document.getElementById('title-identity');
+  const refile = document.getElementById('btn-title-refile') as HTMLButtonElement | null;
+  const label = filedIdentityLabel();
+  if (strip) {
+    if (label) {
+      strip.classList.remove('hidden');
+      strip.innerHTML = `<span class="title-id-label">Filed as</span> <span class="title-id-who">${label}</span>`;
+    } else {
+      strip.classList.add('hidden');
+      strip.innerHTML = '';
+    }
+  }
+  if (refile) {
+    refile.classList.toggle('hidden', !label);
+  }
+  const start = document.getElementById('btn-title-start');
+  if (start) {
+    start.textContent = label ? 'Continue the Climb' : 'Begin the Climb';
   }
 }
 

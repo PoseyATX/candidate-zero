@@ -1,7 +1,7 @@
 /**
  * CANDIDATE ZERO — boot / DOM wire only.
  * Mutable campaign lives in session.ts; paint leaves are pure modules.
- * Nameplate is a 3-step card draft; identity locks on Chronicle.
+ * Nameplate is a 3-step card draft; identity locks until refile / burn.
  */
 
 import { emblem } from './card-art.js';
@@ -13,7 +13,9 @@ import {
   endWeek,
   closeGroundPicker,
   openSetupWithChronicle,
-  tryBeginClimb
+  tryBeginClimb,
+  openRefile,
+  paintTitleIdentity
 } from './session.js';
 import { closeCardDetail } from './paint-play.js';
 import { emptyDraft, renderNameplateDraft, type NameplateDraftState } from './nameplate-draft.js';
@@ -35,7 +37,10 @@ function paintDraft(): void {
       draft = next;
       paintDraft();
     },
-    (setup, seed) => startRun(setup, seed, true)
+    (setup, seed) => {
+      startRun(setup, seed, true);
+      paintTitleIdentity();
+    }
   );
 }
 
@@ -50,13 +55,26 @@ function boot(): void {
   $('title-emblem').innerHTML = emblem('star');
   $('btn-title-start').addEventListener('click', () => {
     if (!tryBeginClimb()) openFirstFiling();
+    paintTitleIdentity();
   });
+  const refile = document.getElementById('btn-title-refile');
+  if (refile) {
+    refile.addEventListener('click', () => {
+      openRefile();
+      draft = emptyDraft();
+      paintDraft();
+      paintTitleIdentity();
+    });
+  }
   $('btn-title-howto').addEventListener('click', () => showTutorial());
   $('btn-howto').addEventListener('click', () => showTutorial());
   const setupHowto = document.getElementById('btn-setup-howto');
   if (setupHowto) setupHowto.addEventListener('click', () => showTutorial());
   $('btn-tut-back').addEventListener('click', () => backFromTutorial());
-  $('btn-new').addEventListener('click', () => requestNewRun());
+  $('btn-new').addEventListener('click', () => {
+    requestNewRun();
+    paintTitleIdentity();
+  });
   $('btn-end').addEventListener('click', () => endWeek());
   $('gp-cancel').addEventListener('click', () => closeGroundPicker());
   const detailClose = document.getElementById('detail-close');
@@ -72,6 +90,7 @@ function boot(): void {
     paintDraft();
   });
   showTitle();
+  paintTitleIdentity();
 }
 
 boot();
