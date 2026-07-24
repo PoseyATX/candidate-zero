@@ -43,6 +43,7 @@ function stateKey(snap: EngineSnapshot): string {
 function nextCommand(snap: EngineSnapshot): Command | null {
   const v = view(snap);
   if (v.over) return null;
+  if (v.pendingOutside) return { type: 'dismissOutside' };
   if (v.pendingDraft) return { type: 'draft', option: 0 };
   if (v.actions.length) {
     const a = v.actions[0]!;

@@ -38,6 +38,7 @@ import {
   campIndexToCardId,
   type Campaign
 } from './loop.js';
+import { clearPendingOutside } from './outside.js';
 import { DEFAULT_HAND_SIZE } from './deck.js';
 import { PRIMARY_WEEKS } from './calendar.js';
 import { getPhase, stageLabel, stageWeek } from './state.js';
@@ -68,7 +69,9 @@ export interface EngineSnapshot {
 export type Command =
   | { type: 'play'; handIndex: number; groundId?: string }
   | { type: 'endWeek' }
-  | { type: 'draft'; option: number };
+  | { type: 'draft'; option: number }
+  /** Host dismisses Outside weather chrome (see clearPendingOutside). */
+  | { type: 'dismissOutside' };
 
 export interface ActionOption {
   handIndex: number;
@@ -119,6 +122,8 @@ export interface RenderView {
   grounds: GroundView[];
   actions: ActionOption[];
   pendingDraft: { phase: number; options: { cardId: string; name: string; risk: string }[] } | null;
+  /** World weather chrome — host shows, then dismissOutside. Never a hand card. */
+  pendingOutside: { id: string; n: string; text: string } | null;
   /** true when there is nothing left but to end the week. */
   canEndWeek: boolean;
   log: { week: number; kind: string; text: string; tier?: number }[];
@@ -265,6 +270,9 @@ export function view(snap: EngineSnapshot): RenderView {
           })
         }
       : null,
+    pendingOutside: s.pendingOutside
+      ? { id: s.pendingOutside.id, n: s.pendingOutside.n, text: s.pendingOutside.text }
+      : null,
     canEndWeek: !s.over && !(pd?.options.length),
     log: s.log.slice(-40).map(e => ({ week: e.week, kind: e.kind, text: e.text, tier: e.tier }))
   };
@@ -304,6 +312,11 @@ export function apply(snap: EngineSnapshot, command: Command): ApplyResult {
       const r = pickPhaseDraft(campaign, command.option);
       ok = r.ok;
       reason = r.reason;
+      break;
+    }
+    case 'dismissOutside': {
+      clearPendingOutside(s);
+      ok = true;
       break;
     }
     case 'endWeek': {

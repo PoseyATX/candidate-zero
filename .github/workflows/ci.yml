@@ -36,6 +36,16 @@ jobs:
       - name: Build headless engine bundle (host/Unity binding artifact)
         run: npm run build:engine
 
+      - name: Export content manifest (Unity ScriptableObject source)
+        run: npm run export:content
+
+      # The Unity host's C# DTOs are generated from the TS engine types. If a
+      # type changed and the generated C# was not regenerated, the Unity build
+      # would silently deserialize into missing/renamed fields. Fail loudly
+      # here instead — this is what replaced four hand-maintained mirrors.
+      - name: Unity binding drift check (generated C# must match TS types)
+        run: npm run gen:unity:check
+
       - name: Install Playwright browser (for UI smoke)
         run: npx playwright install --with-deps chromium
 

@@ -82,6 +82,8 @@ export interface WeekReport {
 export interface LedgerSnapshot {
   week: number;
   ap: number;
+  /** AP ceiling this week (2 normally, 1 during the waiting season) — hosts draw pips from this. */
+  apMax: number;
   fieldAp: number;
   money: number;
   /** Phase 3: cash after debt service reserve (what $ costs actually see). */
@@ -110,6 +112,7 @@ export function snapshot(state: GameState): LedgerSnapshot {
   return {
     week: state.week,
     ap: state.ap,
+    apMax: state.apMax,
     fieldAp: state.fieldAp,
     money: state.money,
     availableCash: availableCash(state),

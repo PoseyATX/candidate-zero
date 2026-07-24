@@ -55,6 +55,7 @@ type Command =
   | { type: 'play'; handIndex: number; groundId?: string } // groundId required only when the action.field flag is true
   | { type: 'draft'; option: number }                      // resolve a pending phase draft
   | { type: 'endWeek' }
+  | { type: 'dismissOutside' }                            // clear Outside weather chrome
 ```
 
 `handIndex` comes from an `ActionOption`; negative indices are camp actions
@@ -67,10 +68,14 @@ mutates the input snapshot (pure — returns a new one).
 `view(snap)` returns: `over`/`outcome`, `stage`/`phase`/`stageLabel`/
 `stageWeek`/`calendarWeek`/`weeksTotal`, `identity` (persona/issue/district),
 `ledger` (AP, money, contacts, nameID, vols, momentum, favors, debt,
-endorsements, ballot, signatures/need, …), `grounds[]` (id, name, pool, your
-rapport, opposition rapport, gotv), `actions[]`, `pendingDraft`, `canEndWeek`,
-and the tail of the `log`. `apply().events` is the slice of log entries a
-single command produced — for host toasts/animation.
+endorsements, ballot, signatures/need, …), `grounds[]`, `actions[]`,
+`pendingDraft`, **`pendingOutside`** (world weather — show then
+`dismissOutside`), `canEndWeek`, and the tail of the `log`.
+`apply().events` is the slice of log entries a single command produced —
+for host toasts/animation.
+
+**Mobile presentation target:** 9:16 (portrait). Desktop 16:9 may letterbox
+or reflow; primary design is one-handed phone.
 
 ## Binding from Unity (or any JS-in-C# runtime)
 

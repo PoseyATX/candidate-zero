@@ -1,55 +1,36 @@
 // Candidate Zero — Engine bridge (Jint)
-// -------------------------------------------------------------------------
-// The runtime half of the Unity binding: Unity calls the pure TypeScript
-// rules engine and NEVER reimplements a rule. The engine ships as a
-// standalone JS bundle (unity/engine/candidate-zero-engine.js, built by
-// `npm run build:engine`, targeted es2019 for Jint) that defines a global
-// `CandidateZeroEngine`. This runs it in Jint — a pure-C# JS interpreter,
-// so there are no native libraries and the iOS/IL2CPP path stays clean.
-// Full contract: docs/ENGINE-API.md · setup: docs/UNITY-SETUP.md.
-//
-// Add Jint to the Unity project via NuGetForUnity (package id: "Jint") or
-// by dropping Jint.dll into Assets/Plugins. A game is turn-based, so the
-// interpreter's speed is a non-issue.
-// -------------------------------------------------------------------------
+// Rules live only in the TS bundle. Unity never reimplements odds/yields.
+// Contract: docs/ENGINE-API.md
 using System;
+// Always qualify Jint.Engine — a bare `Engine` can collide with other names.
 using Jint;
 
 namespace CandidateZero.Runtime
 {
-    /// <summary>
-    /// Stateless facade over the JS engine bundle. A "snapshot" is opaque
-    /// JSON — Unity persists it to save a game, never inspects rules inside.
-    /// Determinism: (seed + command log) reproduces state exactly, and
-    /// serialize/deserialize is lossless (docs/ENGINE-API.md, harness:api).
-    /// </summary>
     public interface IEngineBridge
     {
         string NewGame(int seed, string setupJson = null);
         string View(string snapshotJson);
         string Apply(string snapshotJson, string commandJson);
         string SetupOptions();
+        string Serialize(string snapshotJson);
+        string Deserialize(string saveText);
     }
 
     public sealed class EngineBridge : IEngineBridge
     {
-        private readonly Engine _js;
+        private readonly Jint.Engine _js;
 
-        /// <param name="bundleSource">
-        /// Contents of unity/engine/candidate-zero-engine.js (import it as a
-        /// TextAsset — e.g. rename to .txt/.bytes so Unity doesn't treat the
-        /// .js as script). Evaluated once to define CandidateZeroEngine.
-        /// </param>
         public EngineBridge(string bundleSource)
         {
             if (string.IsNullOrEmpty(bundleSource))
                 throw new ArgumentNullException(nameof(bundleSource));
 
-            _js = new Engine(options => options
-                .LimitRecursion(4000)
-                .TimeoutInterval(TimeSpan.FromSeconds(5)));
+            _js = new Jint.Engine(options => options
+                .LimitRecursion(8000)
+                .TimeoutInterval(TimeSpan.FromSeconds(30)));
 
-            _js.Execute(bundleSource); // defines the global CandidateZeroEngine
+            _js.Execute(bundleSource);
         }
 
         public string NewGame(int seed, string setupJson = null)
@@ -69,6 +50,43 @@ namespace CandidateZero.Runtime
         public string SetupOptions() =>
             Eval("JSON.stringify(CandidateZeroEngine.setupOptions())");
 
-        private string Eval(string expression) => _js.Evaluate(expression).AsString();
+        /// <summary>Opaque save string (engine serialize).</summary>
+        public string Serialize(string snapshotJson) =>
+            Eval($"CandidateZeroEngine.serialize({snapshotJson})");
+
+        /// <summary>Restore snapshot JSON from serialize() output.</summary>
+        public string Deserialize(string saveText)
+        {
+            // Pass save as a JS string literal (escape carefully).
+            var escaped = EscapeJsString(saveText);
+            return Eval($"JSON.stringify(CandidateZeroEngine.deserialize({escaped}))");
+        }
+
+        private static string EscapeJsString(string s)
+        {
+            if (s == null) return "\"\"";
+            return "\"" + s
+                .Replace("\\", "\\\\")
+                .Replace("\"", "\\\"")
+                .Replace("\r", "\\r")
+                .Replace("\n", "\\n")
+                .Replace("\t", "\\t") + "\"";
+        }
+
+        private string Eval(string expression)
+        {
+            try
+            {
+                return _js.Evaluate(expression).AsString();
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException(
+                    "EngineBridge JS eval failed: " + ex.Message +
+                    "\nExpression head: " +
+                    (expression.Length > 200 ? expression.Substring(0, 200) + "…" : expression),
+                    ex);
+            }
+        }
     }
 }

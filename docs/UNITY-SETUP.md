@@ -6,6 +6,47 @@ Everything you copy lives in this repo's `unity/` folder.
 
 Suggested Unity layout: `Assets/CandidateZero/`.
 
+## Ready-made host project (recommended)
+
+A clean Track B host already exists on this machine:
+
+| | |
+|--|--|
+| Path | `C:\Users\matth\candidate-zero-host` |
+| Unity | 6000.3.3f1 |
+| Jint | pre-vendored in `Assets/Plugins/Jint/` |
+| Smoke | Menu **Candidate Zero → Run Engine Smoke (Jint)** or press **Play** |
+
+Do **not** use `candidate-zero-unity` as the rules host — that project has a
+separate C# rules experiment. Art only from there.
+
+Verified (2026-07-24): batch `executeMethod` smoke → `newGame` → `view` →
+`endWeek` green; seed 42 advances week 1→2 via pure TS engine.
+
+### What you should see
+
+| Action | What appears |
+|--------|----------------|
+| **Candidate Zero → Run Engine Smoke (Jint)** | Editor **results window** with JSON (Game view stays empty — by design) |
+| **Play** or **Open Play Mode Card Table** | **9:16 mobile board**: hand cards, inspect, ground pick, phase draft, Outside weather, END WEEK thumb zone |
+
+**Aspect:** design is portrait 9:16. Landscape letterboxes a phone column. In Game view, pick a 9:16 size for honest phone preview.
+
+**Unity on-site practices:** see [`UNITY-MOBILE-BEST-PRACTICES.md`](./UNITY-MOBILE-BEST-PRACTICES.md) (Canvas Scaler multi-res, `Screen.safeArea`, card pooling, `targetFrameRate`, links to docs.unity3d.com / unity.com e-book / learn.unity.com).
+
+Card definitions load from `Resources/Cards` (after **Import Content**) or bootstrap
+from `Resources/content/…json` so Play works without an import step.
+
+Host API extras for Unity: `pendingOutside` + command `dismissOutside` (see ENGINE-API.md).
+
+### Play flow in the host project
+
+1. **Setup wizard** — `setupOptions()` → pick persona / issue / district / region  
+2. **BEGIN** — `newGame({ seed, setup })`  
+3. **Continue career** — `deserialize(PlayerPrefs save)` when a snapshot exists  
+4. **Autosave** — `serialize(snapshot)` after each successful `apply`  
+5. Table: hand, inspect, grounds, phase draft, Outside weather, END WEEK / MENU
+
 ---
 
 ## Track A — import the cards as ScriptableObjects

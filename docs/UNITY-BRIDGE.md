@@ -37,6 +37,59 @@ Workflow: edit content in `src/data/*` → `npm run export:content` → copy the
 JSON into the Unity project → run the importer. New/changed cards flow in;
 assigned art is preserved.
 
+## The C# DTOs are GENERATED — never hand-typed
+
+Everything that crosses the boundary is JSON, so the Unity side needs C#
+classes shaped like the TypeScript types. Those classes used to be typed by
+hand, in **four** places: `Engine/ViewModels.cs`, `Engine/SetupModels.cs`, and
+private `Manifest`/`CardDto` duplicates inside *both* `Editor/ContentImporter.cs`
+and `Content/CardCatalog.cs`.
+
+That is the maintenance tax that compounds as the cardbase and systems grow:
+one new engine field meant four manual C# edits, in two languages, with
+nothing failing loudly when someone forgot. It had already drifted — the host
+declared `ledger.apMax` and rendered the AP pips from it, but the engine never
+emitted that field, so Unity silently fell back to a hardcoded 3 pips while
+the real ceiling was 2 (and 1 during the waiting season).
+
+Now `scripts/gen-unity-models.ts` reads the **real TypeScript types with the
+TypeScript compiler's own type checker** — not a regex, not a parallel schema —
+and emits:
+
+```
+unity/Scripts/Engine/Generated/EngineModels.g.cs    <- src/engine/api.ts
+unity/Scripts/Engine/Generated/ContentModels.g.cs   <- src/data/manifest.ts
+```
+
+| Command | What it does |
+|---|---|
+| `npm run gen:unity` | regenerate the C# models from the TS types |
+| `npm run gen:unity:check` | fail if the generated C# is stale (**runs in CI**) |
+| `npm run sync:unity` | copy the drop-in (`unity/`) into the Unity host project |
+| `npm run sync:unity:check` | fail if the host copy has drifted |
+| `npm run unity` | all of it: build engine → export content → generate → sync |
+
+**Adding a field is now:** add it in TypeScript → `npm run gen:unity` → done.
+Forget the regen and CI fails with `STALE:` instead of Unity silently
+deserializing into a field that no longer exists.
+
+Design notes on the generator:
+- **Opaque by contract.** `EngineSnapshot` maps to `JToken`, not a modelled
+  class. The host persists it and hands it back; it never inspects rules.
+- **String-literal unions stay `string`.** `CardKind`, `deck`, `stage` etc. are
+  transport values. The Unity-side `CandidateZero.Content.CardKind` enum is a
+  *presentation* concern (inspector fields, tint tables) and stays owned by the
+  Content layer, which parses string → enum. Generating a second `CardKind`
+  into `HostData` would collide with it.
+- **`number` is ambiguous** — it maps to `int` by default, with genuinely
+  fractional fields (`approxOdds`, `rapport`, `rivalRap`, `gotv`, `prop`)
+  listed in `FLOAT_FIELDS` at the top of the generator.
+- JSDoc on a TS field becomes an XML `<summary>` on the C# field.
+
+Hand-written C# that remains is only the part Unity genuinely owns:
+`CardDefinition` (a `ScriptableObject` with inspector attributes and an art
+slot), the HUD, and `EngineBridge` itself.
+
 ## Rules → engine bundle
 
 `EngineBridge.cs` (reference stub) shows the runtime call pattern: load the
