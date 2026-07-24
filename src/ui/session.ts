@@ -49,7 +49,7 @@ import {
 import { renderLog, showJuice } from './paint-log.js';
 import { openOutsideWeather } from './outside-ui.js';
 import { renderTerminalOutcome, renderChronicle } from './terminal-ui.js';
-import { showGame, showSetup, showTerminal } from './screens.js';
+import { showGame, showSetup, showTerminal, showTitle } from './screens.js';
 
 export let campaign: Campaign | null = null;
 export let weekPlays: PlayOutcome[] = [];
@@ -110,6 +110,7 @@ export function commitPlay(index: number, ground?: Ground): void {
 
 /**
  * @param lockIdentity — true when filing from the nameplate draft (first bind).
+ * Re-files and incumbent paths pass false; identity already on Chronicle.
  */
 export function startRun(setup: SetupSelection, seed: number, lockIdentity = false): void {
   if (lockIdentity) {
@@ -135,6 +136,7 @@ export function startRun(setup: SetupSelection, seed: number, lockIdentity = fal
   openActSplash('primary');
 }
 
+/** Resume with filed identity — never opens the nameplate. */
 export function tryBeginClimb(): boolean {
   legacy = loadLegacy();
   if (!legacy.identity) return false;
@@ -159,7 +161,13 @@ export function requestNewRun(): void {
   openSetupWithChronicle();
 }
 
+/** Nameplate only when no identity is filed (or after Chronicle wipe). */
 export function openSetupWithChronicle(): void {
+  legacy = loadLegacy();
+  if (legacy.identity) {
+    showTitle();
+    return;
+  }
   showSetup();
   renderChronicle(
     legacy,
@@ -204,7 +212,10 @@ export function enterTerminal(c: Campaign): void {
         'Incumbent cycle. You skip petition — but the primary still wants a fight. Session is behind you until you win November again.'
       );
     },
-    onRest: () => openSetupWithChronicle(),
+    onRest: () => {
+      /* Identity stays filed — never re-open the 3-step draft. */
+      if (!tryBeginClimb()) openSetupWithChronicle();
+    },
     onPathSelected: () => {},
     onTraitSelected: (path: InterimPath, traitId: TraitId) => {
       addTrait(legacy, traitId);

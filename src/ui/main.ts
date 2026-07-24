@@ -18,6 +18,7 @@ import {
 import { closeCardDetail } from './paint-play.js';
 import { emptyDraft, renderNameplateDraft, type NameplateDraftState } from './nameplate-draft.js';
 import './styles.css';
+import './nameplate.css';
 
 function $(id: string): HTMLElement {
   const el = document.getElementById(id);
@@ -38,15 +39,17 @@ function paintDraft(): void {
   );
 }
 
+function openFirstFiling(): void {
+  draft = emptyDraft();
+  openSetupWithChronicle();
+  paintDraft();
+}
+
 function boot(): void {
   wireTabs();
   $('title-emblem').innerHTML = emblem('star');
   $('btn-title-start').addEventListener('click', () => {
-    if (!tryBeginClimb()) {
-      draft = emptyDraft();
-      openSetupWithChronicle();
-      paintDraft();
-    }
+    if (!tryBeginClimb()) openFirstFiling();
   });
   $('btn-title-howto').addEventListener('click', () => showTutorial());
   $('btn-howto').addEventListener('click', () => showTutorial());
@@ -64,6 +67,10 @@ function boot(): void {
       if (e.target === cardDetail) closeCardDetail();
     });
   }
+  window.addEventListener('cz-nameplate', () => {
+    draft = emptyDraft();
+    paintDraft();
+  });
   showTitle();
 }
 
