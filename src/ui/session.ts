@@ -22,8 +22,12 @@ import {
   recordRun,
   setInterimPath,
   addTrait,
+  setIdentity,
+  clearIdentity,
   type InterimPath
 } from '../engine/legacy.js';
+import { injectIntoDrawPile } from '../engine/deck.js';
+import { kitIdsForSetup } from '../data/nameplate-kits.js';
 import { enterWaiting, finishWaiting } from '../engine/waiting.js';
 import type {
   CampaignOutcome,
@@ -45,7 +49,7 @@ import {
 import { renderLog, showJuice } from './paint-log.js';
 import { openOutsideWeather } from './outside-ui.js';
 import { renderTerminalOutcome, renderChronicle } from './terminal-ui.js';
-import { showGame, showSetup, showTerminal } from './screens.js';
+import { showGame, showSetup, showTerminal, showTitle } from './screens.js';
 
 export let campaign: Campaign | null = null;
 export let weekPlays: PlayOutcome[] = [];
@@ -64,7 +68,6 @@ function ensurePlayHooks(): void {
 export function paint(): void {
   ensurePlayHooks();
   if (!campaign) return;
-  // Close inspect sheet on full repaint so it never blocks End Week / ceremony
   closeCardDetail();
   renderHud(campaign);
   renderLedger(campaign);
@@ -105,8 +108,25 @@ export function commitPlay(index: number, ground?: Ground): void {
   paint();
 }
 
-export function startRun(setup: SetupSelection, seed: number): void {
+/**
+ * @param lockIdentity — true when filing from the nameplate draft (first bind).
+ * Re-files and incumbent paths pass false; identity already locked.
+ */
+export function startRun(setup: SetupSelection, seed: number, lockIdentity = false): void {
+  if (lockIdentity) {
+    setIdentity(legacy, setup);
+    saveLegacy(legacy);
+  }
   campaign = createCampaign({ seed, setup });
+  const kit = kitIdsForSetup(setup);
+  if (kit.length) {
+    injectIntoDrawPile(campaign.deck, campaign.state, kit);
+    campaign.state.log.push({
+      week: campaign.state.week,
+      kind: 'note',
+      text: `Opening kit enters the pile: ${kit.join(', ')}.`
+    });
+  }
   applyLegacy(campaign.state, legacy);
   weekPlays = [];
   startWeek(campaign);
@@ -116,24 +136,42 @@ export function startRun(setup: SetupSelection, seed: number): void {
   openActSplash('primary');
 }
 
+/** Resume with filed identity — never opens the nameplate. */
+export function tryBeginClimb(): boolean {
+  legacy = loadLegacy();
+  if (!legacy.identity) return false;
+  const seed = Date.now() % 1_000_000;
+  startRun(legacy.identity, seed, false);
+  return true;
+}
+
 export function requestNewRun(): void {
   if (campaign && !campaign.state.over) {
-    const ok = window.confirm(
-      'Start a new run? This abandons the current campaign — persona, ' +
-        'district, and everything else were locked in at the start and ' +
-        'cannot be changed on an in-progress run.'
-    );
+    const ok = window.confirm('Leave this week? Your filed identity stays — you will not re-pick who you are.');
     if (!ok) return;
+  }
+  legacy = loadLegacy();
+  if (legacy.identity) {
+    const seed = Date.now() % 1_000_000;
+    startRun(legacy.identity, seed, false);
+    return;
   }
   openSetupWithChronicle();
 }
 
+/** Nameplate only when no identity is filed (or after wipe). */
 export function openSetupWithChronicle(): void {
+  legacy = loadLegacy();
+  if (legacy.identity) {
+    showTitle();
+    return;
+  }
   showSetup();
   renderChronicle(
     legacy,
     () => {
       legacy = { runs: [], traits: [], carry: {} };
+      clearIdentity(legacy);
       saveLegacy(legacy);
       return legacy;
     },
@@ -141,6 +179,9 @@ export function openSetupWithChronicle(): void {
       legacy = l;
     }
   );
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('cz-nameplate'));
+  }
 }
 
 export function enterTerminal(c: Campaign): void {
@@ -169,10 +210,11 @@ export function enterTerminal(c: Campaign): void {
         'Incumbent cycle. You skip petition — but the primary still wants a fight. Session is behind you until you win November again.'
       );
     },
-    onRest: () => openSetupWithChronicle(),
-    onPathSelected: () => {
-      /* traits screen painted by terminal-ui */
+    onRest: () => {
+      /* Identity stays filed — never re-open the 3-step draft. */
+      if (!tryBeginClimb()) openSetupWithChronicle();
     },
+    onPathSelected: () => {},
     onTraitSelected: (path: InterimPath, traitId: TraitId) => {
       addTrait(legacy, traitId);
       setInterimPath(legacy, path.id, path.interim);
@@ -184,6 +226,10 @@ export function enterTerminal(c: Campaign): void {
 
 function beginWaitingSeason(pathId: string): void {
   if (!campaign) {
+    if (legacy.identity) {
+      startRun(legacy.identity, Date.now() % 1_000_000, false);
+      return;
+    }
     openSetupWithChronicle();
     return;
   }
