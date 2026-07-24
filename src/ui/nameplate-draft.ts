@@ -147,7 +147,7 @@ export function renderNameplateDraft(
   const summary = [p?.n.replace(/^The /, ''), i?.n, d?.n, r?.n].filter(Boolean).join(' · ');
 
   host.innerHTML = `
-    <div class="id-pips" aria-label="Filing step ${draft.step} of 3">${stepPips(draft.step)}</div>
+    <div class="id-pips" role="group" aria-label="Filing step ${draft.step} of 3">${stepPips(draft.step)}</div>
     <p class="id-step-label">${stepLabel}</p>
     <p class="hint id-step-hint">Tap a card to choose. Your picks stick for the career until you refile.</p>
     ${draft.step < 3 ? `<div class="id-card-grid">${grid}</div>` : grid}
