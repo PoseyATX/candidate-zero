@@ -1,0 +1,51 @@
+# Candidate Zero — line-ending normalization
+# ---------------------------------------------------------------------------
+# Without this, Windows checkouts write CRLF while git's blobs hold LF, so
+# every file reads as "modified" and real changes drown in phantom diffs.
+# Repo blobs are always LF; working trees are always LF on every platform.
+
+* text=auto eol=lf
+
+# Explicit text types (belt and braces for tools that sniff poorly)
+*.ts        text eol=lf
+*.tsx       text eol=lf
+*.js        text eol=lf
+*.mjs       text eol=lf
+*.json      text eol=lf
+*.md        text eol=lf
+*.css       text eol=lf
+*.html      text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.csv       text eol=lf
+*.svg       text eol=lf
+
+# Unity / C# side
+*.cs        text eol=lf diff=csharp
+*.shader    text eol=lf
+*.asmdef    text eol=lf
+*.meta      text eol=lf
+
+# Binary — never touch, never diff
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.webp      binary
+*.ico       binary
+*.ttf       binary
+*.otf       binary
+*.woff      binary
+*.woff2     binary
+*.mp3       binary
+*.wav       binary
+*.ogg       binary
+*.pdf       binary
+*.dll       binary
+*.so        binary
+*.dylib     binary
+*.unitypackage binary
+
+# Generated — mark so review tooling can collapse it
+package-lock.json                       -diff linguist-generated
+unity/engine/candidate-zero-engine.js   -diff linguist-generated
