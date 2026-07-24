@@ -55,18 +55,17 @@ function currentSetup(): SetupSelection {
   };
 }
 
+/**
+ * Player-facing nameplate copy only. Balance numbers (petitionMod, attr
+ * codes) stay in the engine and the first log line — never on this screen.
+ */
 function updateBlurb(): void {
   const setup = currentSetup();
   const p = PERSONAS.find(x => x.id === setup.personaId);
   const r = REGIONS.find(x => x.id === setup.regionId);
   const d = DISTRICTS.find(x => x.id === setup.districtId);
-  const attr = p ? Object.entries(p.attrs).map(([k, v]) => `${k}+${v}`).join(' ') : '';
-  $('setup-blurb').textContent = [
-    p?.d ?? '',
-    d?.d ?? '',
-    r ? `${r.n}: petition mod ${r.petitionMod >= 0 ? '+' : ''}${r.petitionMod}.` : '',
-    attr ? `Attr tilt: ${attr}` : ''
-  ]
+  const i = ISSUES.find(x => x.id === setup.issueId);
+  $('setup-blurb').textContent = [p?.d, d?.d, r?.d, i?.d ? `Issue: ${i.d}` : '']
     .filter(Boolean)
     .join(' ');
 }
