@@ -26,6 +26,8 @@ import {
   clearIdentity,
   type InterimPath
 } from '../engine/legacy.js';
+import { injectIntoDrawPile } from '../engine/deck.js';
+import { kitIdsForSetup } from '../data/nameplate-kits.js';
 import { enterWaiting, finishWaiting } from '../engine/waiting.js';
 import type {
   CampaignOutcome,
@@ -108,7 +110,6 @@ export function commitPlay(index: number, ground?: Ground): void {
 
 /**
  * @param lockIdentity — true when filing from the nameplate draft (first bind).
- * Re-files and incumbent paths pass false; identity already on Chronicle.
  */
 export function startRun(setup: SetupSelection, seed: number, lockIdentity = false): void {
   if (lockIdentity) {
@@ -116,6 +117,15 @@ export function startRun(setup: SetupSelection, seed: number, lockIdentity = fal
     saveLegacy(legacy);
   }
   campaign = createCampaign({ seed, setup });
+  const kit = kitIdsForSetup(setup);
+  if (kit.length) {
+    injectIntoDrawPile(campaign.deck, campaign.state, kit);
+    campaign.state.log.push({
+      week: campaign.state.week,
+      kind: 'note',
+      text: `Nameplate kit — issue/region cards enter the pile: ${kit.join(', ')}.`
+    });
+  }
   applyLegacy(campaign.state, legacy);
   weekPlays = [];
   startWeek(campaign);
@@ -125,10 +135,6 @@ export function startRun(setup: SetupSelection, seed: number, lockIdentity = fal
   openActSplash('primary');
 }
 
-/**
- * Title "Begin the Climb": if identity is locked, skip nameplate entirely.
- * @returns true if a run was started
- */
 export function tryBeginClimb(): boolean {
   legacy = loadLegacy();
   if (!legacy.identity) return false;
@@ -167,6 +173,9 @@ export function openSetupWithChronicle(): void {
       legacy = l;
     }
   );
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('cz-nameplate'));
+  }
 }
 
 export function enterTerminal(c: Campaign): void {
@@ -195,14 +204,8 @@ export function enterTerminal(c: Campaign): void {
         'Incumbent cycle. You skip petition — but the primary still wants a fight. Session is behind you until you win November again.'
       );
     },
-    onRest: () => {
-      // Persistent identity: rest still goes through waiting, not a blank form.
-      // If no path yet, chronicle view only — identity remains.
-      openSetupWithChronicle();
-    },
-    onPathSelected: () => {
-      /* traits screen painted by terminal-ui */
-    },
+    onRest: () => openSetupWithChronicle(),
+    onPathSelected: () => {},
     onTraitSelected: (path: InterimPath, traitId: TraitId) => {
       addTrait(legacy, traitId);
       setInterimPath(legacy, path.id, path.interim);
