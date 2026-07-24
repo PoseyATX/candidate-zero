@@ -174,7 +174,7 @@ export const SS04_Testimony: PlayCard = {
 /** archive SS05 */
 export const SS05_CalendarSlot: PlayCard = {
   id: 'SS05',
-  n: 'Beg a Calendar Slot',
+  n: 'Set on Calendar',
   cost: { a: 1 },
   risk: 'STD',
   ph: [1, 2, 3],
@@ -287,7 +287,7 @@ export const SS07_WorkSenate: PlayCard = {
 /** archive SS08 */
 export const SS08_Casework: PlayCard = {
   id: 'SS08',
-  n: 'District Casework',
+  n: 'Casework',
   cost: { a: 1 },
   risk: 'SAFE',
   ph: [1, 2, 3],
