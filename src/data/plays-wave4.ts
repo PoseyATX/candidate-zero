@@ -87,7 +87,7 @@ export const PL20_PacCheck: PlayCard = {
 };
 
 export const PL21_SelfFundCredit: PlayCard = {
-  id: 'PL21', n: 'Self-Fund on Credit', cost: { a: 1 }, risk: 'SAFE', ph: [1, 2], tag: 'the bank believes in you',
+  id: 'PL21', n: 'Self-Fund', cost: { a: 1 }, risk: 'SAFE', ph: [1, 2], tag: 'the bank believes in you',
   attrs: ['CRA'],
   kind: 'bargain',
   trap: true,
