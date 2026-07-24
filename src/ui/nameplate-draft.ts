@@ -85,8 +85,9 @@ export function renderNameplateDraft(
   onFile: (setup: SetupSelection, seed: number) => void
 ): void {
   const host = $('nameplate-draft');
+  // In-fiction only. No step counts, no Chronicle lectures.
   const stepLabel =
-    draft.step === 1 ? 'Step 1 of 3 — Who walks in' : draft.step === 2 ? 'Step 2 of 3 — What you run on' : 'Step 3 of 3 — Where you file';
+    draft.step === 1 ? 'Who are you' : draft.step === 2 ? 'What do you run on' : 'Where do you file';
 
   let grid = '';
   if (draft.step === 1) {
@@ -141,19 +142,12 @@ export function renderNameplateDraft(
 
   host.innerHTML = `
     <p class="id-step-label">${stepLabel}</p>
-    <p class="hint id-step-hint">${
-      draft.step === 1
-        ? 'Pick a persona card. This is who you are for the entire Chronicle — not just this filing.'
-        : draft.step === 2
-          ? 'Pick the issue that rides on every yard sign. It seeds your opening kit.'
-          : 'District sets the field. Region sets the ground. Both bind.'
-    }</p>
     ${draft.step < 3 ? `<div class="id-card-grid">${grid}</div>` : grid}
-    <p class="id-summary" aria-live="polite">${summary ? esc(summary) : 'No picks yet.'}</p>
+    <p class="id-summary" aria-live="polite">${summary ? esc(summary) : ''}</p>
     <div class="id-draft-actions">
       ${draft.step > 1 ? `<button type="button" class="btn" id="id-back">Back</button>` : ''}
       ${draft.step < 3 ? `<button type="button" class="btn btn-gold" id="id-next" ${canNext ? '' : 'disabled'}>Next</button>` : ''}
-      ${draft.step === 3 ? `<button type="button" class="btn btn-gold" id="id-file" ${canFile ? '' : 'disabled'}>File the nameplate</button>` : ''}
+      ${draft.step === 3 ? `<button type="button" class="btn btn-gold" id="id-file" ${canFile ? '' : 'disabled'}>File</button>` : ''}
       <label class="id-seed-label">Seed <input id="seed-input" type="number" min="0" step="1" placeholder="random" /></label>
     </div>
   `;
