@@ -1,7 +1,7 @@
 /**
  * Nameplate as a 3-step card draft (not a form).
  * 1 Persona → 2 Issue → 3 Place (district + region).
- * Identity is filed once; session layer persists it on Chronicle.
+ * Identity is filed once; session layer persists it.
  */
 
 import {
@@ -53,31 +53,18 @@ function identityCardHtml(
   title: string,
   tag: string,
   body: string,
-  selected: boolean,
-  emblemKey: string
+  selected: boolean
 ): string {
+  // Star for every identity card — no incomplete emblem map.
   return `
     <button type="button" class="id-card ${selected ? 'selected' : ''}" data-kind="${kind}" data-id="${esc(id)}"
       aria-pressed="${selected ? 'true' : 'false'}">
-      <span class="id-card-emblem">${emblem(emblemKey)}</span>
+      <span class="id-card-emblem">${emblem('star')}</span>
       <span class="id-card-name">${esc(title)}</span>
       <span class="id-card-tag">${esc(tag)}</span>
       <span class="id-card-body">${esc(body)}</span>
     </button>`;
 }
-
-const PERSONA_EMBLEM: Record<string, string> = {
-  teacher: 'star',
-  veteran: 'seal',
-  preacher: 'seal',
-  smallbiz: 'coin',
-  PA_CLO: 'network',
-  PA_CON: 'seal',
-  PA_CRA: 'coin',
-  PA_INK: 'gavel',
-  PA_DIP: 'network',
-  PA_CHA: 'star'
-};
 
 export function renderNameplateDraft(
   draft: NameplateDraftState,
@@ -85,7 +72,6 @@ export function renderNameplateDraft(
   onFile: (setup: SetupSelection, seed: number) => void
 ): void {
   const host = $('nameplate-draft');
-  // In-fiction only. No step counts, no Chronicle lectures.
   const stepLabel =
     draft.step === 1 ? 'Who are you' : draft.step === 2 ? 'What do you run on' : 'Where do you file';
 
@@ -98,13 +84,12 @@ export function renderNameplateDraft(
         p.n.replace(/^The /, ''),
         p.tag,
         p.d,
-        draft.personaId === p.id,
-        PERSONA_EMBLEM[p.id] ?? 'star'
+        draft.personaId === p.id
       )
     ).join('');
   } else if (draft.step === 2) {
     grid = ISSUES.map(i =>
-      identityCardHtml('issue', i.id, i.n, i.tag, i.d, draft.issueId === i.id, 'seal')
+      identityCardHtml('issue', i.id, i.n, i.tag, i.d, draft.issueId === i.id)
     ).join('');
   } else {
     const districts = DISTRICTS.map(d =>
@@ -114,22 +99,16 @@ export function renderNameplateDraft(
         d.n,
         d.align,
         d.d,
-        draft.districtId === d.id,
-        d.trap ? 'hourglass' : 'gavel'
+        draft.districtId === d.id
       )
     ).join('');
     const regions = REGIONS.map(r =>
-      identityCardHtml('region', r.id, r.n, r.hook, r.d, draft.regionId === r.id, 'network')
+      identityCardHtml('region', r.id, r.n, r.hook, r.d, draft.regionId === r.id)
     ).join('');
     grid =
       `<div class="id-place-block"><h3 class="id-subhead">District</h3><div class="id-card-grid">${districts}</div></div>` +
       `<div class="id-place-block"><h3 class="id-subhead">Region</h3><div class="id-card-grid">${regions}</div></div>`;
   }
-
-  const canNext =
-    (draft.step === 1 && !!draft.personaId) ||
-    (draft.step === 2 && !!draft.issueId) ||
-    (draft.step === 3 && !!draft.districtId && !!draft.regionId);
 
   const canFile =
     !!draft.personaId && !!draft.issueId && !!draft.districtId && !!draft.regionId;
@@ -146,9 +125,8 @@ export function renderNameplateDraft(
     <p class="id-summary" aria-live="polite">${summary ? esc(summary) : ''}</p>
     <div class="id-draft-actions">
       ${draft.step > 1 ? `<button type="button" class="btn" id="id-back">Back</button>` : ''}
-      ${draft.step < 3 ? `<button type="button" class="btn btn-gold" id="id-next" ${canNext ? '' : 'disabled'}>Next</button>` : ''}
       ${draft.step === 3 ? `<button type="button" class="btn btn-gold" id="id-file" ${canFile ? '' : 'disabled'}>File</button>` : ''}
-      <label class="id-seed-label">Seed <input id="seed-input" type="number" min="0" step="1" placeholder="random" /></label>
+      <label class="id-seed-label">Seed <input id="seed-input" type="number" min="0" step="1" placeholder="random" value="" /></label>
     </div>
   `;
 
@@ -158,10 +136,18 @@ export function renderNameplateDraft(
       const id = (btn as HTMLElement).dataset.id;
       if (!kind || !id) return;
       const next = { ...draft };
-      if (kind === 'persona') next.personaId = id;
-      if (kind === 'issue') next.issueId = id;
-      if (kind === 'district') next.districtId = id;
-      if (kind === 'region') next.regionId = id;
+      if (kind === 'persona') {
+        next.personaId = id;
+        // Auto-advance — pick is the action, not a two-tap dance.
+        next.step = 2;
+      } else if (kind === 'issue') {
+        next.issueId = id;
+        next.step = 3;
+      } else if (kind === 'district') {
+        next.districtId = id;
+      } else if (kind === 'region') {
+        next.regionId = id;
+      }
       onChange(next);
     });
   });
@@ -172,13 +158,7 @@ export function renderNameplateDraft(
       onChange({ ...draft, step: (Math.max(1, draft.step - 1) as DraftStep) });
     });
   }
-  const nextBtn = document.getElementById('id-next');
-  if (nextBtn) {
-    nextBtn.addEventListener('click', () => {
-      if (!canNext) return;
-      onChange({ ...draft, step: (Math.min(3, draft.step + 1) as DraftStep) });
-    });
-  }
+
   const fileBtn = document.getElementById('id-file');
   if (fileBtn) {
     fileBtn.addEventListener('click', () => {

@@ -110,7 +110,7 @@ export function commitPlay(index: number, ground?: Ground): void {
 
 /**
  * @param lockIdentity — true when filing from the nameplate draft (first bind).
- * Re-files and incumbent paths pass false; identity already on Chronicle.
+ * Re-files and incumbent paths pass false; identity already locked.
  */
 export function startRun(setup: SetupSelection, seed: number, lockIdentity = false): void {
   if (lockIdentity) {
@@ -124,7 +124,7 @@ export function startRun(setup: SetupSelection, seed: number, lockIdentity = fal
     campaign.state.log.push({
       week: campaign.state.week,
       kind: 'note',
-      text: `Nameplate kit — issue/region cards enter the pile: ${kit.join(', ')}.`
+      text: `Opening kit enters the pile: ${kit.join(', ')}.`
     });
   }
   applyLegacy(campaign.state, legacy);
@@ -147,9 +147,7 @@ export function tryBeginClimb(): boolean {
 
 export function requestNewRun(): void {
   if (campaign && !campaign.state.over) {
-    const ok = window.confirm(
-      'Abandon this campaign week stack? Your filed identity stays on the Chronicle — you will not re-pick persona. Wipe the Chronicle to clear identity.'
-    );
+    const ok = window.confirm('Leave this week? Your filed identity stays — you will not re-pick who you are.');
     if (!ok) return;
   }
   legacy = loadLegacy();
@@ -161,7 +159,7 @@ export function requestNewRun(): void {
   openSetupWithChronicle();
 }
 
-/** Nameplate only when no identity is filed (or after Chronicle wipe). */
+/** Nameplate only when no identity is filed (or after wipe). */
 export function openSetupWithChronicle(): void {
   legacy = loadLegacy();
   if (legacy.identity) {
