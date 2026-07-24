@@ -1,20 +1,14 @@
 /**
  * CANDIDATE ZERO — The Chronicle (cross-run meta-progression)
- *
- * Ported from archive/prototype-single-file.html's LEGACY/TRAITS/paths/
- * epithet/terminal system. A run ending is not a reset: the archive never
- * had a hard "game over" screen — it has a terminal beat (what happened,
- * what you grew despite losing), then an interim choice (how you spent the
- * two years until the next filing deadline) that grants one permanent
- * trait, then the next run starts already carrying real progress forward.
- *
- * `hasRep`/`warm` checks below only ever see reps this engine can actually
- * grant (see reputation.ts's documented gaps) — traits gated on R08/R09
- * marks in the archive simply won't fire here yet, same scoping as
- * everywhere else this session.
  */
 
-import type { CampaignOutcome, GameState, LegacyState, TraitId } from './types.js';
+import type {
+  CampaignOutcome,
+  FiledIdentity,
+  GameState,
+  LegacyState,
+  TraitId
+} from './types.js';
 import { hasRep } from './reputation.js';
 import { generalWinProbability, primaryWinProbability } from './calendar.js';
 import { applyLegacyDebt, isDebtCrisis, mergeDebtIntoCarry } from './debt.js';
@@ -46,7 +40,8 @@ export function loadLegacy(): LegacyState {
       runs: Array.isArray(parsed.runs) ? parsed.runs : [],
       traits: Array.isArray(parsed.traits) ? parsed.traits : [],
       carry: parsed.carry ?? {},
-      name: parsed.name
+      name: parsed.name,
+      identity: parsed.identity
     };
   } catch {
     return emptyLegacy();
@@ -58,8 +53,16 @@ export function saveLegacy(legacy: LegacyState): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(legacy));
   } catch {
-    // storage unavailable mid-session: the Chronicle lives for this sitting only
+    /* storage unavailable */
   }
+}
+
+export function setIdentity(legacy: LegacyState, id: FiledIdentity): void {
+  legacy.identity = { ...id };
+}
+
+export function clearIdentity(legacy: LegacyState): void {
+  delete legacy.identity;
 }
 
 export const TRAITS: Record<TraitId, { n: string; d: string }> = {
@@ -109,7 +112,6 @@ export function buildPaths(state: GameState, share: number): InterimPath[] {
       n: 'The Advocate',
       d: `The candidate lost; the issue didn’t. Build the organization "${state.issue ?? 'the cause'}" deserved.`,
       traits: ['T_CRED', 'T_NORTH'],
-      // Phase 3: crisis debt closes the soft paths — run again or go home.
       gate: !crisis,
       interim: `Two years building the ${state.issue ?? 'issue'} organization.`
     },
@@ -161,7 +163,6 @@ export function buildPaths(state: GameState, share: number): InterimPath[] {
   return paths.filter(p => p.gate);
 }
 
-/** Trait effects on a fresh run — call after applySetup, before the campaign starts. */
 export function applyLegacy(state: GameState, legacy: LegacyState): void {
   const has = (t: TraitId) => legacy.traits.includes(t);
   if (has('T_LIST') && legacy.carry.contacts) {
@@ -189,11 +190,8 @@ export function applyLegacy(state: GameState, legacy: LegacyState): void {
     state.faces.P += 8;
     state.faces.O += 8;
   }
-  // Phase 3: loss-branch debt compounds into the next cycle (affordability,
-  // not odds). Reuses applyCarriedDebt → addObl OB2 (debt.ts / obligations.ts).
   applyLegacyDebt(state, legacy);
 
-  // Starmap waiting loop + banked waiting-season yields from last cycle.
   if (legacy.carry.waitingLoopId) {
     state.sessionFlags = state.sessionFlags || {};
     state.sessionFlags[`waiting_${legacy.carry.waitingLoopId}`] = true;
@@ -206,9 +204,7 @@ export function applyLegacy(state: GameState, legacy: LegacyState): void {
       text: `WAITING ORBIT — last cycle's path still colors this climb (${legacy.carry.waitingLoopId.replace(/LOOP_WAITING_|LOOP_ELECTED_/g, '').toLowerCase()}). No true game over; only redirection.`
     });
   }
-  if (legacy.carry.waitingContacts) {
-    state.contacts += legacy.carry.waitingContacts;
-  }
+  if (legacy.carry.waitingContacts) state.contacts += legacy.carry.waitingContacts;
   if (legacy.carry.waitingNameID) state.nameID += legacy.carry.waitingNameID;
   if (legacy.carry.waitingMoney) state.money += legacy.carry.waitingMoney;
   if (legacy.carry.waitingVols) state.volPool += legacy.carry.waitingVols;
@@ -223,7 +219,6 @@ export function applyLegacy(state: GameState, legacy: LegacyState): void {
       text: `HIGHER OFFICE RESIDUE — last cycle tested ${legacy.carry.higherOfficeFork} waters. The map is larger than one district.`
     });
   }
-  // One-shot waiting banks (don't double-dip every trait reload)
   if (
     legacy.carry.waitingContacts ||
     legacy.carry.waitingNameID ||
@@ -242,18 +237,9 @@ export function applyLegacy(state: GameState, legacy: LegacyState): void {
   }
 }
 
-/**
- * Approximate "how close you were" for the epithet's loss narrative. Modular
- * resolution is probability-threshold based rather than a simulated vote
- * share, so this reuses the same win-probability formulas the calendar
- * already computes at each election, recomputed post-hoc off the state as
- * it stood when the run ended (pure formula, no RNG — safe to call after
- * the outcome is already set).
- */
 export function computeShare(state: GameState, kind: CampaignOutcome): number {
   if (kind === 'lost_primary') return primaryWinProbability(state) * 100;
   if (kind === 'lost_general') return generalWinProbability(state) * 100;
-  // Session reelection outlook is baked into the outcome text; surface standing.
   if (kind === 'session_law' || kind === 'session_survived') {
     return Math.min(95, 50 + state.districtStanding * 0.4);
   }
@@ -263,7 +249,6 @@ export function computeShare(state: GameState, kind: CampaignOutcome): number {
   return 0;
 }
 
-/** One-line narrative summary of how a run ended, for the Chronicle. */
 export function buildEpithet(state: GameState, kind: CampaignOutcome, share: number): string {
   const who = state.persona ? lowerThe(state.persona) : 'The candidate';
   const alignLabel: Record<string, string> = {
@@ -314,7 +299,6 @@ function lowerThe(n: string): string {
   return n.startsWith('The ') ? 'the ' + n.slice(4) : n;
 }
 
-/** What this run leaves behind even on a loss — the "not empty-handed" beat. */
 export function buildGrowthLine(state: GameState): string | null {
   const grew: string[] = [];
   if (state.walkCount > 0) grew.push(`walked ${state.walkCount} blocks`);
@@ -324,19 +308,12 @@ export function buildGrowthLine(state: GameState): string | null {
   return `But you did not come away empty. This run, you ${grew.join(' · ')}. The county remembers.`;
 }
 
-/** Push this run into the Chronicle and bank its carry-forward stats. */
 export function recordRun(legacy: LegacyState, state: GameState, kind: CampaignOutcome, share: number): void {
   legacy.runs.push({ epithet: buildEpithet(state, kind, share), kind });
   const base = { contacts: state.contacts, nameID: state.nameID };
-  // Phase 3: loss compounds debt into carry; win zeros debt carry
-  // (cash retirement happens in retireDebtOnWin on reelect / Session).
   legacy.carry = mergeDebtIntoCarry(base, state, kind);
 }
 
-/**
- * Chronicle interim path id → starmap waiting loop.
- * "No true game over" — loss redirects into a named orbit for the next climb.
- */
 export const PATH_TO_WAITING_LOOP: Record<string, string> = {
   perennial: 'LOOP_WAITING_PERENNIAL',
   advocate: 'LOOP_WAITING_ADVOCATE',
@@ -347,7 +324,6 @@ export const PATH_TO_WAITING_LOOP: Record<string, string> = {
   statewide: 'LOOP_ELECTED_HIGHER_STATEWIDE'
 };
 
-/** Record interim flavor + bind waiting loop on carry for the next run. */
 export function setInterimPath(legacy: LegacyState, pathId: string, interim: string): void {
   const last = legacy.runs[legacy.runs.length - 1];
   if (last) last.interim = interim;
