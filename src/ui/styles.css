@@ -473,103 +473,295 @@ h1 {
 }
 .setup-actions .btn { min-width: 8rem; }
 
-/* ===== Card detail sheet (tap face → read desc → PLAY) ===== */
+/* ===== Campaign brief — near-fullscreen dossier (tap face → read → play) =====
+   Room is not scarce here. Full sentences. No chip jargon. */
+body.dossier-open {
+  overflow: hidden;
+}
 .card-detail {
   position: fixed;
   inset: 0;
   z-index: 110;
   display: flex;
-  align-items: flex-end;
+  align-items: stretch;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(4px);
-  padding: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 20%, rgba(80, 55, 28, 0.35), transparent 70%),
+    rgba(8, 6, 4, 0.82);
+  backdrop-filter: blur(10px);
+  padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0)
+    env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
 }
 .card-detail.hidden { display: none !important; }
-.detail-panel {
-  width: 100%;
-  max-width: 480px;
+
+.dossier {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 42rem);
+  height: 100%;
+  max-height: 100%;
   margin: 0 auto;
-  background: var(--walnut-2, #1f1815);
-  border-top: 1px solid var(--gold-dim, #a88b4a);
-  border-radius: 16px 16px 0 0;
-  padding: 1.25rem 1.35rem 1.5rem;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.45);
+  background:
+    linear-gradient(180deg, #2a2018 0%, #1a1410 40%, #14100c 100%);
+  border-left: 1px solid rgba(201, 162, 77, 0.28);
+  border-right: 1px solid rgba(201, 162, 77, 0.28);
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.65);
+  animation: dossier-in 0.22s ease-out;
 }
-.detail-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 0.75rem;
-  margin-bottom: 0.5rem;
+@keyframes dossier-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.985); }
+  to { opacity: 1; transform: none; }
 }
-.detail-title {
-  font-family: Cinzel, Merriweather, serif;
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin: 0;
-  color: var(--parchment, #f0e6d2);
-  line-height: 1.2;
-}
-.detail-close {
-  background: none;
-  border: none;
-  color: var(--parchment-dim, #b8a890);
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: 0;
-  width: 2rem;
-  height: 2rem;
-  line-height: 1;
-  flex-shrink: 0;
-}
-.detail-tagline {
-  font-style: italic;
-  font-size: 0.88rem;
-  color: #d4c09a; /* WCAG AA on walnut panel */
-  margin: 0 0 0.65rem;
-}
-.detail-desc {
-  font-size: 1rem;
-  line-height: 1.55;
-  color: var(--parchment, #f0e6d2);
-  margin: 0 0 1rem;
-}
-.detail-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem 1rem;
-  margin-bottom: 1.15rem;
-  padding-bottom: 0.85rem;
-  border-bottom: 1px solid rgba(154, 130, 79, 0.45);
-}
-.detail-stat {
-  font-size: 0.88rem;
-  color: var(--parchment-dim, #cfc0a8);
-}
-.detail-stat strong { color: var(--gold, #c9a84c); font-weight: 700; }
-.detail-stat.detail-locked { color: #c07060; }
-.detail-risk {
+
+.dossier-close {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.75rem;
+  z-index: 5;
+  font-family: Cinzel, serif;
   font-size: 0.72rem;
-  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  align-self: center;
+  color: var(--gold, #c9a84c);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(201, 162, 77, 0.45);
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  cursor: pointer;
 }
-.detail-risk.risk-safe { color: #4a9a4a; }
-.detail-risk.risk-std { color: var(--gold, #c9a84c); }
-.detail-risk.risk-vol { color: #c06040; }
-.detail-risk.risk-choice { color: #6a8ab0; }
-#btn-play-detail {
+.dossier-close:hover,
+.dossier-close:focus-visible {
+  background: rgba(201, 162, 77, 0.18);
+  outline: none;
+}
+
+.dossier-scroll {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1.25rem 1.35rem 1rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.dossier-art {
+  display: flex;
+  justify-content: center;
+  margin: 0.25rem 0 1rem;
+}
+.dossier-art-frame {
+  position: relative;
+  width: min(100%, 16rem);
+  aspect-ratio: 5 / 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(154, 130, 79, 0.75);
+  border-radius: 3px;
+  background:
+    radial-gradient(ellipse 90% 80% at 50% 30%, rgba(255, 250, 235, 0.55), transparent 70%),
+    linear-gradient(180deg, #efe3c6, #e0d0a8);
+  box-shadow:
+    inset 0 0 24px rgba(122, 90, 44, 0.2),
+    0 8px 24px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+.dossier-art-frame.risk-safe { box-shadow: inset 0 0 0 3px rgba(46, 107, 48, 0.45), 0 8px 24px rgba(0, 0, 0, 0.4); }
+.dossier-art-frame.risk-vol { box-shadow: inset 0 0 0 3px rgba(161, 84, 28, 0.5), 0 8px 24px rgba(0, 0, 0, 0.4); }
+.dossier-art-frame.risk-std { box-shadow: inset 0 0 0 3px rgba(201, 162, 77, 0.4), 0 8px 24px rgba(0, 0, 0, 0.4); }
+.dossier-emblem {
+  position: relative;
+  z-index: 2;
+  width: 42%;
+  height: 55%;
+  max-width: 6.5rem;
+  color: #5d452a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dossier-emblem svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 1px 0 rgba(255, 250, 235, 0.55));
+}
+.dossier-art-frame .art-plate,
+.dossier-art-frame .art-raster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.dossier-eyebrow {
+  font-family: Cinzel, serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold, #c9a84c);
+  margin: 0 0 0.45rem;
+  text-align: center;
+}
+.dossier-title {
+  font-family: Cinzel, Merriweather, serif;
+  font-size: clamp(1.45rem, 5vw, 1.85rem);
+  font-weight: 700;
+  margin: 0 0 0.4rem;
+  color: var(--parchment, #f0e6d2);
+  line-height: 1.15;
+  text-align: center;
+  padding: 0 0.5rem;
+}
+.dossier-tagline {
+  font-style: italic;
+  font-size: 1.05rem;
+  color: #d4c09a;
+  margin: 0 0 1rem;
+  text-align: center;
+  line-height: 1.4;
+}
+.dossier-tagline.hidden { display: none; }
+.dossier-prose {
+  font-size: 1.08rem;
+  line-height: 1.65;
+  color: var(--parchment, #f0e6d2);
+  margin: 0 0 1.25rem;
+  max-width: 36rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.dossier-odds {
+  margin: 0 auto 1.35rem;
+  max-width: 36rem;
+  padding: 1rem 1.1rem 1.05rem;
+  border: 1px solid rgba(201, 162, 77, 0.4);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.28);
+}
+.dossier-odds[hidden] { display: none !important; }
+.dossier-odds-num {
+  font-family: Cinzel, serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--gold, #c9a84c);
+  margin: 0 0 0.4rem;
+  line-height: 1.3;
+}
+.dossier-odds-body {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--parchment-dim, #cfc0a8);
+  margin: 0 0 0.75rem;
+}
+.dossier-odds-meter {
+  display: block;
+  height: 0.45rem;
+  border-radius: 2px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(154, 130, 79, 0.45);
+}
+.dossier-odds-meter i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold-dim, #a88b4a), var(--gold, #c9a84c));
+}
+
+.dossier-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0 auto 1rem;
+  max-width: 36rem;
+  padding: 0;
+  border-top: 1px solid rgba(154, 130, 79, 0.4);
+}
+.dossier-fact {
+  display: grid;
+  grid-template-columns: minmax(7.5rem, 32%) 1fr;
+  gap: 0.65rem 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid rgba(154, 130, 79, 0.28);
+  margin: 0;
+}
+.dossier-fact dt {
+  font-family: Cinzel, serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-dim, #a88b4a);
+  margin: 0;
+  padding-top: 0.15rem;
+}
+.dossier-fact dd {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: var(--parchment, #f0e6d2);
+}
+.dossier-fact-note {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--parchment-dim, #cfc0a8);
+  font-weight: 400;
+}
+.dossier-risk.risk-safe { color: #6bbb6b; }
+.dossier-risk.risk-std { color: var(--gold, #c9a84c); }
+.dossier-risk.risk-vol { color: #e08a5c; }
+.dossier-risk.risk-choice { color: #8ab0d4; }
+
+.dossier-lock {
+  max-width: 36rem;
+  margin: 0.5rem auto 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(192, 112, 96, 0.55);
+  border-radius: 4px;
+  background: rgba(120, 40, 30, 0.22);
+  color: #e8b4a8;
+  font-size: 0.98rem;
+  line-height: 1.45;
+}
+.dossier-lock[hidden] { display: none !important; }
+
+.dossier-actions {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.85rem 1.25rem calc(0.95rem + env(safe-area-inset-bottom, 0));
+  border-top: 1px solid rgba(201, 162, 77, 0.35);
+  background: linear-gradient(180deg, rgba(20, 16, 12, 0.4), #120e0a 30%);
+}
+.dossier-actions .btn {
   width: 100%;
   padding: 0.95rem 1rem;
-  font-size: 1.05rem;
+  font-size: 1.02rem;
 }
 #btn-play-detail:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+@media (min-width: 720px) {
+  .card-detail {
+    align-items: center;
+    padding: 1.5rem;
+  }
+  .dossier {
+    height: min(92vh, 900px);
+    border-radius: 6px;
+    border: 1px solid rgba(201, 162, 77, 0.35);
+  }
+  .dossier-scroll {
+    padding: 1.75rem 2rem 1.25rem;
+  }
+  .dossier-fact {
+    grid-template-columns: minmax(9rem, 28%) 1fr;
+  }
 }
 .shop-hint {
   grid-column: 1 / -1;

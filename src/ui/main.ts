@@ -79,12 +79,23 @@ function boot(): void {
   $('gp-cancel').addEventListener('click', () => closeGroundPicker());
   const detailClose = document.getElementById('detail-close');
   if (detailClose) detailClose.addEventListener('click', () => closeCardDetail());
+  const detailBack = document.getElementById('btn-detail-back');
+  if (detailBack) detailBack.addEventListener('click', () => closeCardDetail());
   const cardDetail = document.getElementById('card-detail');
   if (cardDetail) {
     cardDetail.addEventListener('click', e => {
       if (e.target === cardDetail) closeCardDetail();
     });
   }
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      const sheet = document.getElementById('card-detail');
+      if (sheet && !sheet.classList.contains('hidden')) {
+        e.preventDefault();
+        closeCardDetail();
+      }
+    }
+  });
   window.addEventListener('cz-nameplate', () => {
     draft = emptyDraft();
     paintDraft();

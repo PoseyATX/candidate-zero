@@ -17,11 +17,86 @@ import {
   cardHtml,
   cardInner,
   cardClasses,
-  costParts,
   computeCardFaceView,
+  artPlateHtml,
   attrEscape
 } from './card-face.js';
+import { emblemFor, KIND_META } from './card-art.js';
 import { ACT_SHELLS, actFromStage } from './act-shell.js';
+import type { AttrId, RiskClass } from '../engine/types.js';
+
+/** Full attribute names — never dump CLO/CON on a roomy brief. */
+const ATTR_NAMES: Record<AttrId, string> = {
+  CLO: 'Close',
+  CON: 'Conviction',
+  CRA: 'Craft',
+  INK: 'Ink',
+  DIP: 'Diplomacy',
+  CHA: 'Charm'
+};
+
+function costInEnglish(card: PlayCard): string {
+  const c = card.cost;
+  const parts: string[] = [];
+  if (c.a) parts.push(c.a === 1 ? '1 action point' : `${c.a} action points`);
+  if (c.$) parts.push(`$${c.$}`);
+  if (c.vp) parts.push(c.vp === 1 ? '1 volunteer' : `${c.vp} volunteers`);
+  if (c.m) parts.push(c.m === 1 ? '1 momentum' : `${c.m} momentum`);
+  if (c.fav) parts.push(c.fav === 1 ? '1 favor' : `${c.fav} favors`);
+  if (!parts.length) return 'Free — no spend to play';
+  if (parts.length === 1) return parts[0]!;
+  if (parts.length === 2) return `${parts[0]} and ${parts[1]}`;
+  return `${parts.slice(0, -1).join(', ')}, and ${parts[parts.length - 1]}`;
+}
+
+function riskCopy(risk: RiskClass): { title: string; body: string } {
+  switch (risk) {
+    case 'SAFE':
+      return {
+        title: 'Safe',
+        body: 'The floor holds. This never rolls into a disaster.'
+      };
+    case 'STD':
+      return {
+        title: 'Standard risk',
+        body: 'Honest variance — good days and bad days, nothing exotic.'
+      };
+    case 'VOL':
+      return {
+        title: 'Volatile',
+        body: 'Swings both ways. Breakthroughs and disasters are both in play.'
+      };
+    case 'CHOICE':
+      return {
+        title: 'A choice',
+        body: 'The card opens a fork — you pick the path, not the dice alone.'
+      };
+    default:
+      return { title: risk, body: '' };
+  }
+}
+
+function oddsCopy(pct: number | undefined): { headline: string; body: string } | null {
+  if (pct === undefined) return null;
+  const n = Math.round(pct * 100);
+  let feel: string;
+  if (n >= 75) feel = 'The room is with you.';
+  else if (n >= 55) feel = 'A fair fight — better than a coin flip.';
+  else if (n >= 40) feel = 'Uphill. Still worth the walk if you need it.';
+  else feel = 'Long odds. You are asking the county for a miracle.';
+  return {
+    headline: `About ${n} percent chance this succeeds right now`,
+    body: `${feel} That figure already includes your attributes, how many times you have worked this ground, and rival presence.`
+  };
+}
+
+function factRow(label: string, valueHtml: string, extraClass = ''): string {
+  return `
+    <div class="dossier-fact ${extraClass}">
+      <dt>${attrEscape(label)}</dt>
+      <dd>${valueHtml}</dd>
+    </div>`;
+}
 
 function $(id: string): HTMLElement {
   const el = document.getElementById(id);
@@ -138,6 +213,7 @@ export function closeCardDetail(): void {
   detailCampaign = null;
   const root = document.getElementById('card-detail');
   if (root) root.classList.add('hidden');
+  document.body.classList.remove('dossier-open');
 }
 
 export function openCardDetail(campaign: Campaign, index: number): void {
@@ -155,49 +231,137 @@ export function openCardDetail(campaign: Campaign, index: number): void {
   if (locked && !whyLocked) whyLocked = lockReason(campaign, card);
 
   const view = computeCardFaceView(state, card);
-  const { full: costLabel } = costParts(card);
-  const kindMeta = card.kind && card.kind !== 'action' ? card.kind : '';
+  const costWords = costInEnglish(card);
+  const risk = riskCopy(card.risk);
+  const odds = oddsCopy(view.oddsPct);
+  const kindId = card.kind ?? 'action';
+  const kindMeta = KIND_META[kindId] ?? KIND_META.action;
+  const attrWords = (card.attrs ?? [])
+    .map(a => ATTR_NAMES[a] ?? a)
+    .join(', ');
 
   const root = $('card-detail');
   root.classList.remove('hidden');
+  document.body.classList.add('dossier-open');
+
+  const art = root.querySelector('#detail-art');
+  const eyebrow = root.querySelector('#detail-eyebrow');
   const title = root.querySelector('#detail-title');
   const tagline = root.querySelector('#detail-tagline');
   const desc = root.querySelector('#detail-desc');
+  const oddsEl = root.querySelector('#detail-odds') as HTMLElement | null;
   const stats = root.querySelector('#detail-stats');
+  const lockEl = root.querySelector('#detail-lock') as HTMLElement | null;
   const playBtn = root.querySelector('#btn-play-detail') as HTMLButtonElement | null;
+  const backBtn = root.querySelector('#btn-detail-back') as HTMLButtonElement | null;
 
-  if (title) title.textContent = card.n;
-  if (tagline) tagline.textContent = card.tag || '';
-  if (desc) desc.textContent = card.d || card.tag || 'No further detail on file.';
-  if (stats) {
-    // Everything that used to clutter the face lives here.
-    const odds =
-      view.oddsPct !== undefined
-        ? `<span class="detail-stat"><strong>p≈${Math.round(view.oddsPct * 100)}%</strong> odds now</span>`
-        : `<span class="detail-stat">No roll odds</span>`;
-    const risk = `<span class="detail-risk risk-${card.risk.toLowerCase()}">${attrEscape(card.risk)}</span>`;
-    const attrs = view.attrLine
-      ? `<span class="detail-stat">Attrs ${attrEscape(view.attrLine)}</span>`
-      : '';
-    const kind = kindMeta
-      ? `<span class="detail-stat">Kind ${attrEscape(kindMeta)}</span>`
-      : '';
-    const field = card.field
-      ? `<span class="detail-stat">Field — pick a ground after Play</span>`
-      : '';
-    const lock = locked
-      ? `<span class="detail-stat detail-locked">${attrEscape(whyLocked || 'Locked')}</span>`
-      : '';
-    stats.innerHTML = `${odds}${risk}<span class="detail-stat">Cost ${attrEscape(costLabel)}</span>${attrs}${kind}${field}${lock}`;
+  if (art) {
+    const plate = artPlateHtml(card.id);
+    art.innerHTML =
+      `<span class="dossier-art-frame risk-${card.risk.toLowerCase()}">` +
+      `${plate}<span class="dossier-emblem">${emblemFor(card.id)}</span>` +
+      `</span>`;
   }
+  if (eyebrow) {
+    eyebrow.textContent = locked ? 'On file — not playable yet' : 'Campaign brief';
+  }
+  if (title) title.textContent = card.n;
+  if (tagline) {
+    tagline.textContent = card.tag ? `“${card.tag}”` : '';
+    tagline.classList.toggle('hidden', !card.tag);
+  }
+  if (desc) {
+    desc.textContent =
+      card.d ||
+      'No further detail is on file for this play. Trust the title and the cost.';
+  }
+
+  if (oddsEl) {
+    if (odds) {
+      oddsEl.hidden = false;
+      oddsEl.innerHTML = `
+        <p class="dossier-odds-num">${attrEscape(odds.headline)}</p>
+        <p class="dossier-odds-body">${attrEscape(odds.body)}</p>
+        <span class="dossier-odds-meter" aria-hidden="true">
+          <i style="width:${Math.round((view.oddsPct ?? 0) * 100)}%"></i>
+        </span>`;
+    } else {
+      oddsEl.hidden = true;
+      oddsEl.innerHTML = '';
+    }
+  }
+
+  if (stats) {
+    const rows: string[] = [];
+    rows.push(factRow('Cost to play', attrEscape(costWords)));
+    rows.push(
+      factRow(
+        'Risk',
+        `<strong class="dossier-risk risk-${card.risk.toLowerCase()}">${attrEscape(risk.title)}</strong>` +
+          (risk.body ? `<span class="dossier-fact-note">${attrEscape(risk.body)}</span>` : '')
+      )
+    );
+    if (kindMeta) {
+      rows.push(
+        factRow(
+          'What it is',
+          `<strong>${attrEscape(kindMeta.label)}</strong>` +
+            (kindMeta.blurb
+              ? `<span class="dossier-fact-note">${attrEscape(kindMeta.blurb)}</span>`
+              : '')
+        )
+      );
+    }
+    if (attrWords) {
+      rows.push(
+        factRow(
+          'Attributes that help',
+          attrEscape(attrWords),
+          ''
+        )
+      );
+    }
+    rows.push(
+      factRow(
+        'Where you play it',
+        card.field
+          ? 'In the field — after you commit, you choose the ground. Rivals and repeat visits change the odds.'
+          : 'From camp or hand — no ground picker; it resolves where you stand.'
+      )
+    );
+    if (card.ph?.length) {
+      const phaseWords = card.ph
+        .map(p => (p === 1 ? 'Primary' : p === 2 ? 'General' : p === 3 ? 'Session' : `Phase ${p}`))
+        .join(', ');
+      rows.push(factRow('Legal in', attrEscape(phaseWords)));
+    }
+    stats.innerHTML = rows.join('');
+  }
+
+  if (lockEl) {
+    if (locked) {
+      lockEl.hidden = false;
+      lockEl.textContent = whyLocked
+        ? `You cannot play this yet: ${whyLocked}.`
+        : 'You cannot play this yet.';
+    } else {
+      lockEl.hidden = true;
+      lockEl.textContent = '';
+    }
+  }
+
+  if (backBtn) {
+    backBtn.onclick = () => closeCardDetail();
+  }
+
   if (playBtn) {
     playBtn.disabled = locked;
     playBtn.setAttribute('aria-disabled', locked ? 'true' : 'false');
     playBtn.textContent = locked
       ? whyLocked || 'Unavailable'
       : card.field
-        ? `Play — choose ground · ${costLabel}`
-        : `Play — ${costLabel}`;
+        ? `Play — then choose a ground (${costWords})`
+        : `Play this card (${costWords})`;
     playBtn.onclick = () => {
       if (detailIndex === null || !detailCampaign || locked) return;
       const idx = detailIndex;
@@ -211,9 +375,9 @@ export function openCardDetail(campaign: Campaign, index: number): void {
       }
     };
     try {
-      playBtn.focus({ preventScroll: true });
+      (locked ? backBtn : playBtn)?.focus({ preventScroll: true });
     } catch {
-      playBtn.focus();
+      (locked ? backBtn : playBtn)?.focus();
     }
   }
 }

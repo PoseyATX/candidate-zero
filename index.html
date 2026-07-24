@@ -67,15 +67,15 @@
           <h3>Reading a Card</h3>
           <ul class="tut-list">
             <li>The face shows <b>title</b>, <b>art</b>, and <b>cost</b> only.</li>
-            <li><b>First tap</b> opens the sheet — full text, risk, odds, attrs; <b>Play</b> commits.</li>
-            <li><b>p≈</b> on the sheet shows odds on field grounds (rivals tax them).</li>
-            <li><b>Dimmed cards</b> can't be played yet — the sheet says why.</li>
+            <li><b>First tap</b> opens a full brief — story, risk, and odds in plain English; <b>Play</b> commits.</li>
+            <li>Field plays pick a ground. Higher rival opposition makes that ground harder — the brief shows the tax.</li>
+            <li><b>Dimmed cards</b> can't be played yet — the brief says why.</li>
           </ul>
           <h3>Risk</h3>
           <ul class="tut-list">
-            <li><span class="dot dot-safe"></span><b>SAFE</b> — never a disaster.</li>
-            <li><span class="dot dot-std"></span><b>STD</b> — honest variance.</li>
-            <li><span class="dot dot-vol"></span><b>VOL</b> — swings both ways.</li>
+            <li><span class="dot dot-safe"></span><b>Safe</b> — never a disaster.</li>
+            <li><span class="dot dot-std"></span><b>Standard</b> — honest variance.</li>
+            <li><span class="dot dot-vol"></span><b>Volatile</b> — swings both ways.</li>
           </ul>
           <h3>The Two Doors to the Ballot</h3>
           <p><b>Labor:</b> petition signatures. <b>Money:</b> the filing fee. Most runs die at this door.</p>
@@ -117,15 +117,22 @@
           </div>
         </div>
         <div id="card-detail" class="card-detail hidden" role="dialog" aria-modal="true" aria-labelledby="detail-title">
-          <div class="detail-panel">
-            <div class="detail-header">
-              <h3 id="detail-title" class="detail-title"></h3>
-              <button type="button" class="detail-close" id="detail-close" aria-label="Close">✕</button>
+          <div class="dossier" id="detail-panel">
+            <button type="button" class="dossier-close" id="detail-close" aria-label="Close brief">Close</button>
+            <div class="dossier-scroll" tabindex="0" role="region" aria-label="Card brief details">
+              <div class="dossier-art" id="detail-art" aria-hidden="true"></div>
+              <p class="dossier-eyebrow" id="detail-eyebrow">Campaign brief</p>
+              <h2 id="detail-title" class="dossier-title"></h2>
+              <p class="dossier-tagline" id="detail-tagline"></p>
+              <p class="dossier-prose" id="detail-desc"></p>
+              <div class="dossier-odds" id="detail-odds" hidden></div>
+              <dl class="dossier-facts" id="detail-stats"></dl>
+              <p class="dossier-lock" id="detail-lock" hidden></p>
             </div>
-            <p class="detail-tagline" id="detail-tagline"></p>
-            <p class="detail-desc" id="detail-desc"></p>
-            <div class="detail-stats" id="detail-stats"></div>
-            <button type="button" class="btn btn-gold btn-large" id="btn-play-detail">Play</button>
+            <div class="dossier-actions">
+              <button type="button" class="btn btn-gold btn-large" id="btn-play-detail">Play this card</button>
+              <button type="button" class="btn btn-large" id="btn-detail-back">Put it back</button>
+            </div>
           </div>
         </div>
         <div class="mtabs">
