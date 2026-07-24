@@ -114,7 +114,7 @@ export function attrEscape(s: string): string {
     .replace(/>/g, '&gt;');
 }
 
-export function costParts(card: PlayCard): { seal: string; subs: string[] } {
+export function costParts(card: PlayCard): { seal: string; subs: string[]; full: string } {
   const c = card.cost;
   const all: string[] = [];
   if (c.a) all.push(`${c.a} AP`);
@@ -122,8 +122,8 @@ export function costParts(card: PlayCard): { seal: string; subs: string[] } {
   if (c.vp) all.push(`${c.vp} vol`);
   if (c.m) all.push(`${c.m} mom`);
   if (c.fav) all.push(`${c.fav} fav`);
-  if (!all.length) return { seal: 'free', subs: [] };
-  return { seal: all[0]!, subs: all.slice(1) };
+  if (!all.length) return { seal: 'free', subs: [], full: 'free' };
+  return { seal: all[0]!, subs: all.slice(1), full: all.join(' · ') };
 }
 
 export function computeCardFaceView(
@@ -169,7 +169,11 @@ export function computeCardFaceView(
 
 /**
  * Shared card body — hand, camp, drafts.
- * Pass state so odds resolve without importing main/campaign.
+ *
+ * FACE CONTRACT (player product): title · art · cost only.
+ * Tagline, risk, odds, attrs, kind seal, Camp/Shop stamps, lock copy all live
+ * in the inspect sheet (`openCardDetail`). Room on the 2:3 face is reserved
+ * for art aesthetics once rasters ship.
  */
 export function cardInner(
   state: GameState,
@@ -177,29 +181,11 @@ export function cardInner(
   opts: CardFaceOpts = {}
 ): string {
   const v = computeCardFaceView(state, card, opts);
-  const meter =
-    v.oddsPct !== undefined
-      ? `<span class="odds-meter"><i style="width:${Math.round(v.oddsPct * 100)}%"></i></span>`
-      : '';
+  const { full } = costParts(card);
   return `
-    ${v.kindSealHtml}
+    <span class="card-art">${v.artPlateHtml}<span class="card-emblem">${v.emblemHtml}</span></span>
     <span class="name">${attrEscape(v.name)}</span>
-    <span class="orn"><i></i>&#10022;<i></i></span>
-    <span class="card-art">${v.artPlateHtml}<span class="card-emblem">${v.emblemHtml}</span>${v.stampHtml}</span>
-    <span class="cost-seal">${attrEscape(v.seal)}</span>
-    ${
-      v.costSubs.length
-        ? `<span class="cost-subs">${v.costSubs.map(s => `<span>${attrEscape(s)}</span>`).join('')}</span>`
-        : ''
-    }
-    <span class="tagline">${attrEscape(v.tag)}</span>
-    ${v.locked && v.lockReason ? `<span class="locked-reason">${attrEscape(v.lockReason)}</span>` : ''}
-    <span class="card-footer">
-      <span class="risk-tag">${attrEscape(v.risk)}</span>
-      ${v.oddsLabel ? `<span class="odds">${v.oddsLabel}</span>` : ''}
-    </span>
-    ${meter}
-    ${v.attrLine ? `<span class="attrs">${attrEscape(v.attrLine)}</span>` : ''}
+    <span class="cost-seal">${attrEscape(full)}</span>
   `;
 }
 
@@ -224,13 +210,16 @@ export function cardHtml(
   opts: CardFaceOpts = {}
 ): string {
   const desc = attrEscape(card.d);
-  const label = `${attrEscape(card.n)} — ${desc}`;
+  const { full } = costParts(card);
+  const label = `${attrEscape(card.n)} · ${attrEscape(full)}${opts.locked && opts.lockReason ? ` — ${attrEscape(opts.lockReason)}` : ''}. Tap for full text.`;
   // Locked faces stay clickable for inspect (detail sheet); PLAY is disabled there.
   // Do not use HTML disabled — it blocks the first-tap reveal.
+  // Lock reason is data- only (not painted on the face).
   return `
     <button type="button" class="${cardClasses(card, opts)}" data-idx="${index}"
       title="${desc}" aria-label="${label}"
-      ${opts.locked ? 'aria-disabled="true" data-locked="1"' : ''}>
+      ${opts.locked ? 'aria-disabled="true" data-locked="1"' : ''}
+      ${opts.lockReason ? `data-lock-reason="${attrEscape(opts.lockReason)}"` : ''}>
       ${cardInner(state, card, opts)}
     </button>
   `;

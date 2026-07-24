@@ -151,14 +151,12 @@ export function openCardDetail(campaign: Campaign, index: number): void {
   ) as HTMLElement | null;
   const locked =
     !!faceBtn?.classList.contains('locked') || faceBtn?.getAttribute('data-locked') === '1';
-  let whyLocked = '';
-  const faceReason = faceBtn?.querySelector('.locked-reason');
-  if (faceReason) whyLocked = faceReason.textContent || '';
+  let whyLocked = faceBtn?.getAttribute('data-lock-reason') || '';
   if (locked && !whyLocked) whyLocked = lockReason(campaign, card);
 
   const view = computeCardFaceView(state, card);
-  const { seal, subs } = costParts(card);
-  const costLabel = [seal, ...subs].filter(Boolean).join(' · ') || 'free';
+  const { full: costLabel } = costParts(card);
+  const kindMeta = card.kind && card.kind !== 'action' ? card.kind : '';
 
   const root = $('card-detail');
   root.classList.remove('hidden');
@@ -172,18 +170,25 @@ export function openCardDetail(campaign: Campaign, index: number): void {
   if (tagline) tagline.textContent = card.tag || '';
   if (desc) desc.textContent = card.d || card.tag || 'No further detail on file.';
   if (stats) {
+    // Everything that used to clutter the face lives here.
     const odds =
       view.oddsPct !== undefined
         ? `<span class="detail-stat"><strong>p≈${Math.round(view.oddsPct * 100)}%</strong> odds now</span>`
         : `<span class="detail-stat">No roll odds</span>`;
     const risk = `<span class="detail-risk risk-${card.risk.toLowerCase()}">${attrEscape(card.risk)}</span>`;
+    const attrs = view.attrLine
+      ? `<span class="detail-stat">Attrs ${attrEscape(view.attrLine)}</span>`
+      : '';
+    const kind = kindMeta
+      ? `<span class="detail-stat">Kind ${attrEscape(kindMeta)}</span>`
+      : '';
     const field = card.field
       ? `<span class="detail-stat">Field — pick a ground after Play</span>`
       : '';
     const lock = locked
       ? `<span class="detail-stat detail-locked">${attrEscape(whyLocked || 'Locked')}</span>`
       : '';
-    stats.innerHTML = `${odds}${risk}<span class="detail-stat">Cost ${attrEscape(costLabel)}</span>${field}${lock}`;
+    stats.innerHTML = `${odds}${risk}<span class="detail-stat">Cost ${attrEscape(costLabel)}</span>${attrs}${kind}${field}${lock}`;
   }
   if (playBtn) {
     playBtn.disabled = locked;
