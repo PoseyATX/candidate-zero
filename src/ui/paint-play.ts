@@ -1,6 +1,6 @@
 /**
  * Play surface: draft, sectioned playables, ground picker, card detail sheet.
- * First tap opens detail (full card.d + odds); PLAY commits (or opens ground picker).
+ * First tap opens detail (full card.d + odds); PLAY / ADD TO POOL commits.
  */
 
 import {
@@ -110,13 +110,6 @@ export type AfterPaint = () => void;
 let pendingGroundIndex: number | null = null;
 let pendingGroundCard: PlayCard | null = null;
 
-/**
- * Effective success odds for the pending field card on a specific ground —
- * the SAME formula executePlay resolves with (base card odds + attr synergy +
- * repeat-ground familiarity bonus − rival opposition penalty). So the number
- * on the button is exactly what the roll will use. This is the ground/odds
- * literacy fix: the player can see opposition presence actually cost them.
- */
 function groundOdds(s: GameState, card: PlayCard, g: Ground): number {
   const base = card.odds ? card.odds(s, g) : 0.5;
   const attr = cardAttrMod(s, card);
@@ -127,16 +120,16 @@ function groundOdds(s: GameState, card: PlayCard, g: Ground): number {
 }
 let detailIndex: number | null = null;
 let detailCampaign: Campaign | null = null;
+/** When set, the detail sheet is a phase-draft pick (not a hand play). */
+let detailDraftOption: number | null = null;
 let commitHook: PlayCommit | null = null;
 let afterPaintHook: AfterPaint | null = null;
 
-/** Wire commit + repaint hooks (called once from session/paint orchestrator). */
 export function setPlayHooks(commit: PlayCommit, afterPaint: AfterPaint): void {
   commitHook = commit;
   afterPaintHook = afterPaint;
 }
 
-/** Session pipeline motions (bill advance) — SS01–SS07 + PAC claim. */
 const SESSION_PIPELINE_IDS = new Set([
   'SS01',
   'SS02',
@@ -148,7 +141,6 @@ const SESSION_PIPELINE_IDS = new Set([
   'SS_PAC'
 ]);
 
-/** Ballot doors — always surface in Camp section (even when drawn into hand). */
 const BALLOT_DOOR_IDS = new Set(['PL04', 'PL05']);
 
 function lockReason(campaign: Campaign, card: PlayCard): string {
@@ -194,10 +186,6 @@ function sectionHtml(
     </section>`;
 }
 
-/**
- * Tap any face (including locked) → detail sheet.
- * PLAY in the sheet commits (or opens ground picker for field cards).
- */
 function wirePlayCards(root: HTMLElement, campaign: Campaign, _fieldAware: boolean): void {
   root.querySelectorAll<HTMLButtonElement>('.play-card').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -211,34 +199,33 @@ function wirePlayCards(root: HTMLElement, campaign: Campaign, _fieldAware: boole
 export function closeCardDetail(): void {
   detailIndex = null;
   detailCampaign = null;
+  detailDraftOption = null;
   const root = document.getElementById('card-detail');
   if (root) root.classList.add('hidden');
   document.body.classList.remove('dossier-open');
 }
 
-export function openCardDetail(campaign: Campaign, index: number): void {
-  const card = cardForIndex(campaign, index);
-  if (!card) return;
-  detailIndex = index;
-  detailCampaign = campaign;
+function fillDossier(
+  campaign: Campaign,
+  card: PlayCard,
+  opts: {
+    locked?: boolean;
+    whyLocked?: string;
+    eyebrow: string;
+    confirmLabel: string;
+    onConfirm: () => void;
+  }
+): void {
   const state = campaign.state;
-  const faceBtn = document.querySelector(
-    `#playables .play-card[data-idx="${index}"]`
-  ) as HTMLElement | null;
-  const locked =
-    !!faceBtn?.classList.contains('locked') || faceBtn?.getAttribute('data-locked') === '1';
-  let whyLocked = faceBtn?.getAttribute('data-lock-reason') || '';
-  if (locked && !whyLocked) whyLocked = lockReason(campaign, card);
-
   const view = computeCardFaceView(state, card);
   const costWords = costInEnglish(card);
   const risk = riskCopy(card.risk);
   const odds = oddsCopy(view.oddsPct);
   const kindId = card.kind ?? 'action';
   const kindMeta = KIND_META[kindId] ?? KIND_META.action;
-  const attrWords = (card.attrs ?? [])
-    .map(a => ATTR_NAMES[a] ?? a)
-    .join(', ');
+  const attrWords = (card.attrs ?? []).map(a => ATTR_NAMES[a] ?? a).join(', ');
+  const locked = !!opts.locked;
+  const whyLocked = opts.whyLocked || '';
 
   const root = $('card-detail');
   root.classList.remove('hidden');
@@ -262,9 +249,7 @@ export function openCardDetail(campaign: Campaign, index: number): void {
       `${plate}<span class="dossier-emblem">${emblemFor(card.id)}</span>` +
       `</span>`;
   }
-  if (eyebrow) {
-    eyebrow.textContent = locked ? 'On file — not playable yet' : 'Campaign brief';
-  }
+  if (eyebrow) eyebrow.textContent = opts.eyebrow;
   if (title) title.textContent = card.n;
   if (tagline) {
     tagline.textContent = card.tag ? `“${card.tag}”` : '';
@@ -277,7 +262,7 @@ export function openCardDetail(campaign: Campaign, index: number): void {
   }
 
   if (oddsEl) {
-    if (odds) {
+    if (odds && detailDraftOption === null) {
       oddsEl.hidden = false;
       oddsEl.innerHTML = `
         <p class="dossier-odds-num">${attrEscape(odds.headline)}</p>
@@ -285,6 +270,11 @@ export function openCardDetail(campaign: Campaign, index: number): void {
         <span class="dossier-odds-meter" aria-hidden="true">
           <i style="width:${Math.round((view.oddsPct ?? 0) * 100)}%"></i>
         </span>`;
+    } else if (detailDraftOption !== null) {
+      oddsEl.hidden = false;
+      oddsEl.innerHTML = `
+        <p class="dossier-odds-num">Add this card to your pool</p>
+        <p class="dossier-odds-body">It becomes part of your deck for the rest of this run. You pick one from this draft.</p>`;
     } else {
       oddsEl.hidden = true;
       oddsEl.innerHTML = '';
@@ -312,21 +302,13 @@ export function openCardDetail(campaign: Campaign, index: number): void {
         )
       );
     }
-    if (attrWords) {
-      rows.push(
-        factRow(
-          'Attributes that help',
-          attrEscape(attrWords),
-          ''
-        )
-      );
-    }
+    if (attrWords) rows.push(factRow('Attributes that help', attrEscape(attrWords)));
     rows.push(
       factRow(
         'Where you play it',
         card.field
-          ? 'In the field — after you commit, you choose the ground. Rivals and repeat visits change the odds.'
-          : 'From camp or hand — no ground picker; it resolves where you stand.'
+          ? 'In the field — after you commit, you choose the ground.'
+          : 'From camp or hand — no ground picker.'
       )
     );
     if (card.ph?.length) {
@@ -350,29 +332,15 @@ export function openCardDetail(campaign: Campaign, index: number): void {
     }
   }
 
-  if (backBtn) {
-    backBtn.onclick = () => closeCardDetail();
-  }
+  if (backBtn) backBtn.onclick = () => closeCardDetail();
 
   if (playBtn) {
     playBtn.disabled = locked;
     playBtn.setAttribute('aria-disabled', locked ? 'true' : 'false');
-    playBtn.textContent = locked
-      ? whyLocked || 'Unavailable'
-      : card.field
-        ? `Play — then choose a ground (${costWords})`
-        : `Play this card (${costWords})`;
+    playBtn.textContent = locked ? whyLocked || 'Unavailable' : opts.confirmLabel;
     playBtn.onclick = () => {
-      if (detailIndex === null || !detailCampaign || locked) return;
-      const idx = detailIndex;
-      const camp = detailCampaign;
-      const c = cardForIndex(camp, idx);
-      closeCardDetail();
-      if (c?.field) {
-        openGroundPicker(camp, idx, c);
-      } else {
-        commitHook?.(idx);
-      }
+      if (locked) return;
+      opts.onConfirm();
     };
     try {
       (locked ? backBtn : playBtn)?.focus({ preventScroll: true });
@@ -380,6 +348,67 @@ export function openCardDetail(campaign: Campaign, index: number): void {
       (locked ? backBtn : playBtn)?.focus();
     }
   }
+}
+
+export function openCardDetail(campaign: Campaign, index: number): void {
+  const card = cardForIndex(campaign, index);
+  if (!card) return;
+  detailIndex = index;
+  detailCampaign = campaign;
+  detailDraftOption = null;
+  const faceBtn = document.querySelector(
+    `#playables .play-card[data-idx="${index}"]`
+  ) as HTMLElement | null;
+  const locked =
+    !!faceBtn?.classList.contains('locked') || faceBtn?.getAttribute('data-locked') === '1';
+  let whyLocked = faceBtn?.getAttribute('data-lock-reason') || '';
+  if (locked && !whyLocked) whyLocked = lockReason(campaign, card);
+  const costWords = costInEnglish(card);
+
+  fillDossier(campaign, card, {
+    locked,
+    whyLocked,
+    eyebrow: locked ? 'On file — not playable yet' : 'Campaign brief',
+    confirmLabel: locked
+      ? whyLocked || 'Unavailable'
+      : card.field
+        ? `Play — then choose a ground (${costWords})`
+        : `Play this card (${costWords})`,
+    onConfirm: () => {
+      if (detailIndex === null || !detailCampaign) return;
+      const idx = detailIndex;
+      const camp = detailCampaign;
+      const c = cardForIndex(camp, idx);
+      closeCardDetail();
+      if (c?.field) openGroundPicker(camp, idx, c);
+      else commitHook?.(idx);
+    }
+  });
+}
+
+/** Phase draft: same face language; confirm adds the card to the pool. */
+export function openDraftDetail(campaign: Campaign, optionIndex: number): void {
+  const id = campaign.state.pendingDraft?.options[optionIndex];
+  if (!id) return;
+  const card = campaign.catalog.get(id);
+  if (!card) return;
+  detailIndex = null;
+  detailCampaign = campaign;
+  detailDraftOption = optionIndex;
+
+  fillDossier(campaign, card, {
+    locked: false,
+    eyebrow: 'Phase draft',
+    confirmLabel: 'Add to my pool',
+    onConfirm: () => {
+      if (detailDraftOption === null || !detailCampaign) return;
+      const opt = detailDraftOption;
+      const camp = detailCampaign;
+      closeCardDetail();
+      pickPhaseDraft(camp, opt);
+      afterPaintHook?.();
+    }
+  });
 }
 
 export function renderDraft(campaign: Campaign): void {
@@ -399,7 +428,8 @@ export function renderDraft(campaign: Campaign): void {
         const card = campaign.catalog.get(id);
         if (!card) return '';
         return `
-        <button type="button" class="${cardClasses(card)} draft-card" data-draft="${i}">
+        <button type="button" class="${cardClasses(card)} draft-card" data-draft="${i}"
+          aria-label="${attrEscape(card.n)}. Tap for details.">
           ${cardInner(campaign.state, card)}
         </button>`;
       })
@@ -407,11 +437,9 @@ export function renderDraft(campaign: Campaign): void {
     `</div>`;
   box.querySelectorAll<HTMLButtonElement>('[data-draft]').forEach(btn => {
     btn.addEventListener('click', () => {
-      pickPhaseDraft(campaign, Number(btn.dataset.draft));
-      afterPaintHook?.();
+      openDraftDetail(campaign, Number(btn.dataset.draft));
     });
   });
-  // PR-3 draft exclusive UX: scroll draft into view + focus first card
   requestAnimationFrame(() => {
     box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     const first = box.querySelector<HTMLButtonElement>('.draft-card, [data-draft]');
@@ -422,7 +450,6 @@ export function renderDraft(campaign: Campaign): void {
 export function renderPlayables(campaign: Campaign): void {
   const grid = $('playables');
   if (campaign.state.pendingDraft?.options.length) {
-    // Exclusive: no camp/hand/shop flash under draft
     grid.innerHTML = `<p class="hint draft-block">Resolve the phase draft first.</p>`;
     return;
   }
@@ -446,22 +473,18 @@ export function renderPlayables(campaign: Campaign): void {
     return;
   }
 
-  // Primary / general: Camp → Hand → Shop (K10 intentional reorder)
   const allHand = campaign.deck.hand
     .map((id, index) => ({ index, card: campaign.catalog.get(id) }))
     .filter((e): e is { index: number; card: PlayCard } => !!e.card && isVisible(state, e.card));
 
-  // Synthetic camp (index < 0, not BUY): doors fallback + starmap verbs
   const campSynthetic = playable.filter(
     p => p.index < 0 && !p.card.id.startsWith('BUY')
   );
-  // Ballot doors drawn into hand still belong in Camp (doors-first scan path)
   const doorsInHand = allHand.filter(({ card }) => BALLOT_DOOR_IDS.has(card.id));
   const handCards = allHand.filter(({ card }) => !BALLOT_DOOR_IDS.has(card.id));
   const shopCards = playable.filter(p => p.card.id.startsWith('BUY'));
   const act = ACT_SHELLS[actFromStage(state.stage)];
 
-  // Dedupe camp by card id (prefer synthetic index when both would exist)
   const campSeen = new Set<string>();
   const campEntries: { index: number; card: PlayCard; fromHand: boolean }[] = [];
   for (const p of campSynthetic) {
@@ -483,10 +506,7 @@ export function renderPlayables(campaign: Campaign): void {
 
   const campHtml = campEntries
     .map(({ index, card, fromHand }) => {
-      if (!fromHand) {
-        // Always-available camp/starmap — only listed when playable
-        return cardHtml(state, card, index, { camp: true });
-      }
+      if (!fromHand) return cardHtml(state, card, index, { camp: true });
       const locked = apExhausted || !playableIdx.has(index);
       return cardHtml(state, card, index, {
         camp: true,
@@ -514,7 +534,6 @@ export function renderPlayables(campaign: Campaign): void {
     })
     .join('');
 
-  // Shop stays visible at AP=0 (0-AP buys)
   const shopHtml = shopCards
     .map(({ index, card }) => {
       const locked = !playableIdx.has(index);
@@ -579,7 +598,6 @@ function renderSessionPlayables(
       ? `<p class="hint">Nothing legal this week — end week (pipeline already used, or wait for calendar).</p>`
       : `<p class="hint session-hint kit-label">${kit} · one pipeline motion per week</p>`;
 
-  // Prefer two sections when partition is non-empty; else single kit section
   let body = '';
   if (pipeline.length || chamber.length) {
     body =
@@ -653,11 +671,9 @@ export function renderGroundPicker(campaign: Campaign): void {
   const s = campaign.state;
   const last = s.lastGround;
   const card = pendingGroundCard;
-  // Best available odds → highlight the smart pick.
   const bestPct = card
     ? Math.max(...s.groundsArr.map(g => Math.round(groundOdds(s, card, g) * 100)))
     : -1;
-  // Plain-English rule, once, so opposition presence is legible (owner ask).
   const sub = $('gp-sub');
   if (sub) {
     sub.textContent =
