@@ -3,18 +3,9 @@
  * Loaded after styles.css. Do not reintroduce flex:1 on .card-art.
  *
  * Layout (portrait 2:3):
- *   ┌─────────────┐
- *   │   ART       │  ~62% of face (grid 1fr)
- *   │   PLATE     │
- *   ├─────────────┤
- *   │   TITLE     │  fixed 2.55em
- *   ├─────────────┤
- *   │   COST      │  fixed 1.55em (choice cards: title only row)
- *   └─────────────┘
+ *   ART (~62%) · TITLE (2.55em) · COST (1.55em)
  *
- * Source art: author full-bleed for the ART PLATE only.
- * Plate at 172px card ≈ 156×160 CSS px. Production asset: 600×600 or 600×640, ≤50KB webp.
- * CSS uses object-fit: cover so every raster fills the same box.
+ * Production art: plate-only, 600×600 or 600×640, ≤50KB webp, object-fit cover.
  */
 
 .play-card {
@@ -30,7 +21,6 @@
   box-sizing: border-box;
 }
 
-/* Choice / path / trait faces: no cost seal — two rows only */
 .play-card.choice-card {
   grid-template-rows: minmax(0, 1fr) 2.8em !important;
 }
@@ -48,7 +38,6 @@
   align-self: stretch !important;
 }
 
-/* Kill the old choice-card override that shrank art to 34% */
 .choice-card .card-art {
   height: 100% !important;
 }
@@ -63,6 +52,11 @@
   max-height: none !important;
   height: auto !important;
   align-self: center !important;
+  /* No mid-word shattering (PROMO TE A…) — clamp at word boundaries */
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  hyphens: manual !important;
+  font-size: clamp(0.68rem, 2.6vw, 0.9rem) !important;
 }
 
 .play-card .cost-seal {
@@ -74,7 +68,12 @@
   align-self: center !important;
 }
 
-/* Rasters always fill the same plate — no letterbox variance per asset */
+/* Draft options are the same physical card as hand/camp */
+.play-card.draft-card {
+  max-width: 172px !important;
+  width: 100% !important;
+}
+
 .play-card .card-art .art-raster,
 .play-card .card-art.has-raster img,
 .play-card .card-art .has-raster img,
