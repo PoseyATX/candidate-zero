@@ -67,7 +67,7 @@
   width: 100% !important;
 }
 
-/* PR01 promo — pastel pink face only. No "ultra promo" badge. */
+/* PR01 promo — pastel pink shell when full-art is off. No "ultra promo" badge. */
 .play-card.kind-promo {
   --wash: rgba(232, 120, 160, 0.22) !important;
   --accent: #c45a7a !important;
@@ -93,12 +93,16 @@
   color: #b84868 !important;
 }
 
-/* Full-face promo art (PR01): single raster is the entire 2:3 card. */
+/* Full-face promo art (PR01): single art plate is the entire 2:3 card. */
 .play-card.full-art {
   grid-template-rows: minmax(0, 1fr) !important;
   padding: 0 !important;
   overflow: hidden !important;
   background-image: none !important;
+  border-color: #d4899e !important;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.35),
+    0 8px 18px rgba(180, 60, 100, 0.28) !important;
 }
 .play-card.full-art .card-art-full {
   grid-row: 1 / -1 !important;
@@ -108,14 +112,17 @@
   width: 100% !important;
   border-radius: inherit;
   overflow: hidden;
+  display: block !important;
 }
 .play-card.full-art .art-plate,
-.play-card.full-art .art-plate.has-raster {
+.play-card.full-art .art-plate.has-raster,
+.play-card.full-art .art-plate-inline {
   display: block !important;
   width: 100% !important;
   height: 100% !important;
   margin: 0 !important;
 }
+.play-card.full-art .art-plate-inline svg,
 .play-card.full-art .art-raster {
   display: block !important;
   width: 100% !important;
