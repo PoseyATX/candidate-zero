@@ -23,8 +23,9 @@ export const PR01_PrettyFace: PlayCard = {
   attrs: ['CHA'],
   d:
     'A favor from someone who can afford to be kind. The next three real plays you make land as breakthroughs. They asked for nothing on the card.',
-  // Hidden from normal weekly/draft pools — only the 0.1% inject path adds it.
-  show: () => false,
+  // Visible only after the 0.1% inject puts it on the owned deck list.
+  // getAvailableNewCards still won't re-offer it (already owned).
+  show: s => !!(s.deck && s.deck.includes('PR01')),
   odds: () => 0.99,
   run: s => {
     s.sessionFlags = s.sessionFlags || {};
