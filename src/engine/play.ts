@@ -2,6 +2,7 @@
  * CANDIDATE ZERO — Pure play execution
  * Affordability, phase legality, cost payment, resolve + run.
  * Now includes cardAttrMod synergy (root attributes affect odds).
+ * PR01 promo: prettyFaceCharges forces breakthrough on odds-bearing plays.
  */
 
 import { resolve, STAMPS } from './resolve.js';
@@ -18,8 +19,6 @@ export function canAfford(state: GameState, card: PlayCard): boolean {
   const apCost = c.a ?? 0;
   const apCovered = apCost <= state.ap || (apCost > 0 && !!card.field && state.fieldAp > 0);
   if (!apCovered) return false;
-  // Phase 3: $ costs use availableCash (debt reserves a service cushion).
-  // Never an odds tax — pure affordability gate (src/engine/debt.ts).
   if (!canAffordCash(state, c.$ ?? 0)) return false;
   if ((c.vp ?? 0) > state.volPool) return false;
   if ((c.m ?? 0) > state.momentum) return false;
@@ -38,7 +37,6 @@ export function isVisible(state: GameState, card: PlayCard): boolean {
   return true;
 }
 
-/** Card is in phase, visible, and affordable. */
 export function isPlayable(state: GameState, card: PlayCard): boolean {
   return isPhaseLegal(state, card) && isVisible(state, card) && canAfford(state, card);
 }
@@ -62,7 +60,6 @@ export function pickDefaultGround(state: GameState): Ground | undefined {
   return state.groundsArr.find(g => g.pool > 0) ?? state.groundsArr[0];
 }
 
-// === cardAttrMod: Root attributes now affect card power ===
 function amod(state: GameState, id: AttrId): number {
   const val = state.attrs?.[id] ?? 10;
   return (val - 10) / 40;
@@ -77,10 +74,6 @@ export function cardAttrMod(state: GameState, card: PlayCard): number {
   return sum / card.attrs.length;
 }
 
-/**
- * Execute one play: pay costs, resolve RNG, run card effects.
- * Attributes now modify the base probability via cardAttrMod.
- */
 export function executePlay(
   state: GameState,
   card: PlayCard,
@@ -89,7 +82,8 @@ export function executePlay(
   if (!isPhaseLegal(state, card)) {
     return { ok: false, reason: `Not legal in phase ${getPhase(state)}`, cardId: card.id, cardName: card.n };
   }
-  if (!isVisible(state, card)) {
+  // Promo PR01 is inject-only (show:false). Once in hand, still playable.
+  if (card.id !== 'PR01' && !isVisible(state, card)) {
     return { ok: false, reason: 'Card not available (show/req)', cardId: card.id, cardName: card.n };
   }
   if (!canAfford(state, card)) {
@@ -101,10 +95,6 @@ export function executePlay(
     return { ok: false, reason: 'No ground selected', cardId: card.id, cardName: card.n };
   }
 
-  // Ground diminishing returns (Phase 1): for a field play, look up how many
-  // times this ground was already worked this week, derive the odds bump /
-  // rapport multiplier, then tally this visit. groundRapMult is read by
-  // rapGain() inside the card's run(); default 1 for non-field plays.
   state.groundRapMult = 1;
   let groundOddsBonus = 0;
   if (card.field && g) {
@@ -117,35 +107,37 @@ export function executePlay(
     state.lastGround = g.id;
   }
 
-  // Resistance tier escalates with the stakes (pre-ballot -> on-ballot -> general):
-  // scrutiny/opposition organization grows as the race gets real. This widens
-  // resolve()'s disaster band for STD/VOL plays and unlocks PL20 (show: tier>=1).
   state.tier = getPhase(state) - 1;
 
   payCost(state, card);
 
-  // Snapshot for milestones (ballot / stage) before run mutates
   const before = {
     ballot: state.ballot,
     sigs: state.signatures,
     stage: state.stage
   };
 
-  // Base odds from card definition
   let p = card.odds ? card.odds(state, g) : 0.5;
-
-  // === ACTIVATE SYNERGY ===
   const attrMod = cardAttrMod(state, card);
-  // Opposition presence on this ground taxes field odds (rivalRap teeth).
   const rivalPen = card.field ? rivalOddsPenalty(g) : 0;
   p = Math.max(0.02, Math.min(0.95, p + attrMod + groundOddsBonus - rivalPen));
 
-  const roll: RollResult = resolve(p, card.risk, state);
+  // PR01 stack: next three odds-bearing plays (not PR01 itself) are breakthroughs.
+  state.sessionFlags = state.sessionFlags || {};
+  const charges = Number(state.sessionFlags.prettyFaceCharges || 0);
+  let roll: RollResult;
+  if (charges > 0 && card.odds && card.id !== 'PR01') {
+    roll = { tier: 0, roll: 0, p, band: 0 };
+    state.sessionFlags.prettyFaceCharges = charges - 1;
+    state.log.push({
+      week: state.week,
+      kind: 'note',
+      text: `Pretty Face — breakthrough forced (${state.sessionFlags.prettyFaceCharges} left).`
+    });
+  } else {
+    roll = resolve(p, card.risk, state);
+  }
 
-  // The Parliamentarian's save (PA_INK persona, T_NERD legacy trait): once
-  // per campaign, a procedural DISASTER on the petition reads down to a
-  // SETBACK instead. Archive-scoped to PL04 (the only procedural play
-  // ported so far this applies to).
   if (roll.tier === 3 && state.parlSave && !state.parlUsed && card.id === 'PL04') {
     roll.tier = 2;
     state.parlUsed = true;
@@ -162,7 +154,6 @@ export function executePlay(
     state.disasterLog.push(state.week);
   }
 
-  // Dopamine annotation — pure, no pity, after yields applied
   const feedback = buildPlayFeedback(state, card, roll, before);
 
   state.log.push({
@@ -182,11 +173,8 @@ export function executePlay(
     beat: feedback.beat
   });
 
-  // Threshold checks against this play's yields: reputation grants and
-  // Shadow consequences on Faces (see src/engine/reputation.ts).
   shadowCheck(state);
   repCheck(state);
-  // Starmap v0: open pilot movement when advancement conditions met.
   syncMovementFlags(state);
 
   return {
