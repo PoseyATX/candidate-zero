@@ -21,6 +21,7 @@ import {
 import { closeCardDetail } from './paint-play.js';
 import { emptyDraft, renderNameplateDraft, type NameplateDraftState } from './nameplate-draft.js';
 import './styles.css';
+import './full-art.css';
 import './card-lock.css';
 import './nameplate.css';
 
