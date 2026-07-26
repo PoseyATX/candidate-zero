@@ -253,7 +253,7 @@ export function paintTitleIdentity(): void {
   }
   const start = document.getElementById('btn-title-start');
   if (start) {
-    start.textContent = label ? 'Continue the Climb';
+    start.textContent = label ? 'Continue the Climb' : 'Begin the Climb';
   }
 }
 

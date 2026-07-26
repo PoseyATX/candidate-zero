@@ -69,7 +69,8 @@ const KIND_LABELS: Record<CardKind, string> = {
   item: 'Item',
   location: 'Location',
   liability: 'Liability',
-  blackmail: 'Blackmail'
+  blackmail: 'Blackmail',
+  promo: 'Promo'
 };
 
 function cardEntry(card: PlayCard, deck: CardEntry['deck']): CardEntry {
