@@ -82,6 +82,11 @@ function wantPrettyFaceProof(): boolean {
   }
 }
 
+/** Weekly growth + 0.1% promo inject (or force for proof). */
+function afterWeekStart(c: Campaign, forcePromo = false): void {
+  maybeInjectPrettyFace(c.state, c.deck, forcePromo || wantPrettyFaceProof());
+}
+
 export function paint(): void {
   ensurePlayHooks();
   if (!campaign) return;
@@ -143,10 +148,7 @@ export function startRun(setup: SetupSelection, seed: number, lockIdentity = fal
   applyLegacy(campaign.state, legacy);
   weekPlays = [];
   startWeek(campaign);
-  // Proof / supporter QA: force pink promo into hand
-  if (wantPrettyFaceProof() && campaign) {
-    maybeInjectPrettyFace(campaign.state, campaign.deck, true);
-  }
+  afterWeekStart(campaign, wantPrettyFaceProof());
   showGame();
   applyStageChrome();
   paint();
@@ -251,7 +253,7 @@ export function paintTitleIdentity(): void {
   }
   const start = document.getElementById('btn-title-start');
   if (start) {
-    start.textContent = label ? 'Continue the Climb' : 'Begin the Climb';
+    start.textContent = label ? 'Continue the Climb';
   }
 }
 
@@ -273,6 +275,7 @@ export function enterTerminal(c: Campaign): void {
       campaign = createIncumbentCampaign(campaign, legacy);
       weekPlays = [];
       startWeek(campaign);
+      afterWeekStart(campaign);
       showGame();
       applyStageChrome();
       paint();
@@ -349,6 +352,7 @@ export function endWeek(): void {
     campaign = continueAfterWaiting(campaign, legacy);
     weekPlays = [];
     startWeek(campaign);
+    afterWeekStart(campaign);
     showGame();
     applyStageChrome();
     paint();
@@ -362,6 +366,7 @@ export function endWeek(): void {
   }
   if (!campaign.state.pendingDraft) {
     startWeek(campaign);
+    afterWeekStart(campaign);
   }
   applyStageChrome();
   paint();
