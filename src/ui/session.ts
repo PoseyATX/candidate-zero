@@ -27,6 +27,7 @@ import {
   type InterimPath
 } from '../engine/legacy.js';
 import { injectIntoDrawPile } from '../engine/deck.js';
+import { maybeInjectPrettyFace } from '../engine/promo.js';
 import { kitIdsForSetup } from '../data/nameplate-kits.js';
 import { enterWaiting, finishWaiting } from '../engine/waiting.js';
 import type {
@@ -69,6 +70,16 @@ function ensurePlayHooks(): void {
   if (hooksWired) return;
   hooksWired = true;
   setPlayHooks(commitPlay, paint);
+}
+
+function wantPrettyFaceProof(): boolean {
+  try {
+    if (typeof window === 'undefined') return false;
+    const q = new URLSearchParams(window.location.search);
+    return q.get('pr01') === '1' || q.get('pretty') === '1';
+  } catch {
+    return false;
+  }
 }
 
 export function paint(): void {
@@ -114,10 +125,6 @@ export function commitPlay(index: number, ground?: Ground): void {
   paint();
 }
 
-/**
- * @param lockIdentity — true when filing from the nameplate draft (first bind).
- * Re-files and incumbent paths pass false; identity already locked.
- */
 export function startRun(setup: SetupSelection, seed: number, lockIdentity = false): void {
   if (lockIdentity) {
     setIdentity(legacy, setup);
@@ -136,13 +143,16 @@ export function startRun(setup: SetupSelection, seed: number, lockIdentity = fal
   applyLegacy(campaign.state, legacy);
   weekPlays = [];
   startWeek(campaign);
+  // Proof / supporter QA: force pink promo into hand
+  if (wantPrettyFaceProof() && campaign) {
+    maybeInjectPrettyFace(campaign.state, campaign.deck, true);
+  }
   showGame();
   applyStageChrome();
   paint();
   openActSplash('primary');
 }
 
-/** Human-readable filed identity for title / HUD continuity. */
 export function filedIdentityLabel(): string | null {
   legacy = loadLegacy();
   const id = legacy.identity;
@@ -159,7 +169,6 @@ export function hasFiledIdentity(): boolean {
   return !!legacy.identity;
 }
 
-/** Resume with filed identity — never opens the nameplate. */
 export function tryBeginClimb(): boolean {
   legacy = loadLegacy();
   if (!legacy.identity) return false;
@@ -168,10 +177,6 @@ export function tryBeginClimb(): boolean {
   return true;
 }
 
-/**
- * Clear only the filed identity so the player can pick a new nameplate.
- * Keeps Chronicle runs/traits (ballad history) unless they burn separately.
- */
 export function openRefile(): void {
   if (campaign && !campaign.state.over) {
     const ok = window.confirm(
@@ -203,7 +208,6 @@ export function requestNewRun(): void {
   openSetupWithChronicle();
 }
 
-/** Nameplate when no identity is filed (or after refile / burn). */
 export function openSetupWithChronicle(): void {
   legacy = loadLegacy();
   if (legacy.identity) {
@@ -229,7 +233,6 @@ export function openSetupWithChronicle(): void {
   }
 }
 
-/** Title strip: show locked identity + refile control when present. */
 export function paintTitleIdentity(): void {
   const strip = document.getElementById('title-identity');
   const refile = document.getElementById('btn-title-refile') as HTMLButtonElement | null;
@@ -279,7 +282,6 @@ export function enterTerminal(c: Campaign): void {
       );
     },
     onRest: () => {
-      /* Identity stays filed — never re-open the 3-step draft. */
       if (!tryBeginClimb()) openSetupWithChronicle();
     },
     onPathSelected: () => {},
