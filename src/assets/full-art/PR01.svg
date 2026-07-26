@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <defs>
+    <linearGradient id="pr01-paper" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fdf3e7"/>
+      <stop offset="30%" stop-color="#fbeae0"/>
+      <stop offset="55%" stop-color="#f3ddec"/>
+      <stop offset="80%" stop-color="#e9d3ea"/>
+      <stop offset="100%" stop-color="#e3d6ee"/>
+    </linearGradient>
+    <radialGradient id="pr01-glow-warm" cx="20%" cy="14%" r="55%">
+      <stop offset="0%" stop-color="#fff6e0" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#fff6e0" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="pr01-glow-pink" cx="82%" cy="70%" r="50%">
+      <stop offset="0%" stop-color="#f7c9dd" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#f7c9dd" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="pr01-glow-lav" cx="75%" cy="18%" r="40%">
+      <stop offset="0%" stop-color="#d9cdec" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#d9cdec" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="pr01-center" cx="50%" cy="38%" r="42%">
+      <stop offset="0%" stop-color="#fffdf8" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#fffdf8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- full-bleed paper + soft watercolor wash -->
+  <rect width="600" height="900" fill="url(#pr01-paper)"/>
+  <rect width="600" height="900" fill="url(#pr01-glow-warm)"/>
+  <rect width="600" height="900" fill="url(#pr01-glow-pink)"/>
+  <rect width="600" height="900" fill="url(#pr01-glow-lav)"/>
+  <rect width="600" height="900" fill="url(#pr01-center)"/>
+
+  <!-- lipstick-kiss watermark -->
+  <g opacity="0.16" fill="#c65f8a">
+    <path d="M300 470c-46-42-108-30-124 14-10 27 4 55 30 68 20 10 40 6 54-8 6 20 24 34 46 34 26 0 48-19 52-44 4 20 20 36 42 36 28 0 50-23 50-51 0-32-26-56-58-52-18 2-32 14-38 30-10-30-38-50-70-46-16 2-28 10-36 21z"/>
+  </g>
+
+  <!-- inner hairline frame -->
+  <rect x="34" y="34" width="532" height="832" rx="6" fill="none" stroke="#a9865a" stroke-width="1.2" opacity="0.55"/>
+
+  <!-- ornate scrollwork corners -->
+  <g fill="none" stroke="#a9865a" stroke-width="1.6" opacity="0.8" stroke-linecap="round">
+    <!-- top-left -->
+    <path d="M18 84c0-40 30-66 66-66"/>
+    <path d="M18 84c14 0 22-8 22-22"/>
+    <path d="M84 18c0 14 8 22 22 22"/>
+    <path d="M30 60c8-4 12-10 12-18"/>
+    <path d="M60 30c-4 8-10 12-18 12"/>
+    <circle cx="18" cy="84" r="3" fill="#a9865a" stroke="none"/>
+    <circle cx="84" cy="18" r="3" fill="#a9865a" stroke="none"/>
+    <!-- top-right (mirrored) -->
+    <path d="M582 84c0-40-30-66-66-66"/>
+    <path d="M582 84c-14 0-22-8-22-22"/>
+    <path d="M516 18c0 14-8 22-22 22"/>
+    <path d="M570 60c-8-4-12-10-12-18"/>
+    <path d="M540 30c4 8 10 12 18 12"/>
+    <circle cx="582" cy="84" r="3" fill="#a9865a" stroke="none"/>
+    <circle cx="516" cy="18" r="3" fill="#a9865a" stroke="none"/>
+    <!-- bottom-left (mirrored) -->
+    <path d="M18 816c0 40 30 66 66 66"/>
+    <path d="M18 816c14 0 22 8 22 22"/>
+    <path d="M84 882c0-14 8-22 22-22"/>
+    <path d="M30 840c8 4 12 10 12 18"/>
+    <path d="M60 870c-4-8-10-12-18-12"/>
+    <circle cx="18" cy="816" r="3" fill="#a9865a" stroke="none"/>
+    <circle cx="84" cy="882" r="3" fill="#a9865a" stroke="none"/>
+    <!-- bottom-right (mirrored both) -->
+    <path d="M582 816c0 40-30 66-66 66"/>
+    <path d="M582 816c-14 0-22 8-22 22"/>
+    <path d="M516 882c0-14-8-22-22-22"/>
+    <path d="M570 840c-8 4-12 10-12 18"/>
+    <path d="M540 870c4-8 10-12 18-12"/>
+    <circle cx="582" cy="816" r="3" fill="#a9865a" stroke="none"/>
+    <circle cx="516" cy="882" r="3" fill="#a9865a" stroke="none"/>
+  </g>
+
+  <!-- gold star -->
+  <g transform="translate(300 232)">
+    <path d="M0-52 L13-14 54-11 22 12 32 52 0 29 -32 52 -22 12 -54-11 -13-14 Z" fill="#c9a84c"/>
+  </g>
+
+  <!-- title -->
+  <g fill="#5c1a32" font-family="Georgia, 'Times New Roman', serif" font-weight="700" text-anchor="middle">
+    <text x="300" y="410" font-size="42" letter-spacing="2">MORE THAN</text>
+    <text x="300" y="468" font-size="42" letter-spacing="2">JUST A</text>
+    <text x="300" y="526" font-size="42" letter-spacing="2">PRETTY</text>
+    <text x="300" y="584" font-size="42" letter-spacing="2">FACE</text>
+  </g>
+
+  <!-- FREE seal -->
+  <g transform="translate(300 748)">
+    <ellipse rx="82" ry="30" fill="none" stroke="#a9865a" stroke-width="1.6" opacity="0.85"/>
+    <path d="M-52 0l6-6 6 6-6 6z" fill="#a9865a" opacity="0.85"/>
+    <path d="M52 0l6-6 6 6-6 6z" fill="#a9865a" opacity="0.85"/>
+    <text x="0" y="8" text-anchor="middle" font-family="Georgia, serif" font-size="24" font-weight="700" fill="#6b2038" letter-spacing="3">FREE</text>
+  </g>
+</svg>

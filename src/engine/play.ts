@@ -31,9 +31,9 @@ export function isPhaseLegal(state: GameState, card: PlayCard): boolean {
 }
 
 export function isVisible(state: GameState, card: PlayCard): boolean {
-  // Promo injectables use show:false so they never enter normal pools.
-  // Once in hand / catalog play, PR01 must still be visible.
-  if (card.id === 'PR01') return true;
+  // Promo injectables use show:false so they never enter normal draft/growth
+  // pools — but once one lands in hand, it must stay visible there.
+  if (card.kind === 'promo') return true;
   if (card.show && !card.show(state)) return false;
   if (card.req && !card.req(state)) return false;
   return true;

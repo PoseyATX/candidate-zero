@@ -27,7 +27,7 @@ import {
   type InterimPath
 } from '../engine/legacy.js';
 import { injectIntoDrawPile } from '../engine/deck.js';
-import { maybeInjectPrettyFace } from '../engine/promo.js';
+import { maybeInjectPromoCards } from '../engine/promo.js';
 import { kitIdsForSetup } from '../data/nameplate-kits.js';
 import { enterWaiting, finishWaiting } from '../engine/waiting.js';
 import type {
@@ -72,19 +72,24 @@ function ensurePlayHooks(): void {
   setPlayHooks(commitPlay, paint);
 }
 
-function wantPrettyFaceProof(): boolean {
+/** ?promo=<CARD_ID> forces that promo card in for QA/proof (any registered promo, not just PR01). */
+function promoProofId(): string | null {
   try {
-    if (typeof window === 'undefined') return false;
+    if (typeof window === 'undefined') return null;
     const q = new URLSearchParams(window.location.search);
-    return q.get('pr01') === '1' || q.get('pretty') === '1';
+    const id = q.get('promo');
+    if (id) return id;
+    // legacy proof flags kept for existing bookmarks/links
+    if (q.get('pr01') === '1' || q.get('pretty') === '1') return 'PR01';
+    return null;
   } catch {
-    return false;
+    return null;
   }
 }
 
-/** Weekly growth + 0.1% promo inject (or force for proof). */
-function afterWeekStart(c: Campaign, forcePromo = false): void {
-  maybeInjectPrettyFace(c.state, c.deck, forcePromo || wantPrettyFaceProof());
+/** Weekly growth + each registered promo's own rarity roll (or force for proof). */
+function afterWeekStart(c: Campaign, forceId?: string | null): void {
+  maybeInjectPromoCards(c.state, c.deck, forceId ?? promoProofId());
 }
 
 export function paint(): void {
@@ -148,7 +153,7 @@ export function startRun(setup: SetupSelection, seed: number, lockIdentity = fal
   applyLegacy(campaign.state, legacy);
   weekPlays = [];
   startWeek(campaign);
-  afterWeekStart(campaign, wantPrettyFaceProof());
+  afterWeekStart(campaign, promoProofId());
   showGame();
   applyStageChrome();
   paint();

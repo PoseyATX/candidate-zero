@@ -85,6 +85,13 @@ export interface PlayCard {
   show?: (state: GameState) => boolean;
   req?: (state: GameState) => boolean;
   w?: number;
+  /** Render full-bleed: art fills the whole card face, no name/cost/emblem chrome.
+   *  Art source is auto-loaded from src/assets/full-art/<id>.svg — see card-face.ts. */
+  fullBleedArt?: boolean;
+  /** Chance (0–1) per weekly growth pass to auto-inject this card into the deck
+   *  (drawn once per run, kept out of normal draft/growth pools via show:()=>false).
+   *  See engine/promo.ts. */
+  promoRate?: number;
 }
 
 export interface RollResult {
