@@ -1,55 +1,2189 @@
-/* (full content preserved from main + appended full-art rules)
-   NOTE: This is a surgical append of the missing full-art selectors.
-   The preceding rules are identical to f46942e styles.css.
-*/
+:root {
+  --walnut: #1a130d;
+  --walnut-2: #241a11;
+  --walnut-3: #2e2115;
+  --parchment: #e9dcc0;
+  --parchment-dim: #cfc0a0;
+  --oxblood: #8a2f26;
+  --oxblood-bright: #b13c2f;
+  --gold: #b08d3e;
+  --gold-dim: #7d6530;
+  --ink: #221a10;
+  --sage: #6b7a5e;
+  --disaster: #5e1410;
+  --line: #3a2c1b;
+  --muted: var(--parchment-dim);
+  --trap: var(--disaster);
+  font-family: 'Source Serif 4', Georgia, serif;
+  color: var(--parchment);
+  background: var(--walnut);
+  color-scheme: dark;
+}
 
-/* ---- Full-art cards (PR01 and future promo faces) ----
-   The face IS the art. No parchment plate, no title/cost chrome.
-   SVG is inlined in card-face.ts; size it to the entire 2:3 button. */
-.play-card.full-art {
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(176, 141, 62, 0.08), transparent 60%),
+    var(--walnut);
+}
+
+#app {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem 3rem;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+  border-top: 3px double var(--gold);
+  border-bottom: 3px double var(--gold);
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+  color: var(--gold);
+}
+
+h1 {
+  font-family: Cinzel, serif;
+  font-weight: 700;
+  margin: 0.15rem 0 0;
+  font-size: 1.85rem;
+  letter-spacing: 0.02em;
+  color: var(--parchment);
+}
+
+.top-actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.seed-label {
+  font-size: 0.85rem;
+  color: var(--parchment-dim);
+}
+
+.seed-label input {
+  width: 7rem;
+  margin-left: 0.35rem;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid var(--gold-dim);
+  background: var(--walnut-2);
+  color: var(--parchment);
+  font: inherit;
+}
+
+.btn {
+  font-family: Cinzel, serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: 1px solid var(--gold-dim);
+  background: transparent;
+  color: var(--gold);
+  padding: 0.5rem 0.95rem;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.btn:hover { border-color: var(--gold); color: var(--parchment); }
+.btn:active { transform: translateY(1px); }
+.btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+.btn-gold {
+  background: var(--oxblood);
+  color: var(--parchment);
+  border-color: var(--oxblood);
+  font-weight: 600;
+}
+
+.btn-gold:hover { background: var(--oxblood-bright); border-color: var(--oxblood-bright); color: var(--parchment); }
+
+/* Persistent compact HUD — the mobile deckbuilder convention (vitals never
+   scroll away). Hidden on wide screens where the full ledger is visible;
+   sticky at the top of the page on phones. */
+.hud {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  background: rgba(26, 19, 13, 0.96);
+  border-bottom: 2px solid var(--gold-dim);
+  padding: 0.45rem 0.6rem;
+  margin: 0 -0.25rem 0.75rem;
+  font-size: 0.82rem;
+  backdrop-filter: blur(2px);
+}
+
+@media (max-width: 800px) {
+  .hud { display: flex; }
+}
+
+.hud .k {
+  color: var(--gold);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-right: 0.2rem;
+}
+
+.hud-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+.pips { display: inline-flex; gap: 0.22rem; }
+.pip {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  border: 1px solid var(--gold-dim);
+  background: transparent;
+  display: inline-block;
+}
+.pip.on { background: var(--gold); border-color: var(--gold); }
+
+.chip {
+  font-family: Cinzel, serif;
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid var(--gold-dim);
+  color: var(--gold);
+  padding: 0.08rem 0.35rem;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.chip-field { border-color: var(--sage); color: #b9d1a9; }
+.chip-on { border-color: var(--sage); color: #b9d1a9; }
+.chip-debt {
+  border-color: var(--oxblood-bright);
+  color: #e8b4a8;
+  margin-left: 0.25rem;
+}
+
+.hud-meter {
+  display: inline-block;
+  width: 3.2rem;
+  height: 0.38rem;
+  border: 1px solid var(--gold-dim);
+  border-radius: 2px;
+  overflow: hidden;
+  vertical-align: middle;
+  background: rgba(0, 0, 0, 0.3);
+}
+.hud-meter i {
+  display: block;
+  height: 100%;
+  background: var(--gold);
+}
+.hud-meter-week i { background: var(--oxblood-bright); }
+.hud-meter-label {
+  font-size: 0.72rem;
+  color: var(--parchment-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Dossier ledger — Phase 6 bands (docs/UI-IA.md) */
+.ledger {
+  background: var(--walnut-2);
+  border: 1px solid var(--line);
   padding: 0;
-  background-image: none;
-  background: #f0d4e4; /* soft pink fallback while SVG paints */
-  border-color: #c9a06a;
-  outline-color: #c9a06a;
-  --accent: #c9a06a;
-  --wash: transparent;
+  margin-bottom: 1rem;
+  overflow: hidden;
 }
-.play-card.full-art::before {
-  /* keep deco brackets in gold so they read against pink */
-  opacity: 0.55;
+
+.ledger-dossier {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
-.play-card.full-art .card-art,
-.play-card .card-art-full {
+
+.ledger-band {
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--line);
+}
+.ledger-band:last-child {
+  border-bottom: none;
+}
+
+.ledger-band-label {
+  font-family: Cinzel, serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  /* a11y: --gold-dim was 3.07:1 on walnut-2 (< AA 4.5); --gold is 5.46:1 */
+  color: var(--gold);
+  margin-bottom: 0.4rem;
+}
+
+/* Identity — first-class character chrome */
+.ledger-identity {
+  background:
+    linear-gradient(180deg, rgba(176, 141, 62, 0.08), transparent 70%),
+    var(--walnut-3);
+  border-bottom: 2px solid var(--gold-dim);
+  padding: 0.85rem 1rem 0.75rem;
+}
+.ledger-who {
+  font-family: Cinzel, serif;
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: 0.03em;
+  color: var(--parchment);
+  line-height: 1.2;
+}
+.ledger-issue {
+  font-size: 0.92rem;
+  color: var(--parchment-dim);
+  font-style: italic;
+  margin: 0.2rem 0 0.55rem;
+}
+
+.attr-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.attr-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.28rem;
+  border: 1px solid var(--gold-dim);
+  border-radius: 3px;
+  padding: 0.12rem 0.4rem 0.1rem;
+  background: rgba(0, 0, 0, 0.22);
+  font-variant-numeric: tabular-nums;
+}
+.attr-k {
+  font-family: Cinzel, serif;
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+.attr-v {
+  font-size: 0.88rem;
+  color: var(--parchment);
+  font-weight: 600;
+}
+
+.ledger-force {
+  background: var(--walnut-2);
+}
+.ledger-gate .k {
+  color: var(--oxblood-bright);
+}
+.ledger-secondary {
+  opacity: 0.88;
+}
+.ledger-cash {
+  font-family: Cinzel, serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+
+.ledger-machine {
+  background: rgba(0, 0, 0, 0.12);
+  font-size: 0.88rem;
+  color: var(--parchment-dim);
+}
+.ledger-machine .k {
+  color: var(--gold-dim);
+}
+
+.ledger-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.4rem 0.9rem;
+  font-size: 0.95rem;
+}
+
+.ledger-cell .k,
+.ledger-grid .k,
+.ledger-wide .k {
+  color: var(--gold);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: block;
+}
+.ledger-wide {
+  grid-column: 1 / -1;
+  font-size: 0.88rem;
+  line-height: 1.35;
+  margin-top: 0.15rem;
+}
+.ledger-grid .muted,
+.ledger-cell.muted,
+.muted {
+  color: var(--ink-dim, #8a7a62);
+  font-size: 0.82em;
+}
+
+/* Mobile: HUD has vitals — hide duplicate vitals band; sticky identity */
+@media (max-width: 800px) {
+  .ledger-vitals {
+    display: none;
+  }
+  .ledger-identity {
+    position: sticky;
+    top: 2.6rem; /* under sticky HUD */
+    z-index: 25;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  }
+  .ledger-who {
+    font-size: 1.02rem;
+  }
+  .attr-chip {
+    padding: 0.08rem 0.32rem;
+  }
+  .attr-v {
+    font-size: 0.8rem;
+  }
+}
+
+.hud-cash {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.hud-week {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.82rem;
+}
+.hud-who {
+  font-family: Cinzel, serif;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  max-width: 7.5rem;
+  min-width: 4rem;
+  line-height: 1.15;
+}
+.hud-who-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--parchment, #f0e6d2);
+  max-width: 7.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hud-who-issue {
+  font-size: 0.58rem;
+  letter-spacing: 0.03em;
+  color: var(--gold-dim, #a88b4a);
+  max-width: 7.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-transform: none;
+  font-family: Inter, system-ui, sans-serif;
+}
+.hud-sub {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gold-dim);
+  margin-left: 0.2rem;
+}
+
+/* Week guidance (legacy) — reserved height; replaced by goal-strip */
+.week-hint {
+  min-height: 2.75em;
+  margin: 0 0 0.65rem;
+  line-height: 1.35;
+}
+
+/* Goal strip — labeled 3-line box, sticky at top of Play scroll */
+.goal-strip {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  min-height: 4.2em;
+  margin: 0 0 0.75rem;
+  padding: 0.55rem 0.65rem;
+  line-height: 1.35;
+  font-size: 0.9rem;
+  border-left: 3px solid var(--gold, #c9a84c);
+  background: rgba(26, 19, 13, 0.96);
+  border-radius: 0 4px 4px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+.goal-row {
+  display: grid;
+  grid-template-columns: 2.6rem 1fr;
+  gap: 0.4rem;
+  align-items: baseline;
+  margin-top: 0.15rem;
+}
+.goal-row:first-child { margin-top: 0; }
+.goal-label {
+  font-family: Cinzel, serif;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-dim, #a88b4a);
+}
+.goal-primary-text,
+.goal-primary {
+  font-weight: 700;
+  color: var(--parchment, #f0e6d2);
+  letter-spacing: 0.01em;
+  font-size: 0.95rem;
+}
+.goal-progress-text,
+.goal-progress {
+  color: var(--gold, #c9a84c);
+  font-size: 0.88rem;
+}
+.goal-next-text,
+.goal-next {
+  color: var(--parchment-dim, #cfc0a8);
+  font-size: 0.84rem;
+}
+
+/* Setup: Begin + How to Play side by side when space allows */
+.setup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+.setup-actions .btn { min-width: 8rem; }
+
+/* ===== Campaign brief — near-fullscreen dossier (tap face → read → play) =====
+   Room is not scarce here. Full sentences. No chip jargon. */
+body.dossier-open {
+  overflow: hidden;
+}
+.card-detail {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 20%, rgba(80, 55, 28, 0.35), transparent 70%),
+    rgba(8, 6, 4, 0.82);
+  backdrop-filter: blur(10px);
+  padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0)
+    env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+}
+.card-detail.hidden { display: none !important; }
+
+.dossier {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 42rem);
+  height: 100%;
+  max-height: 100%;
+  margin: 0 auto;
+  background:
+    linear-gradient(180deg, #2a2018 0%, #1a1410 40%, #14100c 100%);
+  border-left: 1px solid rgba(201, 162, 77, 0.28);
+  border-right: 1px solid rgba(201, 162, 77, 0.28);
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.65);
+  animation: dossier-in 0.22s ease-out;
+}
+@keyframes dossier-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+
+.dossier-close {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.75rem;
+  z-index: 5;
+  font-family: Cinzel, serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold, #c9a84c);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(201, 162, 77, 0.45);
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  cursor: pointer;
+}
+.dossier-close:hover,
+.dossier-close:focus-visible {
+  background: rgba(201, 162, 77, 0.18);
+  outline: none;
+}
+
+.dossier-scroll {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1.25rem 1.35rem 1rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.dossier-art {
+  display: flex;
+  justify-content: center;
+  margin: 0.25rem 0 1rem;
+}
+.dossier-art-frame {
+  position: relative;
+  width: min(100%, 16rem);
+  aspect-ratio: 5 / 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(154, 130, 79, 0.75);
+  border-radius: 3px;
+  background:
+    radial-gradient(ellipse 90% 80% at 50% 30%, rgba(255, 250, 235, 0.55), transparent 70%),
+    linear-gradient(180deg, #efe3c6, #e0d0a8);
+  box-shadow:
+    inset 0 0 24px rgba(122, 90, 44, 0.2),
+    0 8px 24px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+.dossier-art-frame.risk-safe { box-shadow: inset 0 0 0 3px rgba(46, 107, 48, 0.45), 0 8px 24px rgba(0, 0, 0, 0.4); }
+.dossier-art-frame.risk-vol { box-shadow: inset 0 0 0 3px rgba(161, 84, 28, 0.5), 0 8px 24px rgba(0, 0, 0, 0.4); }
+.dossier-art-frame.risk-std { box-shadow: inset 0 0 0 3px rgba(201, 162, 77, 0.4), 0 8px 24px rgba(0, 0, 0, 0.4); }
+.dossier-emblem {
+  position: relative;
+  z-index: 2;
+  width: 42%;
+  height: 55%;
+  max-width: 6.5rem;
+  color: #5d452a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dossier-emblem svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 1px 0 rgba(255, 250, 235, 0.55));
+}
+.dossier-art-frame .art-plate,
+.dossier-art-frame .art-raster {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.dossier-eyebrow {
+  font-family: Cinzel, serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold, #c9a84c);
+  margin: 0 0 0.45rem;
+  text-align: center;
+}
+.dossier-title {
+  font-family: Cinzel, Merriweather, serif;
+  font-size: clamp(1.45rem, 5vw, 1.85rem);
+  font-weight: 700;
+  margin: 0 0 0.4rem;
+  color: var(--parchment, #f0e6d2);
+  line-height: 1.15;
+  text-align: center;
+  padding: 0 0.5rem;
+}
+.dossier-tagline {
+  font-style: italic;
+  font-size: 1.05rem;
+  color: #d4c09a;
+  margin: 0 0 1rem;
+  text-align: center;
+  line-height: 1.4;
+}
+.dossier-tagline.hidden { display: none; }
+.dossier-prose {
+  font-size: 1.08rem;
+  line-height: 1.65;
+  color: var(--parchment, #f0e6d2);
+  margin: 0 0 1.25rem;
+  max-width: 36rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.dossier-odds {
+  margin: 0 auto 1.35rem;
+  max-width: 36rem;
+  padding: 1rem 1.1rem 1.05rem;
+  border: 1px solid rgba(201, 162, 77, 0.4);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.28);
+}
+.dossier-odds[hidden] { display: none !important; }
+.dossier-odds-num {
+  font-family: Cinzel, serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--gold, #c9a84c);
+  margin: 0 0 0.4rem;
+  line-height: 1.3;
+}
+.dossier-odds-body {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--parchment-dim, #cfc0a8);
+  margin: 0 0 0.75rem;
+}
+.dossier-odds-meter {
+  display: block;
+  height: 0.45rem;
+  border-radius: 2px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(154, 130, 79, 0.45);
+}
+.dossier-odds-meter i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold-dim, #a88b4a), var(--gold, #c9a84c));
+}
+
+.dossier-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0 auto 1rem;
+  max-width: 36rem;
+  padding: 0;
+  border-top: 1px solid rgba(154, 130, 79, 0.4);
+}
+.dossier-fact {
+  display: grid;
+  grid-template-columns: minmax(7.5rem, 32%) 1fr;
+  gap: 0.65rem 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid rgba(154, 130, 79, 0.28);
   margin: 0;
-  border: none;
-  background: none;
-  flex: none;
+}
+.dossier-fact dt {
+  font-family: Cinzel, serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-dim, #a88b4a);
+  margin: 0;
+  padding-top: 0.15rem;
+}
+.dossier-fact dd {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: var(--parchment, #f0e6d2);
+}
+.dossier-fact-note {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--parchment-dim, #cfc0a8);
+  font-weight: 400;
+}
+.dossier-risk.risk-safe { color: #6bbb6b; }
+.dossier-risk.risk-std { color: var(--gold, #c9a84c); }
+.dossier-risk.risk-vol { color: #e08a5c; }
+.dossier-risk.risk-choice { color: #8ab0d4; }
+
+.dossier-lock {
+  max-width: 36rem;
+  margin: 0.5rem auto 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(192, 112, 96, 0.55);
+  border-radius: 4px;
+  background: rgba(120, 40, 30, 0.22);
+  color: #e8b4a8;
+  font-size: 0.98rem;
+  line-height: 1.45;
+}
+.dossier-lock[hidden] { display: none !important; }
+
+.dossier-actions {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.85rem 1.25rem calc(0.95rem + env(safe-area-inset-bottom, 0));
+  border-top: 1px solid rgba(201, 162, 77, 0.35);
+  background: linear-gradient(180deg, rgba(20, 16, 12, 0.4), #120e0a 30%);
+}
+.dossier-actions .btn {
+  width: 100%;
+  padding: 0.95rem 1rem;
+  font-size: 1.02rem;
+}
+#btn-play-detail:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (min-width: 720px) {
+  .card-detail {
+    align-items: center;
+    padding: 1.5rem;
+  }
+  .dossier {
+    height: min(92vh, 900px);
+    border-radius: 6px;
+    border: 1px solid rgba(201, 162, 77, 0.35);
+  }
+  .dossier-scroll {
+    padding: 1.75rem 2rem 1.25rem;
+  }
+  .dossier-fact {
+    grid-template-columns: minmax(9rem, 28%) 1fr;
+  }
+}
+.shop-hint {
+  grid-column: 1 / -1;
+  margin: 0.75rem 0 0.25rem;
+  color: var(--gold);
+  letter-spacing: 0.04em;
+}
+.play-card.shop {
+  border-color: #5a6e4a;
+}
+.play-card .stamp-shop {
+  color: #3d5a32;
+}
+
+/* PR-3 — Play tab sectioning (Camp → Hand → Shop) */
+#playables.card-grid {
+  /* Outer container stacks sections full-width; cards live in inner grids */
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+#playables .play-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+#playables .play-section-label,
+#draft .draft-heading {
+  margin: 0;
+  font-family: Cinzel, serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+#playables .play-section-sub {
+  margin: 0 0 0.2rem;
+  font-size: 0.78rem;
+  color: var(--parchment-dim);
+  line-height: 1.3;
+}
+#playables .play-section-cards,
+#draft .draft-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+  align-items: start;
+}
+@media (min-width: 560px) {
+  #playables .play-section-cards,
+  #draft .draft-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+#playables .play-section[data-section="camp"] .play-section-label {
+  color: var(--gold);
+}
+#playables .play-section[data-section="shop"] .play-section-label {
+  color: #8aaf72;
+}
+#playables .play-section[data-section="pipeline"] .play-section-label {
+  color: #c9a84c;
+}
+#playables .play-section[data-section="chamber"] .play-section-label,
+#playables .play-section[data-section="orbit"] .play-section-label {
+  color: #9ab0c4;
+}
+#playables .draft-block {
+  margin: 0;
+}
+#draft.draft-active {
+  margin-bottom: 0.5rem;
+}
+
+.panels {
+  display: grid;
+  grid-template-columns: 1.2fr 0.9fr;
+  gap: 1rem;
+}
+
+@media (max-width: 800px) {
+  .panels { grid-template-columns: 1fr; }
+}
+
+.panel {
+  background: var(--walnut-2);
+  border: 1px solid var(--line);
+  padding: 0.9rem 1rem 1.1rem;
+  min-height: 280px;
+}
+
+.panel h2 {
+  font-family: Cinzel, serif;
+  font-size: 1rem;
+  margin: 0 0 0.5rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.hint {
+  color: var(--parchment-dim);
+  font-size: 0.9rem;
+  margin: 0 0 0.75rem;
+}
+
+.card-grid {
+  display: grid;
+  /* auto-fill's column *count* is computed from minmax()'s max when it's a
+     definite length, not the min — a 140/172 fixed-max pair silently
+     collapsed to one column on phone-width screens (measured: 308px
+     content width, 2 columns needed only 294px, still rendered as one).
+     1fr makes the max indefinite so the count uses the 140px min instead;
+     the per-card max-width below (not the track) caps individual card
+     growth on wide rows. */
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.9rem;
+  align-items: start;
+}
+
+/* The draft/playables hint paragraph is a sibling inside a now-grid
+   container — let it span the full row instead of squeezing into a cell. */
+.card-grid > .hint {
+  grid-column: 1 / -1;
+  margin: 0 0 0.15rem;
+}
+
+/* ============================== CARDS ==============================
+   FACE CONTRACT: title · art · cost only. Tagline / risk / odds / attrs
+   live on the inspect sheet. Art owns the plate; chrome is thin.
+   Aged-paper grain + corner brackets = Southern-gothic / Art-Deco brief. */
+.play-card {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  width: 100%;
+  max-width: 172px;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  /* Kind channel (see .kind-* below): --wash tints the paper, --accent
+     colors the frame brackets/inner rule. Defaults = neutral action card. */
+  --wash: transparent;
+  --accent: #8a2f26;
+  border: 1px solid #9a824f;
+  outline: 1px solid #9a824f;
+  outline-offset: 3px;
+  border-radius: 3px;
+  background-image:
+    /* aged-paper grain (feTurbulence noise, warm-tinted, very low alpha) */
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 0.16 0 0 0 0 0.11 0 0 0 0 0.05 0 0 0 0.07 0'/></filter><rect width='120' height='120' filter='url(%23n)'/></svg>"),
+    /* kind paper wash (transparent for action) */
+    linear-gradient(var(--wash), var(--wash)),
+    linear-gradient(175deg, #efe3c6, #e2d2ae);
+  padding: 0.45rem 0.5rem 0.4rem;
+  box-shadow:
+    inset 0 0 22px rgba(122, 90, 44, 0.18),
+    0 1px 2px rgba(0, 0, 0, 0.35),
+    0 8px 18px rgba(0, 0, 0, 0.4);
+  transition: transform 0.16s ease, box-shadow 0.16s ease, outline-color 0.16s ease;
+  overflow: hidden;
+}
+
+/* Inner hairline frame + Art Deco corner brackets, one layer each. */
+.play-card::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  border-radius: 2px;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--accent), var(--accent)) 2px 2px / 8px 1px,
+    linear-gradient(var(--accent), var(--accent)) 2px 2px / 1px 8px,
+    linear-gradient(var(--accent), var(--accent)) calc(100% - 2px) 2px / 8px 1px,
+    linear-gradient(var(--accent), var(--accent)) calc(100% - 2px) 2px / 1px 8px,
+    linear-gradient(var(--accent), var(--accent)) 2px calc(100% - 2px) / 8px 1px,
+    linear-gradient(var(--accent), var(--accent)) 2px calc(100% - 2px) / 1px 8px,
+    linear-gradient(var(--accent), var(--accent)) calc(100% - 2px) calc(100% - 2px) / 8px 1px,
+    linear-gradient(var(--accent), var(--accent)) calc(100% - 2px) calc(100% - 2px) / 1px 8px;
+  background-repeat: no-repeat;
+  opacity: 0.6;
+}
+
+.play-card > * { position: relative; z-index: 1; }
+
+.play-card:hover {
+  outline-color: var(--gold);
+  transform: translateY(-4px) rotate(-0.6deg) scale(1.015);
+  box-shadow:
+    inset 0 0 22px rgba(122, 90, 44, 0.18),
+    0 2px 5px rgba(0, 0, 0, 0.4),
+    0 16px 26px rgba(0, 0, 0, 0.45);
+}
+
+.play-card:active { transform: translateY(-1px); }
+
+.play-card:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* Risk-class color coding — a quick-read signal before reading any text. */
+.play-card.risk-safe { border-left: 3px solid #2e6b30; }
+.play-card.risk-std { border-left: 3px solid var(--gold-dim); }
+.play-card.risk-vol { border-left: 3px solid #a1541c; }
+.play-card.risk-choice { border-left: 3px solid #3f5f8a; }
+
+.play-card.camp {
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 0.16 0 0 0 0 0.11 0 0 0 0 0.05 0 0 0 0.07 0'/></filter><rect width='120' height='120' filter='url(%23n)'/></svg>"),
+    linear-gradient(var(--wash), var(--wash)),
+    linear-gradient(175deg, #f2e6bf, #e6d3a0);
+  border-color: var(--gold);
+}
+
+/* ---- Card-kind recognition: paper wash + accent frame per family ----
+   The tint channel, distinct from risk (left edge). `action` is the
+   unmarked default (no rule). Washes are whisper-level so the card still
+   reads as parchment; the corner seal glyph and accent brackets do the
+   heavier lifting. See docs/CARD-TAXONOMY.md. */
+.play-card.kind-bargain   { --wash: rgba(138, 47, 38, 0.10); --accent: #8a2f26; }
+.play-card.kind-ally      { --wash: rgba(96, 116, 84, 0.14);  --accent: #5a6b4a; }
+.play-card.kind-item      { --wash: rgba(176, 141, 62, 0.14); --accent: #8a6d2a; }
+.play-card.kind-location  { --wash: rgba(70, 100, 128, 0.12); --accent: #3f5f7a; }
+.play-card.kind-liability { --wash: rgba(110, 67, 38, 0.16);  --accent: #6e4326; }
+.play-card.kind-blackmail { --wash: rgba(74, 66, 112, 0.14);  --accent: #4a4270; }
+
+/* Corner "kind seal" — mirrors the cost seal, top-left. Small stamped
+   glyph in the kind accent; distinct silhouette per family (not color
+   alone) so it survives colorblindness and tiny sizes. */
+.play-card .kind-seal {
+  position: absolute;
+  top: 0.32rem;
+  left: 0.34rem;
+  z-index: 3;
+  width: 1.35rem;
+  height: 1.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 65%, transparent);
+  background: radial-gradient(circle, rgba(240, 228, 200, 0.95) 55%, rgba(231, 216, 180, 0.9));
+  box-shadow: inset 0 0 0 2px rgba(233, 220, 192, 0.7);
+  transform: rotate(-7deg);
+}
+.play-card .kind-seal svg { width: 74%; height: 74%; }
+
+/* --- Title plate (bottom band) — 2-line clamp --- */
+.play-card .name {
+  order: 2;
+  font-family: Cinzel, serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  line-height: 1.15;
+  text-align: center;
+  letter-spacing: 0.01em;
+  margin: 0.35rem 0.2rem 0.15rem;
+  color: var(--ink);
+  text-shadow: 0 1px 0 rgba(255, 250, 235, 0.5);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  max-height: 2.35em;
+  min-height: 1.15em;
+  word-break: break-word;
+  padding: 0 0.25rem;
+  flex: 0 0 auto;
+}
+
+/* --- Art plate owns the face (title + cost sit around it) --- */
+.play-card .card-art {
+  order: 1;
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+  max-height: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0.15rem 0.2rem 0;
+  border: 1px solid rgba(154, 130, 79, 0.65);
+  background:
+    radial-gradient(ellipse 90% 80% at 50% 30%, rgba(255, 250, 235, 0.5), transparent 70%),
+    repeating-conic-gradient(from 168deg at 50% 118%, rgba(138, 47, 38, 0.05) 0deg 3deg, transparent 3deg 9deg),
+    linear-gradient(180deg, #ecdfc0, #e5d5b1);
+  overflow: hidden;
+}
+.play-card .card-art .art-plate {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
   display: block;
   overflow: hidden;
-  min-height: 0;
-  height: 100%;
 }
-.play-card.full-art .art-plate,
-.play-card .art-plate-inline {
+.play-card .card-art .art-greybox {
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0.55;
+  object-fit: contain;
+}
+.play-card .card-art .art-raster,
+.play-card .card-art.has-raster img,
+.play-card .card-art .has-raster img {
   position: absolute;
   inset: 0;
-  display: block;
   width: 100%;
   height: 100%;
-  z-index: 0;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+  z-index: 1;
+  pointer-events: none;
 }
-.play-card.full-art .art-plate svg,
-.play-card .art-plate-inline svg {
-  display: block;
+.play-card .card-art .art-plate.art-miss .art-raster {
+  display: none;
+}
+.play-card .card-art .card-emblem {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 58%;
+  height: 78%;
+  max-width: 5.75rem;
+  max-height: 4.5rem;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+.play-card .card-art .card-emblem svg,
+.play-card .card-art > svg {
   width: 100%;
   height: 100%;
-  /* viewBox + preserveAspectRatio="xMidYMid slice" already on the SVG */
+  color: #5d452a;
+  filter: drop-shadow(0 1px 0 rgba(255, 250, 235, 0.6));
 }
-/* Promo kind: pink signal even when not full-art */
-.play-card.kind-promo {
-  --wash: rgba(232, 160, 184, 0.18);
-  --accent: #c9a06a;
+/* Legacy: direct svg child without plate wrapper */
+.play-card .card-art > svg {
+  width: 46%;
+  height: 82%;
+}
+
+/* --- Cost band under title (full cost string; multi-term fits here) --- */
+.play-card .cost-seal {
+  order: 3;
+  position: relative;
+  top: auto;
+  right: auto;
+  z-index: 2;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  max-width: none;
+  max-height: none;
+  align-self: center;
+  box-sizing: border-box;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family: Cinzel, serif;
+  font-weight: 700;
+  font-size: 0.62rem;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  color: var(--oxblood);
+  border: 1.5px solid rgba(138, 47, 38, 0.7);
+  box-shadow: inset 0 0 0 1.5px rgba(233, 220, 192, 0.85);
+  background: linear-gradient(180deg, #f0e4c8, #e4d3ad);
+  transform: none;
+  overflow: hidden;
+  padding: 0.22rem 0.55rem;
+  margin: 0.1rem 0.35rem 0.2rem;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+/* --- Rubber stamp for camp actions, across the emblem plate. --- */
+.play-card .stamp {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(-12deg);
+  font-family: Cinzel, serif;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  padding: 0.1rem 0.45rem 0.08rem 0.55rem;
+  border: 2px double currentColor;
+  border-radius: 2px;
+  opacity: 0.8;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+.play-card .stamp-camp { color: #7d6018; }
+.play-card .stamp-shop { color: #3d5a32; }
+
+/* --- Ceremony shells: three acts (Primary / General / Session) --- */
+
+/* Persistent act banner under HUD */
+.act-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.45rem 0.85rem;
+  margin: 0 0 0.85rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--line);
+  border-left-width: 4px;
+  background: var(--walnut-2);
+  font-size: 0.82rem;
+}
+.act-banner[hidden] { display: none !important; }
+.act-banner-num {
+  font-family: Cinzel, serif;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.68rem;
+  color: var(--gold);
+}
+.act-banner-title {
+  font-family: Cinzel, serif;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--parchment);
+}
+.act-banner-sub {
+  color: var(--parchment-dim);
+  font-size: 0.78rem;
+  flex: 1 1 12rem;
+}
+
+/* Stage frame tints — unmistakable at a glance */
+#game.stage-primary {
+  box-shadow: inset 0 0 0 2px rgba(138, 47, 38, 0.45);
+}
+#game.stage-primary .act-banner,
+.act-banner-primary {
+  border-left-color: var(--oxblood-bright);
+  background: linear-gradient(90deg, rgba(138, 47, 38, 0.18), transparent 55%), var(--walnut-2);
+}
+#game.stage-general {
+  box-shadow: inset 0 0 0 2px rgba(63, 95, 122, 0.55);
+}
+#game.stage-general .act-banner,
+.act-banner-general {
+  border-left-color: #5a8ab0;
+  background: linear-gradient(90deg, rgba(63, 95, 122, 0.28), transparent 55%), var(--walnut-2);
+}
+#game.stage-session {
+  box-shadow: inset 0 0 0 2px rgba(180, 140, 60, 0.45);
+}
+#game.stage-waiting {
+  box-shadow: inset 0 0 0 2px rgba(90, 120, 100, 0.5);
+}
+#game.stage-waiting .act-banner,
+.act-banner-waiting {
+  border-left-color: #6b8f71;
+  background: linear-gradient(90deg, rgba(90, 120, 100, 0.25), transparent 55%), var(--walnut-2);
+}
+.act-splash-waiting {
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 30%, rgba(90, 120, 100, 0.3), transparent 65%),
+    rgba(10, 8, 6, 0.92);
+}
+.chip-act-waiting {
+  border-color: #6b8f71;
+  color: #b8d4bc;
+}
+.alpha-tag.stage-tag-waiting {
+  background: #2a3d30;
+  border-color: #6b8f71;
+  color: #c5e0c9;
+}
+#game.stage-session .act-banner,
+.act-banner-session {
+  border-left-color: var(--gold);
+  background: linear-gradient(90deg, rgba(176, 141, 62, 0.22), transparent 55%), var(--walnut-2);
+}
+#game.stage-session .session-hint,
+#game.stage-session .kit-label {
+  color: var(--gold);
+  font-family: Cinzel, serif;
+  letter-spacing: 0.06em;
+}
+#game.stage-general .kit-label {
+  color: #9bb8d0;
+  font-family: Cinzel, serif;
+  letter-spacing: 0.05em;
+}
+#game.stage-primary .kit-label {
+  color: #d4a89a;
+  font-family: Cinzel, serif;
+  letter-spacing: 0.04em;
+}
+#game.stage-session .panel-actions {
+  border-color: rgba(176, 141, 62, 0.45);
+}
+#game.stage-general .panel-actions {
+  border-color: rgba(90, 138, 176, 0.4);
+}
+#game.stage-primary .panel-actions {
+  border-color: rgba(177, 60, 47, 0.35);
+}
+
+/* Full-screen act handoff (shared by all three acts) */
+.act-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 8, 6, 0.9);
+  padding: 1.25rem;
+}
+.act-splash.hidden { display: none; }
+.act-splash-primary {
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 30%, rgba(138, 47, 38, 0.28), transparent 65%),
+    rgba(10, 8, 6, 0.92);
+}
+.act-splash-general {
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 30%, rgba(63, 95, 122, 0.35), transparent 65%),
+    rgba(8, 10, 14, 0.93);
+}
+.act-splash-session {
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 30%, rgba(176, 141, 62, 0.28), transparent 65%),
+    rgba(10, 8, 6, 0.92);
+}
+.act-splash-panel {
+  max-width: 30rem;
+  background: var(--walnut-2);
+  border: 1px solid var(--gold-dim);
+  padding: 1.5rem 1.35rem;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+.act-splash-primary .act-splash-panel { border-color: rgba(177, 60, 47, 0.65); }
+.act-splash-general .act-splash-panel { border-color: rgba(90, 138, 176, 0.7); }
+.act-splash-session .act-splash-panel { border-color: var(--gold-dim); }
+.act-splash-panel h2,
+.act-splash-title {
+  font-family: Cinzel, serif;
+  color: var(--gold);
+  margin: 0.35rem 0 0.75rem;
+  font-size: 1.45rem;
+}
+.act-splash-general .act-splash-title { color: #9bb8d0; }
+.act-splash-primary .act-splash-title { color: #e8b4a8; }
+.act-splash-body {
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--parchment);
+  text-align: left;
+  margin-bottom: 0.75rem;
+  white-space: pre-wrap;
+}
+.act-splash-hint {
+  text-align: left;
+  margin-bottom: 1rem;
+}
+
+/* Outside weather — world event surface (never hand; Phase 6+ UI) */
+.outside-weather {
+  position: fixed;
+  inset: 0;
+  z-index: 85; /* above act splash if both queue (weather first in flow) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background:
+    radial-gradient(ellipse 80% 55% at 50% 20%, rgba(61, 90, 104, 0.4), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(138, 47, 38, 0.15), transparent 55%),
+    rgba(6, 10, 14, 0.94);
+}
+.outside-weather.hidden {
+  display: none;
+}
+.outside-weather-panel {
+  max-width: 28rem;
+  width: 100%;
+  background: linear-gradient(175deg, #1a2228, var(--walnut-2));
+  border: 1px solid #3d5a68;
+  outline: 1px solid rgba(169, 196, 209, 0.25);
+  outline-offset: 3px;
+  padding: 1.4rem 1.3rem 1.25rem;
+  text-align: center;
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.55);
+}
+.outside-weather-tag {
+  color: #a9c4d1;
+  letter-spacing: 0.2em;
+  margin: 0 0 0.35rem;
+}
+.outside-weather-title {
+  font-family: Cinzel, serif;
+  font-size: 1.28rem;
+  color: #c5dce8;
+  margin: 0.2rem 0 0.85rem;
+  letter-spacing: 0.03em;
+  line-height: 1.2;
+}
+.outside-weather-body {
+  font-size: 0.94rem;
+  line-height: 1.5;
+  color: var(--parchment);
+  margin: 0 0 0.75rem;
+}
+.outside-weather-hint {
+  text-align: left;
+  margin: 0 0 1.1rem;
+  color: #8aa3b0;
+  font-style: italic;
+}
+.outside-weather-panel .btn {
+  min-width: 10rem;
+}
+
+/* HUD / masthead stage chips */
+.chip-act {
+  font-weight: 700;
+}
+.chip-act-primary {
+  border-color: var(--oxblood-bright);
+  color: #e8b4a8;
+}
+.chip-act-general {
+  border-color: #5a8ab0;
+  color: #9bb8d0;
+}
+.chip-act-session {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.alpha-tag.stage-tag {
+  font-size: 0.55rem;
+  vertical-align: middle;
+}
+.alpha-tag.stage-tag-primary {
+  background: var(--oxblood);
+  border-color: var(--oxblood-bright);
+}
+.alpha-tag.stage-tag-general {
+  background: #2a3d52;
+  border-color: #5a8ab0;
+  color: #c5d8e8;
+}
+.alpha-tag.stage-tag-session {
+  background: var(--oxblood);
+  border-color: var(--gold);
+}
+
+/* Back-compat: old session-splash class names (if any linger) */
+.session-splash { /* alias */ }
+.bill-epitaph {
+  color: var(--gold);
+  font-size: 0.95rem;
+}
+.alpha-tag.session-tag {
+  background: var(--oxblood);
+  border-color: var(--gold);
+}
+
+/* --- Body text (PR-3.5: clamp so long taglines never shove plate/footer) --- */
+.play-card .tagline {
+  font-style: italic;
+  font-size: 0.66rem;
+  text-align: center;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+  color: #6a5426;
+  margin-bottom: 0.25rem;
+}
+
+/* Card descriptions are revealed on demand (button title / accessible name),
+   never drawn on the 2:3 face — so there is no on-card scroll region. See
+   cardHtml() in src/ui/main.ts. Choice-card `.desc` (terminal/persona/trait
+   panels) is a separate, non-scrolling layout and keeps its own rule. */
+
+/* --- Ticket-stub footer --- */
+.play-card .card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 0.28rem;
+  padding-top: 0.26rem;
+  border-top: 1px dashed #9a824f;
+  font-size: 0.66rem;
+}
+
+.play-card .risk-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  color: #6a5426;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: Cinzel, serif;
+  font-size: 0.6rem;
+}
+.play-card .risk-tag::before {
+  content: '';
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: var(--gold-dim);
+}
+.play-card.risk-safe .risk-tag::before { background: #2e6b30; }
+.play-card.risk-vol .risk-tag::before { background: #a1541c; }
+
+.play-card .odds {
+  color: #6a5426;
+  font-variant-numeric: tabular-nums;
+}
+
+.play-card .attrs {
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  color: var(--oxblood);
+  text-transform: uppercase;
+  text-align: center;
+  margin-top: 0.18rem;
+  font-family: Cinzel, serif;
+}
+
+/* Terminal / chronicle choice cards: same frame, no cost machinery. */
+.choice-card .desc { flex: 1 1 auto; }
+.choice-card .card-art { height: 34%; }
+
+.row-actions { margin-top: 0.85rem; }
+
+/* Thumb reach: on phones the primary action stays pinned to the bottom of
+   the viewport while the Actions panel is in view — no scrolling back down
+   to end the week. */
+@media (max-width: 800px) {
+  .row-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    margin: 0.85rem -1rem 0;
+    padding: 0.6rem 1rem 0.7rem;
+    background: linear-gradient(rgba(36, 26, 17, 0), var(--walnut-2) 40%);
+  }
+  .row-actions .btn { width: 100%; padding: 0.75rem 1rem; font-size: 0.82rem; }
+}
+
+/* Locked cards stay on the table, dimmed. Why is on the inspect sheet. */
+.play-card.locked {
+  cursor: pointer; /* still open detail */
+  opacity: 0.55;
+  filter: saturate(0.55);
+}
+.play-card.locked:hover {
+  transform: none;
+  outline-color: #9a824f;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.35),
+    0 8px 18px rgba(0, 0, 0, 0.4);
+}
+
+/* Success-odds meter — at-a-glance p% under the footer, tinted by risk class. */
+.play-card .odds-meter {
+  position: relative;
+  z-index: 1;
+  display: block;
+  height: 0.3rem;
+  margin-top: 0.25rem;
+  border: 1px solid rgba(34, 26, 16, 0.35);
+  border-radius: 2px;
+  overflow: hidden;
+  background: rgba(34, 26, 16, 0.12);
+}
+.play-card .odds-meter i { display: block; height: 100%; background: var(--gold-dim); }
+.play-card.risk-safe .odds-meter i { background: #2e6b30; }
+.play-card.risk-vol .odds-meter i { background: #a1541c; }
+
+.log {
+  max-height: 420px;
+  overflow: auto;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.log-line {
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--parchment-dim);
+}
+
+.log-line .w {
+  /* a11y: --gold-dim was 3.07:1 on the log's dark panel (< AA 4.5) */
+  color: var(--gold);
+  margin-right: 0.35rem;
+  font-size: 0.78rem;
+}
+
+.foot {
+  margin-top: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.78rem;
+  color: var(--parchment-dim);
+  border-top: 1px solid var(--line);
+  padding-top: 0.75rem;
+}
+
+.foot .kofi,
+.alpha-note .kofi {
+  color: inherit;
+  text-decoration: none;
+  opacity: 0.9;
+  letter-spacing: inherit;
+  text-transform: none;
+}
+
+.foot .kofi:hover,
+.alpha-note .kofi:hover {
+  text-decoration: underline;
+  opacity: 1;
+}
+
+.hidden { display: none !important; }
+
+/* ========================= GROUND PICKER =========================
+   Modal shown when a field play needs a ground. Reads your rapport vs the
+   opposition's presence per ground, marks the last-worked one, and warns
+   where you've already worked this week (½ rapport). */
+.ground-picker {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(10, 7, 4, 0.72);
+  backdrop-filter: blur(2px);
+}
+.gp-panel {
+  width: min(560px, 100%);
+  max-height: 88vh;
+  overflow-y: auto;
+  background: var(--walnut-2);
+  border: 1px solid var(--gold-dim);
+  border-top: 3px double var(--gold);
+  padding: 1rem 1.1rem 1.2rem;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+}
+.gp-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.gp-head h3 {
+  font-family: Cinzel, serif;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  color: var(--gold);
+  margin: 0;
+}
+.gp-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.6rem;
+}
+.gp-ground {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  padding: 0.6rem 0.65rem;
+  color: var(--parchment);
+  background: var(--walnut-3);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  transition: border-color 0.14s ease, transform 0.14s ease;
+}
+.gp-ground:hover { border-color: var(--gold); transform: translateY(-2px); }
+.gp-ground:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.gp-last { border-color: var(--gold-dim); }
+.gp-name {
+  font-family: Cinzel, serif;
+  font-size: 0.8rem;
+  color: var(--parchment);
+}
+.gp-tag {
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  border: 1px solid var(--gold-dim);
+  border-radius: 2px;
+  padding: 0 0.25rem;
+  vertical-align: 0.1em;
+}
+.gp-odds {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--parchment);
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3rem;
+}
+.gp-odds-best { color: var(--gold); }
+.gp-pen {
+  font-size: 0.62rem;
+  font-weight: 500;
+  color: #d98a6a;
+  letter-spacing: 0.02em;
+}
+.gp-meters { display: flex; flex-direction: column; gap: 0.28rem; }
+.gp-meter { display: grid; grid-template-columns: 1.7rem 1fr 1.6rem; align-items: center; gap: 0.35rem; }
+.gp-mlabel {
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--parchment-dim);
+}
+.gp-bar {
+  height: 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.3);
+}
+.gp-bar i { display: block; height: 100%; }
+.gp-you { background: var(--gold); }
+.gp-opp { background: var(--oxblood-bright); }
+.gp-num { font-size: 0.72rem; font-variant-numeric: tabular-nums; color: var(--parchment-dim); text-align: right; }
+.gp-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.66rem;
+  color: var(--parchment-dim);
+}
+.gp-worked { color: var(--oxblood-bright); }
+
+/* ============================ TITLE SCREEN ============================
+   Deco nameplate: eyebrow, double rules, giant Cinzel wordmark, engraved
+   star, tag quote, two big actions. Sunburst glow rises from the bottom
+   like footlights on a stage. */
+.title-screen {
+  min-height: calc(100vh - 6rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.9rem;
+  padding: 2.5rem 1rem 3rem;
+  background:
+    repeating-conic-gradient(from 176deg at 50% 130%, rgba(176, 141, 62, 0.045) 0deg 2deg, transparent 2deg 7deg),
+    radial-gradient(ellipse 90% 55% at 50% 108%, rgba(138, 47, 38, 0.22), transparent 65%),
+    radial-gradient(ellipse 70% 40% at 50% -10%, rgba(176, 141, 62, 0.1), transparent 60%);
+}
+
+.title-screen .eyebrow {
+  font-size: 0.82rem;
+  letter-spacing: 0.34em;
+}
+
+.title-rule {
+  width: min(340px, 72vw);
+  border-top: 3px double var(--gold);
+  position: relative;
+}
+.title-rule::after {
+  content: '\2726';
+  position: absolute;
+  left: 50%;
+  top: -0.62em;
+  transform: translateX(-50%);
+  background: var(--walnut);
+  padding: 0 0.5rem;
+  color: var(--gold);
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+.title-name {
+  font-family: Cinzel, serif;
+  font-weight: 700;
+  font-size: clamp(2.6rem, 11vw, 4.6rem);
+  line-height: 1.02;
+  letter-spacing: 0.06em;
+  margin: 0.2rem 0;
+  color: var(--parchment);
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.6),
+    0 0 24px rgba(176, 141, 62, 0.25);
+}
+
+.title-emblem {
+  width: 4.4rem;
+  height: 4.4rem;
+  color: var(--gold);
+  opacity: 0.9;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
+}
+.title-emblem svg { width: 100%; height: 100%; }
+
+.title-tag {
+  font-style: italic;
+  color: var(--parchment-dim);
+  font-size: 0.98rem;
+  line-height: 1.5;
+  margin: 0.1rem 0 0.4rem;
+}
+
+.title-identity {
+  margin: 0.35rem 0 0.85rem;
+  padding: 0.55rem 0.75rem;
+  max-width: min(360px, 90vw);
+  border: 1px solid rgba(201, 162, 77, 0.45);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.28);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: var(--parchment);
+}
+.title-identity.hidden {
+  display: none;
+}
+.title-id-label {
+  display: block;
+  font-family: Cinzel, serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.2rem;
+}
+.title-id-who {
+  color: var(--parchment);
+}
+
+.title-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  width: min(320px, 80vw);
+}
+
+.btn-big {
+  padding: 0.85rem 1rem;
+  font-size: 0.88rem;
+  letter-spacing: 0.14em;
+}
+
+.alpha-note {
+  margin-top: 1.1rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+}
+
+/* Alpha badge next to the masthead wordmark. */
+.alpha-tag {
+  display: inline-block;
+  vertical-align: 0.35em;
+  font-family: Cinzel, serif;
+  font-size: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  border: 1px solid var(--gold-dim);
+  border-radius: 2px;
+  padding: 0.1rem 0.3rem 0.08rem 0.4rem;
+  transform: rotate(-4deg);
+  opacity: 0.9;
+}
+
+/* ============================== TUTORIAL ============================== */
+.tutorial .panel { max-width: 720px; margin: 0 auto; }
+
+.tutorial h3 {
+  font-family: Cinzel, serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 1.3rem 0 0.35rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--line);
+}
+
+.tutorial p { margin: 0 0 0.6rem; line-height: 1.55; font-size: 0.93rem; color: var(--parchment); }
+.tutorial p b, .tutorial li b { color: var(--gold); font-weight: 600; }
+
+.tut-list {
+  margin: 0 0 0.6rem;
+  padding-left: 1.1rem;
+  line-height: 1.55;
+  font-size: 0.93rem;
+}
+.tut-list li { margin-bottom: 0.3rem; }
+
+.dot {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  margin-right: 0.4rem;
+  vertical-align: baseline;
+}
+.dot-safe { background: #2e6b30; }
+.dot-std { background: var(--gold-dim); }
+.dot-vol { background: #a1541c; }
+
+.setup-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin: 0.75rem 0;
+}
+
+.setup-grid label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.setup-grid select {
+  font: inherit;
+  text-transform: none;
+  letter-spacing: normal;
+  padding: 0.4rem;
+  border: 1px solid var(--gold-dim);
+  background: var(--walnut-2);
+  color: var(--parchment);
+}
+
+/* .draft-card gets its card-shell styling from .play-card + a risk-* class
+   (assigned in main.ts renderDraft) — no separate rule needed here. */
+
+/* Fixed toast stack — Phase 6; never reflows card grids */
+.toast-host {
+  position: fixed;
+  left: 50%;
+  top: 12%;
+  transform: translateX(-50%);
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  width: min(420px, 92vw);
+  pointer-events: none;
+}
+.toast {
+  width: 100%;
+  background: linear-gradient(175deg, #efe3c6, #e0cfa9);
+  color: var(--ink);
+  border: 1px solid var(--gold);
+  outline: 2px solid var(--gold-dim);
+  outline-offset: 2px;
+  padding: 0.7rem 1rem;
+  text-align: center;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+  animation: toast-in 0.35s ease-out both;
+  pointer-events: none;
+}
+.toast-stamp {
+  font-family: Cinzel, serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.15rem;
+  color: #4a3b24;
+}
+.toast-body {
+  font-size: 0.88rem;
+  line-height: 1.35;
+  color: #3a2e1c;
+}
+.toast-spark { outline-color: var(--gold); }
+.toast-hit { outline-color: var(--sage); }
+.toast-thump { outline-color: var(--gold-dim); }
+.toast-crash {
+  background: linear-gradient(175deg, #f0cfc8, #e0b0a6);
+  outline-color: var(--oxblood-bright);
+}
+.toast-whisper {
+  background: linear-gradient(175deg, #d4e0e8, #c0d0dc);
+  outline-color: #3d5a68;
+}
+.toast-out {
+  animation: toast-out 0.28s ease-in forwards;
+}
+
+@keyframes toast-in {
+  from { transform: translateY(-10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes toast-out {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-8px); }
+}
+
+/* Setup as nameplate fill — shared materials with title */
+.nameplate-panel {
+  max-width: 640px;
+  margin: 0 auto 1.5rem;
+  border-top: 3px double var(--gold);
+  border-bottom: 3px double var(--gold);
+  background:
+    radial-gradient(ellipse 80% 40% at 50% 0%, rgba(176, 141, 62, 0.08), transparent 55%),
+    var(--walnut-2);
+}
+.setup-eyebrow {
+  text-align: center;
+  margin-bottom: 0.35rem;
+}
+.setup-rule {
+  margin: 0.35rem auto 0.6rem;
+  width: min(280px, 70%);
+}
+.setup-title {
+  text-align: center;
+  font-family: Cinzel, serif;
+  letter-spacing: 0.04em;
+}
+.setup-lede {
+  text-align: center;
+  max-width: 28rem;
+  margin: 0.25rem auto 0.75rem;
+}
+
+.log-line.juice { color: var(--gold); font-style: italic; }
+.log-line.summary { font-weight: 600; border-left: 3px solid var(--gold); padding-left: 0.4rem; color: var(--parchment); }
+.log-line.tier-0 { color: var(--gold); }
+.log-line.tier-1 { color: #9fc491; }
+.log-line.tier-3 { color: var(--oxblood-bright); }
+
+.play-card.flash-spark { box-shadow: 0 0 0 2px var(--gold); }
+.play-card.flash-crash { box-shadow: 0 0 0 2px var(--oxblood-bright); }
+
+/* Chronicle — the run history shown on the setup screen (src/engine/legacy.ts). */
+.chronicle {
+  border: 1px dashed var(--gold-dim);
+  padding: 0.7rem 0.85rem;
+  margin-top: 1rem;
+  font-size: 0.92rem;
+  color: var(--parchment-dim);
+}
+.chronicle .ct {
+  font-family: Cinzel, serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+.chronicle p { margin: 0 0 0.4rem; }
+.chronicle p b { color: var(--parchment); }
+.chronicle .burn-row { margin-top: 0.6rem; }
+
+/* Terminal — the "run over" screen replaced by the Chronicle flow: epithet,
+   growth summary, then interim path / trait / reelection cards. Reuses
+   .play-card so these read as the same kind of object as in-game choices —
+   options to play, not a dead end. */
+#terminal-head h2 { margin-top: 0; }
+#terminal-head p { margin: 0 0 0.5rem; }
+#terminal-head .epithet { font-style: italic; color: var(--parchment); }
+/* a11y: --sage (#6b7a5e) was 3.71:1 on the dark panel; a lighter sage keeps
+   the "you grew despite the loss" tone at 6.6:1. */
+#terminal-head .growth { color: #93a883; }
+/* a11y: --oxblood-bright was 2.89:1 on the dark panel (< AA 4.5); this
+   lighter warm-red keeps the "the note is due" warning tone at 6.2:1. */
+#terminal-head .debt-note { color: #e0836f; }
+
+/* =====================================================================
+   MOBILE LAYER — one-handed IA over the full-featured UI
+   Bottom-nav tabs (Play/Dossier/Log), sticky compact HUD, thumb-reach
+   primary action. Presentation only; the engine render targets (#hud,
+   #ledger, #playables, #draft, #log, #ground-picker) are unchanged.
+   Cleaner typography (Inter body / Merriweather headings), walnut theme
+   already in :root above.
+   ===================================================================== */
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
+.panel-actions > h2, .panel-log > h2 {
+  font-family: 'Merriweather', Georgia, serif;
+}
+/* Keep the ornate display face only for the big title wordmark. */
+.title-name, h1.title-name { font-family: 'Cinzel', serif; }
+
+/* In-game fills the whole viewport as a flex column (covering the redundant
+   marketing topbar), so the sticky bottom nav lands at the true bottom. */
+#game:not(.hidden) {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(176, 141, 62, 0.08), transparent 60%),
+    var(--walnut);
+}
+#game #hud {
+  display: flex;         /* vitals always visible in-game, all widths */
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+/* Tab panels fill the space between HUD and the bottom nav. */
+.mtabs { flex: 1 1 auto; overflow: hidden; position: relative; }
+.mtab-panel {
+  display: none;
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.75rem 0.75rem 0.5rem;
+}
+.mtab-panel.active { display: block; }
+.mtab-panel .panel { border: none; background: none; padding: 0; }
+
+/* Thumb-reach End Week, pinned above the nav; only on the Play tab. */
+.play-footer {
+  flex: 0 0 auto;
+  padding: 0.6rem 0.9rem;
+  border-top: 1px solid var(--gold-dim);
+  background: var(--walnut-2);
+}
+.play-footer .btn { width: 100%; padding: 0.9rem; font-size: 1rem; }
+#game.tab-dossier .play-footer,
+#game.tab-log .play-footer { display: none; }
+
+/* Bottom navigation. */
+.mbottom-nav {
+  flex: 0 0 auto;
+  display: flex;
+  border-top: 1px solid var(--gold-dim);
+  background: var(--walnut-2);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.mnav-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  /* a11y: --gold-dim is 3.07:1 on walnut (< AA). parchment-dim reads as a
+     muted-but-legible inactive; active state is --gold + underline. */
+  color: var(--parchment-dim);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.7rem 0;
+  cursor: pointer;
+}
+.mnav-btn.active { color: var(--gold); box-shadow: inset 0 2px 0 var(--gold); }
+.mnav-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
+
+/* Ground picker as a bottom sheet on mobile. */
+#game #ground-picker:not(.hidden) {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+}
+#ground-picker .gp-panel {
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  border-radius: 16px 16px 0 0;
+}
+
+/* Draft grid (when not nested under .draft-cards) keeps 2-col fallback. */
+#draft.card-grid:not(:has(.draft-cards)) {
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+}
+@media (min-width: 560px) {
+  #draft.card-grid:not(:has(.draft-cards)) {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
