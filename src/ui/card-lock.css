@@ -93,46 +93,80 @@
   color: #b84868 !important;
 }
 
-/* Full-face promo art (PR01): single art plate is the entire 2:3 card. */
+/* ============================================================
+   FULL-FACE PROMO ART (PR01)
+   Single inlined SVG owns the entire 2:3 card. No title, no cost,
+   no parchment plate, no emblem. Grid collapses to one cell.
+   ============================================================ */
 .play-card.full-art {
   grid-template-rows: minmax(0, 1fr) !important;
+  grid-template-columns: minmax(0, 1fr) !important;
   padding: 0 !important;
   overflow: hidden !important;
   background-image: none !important;
-  border-color: #d4899e !important;
+  background: #f0d4e4 !important;
+  border-color: #c9a06a !important;
+  outline-color: #c9a06a !important;
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.35),
     0 8px 18px rgba(180, 60, 100, 0.28) !important;
 }
+
+/* The sole child fills the single grid cell completely */
+.play-card.full-art > .card-art,
 .play-card.full-art .card-art-full {
   grid-row: 1 / -1 !important;
-  grid-column: 1 !important;
+  grid-column: 1 / -1 !important;
   margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  background: none !important;
   height: 100% !important;
   width: 100% !important;
-  border-radius: inherit;
-  overflow: hidden;
+  min-height: 0 !important;
+  max-height: none !important;
+  align-self: stretch !important;
+  justify-self: stretch !important;
   display: block !important;
+  position: relative !important;
+  overflow: hidden !important;
+  border-radius: inherit;
 }
+
+/* Intermediate plate + the SVG itself must expand to 100% */
 .play-card.full-art .art-plate,
 .play-card.full-art .art-plate.has-raster,
 .play-card.full-art .art-plate-inline {
+  position: absolute !important;
+  inset: 0 !important;
   display: block !important;
   width: 100% !important;
   height: 100% !important;
   margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  background: none !important;
+  z-index: 0 !important;
 }
+
 .play-card.full-art .art-plate-inline svg,
+.play-card.full-art .art-plate svg,
 .play-card.full-art .art-raster {
   display: block !important;
   width: 100% !important;
   height: 100% !important;
   object-fit: cover !important;
   object-position: center center !important;
+  max-width: none !important;
+  max-height: none !important;
 }
+
+/* Kill any residual chrome that the JS might still emit */
 .play-card.full-art .name,
 .play-card.full-art .cost-seal,
-.play-card.full-art .card-emblem {
+.play-card.full-art .card-emblem,
+.play-card.full-art .kind-seal,
+.play-card.full-art .stamp {
   display: none !important;
 }
 
