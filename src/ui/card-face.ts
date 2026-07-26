@@ -2,6 +2,7 @@
  * Card face rendering — pure leaf (no imports from main.ts).
  * Design: CardFaceView + computeCardFaceView; odds need GameState.
  * PR-4: CARD_ART map + BASE_URL-safe art helpers.
+ * PR01: full-bleed promo art (title + cost baked into raster/SVG).
  */
 
 import type { GameState, Ground, PlayCard } from '../engine/types.js';
@@ -15,11 +16,19 @@ export interface CardFaceOpts {
   lockReason?: string;
 }
 
-export type CardArtEntry = { file: string };
+export type CardArtEntry = { file: string; fullFace?: boolean };
 
+/** Registered rasters / SVGs under public/assets/cards/. */
 export const CARD_ART: Record<string, CardArtEntry> = {
-  // empty until rasters ship
+  PR01: { file: 'PR01.svg', fullFace: true }
 };
+
+/** Cards whose art already paints title + cost — hide system text layers. */
+const FULL_FACE_ART = new Set(
+  Object.entries(CARD_ART)
+    .filter(([, e]) => e.fullFace)
+    .map(([id]) => id)
+);
 
 export function cardArtBase(): string {
   try {
@@ -37,7 +46,7 @@ export function cardArtUrl(file: string): string {
     return '';
   }
   const cleaned = file.replace(/^\/+/, '').replace(/^assets\/cards\//, '');
-  if (!cleaned || cleaned.includes('..') || cleaned.includes('/') && cleaned.split('/').some(p => p === '..')) {
+  if (!cleaned || cleaned.includes('..') || (cleaned.includes('/') && cleaned.split('/').some(p => p === '..'))) {
     return '';
   }
   if (cleaned.includes('\\')) return '';
@@ -59,7 +68,7 @@ export function artPlateHtml(cardId: string): string {
       const src = attrEscape(url);
       return (
         `<span class="art-plate has-raster" data-art="${attrEscape(entry.file)}">` +
-        `<img class="art-raster" src="${src}" alt="" loading="lazy" width="120" height="90" decoding="async" />` +
+        `<img class="art-raster" src="${src}" alt="" loading="lazy" width="120" height="180" decoding="async" />` +
         `</span>`
       );
     }
@@ -83,6 +92,7 @@ export interface CardFaceView {
   emblemHtml: string;
   lockReason: string;
   locked: boolean;
+  fullFace: boolean;
 }
 
 export function attrEscape(s: string): string {
@@ -127,6 +137,7 @@ export function computeCardFaceView(
   const kindSeal = mark
     ? `<span class="kind-seal" role="img" title="${meta?.label ?? ''} — ${meta?.blurb ?? ''}" aria-label="${meta?.label ?? ''}">${mark}</span>`
     : '';
+  const fullFace = FULL_FACE_ART.has(card.id) && !!CARD_ART[card.id];
   return {
     name: card.n,
     tag: card.tag,
@@ -140,9 +151,10 @@ export function computeCardFaceView(
     stampHtml: stamp,
     kindSealHtml: kindSeal,
     artPlateHtml: artPlateHtml(card.id),
-    emblemHtml: emblemFor(card.id),
+    emblemHtml: fullFace ? '' : emblemFor(card.id),
     lockReason: opts.lockReason ?? '',
-    locked: !!opts.locked
+    locked: !!opts.locked,
+    fullFace
   };
 }
 
@@ -153,6 +165,10 @@ export function cardInner(
 ): string {
   const v = computeCardFaceView(state, card, opts);
   const { full } = costParts(card);
+  // Full-face promo: raster is the entire 2:3 face (title + cost painted in art).
+  if (v.fullFace && v.artPlateHtml) {
+    return `<span class="card-art card-art-full">${v.artPlateHtml}</span>`;
+  }
   return `
     <span class="card-art">${v.artPlateHtml}<span class="card-emblem">${v.emblemHtml}</span></span>
     <span class="name">${attrEscape(v.name)}</span>
@@ -162,11 +178,13 @@ export function cardInner(
 
 export function cardClasses(card: PlayCard, opts: CardFaceOpts = {}): string {
   const kind = card.kind ?? 'action';
+  const fullFace = FULL_FACE_ART.has(card.id) && !!CARD_ART[card.id];
   return [
     'play-card',
     `risk-${card.risk.toLowerCase()}`,
     kind !== 'action' ? `kind-${kind}` : '',
-    card.id === 'PR01' ? 'kind-promo' : '',
+    card.id === 'PR01' || kind === 'promo' ? 'kind-promo' : '',
+    fullFace ? 'full-art' : '',
     opts.shop ? 'shop' : '',
     opts.camp && !opts.shop ? 'camp' : '',
     opts.locked ? 'locked' : ''

@@ -93,6 +93,42 @@
   color: #b84868 !important;
 }
 
+/* Full-face promo art (PR01): single raster is the entire 2:3 card. */
+.play-card.full-art {
+  grid-template-rows: minmax(0, 1fr) !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  background-image: none !important;
+}
+.play-card.full-art .card-art-full {
+  grid-row: 1 / -1 !important;
+  grid-column: 1 !important;
+  margin: 0 !important;
+  height: 100% !important;
+  width: 100% !important;
+  border-radius: inherit;
+  overflow: hidden;
+}
+.play-card.full-art .art-plate,
+.play-card.full-art .art-plate.has-raster {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+}
+.play-card.full-art .art-raster {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center center !important;
+}
+.play-card.full-art .name,
+.play-card.full-art .cost-seal,
+.play-card.full-art .card-emblem {
+  display: none !important;
+}
+
 .play-card .card-art .art-raster,
 .play-card .card-art.has-raster img,
 .play-card .card-art .has-raster img,
