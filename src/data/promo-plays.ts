@@ -9,7 +9,7 @@ import type { PlayCard } from '../engine/types.js';
  * PR01 — More Than Just a Pretty Face
  * Supporter promo. Free. Next three odds-bearing plays are breakthroughs.
  * Draw: ~0.1% on weekly inject (or ?pr01=1 for proof).
- * No "ultra promo" chrome — pink face is the only signal.
+ * Pink face is the only special signal — no badge text.
  */
 export const PR01_PrettyFace: PlayCard = {
   id: 'PR01',
@@ -18,7 +18,7 @@ export const PR01_PrettyFace: PlayCard = {
   risk: 'SAFE',
   ph: [1, 2, 3],
   tag: 'a favor',
-  kind: 'action',
+  kind: 'promo',
   rarity: 'rare',
   residency: 'special',
   control: 'player',
@@ -33,7 +33,7 @@ export const PR01_PrettyFace: PlayCard = {
     s.sessionFlags.prettyFaceCharges = 3;
     s.sessionFlags.prettyFaceSeen = 1;
     return (
-      'MORE THAN JUST A PRETTY FACE — the next three real plays break through. ' +
+      'More Than Just a Pretty Face — the next three real plays break through. ' +
       'Three charges. Use them.'
     );
   }

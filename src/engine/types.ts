@@ -53,7 +53,8 @@ export type CardKind =
   | 'item'
   | 'location'
   | 'liability'
-  | 'blackmail';
+  | 'blackmail'
+  | 'promo';
 
 export type AttrId = 'CLO' | 'CON' | 'CRA' | 'INK' | 'DIP' | 'CHA';
 
