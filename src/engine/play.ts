@@ -1,7 +1,6 @@
 /**
  * CANDIDATE ZERO — Pure play execution
  * Affordability, phase legality, cost payment, resolve + run.
- * Now includes cardAttrMod synergy (root attributes affect odds).
  * PR01 promo: prettyFaceCharges forces breakthrough on odds-bearing plays.
  */
 
@@ -32,6 +31,9 @@ export function isPhaseLegal(state: GameState, card: PlayCard): boolean {
 }
 
 export function isVisible(state: GameState, card: PlayCard): boolean {
+  // Promo injectables use show:false so they never enter normal pools.
+  // Once in hand / catalog play, PR01 must still be visible.
+  if (card.id === 'PR01') return true;
   if (card.show && !card.show(state)) return false;
   if (card.req && !card.req(state)) return false;
   return true;
@@ -82,8 +84,7 @@ export function executePlay(
   if (!isPhaseLegal(state, card)) {
     return { ok: false, reason: `Not legal in phase ${getPhase(state)}`, cardId: card.id, cardName: card.n };
   }
-  // Promo PR01 is inject-only (show:false). Once in hand, still playable.
-  if (card.id !== 'PR01' && !isVisible(state, card)) {
+  if (!isVisible(state, card)) {
     return { ok: false, reason: 'Card not available (show/req)', cardId: card.id, cardName: card.n };
   }
   if (!canAfford(state, card)) {
@@ -122,7 +123,6 @@ export function executePlay(
   const rivalPen = card.field ? rivalOddsPenalty(g) : 0;
   p = Math.max(0.02, Math.min(0.95, p + attrMod + groundOddsBonus - rivalPen));
 
-  // PR01 stack: next three odds-bearing plays (not PR01 itself) are breakthroughs.
   state.sessionFlags = state.sessionFlags || {};
   const charges = Number(state.sessionFlags.prettyFaceCharges || 0);
   let roll: RollResult;
