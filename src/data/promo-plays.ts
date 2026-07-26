@@ -1,13 +1,15 @@
 /**
- * Promo / supporter cards — not Main Deck density.
- * Injected at 0.1% (not weighted into normal weekly pool).
+ * Promo / supporter cards — not Main Deck.
+ * Injected at extreme rarity; never in the normal weekly growth pool.
  */
 
 import type { PlayCard } from '../engine/types.js';
 
 /**
- * MORE THAN JUST A PRETTY FACE
- * Supporter promo. Next three odds-bearing plays are guaranteed breakthroughs.
+ * PR01 — More Than Just a Pretty Face
+ * Supporter promo. Free. Next three odds-bearing plays are breakthroughs.
+ * Draw: ~0.1% on weekly inject (or ?pr01=1 for proof).
+ * No "ultra promo" chrome — pink face is the only signal.
  */
 export const PR01_PrettyFace: PlayCard = {
   id: 'PR01',
@@ -22,16 +24,18 @@ export const PR01_PrettyFace: PlayCard = {
   control: 'player',
   attrs: ['CHA'],
   d:
-    'A favor from someone who can afford to be kind. The next three real plays you make land as breakthroughs. They asked for nothing on the card.',
-  // Visible only after the 0.1% inject puts it on the owned deck list.
-  // getAvailableNewCards still won't re-offer it (already owned).
-  show: s => !!(s.deck && s.deck.includes('PR01')),
+    'A favor from someone who can afford to be kind. The next three real plays you make land as breakthroughs. They asked for nothing on the card. Remember the name.',
+  // Never in the normal available pool — inject only.
+  show: () => false,
   odds: () => 0.99,
-  run: s => {
+  run: (s) => {
     s.sessionFlags = s.sessionFlags || {};
     s.sessionFlags.prettyFaceCharges = 3;
     s.sessionFlags.prettyFaceSeen = 1;
-    return 'The room softens. Your next three real plays are breakthroughs.';
+    return (
+      'MORE THAN JUST A PRETTY FACE — the next three real plays break through. ' +
+      'Three charges. Use them.'
+    );
   }
 };
 
