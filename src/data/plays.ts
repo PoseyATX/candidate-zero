@@ -1,12 +1,6 @@
 /**
  * CANDIDATE ZERO — Play Card Data (pure, explicit-state)
  * All cards tagged with root attributes for cardAttrMod synergy.
- * CHA = retail/charm/doors
- * CLO = visibility/turnout/muscle
- * CON = discipline/message
- * CRA = maneuver/oppo/fixer
- * INK = procedure/rules
- * DIP = coalitions/gatekeepers
  */
 
 import type { GameState, Ground, RollResult, PlayCard } from '../engine/types.js';
@@ -16,19 +10,17 @@ import { WAVE4_PLAYS } from './plays-wave4.js';
 import { allShopPlayTemplates } from './assets.js';
 import { STARMAP_PLAYS } from './plays-starmap.js';
 import { WAVE5_PLAYS } from './plays-wave5.js';
+import { PROMO_PLAYS } from './promo-plays.js';
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
 }
 function rapGain(g: Ground, amt: number, state: GameState) {
   if (state.rapStall) amt = Math.ceil(amt / 2);
-  // Phase 1 diminishing returns: repeat-ground plays this week bank less
-  // new rapport (multiplier set by executePlay from getGroundPenalty).
   amt = Math.round(amt * (state.groundRapMult ?? 1));
   g.rapport = clamp(g.rapport + amt, 0, 100);
 }
 
-// ===== WAVE 1: Early core + ballot access =====
 export const PL01_BlockWalk: PlayCard = {
   id: 'PL01', n: 'Block Walk', cost: { a: 1 }, risk: 'SAFE', ph: [1,2,3], field: true, tag: 'the spine',
   attrs: ['CHA'],
@@ -36,36 +28,24 @@ export const PL01_BlockWalk: PlayCard = {
   odds: (s) => clamp(0.62 + s.volPool*0.02 + (s.assets.includes('A01')?0.12:0) + (s.messageSharp?0.05:0), 0, 0.95),
   run: (s, o, g) => {
     if (!g) return 'No ground selected.'; s.walkCount++;
-    // Phase 1: the Field Director (AL09) boosts the turf they actually work.
     const mult = (s.assets.includes('A01')?1.5:1) * (allyWarmAtGround(s,'AL09',g.id)?1.2:1);
-    // archive:547–548 — A11 Push Cards add +1 name ID on successful walks
     const push = s.assets.includes('A11') ? 1 : 0;
     const gen = s.stage === 'general';
     if (o.tier === 0) {
       const c = Math.min(g.pool, Math.round((55+random()*30)*mult));
       g.pool-=c; s.contacts+=c; rapGain(g, gen ? 2 : 6, s); s.volPool+=1; s.nameID+=2+push;
-      if (gen) {
-        g.gotv += 0.18;
-        return `General doors: +${c} contacts and +18% GOTV banked at ${g.n}. Turnout, not introductions.`;
-      }
+      if (gen) { g.gotv += 0.18; return `General doors: +${c} contacts and +18% GOTV banked at ${g.n}. Turnout, not introductions.`; }
       return `A church picnic adopts you whole. +${c} contacts, a volunteer, and rapport at ${g.n}.`;
     }
     if (o.tier === 1) {
       const c = Math.min(g.pool, Math.round((22+random()*16)*mult));
       g.pool-=c; s.contacts+=c; s.volPool+=1; rapGain(g, gen ? 1 : 3, s);
-      // Hygiene: labor spine needs name heat on ordinary GAINS, not only breakthroughs
       s.nameID += 1 + push;
-      if (gen) {
-        g.gotv += 0.1;
-        return `Turnout walk at ${g.n}: +${c} contacts, +10% GOTV. The list is a vote plan now.`;
-      }
+      if (gen) { g.gotv += 0.1; return `Turnout walk at ${g.n}: +${c} contacts, +10% GOTV. The list is a vote plan now.`; }
       return `Doors open. +${c} contacts, +1 volunteer at ${g.n}`;
     }
     const c = Math.min(g.pool,6); g.pool-=c; s.contacts+=c;
-    if (gen) {
-      g.gotv += 0.03;
-      return `Heat and closed blinds — still +${c} contacts and a thin +3% GOTV at ${g.n}.`;
-    }
+    if (gen) { g.gotv += 0.03; return `Heat and closed blinds — still +${c} contacts and a thin +3% GOTV at ${g.n}.`; }
     return 'Heat, dogs, closed blinds. +'+c+' contacts and one ruined pair of boots.';
   }
 };
@@ -104,12 +84,9 @@ export const PL04_PetitionDrive: PlayCard = {
   attrs: ['CLO'],
   d: 'Signatures instead of a fee. Labor is the currency you were born holding.',
   show: (s) => !s.ballot,
-  // 2026-07-19 hygiene: pure petition had drifted to ~98% ballot@vol0.
-  // Odds + yields restore ~5–10% miss at vol0 without starving labor primary force.
   odds: (s) => clamp(0.57 + s.volPool * 0.033 + (warm(s, 'AL09') ? 0.08 : 0), 0, 0.95),
   run: (s, o) => {
     if (o.tier <= 1) {
-      // Yields: breakthrough ~85–120, gain ~50–75 (mid between free-ballot and starve).
       const g = o.tier === 0 ? 85 + Math.floor(random() * 36) : 50 + Math.floor(random() * 26);
       s.signatures += g;
       if (s.signatures >= s.sigNeed && !s.ballot) { s.ballot = true; return `+${g} signatures — threshold cleared. On the ballot, free but not cheap.`; }
@@ -134,7 +111,6 @@ export const PL06_TownHall: PlayCard = {
   run: (s, o) => { s.townHallThisWeek = true; if (o.tier <= 1) { s.contacts+=15; s.momentum+=1; s.volPool+=1; return 'A fair hearing, two new believers, and one of them signs up to walk.'; } if (o.tier === 2) return 'Six attendees, one of them lost.'; s.momentum = Math.max(0, s.momentum-1); return 'A heckler wins the room. It happens.'; }
 };
 
-// ===== WAVE 2 =====
 export const PL07_CandidateForum: PlayCard = {
   id: 'PL07', n: 'Candidate Forum', cost: { a:1 }, risk: 'VOL', ph: [2,3], tag: 'bright lights',
   attrs: ['CON', 'CHA'],
@@ -149,17 +125,7 @@ export const PL07_CandidateForum: PlayCard = {
   }
 };
 
-/**
- * Kitchen Table — archive PL08 (lines 581–582).
- *
- * Ally grant: AL01 on tier 0/1; AL02 when chairs(s) >= 3.
- * Archive chairs() = warm AL01 count + chairCount — NOT ground-scoped.
- * Phase 1 considered gating on allyWarmAtGround(AL01, ground); archive
- * allies are roster-wide, so PL08 stays roster-wide (no ground gate).
- * allyWarmAtGround remains the field-ops tool (AL09 on PL01/PL19/PL21B/PL39).
- */
 export const PL08_KitchenTable: PlayCard = {
-  // Kit gravity: primary club politics — not a November lever (ph 1–2 only).
   id: 'PL08', n: 'Kitchen Table', cost: { a:1 }, risk: 'STD', ph: [1,2], tag: 'pie is not optional',
   attrs: ['DIP'],
   d: "A chair's kitchen, her rules. Bring pie; leave with a precinct or nothing. (Primary circuit — out of the general.)",
@@ -174,12 +140,10 @@ export const PL08_KitchenTable: PlayCard = {
     );
   },
   run: (s, o) => {
-    // archive chairs helper (line 389)
     const chairsOf = () =>
       s.allies.filter(a => a.id === 'AL01' && a.warm > 0).length + (s.chairCount || 0);
     s.pieCount = (s.pieCount || 0) + 1;
     if (o.tier === 0) {
-      // archive:581
       addAlly(s, 'AL01', 3);
       s.chairCount = (s.chairCount || 0) + 1;
       s.endorsePts += 1;
@@ -187,7 +151,6 @@ export const PL08_KitchenTable: PlayCard = {
       return 'She comes over — and brings her club president\'s number.';
     }
     if (o.tier === 1) {
-      // archive:582
       addAlly(s, 'AL01', 2);
       s.endorsePts += 1;
       if (chairsOf() >= 3) addAlly(s, 'AL02', 2);
@@ -217,7 +180,6 @@ export const PL10_PressRelease: PlayCard = {
   id: 'PL10', n: 'Press Release', cost: { a:1 }, risk: 'SAFE', ph: [1,2,3], tag: 'the on-ramp',
   attrs: ['CRA'],
   d: 'Nobody prints it. Everybody files it. The reporter learns your name spelling.', odds: () => 0.85,
-  // archive:595 — prCount===2 grants AL04 Beat Reporter
   run: (s) => {
     s.momentum += 1;
     s.nameID += 1;
@@ -251,7 +213,6 @@ export const PL14_CourtTheChairs: PlayCard = {
   odds: (s) => clamp(0.34 + s.contacts*0.001 + s.faces.G*0.004 - (s.pieMalus||0) - (s.reps.includes('R07')?0.2:0) + (s.reps.includes('R05')?0.15:0), 0, 0.9),
   run: (s, o) => {
     s.pieCount = (s.pieCount || 0) + 1;
-    // archive:619 — tier 0 grants AL01
     if (o.tier === 0) {
       s.endorsePts += 2;
       s.faces.O += 4;
@@ -264,7 +225,6 @@ export const PL14_CourtTheChairs: PlayCard = {
   }
 };
 
-// ===== WAVE 3 =====
 export const PL11_StrawPoll: PlayCard = {
   id: 'PL11', n: 'Straw Poll Push', cost: { a:1, vp:1 }, risk: 'STD', ph: [1,2], tag: 'club math',
   attrs: ['CLO', 'DIP'],
@@ -272,7 +232,6 @@ export const PL11_StrawPoll: PlayCard = {
   req: (s) => s.backers.includes('B06') || warm(s, 'AL03'),
   odds: (s) => clamp(0.45 + (s.clubOdds||0) + (warm(s,'AL03')?0.12:0) + (s.strawBonus||0) + s.volPool*0.015, 0, 0.9),
   run: (s, o) => {
-    // archive:599 — win grants AL03 Club President + strawWins
     if (o.tier <= 1) {
       s.strawWins = (s.strawWins || 0) + 1;
       s.endorsePts += o.tier === 0 ? 2 : 1;
@@ -325,7 +284,6 @@ export const PL19_GOTVWeekend: PlayCard = {
   odds: (s, g) => clamp(0.58 + s.volPool*0.025 + (allyWarmAtGround(s,'AL09',g?.id)?0.1:0) + s.faces.T*0.002, 0, 0.95),
   run: (s, o, g) => {
     if (!g) return 'No ground selected.';
-    // GOTV banks conversion; also a little name heat for the general
     if (o.tier <= 1) {
       const k = o.tier === 0 ? 0.55 : 0.35;
       g.gotv += k;
@@ -342,10 +300,6 @@ export const PL19_GOTVWeekend: PlayCard = {
   }
 };
 
-/**
- * Archive PL20 "Rides to the Polls" — modular id PL23 (PL20 is PAC Check here).
- * Flatbed / A06 unlock. Pure general GOTV field lever.
- */
 export const PL23_RidesToPolls: PlayCard = {
   id: 'PL23',
   n: 'Rides to the Polls',
@@ -360,7 +314,6 @@ export const PL23_RidesToPolls: PlayCard = {
   odds: () => 0.8,
   run: (s, o, g) => {
     if (!g) return 'No ground.';
-    // Low-prop grounds (hard turnout) convert hardest — archive logic
     const base = (g.prop ?? 0.5) < 0.4 ? 0.4 : 0.15;
     const k = o.tier === 0 ? base : o.tier === 1 ? base * 0.75 : base * 0.4;
     g.gotv += k;
@@ -368,7 +321,6 @@ export const PL23_RidesToPolls: PlayCard = {
   }
 };
 
-/** Tag Main-deck player verbs (mutates; see docs/CARD-RESIDENCY.md). */
 function tagMainPlayer(cards: PlayCard[]): PlayCard[] {
   for (const c of cards) {
     if (c.residency === undefined) c.residency = 'main';
@@ -377,24 +329,23 @@ function tagMainPlayer(cards: PlayCard[]): PlayCard[] {
   return cards;
 }
 
-/** Wave 1–3 core plays (attr-tagged). Main Deck — always-carry campaign spine. */
 export const CORE_PLAYS: PlayCard[] = tagMainPlayer([
   PL01_BlockWalk, PL02_PhoneBank, PL03_YardSignBlitz, PL04_PetitionDrive, PL05_PayFilingFee, PL06_TownHall,
   PL07_CandidateForum, PL08_KitchenTable, PL09_EarnedMedia, PL10_PressRelease, PL13_FishFry, PL14_CourtTheChairs,
   PL11_StrawPoll, PL12_ClubSpeech, PL15_OppoResearch, PL17_DebatePrep, PL19_GOTVWeekend, PL23_RidesToPolls
 ]);
 
-/** Shop BUY* templates (catalog entries; live availability via show()). Main unlocks. */
 export const SHOP_PLAYS: PlayCard[] = tagMainPlayer(allShopPlayTemplates());
 
-/**
- * Play catalog for SRD audit / draw pool (excludes BUY* shop items —
- * those are camp actions, not deck plays; see SHOP_PLAYS + buildCatalog).
- * Starmap pilot verbs (MV01) included — tightly show-gated; Special residency.
- */
-export const ALL_PLAYS: PlayCard[] = [...CORE_PLAYS, ...WAVE4_PLAYS, ...STARMAP_PLAYS, ...WAVE5_PLAYS];
+/** Includes promo injectables (PR01) — show:false keeps them out of normal pools. */
+export const ALL_PLAYS: PlayCard[] = [
+  ...CORE_PLAYS,
+  ...WAVE4_PLAYS,
+  ...STARMAP_PLAYS,
+  ...WAVE5_PLAYS,
+  ...PROMO_PLAYS
+];
 
-/** Alias used by weekly-draw pool filters. */
 export const PLAYS = ALL_PLAYS;
 
 export const PLAY_COUNT = ALL_PLAYS.length;
