@@ -1,11 +1,6 @@
 /**
  * HARD LOCK — every .play-card is 2:3. Art plate size never changes with title length.
  * Loaded after styles.css. Do not reintroduce flex:1 on .card-art.
- *
- * Layout (portrait 2:3):
- *   ART (~62%) · TITLE (2.55em) · COST (1.55em)
- *
- * Production art: plate-only, 600×600 or 600×640, ≤50KB webp, object-fit cover.
  */
 
 .play-card {
@@ -52,7 +47,6 @@
   max-height: none !important;
   height: auto !important;
   align-self: center !important;
-  /* No mid-word shattering (PROMO TE A…) — clamp at word boundaries */
   word-break: normal !important;
   overflow-wrap: normal !important;
   hyphens: manual !important;
@@ -68,10 +62,35 @@
   align-self: center !important;
 }
 
-/* Draft options are the same physical card as hand/camp */
 .play-card.draft-card {
   max-width: 172px !important;
   width: 100% !important;
+}
+
+/* PR01 promo — pastel pink face only. No "ultra promo" badge. */
+.play-card.kind-promo {
+  --wash: rgba(232, 120, 160, 0.22) !important;
+  --accent: #c45a7a !important;
+  border-color: #d4899e !important;
+  outline-color: #e8a0b4 !important;
+  background-image:
+    linear-gradient(rgba(255, 214, 228, 0.55), rgba(255, 214, 228, 0.55)),
+    linear-gradient(175deg, #fce8f0, #f5d0de) !important;
+  box-shadow:
+    inset 0 0 22px rgba(200, 80, 120, 0.18),
+    0 1px 2px rgba(0, 0, 0, 0.35),
+    0 8px 18px rgba(180, 60, 100, 0.25) !important;
+}
+.play-card.kind-promo .name {
+  color: #6b2038 !important;
+}
+.play-card.kind-promo .cost-seal {
+  color: #9a3050 !important;
+  border-color: rgba(180, 70, 100, 0.7) !important;
+  background: linear-gradient(180deg, #fce4ec, #f5c6d6) !important;
+}
+.play-card.kind-promo .card-emblem {
+  color: #b84868 !important;
 }
 
 .play-card .card-art .art-raster,

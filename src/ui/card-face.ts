@@ -1,7 +1,7 @@
 /**
  * Card face rendering — pure leaf (no imports from main.ts).
  * Design: CardFaceView + computeCardFaceView; odds need GameState.
- * PR-4: CARD_ART map + BASE_URL-safe art helpers (no raster samples until gate).
+ * PR-4: CARD_ART map + BASE_URL-safe art helpers.
  */
 
 import type { GameState, Ground, PlayCard } from '../engine/types.js';
@@ -15,18 +15,12 @@ export interface CardFaceOpts {
   lockReason?: string;
 }
 
-/** Filename under public/assets/cards/ — never a remote URL. */
 export type CardArtEntry = { file: string };
 
-/**
- * Optional map: cardId → file under public/assets/cards/.
- * Empty until real assets ship + check:card-art is green.
- */
 export const CARD_ART: Record<string, CardArtEntry> = {
-  // e.g. PL01: { file: 'PL01.webp' },
+  // empty until rasters ship
 };
 
-/** Vite base (e.g. '/candidate-zero/' on Pages). */
 export function cardArtBase(): string {
   try {
     const b = (import.meta as ImportMeta & { env?: { BASE_URL?: string } }).env
@@ -38,10 +32,6 @@ export function cardArtBase(): string {
   return '/';
 }
 
-/**
- * Build browser URL with Vite base. Accepts filename or assets/cards/… relative.
- * Rejects `..` and remote schemes → empty string.
- */
 export function cardArtUrl(file: string): string {
   if (!file || /^(https?:)?\/\//i.test(file) || file.includes('://') || file.includes('..')) {
     return '';
@@ -50,12 +40,10 @@ export function cardArtUrl(file: string): string {
   if (!cleaned || cleaned.includes('..') || cleaned.includes('/') && cleaned.split('/').some(p => p === '..')) {
     return '';
   }
-  // single path segment preferred; allow nested under cards only via cleaned name
   if (cleaned.includes('\\')) return '';
   return `${cardArtBase()}assets/cards/${cleaned}`;
 }
 
-/** Allowlist: must stay under BASE_URL + assets/cards/, no .., no remote. */
 export function isSafeCardArtUrl(url: string): boolean {
   if (!url || /^(https?:)?\/\//i.test(url) || url.includes('..')) return false;
   const base = cardArtBase();
@@ -63,14 +51,6 @@ export function isSafeCardArtUrl(url: string): boolean {
   return url.startsWith(prefix);
 }
 
-/**
- * Art plate HTML: a registered CARD_ART raster if one exists, otherwise
- * EMPTY — the engraved emblem (layered separately by cardInner) stands alone
- * on the parchment face. The Anvil hash-colored greybox plate was retired:
- * the owner (issue #33 §3.3/§9-P1) called the clashing colored boxes ugly and
- * asked for emblem-only until real rasters ship. `cardArtPlateHtml` stays
- * available in the anvil-port for tooling, just not on the player-facing card.
- */
 export function artPlateHtml(cardId: string): string {
   const entry = CARD_ART[cardId];
   if (entry?.file) {
@@ -87,7 +67,6 @@ export function artPlateHtml(cardId: string): string {
   return '';
 }
 
-/** Precomputed face data (odds resolved against state). */
 export interface CardFaceView {
   name: string;
   tag: string;
@@ -167,14 +146,6 @@ export function computeCardFaceView(
   };
 }
 
-/**
- * Shared card body — hand, camp, drafts.
- *
- * FACE CONTRACT (player product): title · art · cost only.
- * Tagline, risk, odds, attrs, kind seal, Camp/Shop stamps, lock copy all live
- * in the inspect sheet (`openCardDetail`). Room on the 2:3 face is reserved
- * for art aesthetics once rasters ship.
- */
 export function cardInner(
   state: GameState,
   card: PlayCard,
@@ -195,6 +166,7 @@ export function cardClasses(card: PlayCard, opts: CardFaceOpts = {}): string {
     'play-card',
     `risk-${card.risk.toLowerCase()}`,
     kind !== 'action' ? `kind-${kind}` : '',
+    card.id === 'PR01' ? 'kind-promo' : '',
     opts.shop ? 'shop' : '',
     opts.camp && !opts.shop ? 'camp' : '',
     opts.locked ? 'locked' : ''
@@ -212,9 +184,6 @@ export function cardHtml(
   const desc = attrEscape(card.d);
   const { full } = costParts(card);
   const label = `${attrEscape(card.n)} · ${attrEscape(full)}${opts.locked && opts.lockReason ? ` — ${attrEscape(opts.lockReason)}` : ''}. Tap for full text.`;
-  // Locked faces stay clickable for inspect (detail sheet); PLAY is disabled there.
-  // Do not use HTML disabled — it blocks the first-tap reveal.
-  // Lock reason is data- only (not painted on the face).
   return `
     <button type="button" class="${cardClasses(card, opts)}" data-idx="${index}"
       title="${desc}" aria-label="${label}"
