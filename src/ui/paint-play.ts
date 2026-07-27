@@ -19,7 +19,8 @@ import {
   cardClasses,
   computeCardFaceView,
   artPlateHtml,
-  attrEscape
+  attrEscape,
+  isFullBleedArt
 } from './card-face.js';
 import { emblemFor, KIND_META } from './card-art.js';
 import { ACT_SHELLS, actFromStage } from './act-shell.js';
@@ -244,10 +245,17 @@ function fillDossier(
 
   if (art) {
     const plate = artPlateHtml(card.id);
-    art.innerHTML =
-      `<span class="dossier-art-frame risk-${card.risk.toLowerCase()}">` +
-      `${plate}<span class="dossier-emblem">${emblemFor(card.id)}</span>` +
-      `</span>`;
+    if (isFullBleedArt(card)) {
+      // The artwork is the whole card face and carries its own framing/title.
+      // Show it at the card's own 2:3 portrait ratio — no parchment frame and
+      // no emblem, both of which would crop and overpaint the art.
+      art.innerHTML = `<span class="dossier-art-full">${plate}</span>`;
+    } else {
+      art.innerHTML =
+        `<span class="dossier-art-frame risk-${card.risk.toLowerCase()}">` +
+        `${plate}<span class="dossier-emblem">${emblemFor(card.id)}</span>` +
+        `</span>`;
+    }
   }
   if (eyebrow) eyebrow.textContent = opts.eyebrow;
   if (title) title.textContent = card.n;

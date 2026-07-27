@@ -63,8 +63,13 @@ for (const [path, url] of Object.entries(RASTER_MODULES)) {
   FULL_ART[artIdFromPath(path)] = { kind: 'raster', url };
 }
 
-function fullBleedArt(card: PlayCard): boolean {
+/** True when this card's face is a single piece of full-bleed art (no chrome). */
+export function isFullBleedArt(card: PlayCard): boolean {
   return !!card.fullBleedArt && !!FULL_ART[card.id];
+}
+
+function fullBleedArt(card: PlayCard): boolean {
+  return isFullBleedArt(card);
 }
 
 export function cardArtBase(): string {

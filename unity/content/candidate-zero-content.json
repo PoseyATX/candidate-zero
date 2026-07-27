@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "counts": {
-    "cards": 116,
+    "cards": 117,
     "personas": 24,
     "issues": 18,
     "districts": 4,
@@ -36,6 +36,10 @@
     {
       "id": "blackmail",
       "label": "Blackmail"
+    },
+    {
+      "id": "promo",
+      "label": "Promo"
     }
   ],
   "cards": [
@@ -99,7 +103,7 @@
     },
     {
       "id": "PL03",
-      "name": "Yard Sign Blitz",
+      "name": "Yard Signs",
       "tagline": "visibility",
       "description": "A district that sees your name starts believing it belongs there.",
       "risk": "SAFE",
@@ -127,7 +131,7 @@
     },
     {
       "id": "PL04",
-      "name": "Petition Drive",
+      "name": "Petitions",
       "tagline": "the zero-dollar door",
       "description": "Signatures instead of a fee. Labor is the currency you were born holding.",
       "risk": "STD",
@@ -154,7 +158,7 @@
     },
     {
       "id": "PL05",
-      "name": "Pay the Filing Fee",
+      "name": "Filing Fee",
       "tagline": "the money door",
       "description": "$1,250 and it's done. Shame-free, story-free.",
       "risk": "SAFE",
@@ -239,7 +243,7 @@
     },
     {
       "id": "PL08",
-      "name": "Kitchen-Table Meeting",
+      "name": "Kitchen Table",
       "tagline": "pie is not optional",
       "description": "A chair's kitchen, her rules. Bring pie; leave with a precinct or nothing. (Primary circuit — out of the general.)",
       "risk": "STD",
@@ -267,7 +271,7 @@
     },
     {
       "id": "PL09",
-      "name": "Earned Media Pitch",
+      "name": "Earned Media",
       "tagline": "the gallery",
       "description": "A county weekly, a drive-time host, a stringer if you're lucky.",
       "risk": "VOL",
@@ -495,7 +499,7 @@
     },
     {
       "id": "PL19",
-      "name": "GOTV Weekend",
+      "name": "Get Out the Vote",
       "tagline": "the point of it all",
       "description": "Rapport is a promise. Turnout is the promise kept. One volunteer and a weekend. The general spine.",
       "risk": "STD",
@@ -637,7 +641,7 @@
     },
     {
       "id": "PL21",
-      "name": "Self-Fund on Credit",
+      "name": "Self-Fund",
       "tagline": "the bank believes in you",
       "description": "The bank will lend against the homestead. Campaigns have eaten better men's farms. Spend it now — the bill lands on the win/loss branch, not your odds.",
       "risk": "SAFE",
@@ -1702,6 +1706,35 @@
       "deck": "main"
     },
     {
+      "id": "PR01",
+      "name": "More Than Just a Pretty Face",
+      "tagline": "a favor",
+      "description": "A favor from someone who can afford to be kind. The next three real plays you make land as breakthroughs. They asked for nothing on the card. Remember the name.",
+      "risk": "SAFE",
+      "kind": "promo",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 0,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
       "id": "SS27",
       "name": "Ribbon-Cutting Circuit",
       "tagline": "the home fires",
@@ -1960,7 +1993,7 @@
     },
     {
       "id": "SS05",
-      "name": "Beg a Calendar Slot",
+      "name": "Set on Calendar",
       "tagline": "the narrowest door",
       "description": "Calendars decides what the House even sees. (Opens wk 9.) Favor is the only currency here.",
       "risk": "STD",
@@ -2059,7 +2092,7 @@
     },
     {
       "id": "SS08",
-      "name": "District Casework",
+      "name": "Casework",
       "tagline": "the home fires",
       "description": "A veteran's benefits, a stop-sign petition, a widow's property line. The seat is kept here, not in Austin.",
       "risk": "SAFE",

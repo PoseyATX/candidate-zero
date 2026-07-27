@@ -46,6 +46,21 @@ jobs:
       - name: Unity binding drift check (generated C# must match TS types)
         run: npm run gen:unity:check
 
+      # gen:unity:check covers the generated C# only. Nothing verified the
+      # committed content manifest or engine bundle, so they silently rotted:
+      # the committed manifest was missing the `promo` card kind and PR01
+      # entirely, meaning sponsor cards would not exist in the Unity/iOS build.
+      # Both artifacts are byte-reproducible under `npm ci`, so any diff after
+      # the two steps above means someone changed source without regenerating.
+      - name: Unity artifact drift check (committed exports must match source)
+        run: |
+          if ! git diff --exit-code --stat -- unity/; then
+            echo ""
+            echo "::error::Committed Unity artifacts are stale."
+            echo "Run 'npm run export:content && npm run build:engine' and commit unity/."
+            exit 1
+          fi
+
       - name: Install Playwright browser (for UI smoke)
         run: npx playwright install --with-deps chromium
 

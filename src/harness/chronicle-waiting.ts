@@ -52,9 +52,17 @@ for (const [pathId, loopId] of Object.entries(PATH_TO_WAITING_LOOP)) {
     !!s.entityHistory?.some(h => h.includes('LOOP_WAITING_PERENNIAL')),
     'entityHistory waiting tag'
   );
+  // Assert the contract, not the wording. This previously pinned the literal
+  // "WAITING ORBIT" marker, which 7f05cb9 deliberately removed when the line was
+  // rewritten as player-facing prose — leaving CI red. The flag + a surfaced
+  // note are the stable signals; copy edits must not break this.
   assert(
-    s.log.some(l => l.text.includes('WAITING ORBIT')),
-    'waiting orbit log'
+    s.sessionFlags?.['waiting_LOOP_WAITING_PERENNIAL'] === true,
+    'waiting loop session flag'
+  );
+  assert(
+    s.log.some(l => l.kind === 'note'),
+    'waiting residue surfaced in the log'
   );
   console.log('PASSED: applyLegacy waiting residue');
 }
