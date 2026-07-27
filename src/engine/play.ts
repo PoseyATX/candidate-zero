@@ -58,8 +58,30 @@ export function payCost(state: GameState, card: PlayCard): void {
   if (c.fav) state.favors -= c.fav;
 }
 
+/**
+ * Some grounds are closed until you hold the key that opens them (Church
+ * Corridor needs the Faith Leader — MV07 / plays-wave4 clear `gated`).
+ * `Ground.gated` shipped on GR04 and was cleared by those cards, but nothing
+ * ever *read* it, so the corridor was workable from turn 1 and the "corridor
+ * open" payoff was a no-op. This is the single reader.
+ */
+export function isGroundLocked(g: Ground): boolean {
+  return g.gated === true;
+}
+
+/** Player-facing reason a ground can't be worked yet, or '' when it's open. */
+export function groundLockReason(g: Ground): string {
+  return isGroundLocked(g) ? 'Closed — you need someone to walk you in' : '';
+}
+
+/** Grounds the player may actually work right now. */
+export function workableGrounds(state: GameState): Ground[] {
+  return state.groundsArr.filter(g => !isGroundLocked(g));
+}
+
 export function pickDefaultGround(state: GameState): Ground | undefined {
-  return state.groundsArr.find(g => g.pool > 0) ?? state.groundsArr[0];
+  const open = workableGrounds(state);
+  return open.find(g => g.pool > 0) ?? open[0] ?? undefined;
 }
 
 function amod(state: GameState, id: AttrId): number {
@@ -94,6 +116,9 @@ export function executePlay(
   const g = ground ?? (card.field ? pickDefaultGround(state) : undefined);
   if (card.field && !g) {
     return { ok: false, reason: 'No ground selected', cardId: card.id, cardName: card.n };
+  }
+  if (card.field && g && isGroundLocked(g)) {
+    return { ok: false, reason: groundLockReason(g), cardId: card.id, cardName: card.n };
   }
 
   state.groundRapMult = 1;

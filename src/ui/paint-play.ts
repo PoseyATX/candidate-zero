@@ -10,7 +10,14 @@ import {
   snapshot,
   type Campaign
 } from '../engine/loop.js';
-import { isPhaseLegal, isVisible, canAfford, cardAttrMod } from '../engine/play.js';
+import {
+  isPhaseLegal,
+  isVisible,
+  canAfford,
+  cardAttrMod,
+  isGroundLocked,
+  groundLockReason
+} from '../engine/play.js';
 import { getGroundPenalty, rivalOddsPenalty } from '../engine/calendar.js';
 import type { GameState, Ground, PlayCard } from '../engine/types.js';
 import {
@@ -694,6 +701,8 @@ export function renderGroundPicker(campaign: Campaign): void {
       const rap = Math.round(g.rapport || 0);
       const rival = Math.round(g.rivalRap || 0);
       const workedThisWeek = (s.groundPlays?.[g.id] ?? 0) > 0;
+      const locked = isGroundLocked(g);
+      const lockWhy = groundLockReason(g);
       const pct = card ? Math.round(groundOdds(s, card, g) * 100) : null;
       const rivalPen = card && card.field ? Math.round(rivalOddsPenalty(g) * 100) : 0;
       const oddsHtml =
@@ -703,9 +712,10 @@ export function renderGroundPicker(campaign: Campaign): void {
             `p≈${pct}%${pct === bestPct ? ' · best' : ''}${rivalPen > 0 ? ` <span class="gp-pen">−${rivalPen}% rival</span>` : ''}</span>`
           : '';
       return `
-        <button type="button" class="gp-ground${g.id === last ? ' gp-last' : ''}" data-ground="${g.id}">
-          <span class="gp-name">${g.n}${g.id === last ? ' <span class="gp-tag">last</span>' : ''}</span>
-          ${oddsHtml}
+        <button type="button" class="gp-ground${g.id === last ? ' gp-last' : ''}${locked ? ' gp-locked' : ''}" data-ground="${g.id}"
+          ${locked ? `aria-disabled="true" data-locked="1" title="${attrEscape(lockWhy)}"` : ''}>
+          <span class="gp-name">${g.n}${g.id === last ? ' <span class="gp-tag">last</span>' : ''}${locked ? ' <span class="gp-tag gp-tag-lock">closed</span>' : ''}</span>
+          ${locked ? '' : oddsHtml}
           <span class="gp-meters">
             <span class="gp-meter" title="Your rapport on this ground — banks when you work here">
               <span class="gp-mlabel">you</span>
@@ -720,7 +730,8 @@ export function renderGroundPicker(campaign: Campaign): void {
           </span>
           <span class="gp-foot">
             <span>pool ${g.pool}</span>
-            ${workedThisWeek ? '<span class="gp-worked">worked · ½ rapport</span>' : ''}
+            ${locked ? `<span class="gp-lockwhy">${attrEscape(lockWhy)}</span>` : ''}
+            ${workedThisWeek && !locked ? '<span class="gp-worked">worked · ½ rapport</span>' : ''}
           </span>
         </button>`;
     })
@@ -730,6 +741,8 @@ export function renderGroundPicker(campaign: Campaign): void {
     .forEach(btn => {
       btn.addEventListener('click', () => {
         if (pendingGroundIndex === null) return;
+        // Locked grounds stay visible (with the reason) but are not selectable.
+        if (btn.dataset.locked === '1') return;
         const ground = campaign.state.groundsArr.find(g => g.id === btn.dataset.ground);
         const index = pendingGroundIndex;
         closeGroundPicker();

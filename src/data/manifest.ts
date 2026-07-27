@@ -38,6 +38,9 @@ export interface CardEntry {
   description: string;
   risk: string;
   kind: CardKind;
+  /** Acquisition weight in the phase draft (deck.ts RARITY_WEIGHT) and the
+   *  presentation tier a host frames the card with. */
+  rarity: 'common' | 'uncommon' | 'rare';
   trap: boolean;
   field: boolean;
   phases: number[];
@@ -82,6 +85,7 @@ function cardEntry(card: PlayCard, deck: CardEntry['deck']): CardEntry {
     description: card.d,
     risk: card.risk,
     kind: card.kind ?? 'action',
+    rarity: card.rarity ?? 'common',
     trap: !!card.trap,
     field: !!card.field,
     phases: [...card.ph],

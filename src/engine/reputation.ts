@@ -16,8 +16,9 @@
  * rapStall, obls, groundsArr, shFired) already exists in GameState.
  */
 
-import type { GameState } from './types.js';
+import type { GameState, Ground } from './types.js';
 import { addObl } from '../data/obligations.js';
+import { groundAffinityMult } from '../data/setup.js';
 
 export function hasRep(state: GameState, id: string): boolean {
   return state.reps.includes(id);
@@ -193,4 +194,18 @@ export function shadowCheck(state: GameState): void {
       state.exposure += 1;
     });
   }
+}
+
+/**
+ * Canonical ground-rapport bank. Every rapport source must route through here
+ * so the modifiers apply uniformly: rapStall, the same-ground weekly penalty
+ * (groundRapMult), and Ground.aff x issue affinity. Several starmap verbs
+ * (MV07/MV12/MV14) used to mutate `g.rapport` directly and silently skipped
+ * all three.
+ */
+export function bankRapport(g: Ground, amt: number, state: GameState): void {
+  if (state.rapStall) amt = Math.ceil(amt / 2);
+  amt = amt * groundAffinityMult(state.assets ?? [], g.aff);
+  amt = Math.round(amt * (state.groundRapMult ?? 1));
+  g.rapport = Math.max(0, Math.min(100, g.rapport + amt));
 }

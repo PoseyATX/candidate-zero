@@ -90,6 +90,10 @@ namespace CandidateZero.HostData
         public float rapport;
         public float rivalRap;
         public float gotv;
+        /// <summary>Closed until the player holds the key that opens it (Ground.gated). A host must not offer a locked ground as a field-play target.</summary>
+        public bool locked;
+        /// <summary>Player-facing reason, '' when open.</summary>
+        public string lockReason;
     }
 
     public sealed class ActionView

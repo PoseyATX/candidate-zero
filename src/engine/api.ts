@@ -55,6 +55,7 @@ import {
 } from '../data/setup.js';
 import type { DeckState, GameState, PlayCard } from './types.js';
 import { buildGoalStripInput, formatGoalStrip, type GoalCopyKey } from '../ui/goal-strip.js';
+import { isGroundLocked, groundLockReason } from './play.js';
 
 export const ENGINE_API_VERSION = '1.0.0';
 
@@ -100,6 +101,11 @@ export interface GroundView {
   rapport: number;
   rivalRap: number;
   gotv: number;
+  /** Closed until the player holds the key that opens it (Ground.gated).
+   *  A host must not offer a locked ground as a field-play target. */
+  locked: boolean;
+  /** Player-facing reason, '' when open. */
+  lockReason: string;
 }
 
 /**
@@ -285,7 +291,9 @@ export function view(snap: EngineSnapshot): RenderView {
       pool: g.pool,
       rapport: Math.round(g.rapport || 0),
       rivalRap: Math.round(g.rivalRap || 0),
-      gotv: g.gotv || 0
+      gotv: g.gotv || 0,
+      locked: isGroundLocked(g),
+      lockReason: groundLockReason(g)
     })),
     actions,
     goal: formatGoalStrip(goalInput),

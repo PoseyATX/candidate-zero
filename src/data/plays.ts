@@ -5,7 +5,7 @@
 
 import type { GameState, Ground, RollResult, PlayCard } from '../engine/types.js';
 import { random } from '../engine/rng.js';
-import { addAlly, warm, allyWarmAtGround } from '../engine/reputation.js';
+import { addAlly, warm, allyWarmAtGround, bankRapport } from '../engine/reputation.js';
 import { WAVE4_PLAYS } from './plays-wave4.js';
 import { allShopPlayTemplates } from './assets.js';
 import { STARMAP_PLAYS } from './plays-starmap.js';
@@ -15,10 +15,9 @@ import { PROMO_PLAYS } from './promo-plays.js';
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
 }
+/** Thin alias — all rapport routes through engine/reputation.bankRapport. */
 function rapGain(g: Ground, amt: number, state: GameState) {
-  if (state.rapStall) amt = Math.ceil(amt / 2);
-  amt = Math.round(amt * (state.groundRapMult ?? 1));
-  g.rapport = clamp(g.rapport + amt, 0, 100);
+  bankRapport(g, amt, state);
 }
 
 export const PL01_BlockWalk: PlayCard = {

@@ -49,7 +49,9 @@ function nextCommand(snap: EngineSnapshot): Command | null {
     const a = v.actions[0]!;
     const cmd: Command = { type: 'play', handIndex: a.handIndex };
     if (a.field && v.grounds.length) {
-      cmd.groundId = v.grounds[v.calendarWeek % v.grounds.length]!.id;
+      // Only open grounds are valid field targets (GroundView.locked).
+      const open = v.grounds.filter(g => !g.locked);
+      if (open.length) cmd.groundId = open[v.calendarWeek % open.length]!.id;
     }
     return cmd;
   }

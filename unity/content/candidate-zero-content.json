@@ -50,6 +50,7 @@
       "description": "Boots and a clipboard. The one play that never turns on you. When in doubt. In the general, doors become turnout.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": true,
       "phases": [
@@ -79,6 +80,7 @@
       "description": "Half the yield, none of the weather. Grandma's kitchen table is HQ. In the general, the phone is a GOTV tool.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": true,
       "phases": [
@@ -108,6 +110,7 @@
       "description": "A district that sees your name starts believing it belongs there.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": true,
       "phases": [
@@ -136,6 +139,7 @@
       "description": "Signatures instead of a fee. Labor is the currency you were born holding.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -163,6 +167,7 @@
       "description": "$1,250 and it's done. Shame-free, story-free.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -190,6 +195,7 @@
       "description": "Folding chairs, burnt coffee, real questions. The kids notice if you skip these.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -219,6 +225,7 @@
       "description": "Sixty seconds and every rival watching for the stumble.",
       "risk": "VOL",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -248,6 +255,7 @@
       "description": "A chair's kitchen, her rules. Bring pie; leave with a precinct or nothing. (Primary circuit — out of the general.)",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -276,6 +284,7 @@
       "description": "A county weekly, a drive-time host, a stringer if you're lucky.",
       "risk": "VOL",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -305,6 +314,7 @@
       "description": "Nobody prints it. Everybody files it. The reporter learns your name spelling.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -334,6 +344,7 @@
       "description": "Five-dollar plates, donation jar, casseroles. Net positive, always.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": true,
       "phases": [
@@ -363,6 +374,7 @@
       "description": "The kitchen-table circuit at scale. Phase III chairs are already spoken for.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -391,6 +403,7 @@
       "description": "Pack the room, count the hands. Clubs remember who wins their straw.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -420,6 +433,7 @@
       "description": "Rubber chicken, real gatekeepers. Read the room or the room reads you.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -449,6 +463,7 @@
       "description": "A quiet man with a courthouse habit. What he finds becomes yours to spend — or to hold.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -476,6 +491,7 @@
       "description": "The Kitchen Cabinet plays your rival better than your rival does.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -504,6 +520,7 @@
       "description": "Rapport is a promise. Turnout is the promise kept. One volunteer and a weekend. The general spine.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": true,
       "phases": [
@@ -531,6 +548,7 @@
       "description": "The truck runs routes. Steepest conversion where turnout is lowest. Needs the Flatbed (shop A06).",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": true,
       "phases": [
@@ -558,6 +576,7 @@
       "description": "An army marches on casseroles. Every volunteer makes every other card better.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -588,6 +607,7 @@
       "description": "You are not running on nine things. You are running on one thing, said so it stays said.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -616,6 +636,7 @@
       "description": "A man in a good suit admires your race. The check is real. So is the string tied to it. Once. Session will collect.",
       "risk": "STD",
       "kind": "bargain",
+      "rarity": "common",
       "trap": true,
       "field": false,
       "phases": [
@@ -646,6 +667,7 @@
       "description": "The bank will lend against the homestead. Campaigns have eaten better men's farms. Spend it now — the bill lands on the win/loss branch, not your odds.",
       "risk": "SAFE",
       "kind": "bargain",
+      "rarity": "common",
       "trap": true,
       "field": false,
       "phases": [
@@ -674,6 +696,7 @@
       "description": "What the quiet man found, printed on cheap stock and mailed to every primary voter who votes.",
       "risk": "VOL",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -703,6 +726,7 @@
       "description": "One volunteer stops showing up as a volunteer and starts showing up as staff.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": true,
       "phases": [
@@ -732,6 +756,7 @@
       "description": "A professional who has run four of these before. Money buys what volunteers can't always deliver on schedule.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": true,
       "phases": [
@@ -760,6 +785,7 @@
       "description": "One man prints the card half the primary votes from. His price is never only money.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -789,6 +815,7 @@
       "description": "Biscuits at six-thirty. The Corridor watches who shows before sunrise.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -819,6 +846,7 @@
       "description": "Not for an endorsement — for a fair shake. The weekly decides who's \"serious\" long before the voters do.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -847,6 +875,7 @@
       "description": "The one endorsement that moves a whole county. He gives it to winners, so look like one.",
       "risk": "VOL",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -875,6 +904,7 @@
       "description": "A beloved judge has died. You can be present, or you can be seen. Presence earns the living.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -904,6 +934,7 @@
       "description": "The chairs you banked open a door: lists, volunteers, a quiet county nod. Special kit — Precinct Chair orbit.",
       "risk": "SAFE",
       "kind": "ally",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -934,6 +965,7 @@
       "description": "The captain's route book becomes the week's law. Special kit — Canvass Captain orbit. Field AP and turf GOTV.",
       "risk": "SAFE",
       "kind": "ally",
+      "rarity": "common",
       "trap": false,
       "field": true,
       "phases": [
@@ -966,6 +998,7 @@
       "description": "The heaviest local name spends itself once. Special kit — County Judge orbit. Endorsement gravity and name heat.",
       "risk": "SAFE",
       "kind": "ally",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -998,6 +1031,7 @@
       "description": "The Chairwoman opens the file and the volunteer list. Special kit — County Party orbit.",
       "risk": "SAFE",
       "kind": "ally",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -1030,6 +1064,7 @@
       "description": "Every name that votes straw. Special kit — Club Leader orbit.",
       "risk": "SAFE",
       "kind": "ally",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -1061,6 +1096,7 @@
       "description": "Not an endorsement — the benefit of the doubt in print. Special kit — Local Editor orbit.",
       "risk": "SAFE",
       "kind": "ally",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -1093,6 +1129,7 @@
       "description": "The Pastor's hand on both of yours. Directory and volunteers. Special kit — Faith Leader orbit.",
       "risk": "SAFE",
       "kind": "ally",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -1125,6 +1162,7 @@
       "description": "Half the primary votes from a printed card. Special kit — Slate-Maker orbit. His marker was already on it.",
       "risk": "SAFE",
       "kind": "ally",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -1156,6 +1194,7 @@
       "description": "The Finance Chair opens the call sheet. Special kit — money spine, not a free weekly drip forever.",
       "risk": "SAFE",
       "kind": "ally",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -1188,6 +1227,7 @@
       "description": "Open mic between farm reports and the noon news. Special kit — Radio Host orbit. Name heat, not an endorsement.",
       "risk": "SAFE",
       "kind": "ally",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -1220,6 +1260,7 @@
       "description": "A junior lobbyist with a conscience walks you the side door. Special kit — access, not a vote.",
       "risk": "SAFE",
       "kind": "ally",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -1251,6 +1292,7 @@
       "description": "The local president puts a hand on your shoulder at shift change. Special kit — Union orbit. Volunteers and doors.",
       "risk": "SAFE",
       "kind": "ally",
+      "rarity": "common",
       "trap": false,
       "field": true,
       "phases": [
@@ -1283,6 +1325,7 @@
       "description": "Rubber chicken, name tags, reliable voters. Special kit — Chamber orbit. Money and polite weight.",
       "risk": "SAFE",
       "kind": "ally",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -1315,6 +1358,7 @@
       "description": "Unofficial senate on the bench out front. Special kit — Feed-Store orbit. Rumor is infrastructure.",
       "risk": "SAFE",
       "kind": "ally",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -1346,6 +1390,7 @@
       "description": "An hour at the exit doors. Cheap, endless, and it actually works.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -1375,6 +1420,7 @@
       "description": "A quarter page next to the potluck schedule. The congregation notices who shows up in print.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -1404,6 +1450,7 @@
       "description": "Your name on forty small backs, every Saturday, all season. Turnout starts young — through the parents.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -1432,6 +1479,7 @@
       "description": "Three hundred words, tightly argued. The people who vote in primaries read the paper.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -1460,6 +1508,7 @@
       "description": "One table, four regulars, refills on the house. Retail politics at its most literal.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -1489,6 +1538,7 @@
       "description": "The business agent likes you enough to put it in writing. Stewards walk turf you never could.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "uncommon",
       "trap": false,
       "field": false,
       "phases": [
@@ -1517,6 +1567,7 @@
       "description": "Lookalike audiences, dayparted, A/B tested. The consultant swears by the dashboard.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "uncommon",
       "trap": false,
       "field": false,
       "phases": [
@@ -1545,6 +1596,7 @@
       "description": "The seniors vote at ninety percent and love a ride. Turnout you can schedule.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "uncommon",
       "trap": false,
       "field": false,
       "phases": [
@@ -1572,6 +1624,7 @@
       "description": "A kid with a camcorder at every rival event, waiting for the gaffe. Sometimes it comes.",
       "risk": "VOL",
       "kind": "action",
+      "rarity": "uncommon",
       "trap": false,
       "field": false,
       "phases": [
@@ -1600,6 +1653,7 @@
       "description": "Three thousand seats and a pastor who might, or might not, wave you up front.",
       "risk": "VOL",
       "kind": "action",
+      "rarity": "uncommon",
       "trap": false,
       "field": false,
       "phases": [
@@ -1629,6 +1683,7 @@
       "description": "A name people know from television deigns to say yours. The bump is real; so is the debt.",
       "risk": "VOL",
       "kind": "action",
+      "rarity": "rare",
       "trap": false,
       "field": false,
       "phases": [
@@ -1657,6 +1712,7 @@
       "description": "You say the exact right thing at the exact right second and the internet decides to care.",
       "risk": "VOL",
       "kind": "action",
+      "rarity": "rare",
       "trap": false,
       "field": false,
       "phases": [
@@ -1685,6 +1741,7 @@
       "description": "Every captain, every van, every list, one weekend. When the machine moves as one, the count moves with it.",
       "risk": "VOL",
       "kind": "action",
+      "rarity": "rare",
       "trap": false,
       "field": false,
       "phases": [
@@ -1712,6 +1769,7 @@
       "description": "A favor from someone who can afford to be kind. The next three real plays you make land as breakthroughs. They asked for nothing on the card. Remember the name.",
       "risk": "SAFE",
       "kind": "promo",
+      "rarity": "rare",
       "trap": false,
       "field": false,
       "phases": [
@@ -1741,6 +1799,7 @@
       "description": "A new bridge, a clinic wing, a fire truck. You hold the giant scissors and the district sees you deliver.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -1773,6 +1832,7 @@
       "description": "A good cause, a ballroom, and every lobbyist in town buying a table. Goodwill and debts, exchanged over rubber chicken.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -1805,6 +1865,7 @@
       "description": "A challenger is testing the waters back home. You can ignore it — or plant your flag and stare them down.",
       "risk": "VOL",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -1837,6 +1898,7 @@
       "description": "Your name, your issue, a number. It exists now, which is more than most ideas get.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -1869,6 +1931,7 @@
       "description": "Bills go where the Speaker sends them. (Opens wk 2.) If the PAC holds a claim, they collect before the desk moves.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -1901,6 +1964,7 @@
       "description": "They want an aye on a quiet association bill. Refuse and keep your district — pay in heat and ink.",
       "risk": "VOL",
       "kind": "bargain",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -1933,6 +1997,7 @@
       "description": "The chair decides what gets heard. (Hearings open wk 4.) Kitchen-table rules, marble floors.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -1965,6 +2030,7 @@
       "description": "Witnesses, a timer, members reading their phones. (Votes-out open wk 6.)",
       "risk": "VOL",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -1998,6 +2064,7 @@
       "description": "Calendars decides what the House even sees. (Opens wk 9.) Favor is the only currency here.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2031,6 +2098,7 @@
       "description": "Amendments fly, points of order lurk, the back mic is loaded. (Floor opens wk 11.)",
       "risk": "VOL",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2064,6 +2132,7 @@
       "description": "Thirty-one senators, the Lt. Governor, and the Tag in wait. (Opens wk 13.)",
       "risk": "VOL",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2097,6 +2166,7 @@
       "description": "A veteran's benefits, a stop-sign petition, a widow's property line. The seat is kept here, not in Austin.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2129,6 +2199,7 @@
       "description": "Carry a small unpleasant thing for leadership. It costs your name a little; it buys your bill a lot.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2161,6 +2232,7 @@
       "description": "Your aye for his, payable when called. The whole building runs on this ledger.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2193,6 +2265,7 @@
       "description": "Most members never read them. The ones who do own the ones who don't.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2225,6 +2298,7 @@
       "description": "One procedural miracle, pre-paid. Spend it where the session bends.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2257,6 +2331,7 @@
       "description": "Civics at the community college, two evenings a week. Thirty adults who now know your name and your handshake.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2290,6 +2365,7 @@
       "description": "A standing byline in the county paper. Slow, unglamorous, and it keeps your name in print between the elections.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2323,6 +2399,7 @@
       "description": "A bib, a starting pistol, and a banner with your name over the finish line. Good works, well photographed.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2356,6 +2433,7 @@
       "description": "Call the names that still pick up. The county forgets slower when you dial.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2389,6 +2467,7 @@
       "description": "The candidate lost; the cause did not. Folding chairs and a sharp message.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2421,6 +2500,7 @@
       "description": "Two years inside. Briefs, desks, and where the levers hide.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2453,6 +2533,7 @@
       "description": "Fix what broke. Coach the team. Let the mailers fade a little.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2484,6 +2565,7 @@
       "description": "Title still warm. Doors still open. No vote — only lunch.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2517,6 +2599,7 @@
       "description": "Birthdays, funerals, fish fries you are not running. Yet.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2546,6 +2629,7 @@
       "description": "A retainer, a speech fee, a board. Not a campaign — not yet.",
       "risk": "STD",
       "kind": "bargain",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2575,6 +2659,7 @@
       "description": "White paper, memo, bill draft that waits for a sponsor.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2605,6 +2690,7 @@
       "description": "Quiet calls about a larger map. Senate row or the statewide ballot.",
       "risk": "VOL",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2635,6 +2721,7 @@
       "description": "You do not ask for the room. You fill it, and the turnout operation fills the rest.",
       "risk": "VOL",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2663,6 +2750,7 @@
       "description": "The message arrives pre-sharpened and never wavers. You say the same true thing until it is the only thing.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2691,6 +2779,7 @@
       "description": "Someone owes you, and today is the day. The angle was always there.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2720,6 +2809,7 @@
       "description": "Every box checked, every deadline beaten. The clerk finds nothing because there is nothing to find.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2747,6 +2837,7 @@
       "description": "You seat the rancher next to the union man and both leave thinking they won.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2775,6 +2866,7 @@
       "description": "The kid, the dog, the surgery last spring. You remember, and they never forget that you did.",
       "risk": "VOL",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2804,6 +2896,7 @@
       "description": "Conviction with muscle behind it — a crowd that showed up angry and organized.",
       "risk": "VOL",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2833,6 +2926,7 @@
       "description": "Loud out front, and an elbow the establishment never sees coming.",
       "risk": "VOL",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2862,6 +2956,7 @@
       "description": "Grind plus the rulebook. You are still knocking when the others go home.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2892,6 +2987,7 @@
       "description": "Your name means something here. The chairs already wave you through.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2921,6 +3017,7 @@
       "description": "Star quarterback, then feed-store owner, now this. The county has rooted for you for decades.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2950,6 +3047,7 @@
       "description": "A disciplined message and a knife for the primary. You are exactly as angry as you choose to be.",
       "risk": "VOL",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -2979,6 +3077,7 @@
       "description": "A cause and the rulebook to advance it. You file, and the file has teeth.",
       "risk": "VOL",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -3008,6 +3107,7 @@
       "description": "Steady, principled, trusted across the aisle — the kind they call \"serious.\"",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -3037,6 +3137,7 @@
       "description": "A pulpit is a precinct and Sundays are turnout. You move people, and you mean it.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -3066,6 +3167,7 @@
       "description": "You know the rules AND how to bend them. Dangerous in a committee, deadly near a deadline.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -3096,6 +3198,7 @@
       "description": "Two of everything and a price on each. You can trade your way out of almost anything.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -3125,6 +3228,7 @@
       "description": "Timing and charm: you know the line AND the moment to land it. Made for the cameras.",
       "risk": "VOL",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -3154,6 +3258,7 @@
       "description": "Process mastery and the relationships to use it. Leadership is watching this profile.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -3183,6 +3288,7 @@
       "description": "You explain the water-district budget so plainly people thank you for it.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -3213,6 +3319,7 @@
       "description": "A known name and a gift for people. Doors open on the family reputation; you keep them open on your own.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -3242,6 +3349,7 @@
       "description": "Twenty years of cafeteria nights. You work the rooms that already know your name.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -3272,6 +3380,7 @@
       "description": "The VFW and Legion still stand when the cameras leave. Bio is armor; the halls are turnout.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -3302,6 +3411,7 @@
       "description": "Everyone still owes you a favor or a bag of feed. You cash favors before cash.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -3331,6 +3441,7 @@
       "description": "A hundred students, one afternoon, clipboards everywhere. Signatures at scale — the labor door, staffed by the young.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -3359,6 +3470,7 @@
       "description": "Someone else's rolodex, dialing for you. The money arrives bundled, with strings you can mostly ignore.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -3389,6 +3501,7 @@
       "description": "Every captain a small turnout operation. When they move together, the count moves with them.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -3418,6 +3531,7 @@
       "description": "A friendly anchor and a standing invitation. When you have something to say, the county hears it that night.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -3447,6 +3561,7 @@
       "description": "Captains, turfs, cut lists. The volunteers you recruited become a machine that runs without you.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -3477,6 +3592,7 @@
       "description": "You are not campaigning anymore; you are just around, the way the weather is around. People vote for the weather they know.",
       "risk": "SAFE",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [
@@ -3506,6 +3622,7 @@
       "description": "The people who decide have decided it is your turn. One call, and the slate rearranges itself around you.",
       "risk": "STD",
       "kind": "action",
+      "rarity": "common",
       "trap": false,
       "field": false,
       "phases": [

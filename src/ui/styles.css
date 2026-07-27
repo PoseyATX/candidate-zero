@@ -2228,3 +2228,22 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+/* Locked ground (Ground.gated): visible with its reason, never selectable —
+   same convention as unplayable cards, which dim with a reason rather than
+   vanishing. Opening one (e.g. MV07 Faith Leader) is a real unlock beat. */
+.gp-ground.gp-locked {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: saturate(0.5);
+}
+.gp-ground.gp-locked .gp-bar { opacity: 0.5; }
+.gp-tag-lock {
+  background: rgba(138, 47, 38, 0.28);
+  border-color: rgba(180, 90, 70, 0.6);
+  color: #e6c9a8;
+}
+.gp-lockwhy {
+  color: #c9a06a;
+  font-style: italic;
+}

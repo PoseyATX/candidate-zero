@@ -21,6 +21,7 @@ import {
   PILOT_SLATE,
   PILOT_UNION
 } from './starmap/pilots.js';
+import { bankRapport } from '../engine/reputation.js';
 
 function markEntity(s: { entityHistory?: string[] }, entityId: string): void {
   s.entityHistory = s.entityHistory ?? [];
@@ -107,12 +108,15 @@ export const MV02_FieldPlan: PlayCard = {
         const ground = s.groundsArr.find(x => x.id === id);
         if (ground) {
           ground.gotv = (ground.gotv || 0) + 0.15;
-          gotvNote = ` +15% GOTV at ${ground.n}.`;
+          // The captain's plan works the turf, not just the turnout model.
+          bankRapport(ground, 5, s);
+          gotvNote = ` +15% GOTV and rapport at ${ground.n}.`;
         }
       }
     } else if (g) {
       g.gotv = (g.gotv || 0) + 0.12;
-      gotvNote = ` +12% GOTV at ${g.n}.`;
+      bankRapport(g, 4, s);
+      gotvNote = ` +12% GOTV and rapport at ${g.n}.`;
     }
     markEntity(s, PILOT_CAPTAIN.entityId);
     consumePilot(s, PILOT_CAPTAIN.consumeFlag, PILOT_CAPTAIN.residueFlag);
@@ -278,7 +282,7 @@ export const MV07_CorridorBlessing: PlayCard = {
     // Corridor ground
     const g = s.groundsArr.find(x => x.id === 'GR04');
     if (g) {
-      g.rapport = Math.min(100, g.rapport + 8);
+      bankRapport(g, 8, s);
       g.gated = false;
     }
     if (!s.assets.includes('A13')) s.assets.push('A13');
@@ -449,7 +453,7 @@ export const MV12_PlantGate: PlayCard = {
     s.contacts += 35;
     s.faces.G = Math.min(100, (s.faces.G || 0) + 4);
     if (g) {
-      g.rapport = Math.min(100, (g.rapport || 0) + 6);
+      bankRapport(g, 6, s);
       g.gotv = (g.gotv || 0) + 0.08;
     }
     markEntity(s, PILOT_UNION.entityId);
@@ -520,7 +524,7 @@ export const MV14_FeedBench: PlayCard = {
     // Rural grounds soft open if present
     for (const id of ['GR02', 'GR05', 'GR06']) {
       const ground = s.groundsArr.find(x => x.id === id);
-      if (ground) ground.rapport = Math.min(100, (ground.rapport || 0) + 4);
+      if (ground) bankRapport(ground, 4, s);
     }
     markEntity(s, PILOT_FEED.entityId);
     consumePilot(s, PILOT_FEED.consumeFlag, PILOT_FEED.residueFlag);

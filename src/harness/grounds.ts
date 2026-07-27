@@ -174,6 +174,29 @@ for (const r of rows) {
 }
 // Spread should touch at least as many grounds as focus (focus can starve under rival teeth)
 assert(laborSpread.avgContested + 0.01 >= laborFocus.avgContested, 'spread should contest >= focus');
+
+// --- Ground win-condition guardrail (calibrated 2026-07-27) ---
+// The condition sat at 0% met in every strategy from Phase 1 until the
+// affinity/gating pass, because the 60/40 thresholds were sketched against an
+// economy that was never built. career.ts is now calibrated so the broad-play
+// archetype actually reaches it. Assert the band so it cannot silently rot back
+// to 0 (or inflate to a free win) on a future tuning pass.
+{
+  const moneySpread = rows.find(r => r.combo === 'money/spread')!;
+  const moneyFocus = rows.find(r => r.combo === 'money/focus')!;
+  assert(
+    moneySpread.sketchMetPct >= 12 && moneySpread.sketchMetPct <= 65,
+    `money/spread ground condition met ${moneySpread.sketchMetPct}% — expected 12-65% ` +
+      `(0 means the thresholds drifted out of reach again; >65 means it is a free win)`
+  );
+  // Focus play banks nothing on a second ground, so a breadth condition is
+  // unreachable for it by design. Assert that stays true rather than silently
+  // becoming the dominant strategy.
+  assert(
+    moneyFocus.sketchMetPct <= moneySpread.sketchMetPct,
+    'breadth condition must not favor focus over spread'
+  );
+}
 // Teeth unit tests (not smoke-win-rate — N=50 is noisy)
 {
   const g = { id: 'x', n: 't', pool: 1, pool0: 1, prop: 0.5, aff: 'G', rapport: 0, gotv: 0, rivalRap: 50 };

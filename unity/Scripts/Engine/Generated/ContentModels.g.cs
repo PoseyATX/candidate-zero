@@ -51,6 +51,8 @@ namespace CandidateZero.HostData
         public string description;
         public string risk;
         public string kind;
+        /// <summary>Acquisition weight in the phase draft (deck.ts RARITY_WEIGHT) and the presentation tier a host frames the card with.</summary>
+        public string rarity;
         public bool trap;
         public bool field;
         public List<int> phases;

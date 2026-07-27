@@ -17,6 +17,7 @@ import {
 import { tickOutsideDeck } from './outside.js';
 import { WAITING_WEEKS, onWaitingWeekAdvance } from './waiting.js';
 import type { CampaignOutcome, GameState, Ground } from './types.js';
+import { checkBallotThreshold } from './career.js';
 
 /** Primary campaign length (includes filing window). */
 export const PRIMARY_WEEKS = 8;
@@ -253,8 +254,27 @@ export function primaryWinProbability(state: GameState): number {
     (state.exposure || 0) * 0.04 -
     fieldPressure -
     incumbentPressure -
-    rivalPressure;
+    rivalPressure +
+    groundConditionBonus(state);
   return clamp(p, 0.1, 0.9);
+}
+
+/**
+ * Ground-distribution payoff.
+ *
+ * Phase 1 built `checkBallotThreshold` as a measurement-only sketch and the
+ * roadmap called for it to *replace* these probabilities in Phase 2. It is
+ * wired here as a bonus instead: replacing the model would invalidate the
+ * whole Phase 5 balance matrix (24 personas, win band 6.7-33.3%). As a
+ * modifier, contesting a few grounds properly is decisive without detonating
+ * tuned work. Meeting the full condition is worth a real swing; getting the
+ * home ground alone is worth a token.
+ */
+export function groundConditionBonus(state: GameState): number {
+  const r = checkBallotThreshold(state);
+  if (r.met) return 0.1;
+  if (r.homeMet) return 0.03;
+  return 0;
 }
 
 /**
@@ -286,6 +306,7 @@ export function generalWinProbability(state: GameState): number {
     Math.max(1, state.groundsArr.length);
   const gotv = state.groundsArr.reduce((s, g) => s + (g.gotv || 0), 0);
   const opp = state.genBase || 0.45;
+  const groundBonus = groundConditionBonus(state);
   const wrongTax =
     state.district?.align === 'wrong' || state.district?.trap ? 0.1 : 0;
   // Opposition turf organization depresses November slightly (GOTV still king).
@@ -301,7 +322,8 @@ export function generalWinProbability(state: GameState): number {
     state.hitPieces * 0.05 -
     opp * 0.28 -
     wrongTax -
-    rivalPressure;
+    rivalPressure +
+    groundBonus;
   return clamp(p, 0.06, 0.92);
 }
 

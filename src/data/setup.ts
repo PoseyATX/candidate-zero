@@ -37,7 +37,26 @@ export interface IssueDef {
   n: string;
   tag: string;
   d: string;
+  /** Constituency affinity, same vocabulary as Ground.aff (see GROUND_AFFINITY).
+   *  Where a ground and your issue share a constituency, rapport banks harder —
+   *  the fiction was already in the issue copy ("The FM roads know the
+   *  arithmetic", "four storefronts by the plant gate"); this makes it real. */
+  aff: string;
 }
+
+/**
+ * Ground / issue constituency codes. `T` is anchored by the shipped trait
+ * T_CRED ("True-Believer grounds start at 12 rapport"); the rest follow the
+ * ground names and the issue flavor text they were written against.
+ */
+export const GROUND_AFFINITY: Record<string, string> = {
+  T: 'True believers — the base that shows up',
+  G: 'General electorate — broad, persuadable',
+  O: 'Old guard — courthouse, institutions, incumbent machinery',
+  F: 'Families — schools, subdivisions, young households',
+  P: 'Professionals — commuters and the new-money class',
+  L: 'Leisure — retirees and lake country'
+};
 
 export interface DistrictDef {
   id: string;
@@ -235,25 +254,25 @@ export const PERSONAS: PersonaDef[] = [
 ];
 
 export const ISSUES: IssueDef[] = [
-  { id: 'taxes', n: 'Property taxes', tag: 'taxes', d: 'Appraisal districts, school M&O, the levy that never sleeps.' },
-  { id: 'water', n: 'Water rights', tag: 'water', d: 'Groundwater districts, river authorities, and drought maps.' },
-  { id: 'schools', n: 'School finance', tag: 'schools', d: 'Formulas, facilities, and Friday nights.' },
-  { id: 'border', n: 'The border', tag: 'border', d: 'Federal failure, local consequence. Easy to shout; hard to govern.' },
-  { id: 'hospitals', n: 'Rural hospitals', tag: 'hospitals', d: 'OB deserts, ambulance miles, and the last ER light.' },
-  { id: 'land', n: 'Eminent domain', tag: 'land', d: 'Pipelines, corridors, and ranch gates.' },
+  { id: 'taxes', n: 'Property taxes', tag: 'taxes', d: 'Appraisal districts, school M&O, the levy that never sleeps.', aff: 'O,P' },
+  { id: 'water', n: 'Water rights', tag: 'water', d: 'Groundwater districts, river authorities, and drought maps.', aff: 'T,G' },
+  { id: 'schools', n: 'School finance', tag: 'schools', d: 'Formulas, facilities, and Friday nights.', aff: 'F,G' },
+  { id: 'border', n: 'The border', tag: 'border', d: 'Federal failure, local consequence. Easy to shout; hard to govern.', aff: 'T,G' },
+  { id: 'hospitals', n: 'Rural hospitals', tag: 'hospitals', d: 'OB deserts, ambulance miles, and the last ER light.', aff: 'T,G' },
+  { id: 'land', n: 'Eminent domain', tag: 'land', d: 'Pipelines, corridors, and ranch gates.', aff: 'T,G' },
   // Ported from archive/prototype-single-file.html (2026-07-17) — see docs/SRD-NOTES.md.
-  { id: 'tolls', n: 'Highway tolls', tag: 'tolls', d: 'They promised the tolls would come off when the road was paid. The road is paid.' },
-  { id: 'teacherpay', n: 'Teacher pay', tag: 'teacherpay', d: 'Twenty years in a classroom and a second job at the feed store. The room already agrees; make it vote.' },
-  { id: 'ag-subsidies', n: 'Ag subsidies & crop insurance', tag: 'ag-subsidies', d: 'One hailstorm from foreclosure, every single year. The FM roads know the arithmetic.' },
-  { id: 'corruption', n: 'Courthouse corruption', tag: 'corruption', d: "The commissioners' court has been a family business for forty years. Naming it takes nerve." },
-  { id: 'broadband', n: 'Rural broadband', tag: 'broadband', d: 'Kids do homework in the church parking lot for the wifi. The future has a dead zone.' },
-  { id: 'bail-reform', n: 'Prison & bail reform', tag: 'bail-reform', d: "The unit is the county's biggest employer and its heaviest silence. Careful, serious ground." },
-  { id: 'mental-health', n: 'Mental health funding', tag: 'mental-health', d: 'The sheriff runs the largest psychiatric facility in three counties: his jail. Even he says so.' },
-  { id: 'veterans', n: "Veterans' services", tag: 'veterans', d: 'The Legion hall knows every name on the waiting list. Show up and listen first.' },
-  { id: 'grid', n: 'Rural grid reliability', tag: 'grid', d: 'Everyone remembers the freeze. Every generator in every barn is a campaign memorial.' },
-  { id: 'payday-lending', n: 'Payday lending', tag: 'payday-lending', d: 'Four storefronts by the plant gate, 400% APR. The math preys on shift workers by design.' },
-  { id: 'vouchers', n: 'Public school vouchers', tag: 'vouchers', d: 'The church wants them; the small towns fear them — the district IS the school. A knife-edge issue.' },
-  { id: 'election-integrity', n: 'Election integrity', tag: 'election-integrity', d: 'The county clerk is tired, honest, and yelled at from both directions. Order-flavored, radioactive, real.' }
+  { id: 'tolls', n: 'Highway tolls', tag: 'tolls', d: 'They promised the tolls would come off when the road was paid. The road is paid.', aff: 'P,F' },
+  { id: 'teacherpay', n: 'Teacher pay', tag: 'teacherpay', d: 'Twenty years in a classroom and a second job at the feed store. The room already agrees; make it vote.', aff: 'F,G' },
+  { id: 'ag-subsidies', n: 'Ag subsidies & crop insurance', tag: 'ag-subsidies', d: 'One hailstorm from foreclosure, every single year. The FM roads know the arithmetic.', aff: 'T,G' },
+  { id: 'corruption', n: 'Courthouse corruption', tag: 'corruption', d: "The commissioners' court has been a family business for forty years. Naming it takes nerve.", aff: 'O,G' },
+  { id: 'broadband', n: 'Rural broadband', tag: 'broadband', d: 'Kids do homework in the church parking lot for the wifi. The future has a dead zone.', aff: 'T,G' },
+  { id: 'bail-reform', n: 'Prison & bail reform', tag: 'bail-reform', d: "The unit is the county's biggest employer and its heaviest silence. Careful, serious ground.", aff: 'O,T' },
+  { id: 'mental-health', n: 'Mental health funding', tag: 'mental-health', d: 'The sheriff runs the largest psychiatric facility in three counties: his jail. Even he says so.', aff: 'O,T' },
+  { id: 'veterans', n: "Veterans' services", tag: 'veterans', d: 'The Legion hall knows every name on the waiting list. Show up and listen first.', aff: 'G,T' },
+  { id: 'grid', n: 'Rural grid reliability', tag: 'grid', d: 'Everyone remembers the freeze. Every generator in every barn is a campaign memorial.', aff: 'T,G' },
+  { id: 'payday-lending', n: 'Payday lending', tag: 'payday-lending', d: 'Four storefronts by the plant gate, 400% APR. The math preys on shift workers by design.', aff: 'T,O' },
+  { id: 'vouchers', n: 'Public school vouchers', tag: 'vouchers', d: 'The church wants them; the small towns fear them — the district IS the school. A knife-edge issue.', aff: 'T,G' },
+  { id: 'election-integrity', n: 'Election integrity', tag: 'election-integrity', d: 'The county clerk is tired, honest, and yelled at from both directions. Order-flavored, radioactive, real.', aff: 'O,G' }
 ];
 
 export const DISTRICTS: DistrictDef[] = [
@@ -348,4 +367,27 @@ export function setupFromPartial(partial: Partial<SetupSelection>): SetupSelecti
     districtId: partial.districtId ?? HARNESS_DEFAULT_SETUP.districtId,
     regionId: partial.regionId ?? HARNESS_DEFAULT_SETUP.regionId
   };
+}
+
+/** Affinity codes for the player's chosen issue, from the ISSUE_<tag> asset. */
+export function issueAffinity(assets: string[]): string[] {
+  const tag = assets.find(a => a.startsWith('ISSUE_'))?.slice('ISSUE_'.length);
+  if (!tag) return [];
+  const issue = ISSUES.find(i => i.tag === tag);
+  return issue ? issue.aff.split(',').map(c => c.trim()).filter(Boolean) : [];
+}
+
+/**
+ * Rapport multiplier for working `groundAff` while running on your issue.
+ * One shared constituency is a good fit, two is your turf. Returns 1 when the
+ * player has no issue or nothing overlaps.
+ */
+export function groundAffinityMult(assets: string[], groundAff: string): number {
+  const mine = issueAffinity(assets);
+  if (!mine.length) return 1;
+  const theirs = groundAff.split(',').map(c => c.trim()).filter(Boolean);
+  const shared = theirs.filter(c => mine.includes(c)).length;
+  if (shared >= 2) return 2;
+  if (shared === 1) return 1.5;
+  return 1;
 }

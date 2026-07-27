@@ -38,9 +38,25 @@ export interface BallotThresholdResult {
   met: boolean;
 }
 
+/**
+ * Calibrated 2026-07-27 against the real rapport economy (harness:grounds +
+ * a distribution probe), replacing the original 60/40 sketch which was written
+ * against an economy that was never built and was met 0% of the time in every
+ * strategy since Phase 1.
+ *
+ * Measured medians after the affinity/gating pass, per campaign:
+ *   money/spread  home 13 · 2nd 8 · 3rd 5
+ *   labor/spread  home  5 · 2nd 2 · 3rd 0
+ *   *focus        home 10-28 · 2nd 0 · 3rd 0
+ *
+ * Focus play banks nothing on a second ground, so a breadth condition is
+ * unreachable for it by construction — that is intended. This condition
+ * rewards contesting "a few, not all eight", the stated Phase 1 design target.
+ * Guardrail: harness:grounds asserts the met-rate band.
+ */
 const THRESHOLDS = {
-  primary: { home: 60, other: 40, othersNeeded: 2 },
-  general: { home: 40, other: 30, othersNeeded: 2 }
+  primary: { home: 12, other: 5, othersNeeded: 2 },
+  general: { home: 8, other: 4, othersNeeded: 2 }
 } as const;
 
 /**
