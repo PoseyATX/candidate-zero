@@ -307,7 +307,10 @@ async function main() {
           assert(truth && !stale, `ground picker rival copy clear (title=${JSON.stringify(rivalTitle)})`);
           pickerOppTruthChecked = true;
         }
-        const grounds = await page.$$('.gp-ground');
+        // Locked grounds (Ground.gated) render but are deliberately not
+        // selectable, so only cycle the open ones — clicking a locked card
+        // hangs the driver.
+        const grounds = await page.$$('.gp-ground:not(.gp-locked)');
         if (!grounds.length) {
           failures.push('ground picker open but no grounds listed');
           await page.locator('#gp-cancel').click();

@@ -26,6 +26,7 @@ import { sessionPipelineStrategy, laborBallotStrategy } from '../engine/strategi
 import { applySelfLoan, maybePacBridge, retireDebtOnWin } from '../engine/debt.js';
 import { executePlay } from '../engine/play.js';
 import { SS01_FileBill, SS02_SeekReferral } from '../data/session-plays.js';
+import { CAMPAIGN_AP } from '../engine/state.js';
 
 function assert(cond: boolean, msg: string): void {
   if (!cond) throw new Error('FAIL: ' + msg);
@@ -68,7 +69,7 @@ console.log('=== CANDIDATE ZERO — Phase 4 Session Harness ===\n');
   useRng(createRng(44));
   const s = createNewState({ seed: 44 });
   enterSession(s);
-  s.ap = 2;
+  s.ap = CAMPAIGN_AP;
   const file = { ...SS01_FileBill, odds: () => 0.99 };
   const r = executePlay(s, file);
   assert(r.ok, 'file play ok: ' + r.reason);
@@ -80,7 +81,7 @@ console.log('=== CANDIDATE ZERO — Phase 4 Session Harness ===\n');
 // PAC claim bites on referral
 {
   setDefaultSeed(45);
-  const s = createNewState({ seed: 45, money: 5000, ap: 4 });
+  const s = createNewState({ seed: 45, money: 5000, ap: CAMPAIGN_AP });
   applySelfLoan(s, 3000);
   maybePacBridge(s, 3000);
   retireDebtOnWin(s);
@@ -92,7 +93,7 @@ console.log('=== CANDIDATE ZERO — Phase 4 Session Harness ===\n');
   s.bill!.pipelineStage = 1;
   s.bill!.status = 'filed';
   s.week = 2;
-  s.ap = 2;
+  s.ap = CAMPAIGN_AP;
   const standing0 = s.districtStanding;
   const ref = { ...SS02_SeekReferral, odds: () => 0.99 };
   executePlay(s, ref);
@@ -200,7 +201,7 @@ console.log('=== CANDIDATE ZERO — Phase 4 Session Harness ===\n');
 {
   setDefaultSeed(72);
   useRng(createRng(72));
-  const s = createNewState({ seed: 72, ap: 2 });
+  const s = createNewState({ seed: 72, ap: CAMPAIGN_AP });
   enterSession(s);
   s.favor = 30;
   s.bill!.pipelineStage = 4;
@@ -209,7 +210,7 @@ console.log('=== CANDIDATE ZERO — Phase 4 Session Harness ===\n');
   assert(sessionPipelineBlocked(s, 'SS05'), 'calendar blocked under freeze+low favor');
   assert(SS05_CalendarSlot.show!(s) === false, 'SS05 hidden when freeze-blocked');
   // Errand thaws
-  s.ap = 2;
+  s.ap = CAMPAIGN_AP;
   const err = { ...SS09_SpeakerErrand, odds: () => 0.99 };
   executePlay(s, err);
   assert(Number(s.sessionFlags.speakerFreeze || 0) === 0 || s.favor > 30, 'errand helps freeze/favor');
@@ -217,7 +218,7 @@ console.log('=== CANDIDATE ZERO — Phase 4 Session Harness ===\n');
 }
 {
   setDefaultSeed(73);
-  const s = createNewState({ seed: 73, ap: 2 });
+  const s = createNewState({ seed: 73, ap: CAMPAIGN_AP });
   enterSession(s);
   s.districtStanding = 50;
   s.sessionFlags.challengerHeat = 2;

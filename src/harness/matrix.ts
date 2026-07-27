@@ -152,11 +152,15 @@ function flagCell(
     }
   } else {
     // Wrong-party: hard November; mean should be low. Cap individual cells.
-    if (m.overall > 35) flags.push('WRONG_TOO_EASY');
+    // Threshold re-derived 2026-07-27 for the 5-AP economy: it is a multiple of
+    // the open-district baseline, not an absolute. Baseline moved ~20% -> ~42%,
+    // so the old 35 (1.75x the old baseline) becomes ~70.
+    if (m.overall > 70) flags.push('WRONG_TOO_EASY');
     if (m.overall === 0 && m.reach === 0 && N >= 25) flags.push('WRONG_UNWINNABLE_SAMPLE');
   }
 
-  if (isIncumb && m.overall > 55) flags.push('INCUMB_TOO_EASY');
+  // Likewise scaled with the baseline (was 55 against a ~20% baseline).
+  if (isIncumb && m.overall > 85) flags.push('INCUMB_TOO_EASY');
 
   return flags;
 }
@@ -449,7 +453,15 @@ console.log({
 assert(cells.length >= 40, 'matrix sample too small');
 assert(openLabor.length === PERSONAS.length, 'every persona should appear on open/east labor');
 assert(wrong.length === PERSONAS.length, 'every persona should appear on wrong/east labor');
-assert(wrongAvg < 22, `wrong district mean win too high (${wrongAvg.toFixed(1)}%)`);
+// Relative, not absolute. The trap district's identity is "meaningfully harder
+// than an open seat", which is a gap — an absolute number just encodes whatever
+// the economy happened to be when it was written, and broke the moment AP
+// changed. Requires the trap to stay at least 25% harder than the open baseline.
+assert(
+  wrongAvg <= meanPersonaWin * 0.75,
+  `wrong district not hard enough: ${wrongAvg.toFixed(1)}% vs open baseline ${meanPersonaWin.toFixed(1)}% ` +
+    `(needs <= ${(meanPersonaWin * 0.75).toFixed(1)}%)`
+);
 assert(wrongAvg > 2, `wrong district mean win too low (${wrongAvg.toFixed(1)}%) — trap became impossible`);
 // At least some wrong-district wins if N decent — souls-like not impossible
 if (N >= 25) {

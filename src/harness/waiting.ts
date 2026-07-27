@@ -23,6 +23,7 @@ import {
   type Campaign
 } from '../engine/loop.js';
 import { createRng, setDefaultSeed, useRng } from '../engine/rng.js';
+import { WAITING_AP } from '../engine/state.js';
 
 function assert(cond: boolean, msg: string): void {
   if (!cond) throw new Error('FAIL: ' + msg);
@@ -40,7 +41,7 @@ assert(WAITING_WEEKS === 4, 'compressed season');
   const { text } = enterWaiting(s, 'perennial');
   assert(s.stage === 'waiting', 'stage waiting');
   assert(s.over === false, 'not over during waiting');
-  assert(s.apMax === 1 && s.ap === 1, '1 AP');
+  assert(s.apMax === WAITING_AP && s.ap === WAITING_AP, `waiting season budget (${WAITING_AP} AP)`);
   assert(s.waitingPathId === 'perennial', 'path');
   assert(s.waitingLoopId === 'LOOP_WAITING_PERENNIAL', 'loop');
   assert(/WAITING SEASON/i.test(text), 'entry text');

@@ -176,7 +176,7 @@ export const PATH_REWARDS: PlayCard[] = [
     n: 'Outsource Petition Drive to University Interns',
     attrs: ['INK', 'CLO'],
     risk: 'STD',
-    cost: { a: 1 },
+    cost: { a: 2 },
     ph: [1],
     tag: 'the intern army',
     d: 'A hundred students, one afternoon, clipboards everywhere. Signatures at scale — the labor door, staffed by the young.',
@@ -200,7 +200,7 @@ export const PATH_REWARDS: PlayCard[] = [
     n: "Work the Bundler's List",
     attrs: ['CRA', 'DIP'],
     risk: 'STD',
-    cost: { a: 1 },
+    cost: { a: 2 },
     ph: [1, 2, 3],
     tag: 'pre-sorted checks',
     d: "Someone else's rolodex, dialing for you. The money arrives bundled, with strings you can mostly ignore.",
@@ -218,7 +218,7 @@ export const PATH_REWARDS: PlayCard[] = [
     n: 'Turn Out the Precinct Captains',
     attrs: ['DIP', 'CLO'],
     risk: 'STD',
-    cost: { a: 1, vp: 1 },
+    cost: { a: 2, vp: 1 },
     ph: [2, 3],
     tag: 'the machine turns',
     d: 'Every captain a small turnout operation. When they move together, the count moves with them.',
@@ -232,7 +232,7 @@ export const PATH_REWARDS: PlayCard[] = [
   }),
   reward({
     id: 'RW_ANCHOR', pathId: 'P_PRESS', n: 'The Anchor Takes Your Call',
-    attrs: ['CHA', 'CRA'], risk: 'STD', cost: { a: 1 }, ph: [2, 3], tag: 'the evening desk',
+    attrs: ['CHA', 'CRA'], risk: 'STD', cost: { a: 2 }, ph: [2, 3], tag: 'the evening desk',
     d: 'A friendly anchor and a standing invitation. When you have something to say, the county hears it that night.',
     odds: (s) => clamp(0.66 + (s.messageSharp ? 0.08 : 0), 0.05, 0.95),
     run: (s, o) => {
@@ -244,7 +244,7 @@ export const PATH_REWARDS: PlayCard[] = [
   }),
   reward({
     id: 'RW_TURF', pathId: 'P_FIELD', n: 'Stand Up a Turf Operation',
-    attrs: ['CLO', 'DIP'], risk: 'SAFE', cost: { a: 1, vp: 1 }, ph: [1, 2, 3], tag: 'boots with a plan',
+    attrs: ['CLO', 'DIP'], risk: 'SAFE', cost: { a: 2, vp: 1 }, ph: [1, 2, 3], tag: 'boots with a plan',
     d: 'Captains, turfs, cut lists. The volunteers you recruited become a machine that runs without you.',
     odds: (s) => clamp(0.72 + s.volPool * 0.02, 0.05, 0.95),
     run: (s, o) => {
@@ -254,7 +254,7 @@ export const PATH_REWARDS: PlayCard[] = [
   }),
   reward({
     id: 'RW_REGULAR', pathId: 'P_RETAIL', n: 'Become a Fixture',
-    attrs: ['CHA'], risk: 'SAFE', cost: { a: 1 }, ph: [1, 2, 3], tag: 'one of us',
+    attrs: ['CHA'], risk: 'SAFE', cost: { a: 2 }, ph: [1, 2, 3], tag: 'one of us',
     d: 'You are not campaigning anymore; you are just around, the way the weather is around. People vote for the weather they know.',
     odds: () => 0.85,
     run: (s, o) => {
@@ -264,7 +264,7 @@ export const PATH_REWARDS: PlayCard[] = [
   }),
   reward({
     id: 'RW_KINGMAKER', pathId: 'P_LADDER', n: "Cash the Kingmaker's Chit",
-    attrs: ['DIP'], risk: 'STD', cost: { a: 1 }, ph: [2, 3], tag: 'your turn',
+    attrs: ['DIP'], risk: 'STD', cost: { a: 2 }, ph: [2, 3], tag: 'your turn',
     d: 'The people who decide have decided it is your turn. One call, and the slate rearranges itself around you.',
     odds: (s) => clamp(0.64 + s.endorsePts * 0.01, 0.05, 0.95),
     run: (s, o) => {

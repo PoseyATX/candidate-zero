@@ -23,7 +23,7 @@ function clamp(v: number, lo: number, hi: number): number {
 export const SS01_FileBill: PlayCard = {
   id: 'SS01',
   n: 'File the Bill',
-  cost: { a: 1 },
+  cost: { a: 2 },
   risk: 'SAFE',
   ph: [1, 2, 3],
   tag: 'H.B. ____',
@@ -42,7 +42,7 @@ export const SS01_FileBill: PlayCard = {
 export const SS02_SeekReferral: PlayCard = {
   id: 'SS02',
   n: 'Seek Referral',
-  cost: { a: 1 },
+  cost: { a: 2 },
   risk: 'STD',
   ph: [1, 2, 3],
   tag: "the Speaker's desk",
@@ -105,7 +105,7 @@ export const SS_PAC_Refuse: PlayCard = {
 export const SS03_CourtChair: PlayCard = {
   id: 'SS03',
   n: 'Court the Chair',
-  cost: { a: 1 },
+  cost: { a: 2 },
   risk: 'STD',
   ph: [1, 2, 3],
   tag: 'the gatekeeper',
@@ -137,7 +137,7 @@ export const SS03_CourtChair: PlayCard = {
 export const SS04_Testimony: PlayCard = {
   id: 'SS04',
   n: 'Committee Testimony',
-  cost: { a: 1 },
+  cost: { a: 2 },
   risk: 'VOL',
   ph: [1, 2, 3],
   tag: 'on the record',
@@ -175,7 +175,7 @@ export const SS04_Testimony: PlayCard = {
 export const SS05_CalendarSlot: PlayCard = {
   id: 'SS05',
   n: 'Set on Calendar',
-  cost: { a: 1 },
+  cost: { a: 2 },
   risk: 'STD',
   ph: [1, 2, 3],
   tag: 'the narrowest door',
@@ -209,7 +209,7 @@ export const SS05_CalendarSlot: PlayCard = {
 export const SS06_FloorFight: PlayCard = {
   id: 'SS06',
   n: 'Floor Fight',
-  cost: { a: 1 },
+  cost: { a: 2 },
   risk: 'VOL',
   ph: [1, 2, 3],
   tag: 'the whole House watching',
@@ -255,7 +255,7 @@ export const SS06_FloorFight: PlayCard = {
 export const SS07_WorkSenate: PlayCard = {
   id: 'SS07',
   n: 'Work the Senate',
-  cost: { a: 1 },
+  cost: { a: 2 },
   risk: 'VOL',
   ph: [1, 2, 3],
   tag: 'the other chamber',
@@ -288,7 +288,7 @@ export const SS07_WorkSenate: PlayCard = {
 export const SS08_Casework: PlayCard = {
   id: 'SS08',
   n: 'Casework',
-  cost: { a: 1 },
+  cost: { a: 2 },
   risk: 'SAFE',
   ph: [1, 2, 3],
   tag: 'the home fires',
@@ -321,7 +321,7 @@ export const SS08_Casework: PlayCard = {
 export const SS09_SpeakerErrand: PlayCard = {
   id: 'SS09',
   n: "The Speaker's Errand",
-  cost: { a: 1 },
+  cost: { a: 2 },
   risk: 'STD',
   ph: [1, 2, 3],
   tag: 'favor for favor',
@@ -351,7 +351,7 @@ export const SS09_SpeakerErrand: PlayCard = {
 export const SS10_WhipTrade: PlayCard = {
   id: 'SS10',
   n: 'Whip a Vote Trade',
-  cost: { a: 1 },
+  cost: { a: 2 },
   risk: 'STD',
   ph: [1, 2, 3],
   tag: 'the favor economy',
@@ -374,7 +374,7 @@ export const SS10_WhipTrade: PlayCard = {
 export const SS12_StudyRules: PlayCard = {
   id: 'SS12',
   n: 'Study the Rules',
-  cost: { a: 1 },
+  cost: { a: 2 },
   risk: 'SAFE',
   ph: [1, 2, 3],
   tag: 'the manual',
@@ -424,7 +424,7 @@ const SESSION_ENTITY_SCOPE = ['ENT_FRESHMAN_MEMBER', 'ENT_STATE_REP'] as const;
 // --- Wave: more session survival plays (non-pipeline). Match the SS idiom:
 //     show gated to stage==='session'; standing / challenger / favors. ---
 export const SS27_RibbonCircuit: PlayCard = {
-  id: 'SS27', n: 'Ribbon-Cutting Circuit', cost: { a: 1 }, risk: 'SAFE', ph: [1, 2, 3],
+  id: 'SS27', n: 'Ribbon-Cutting Circuit', cost: { a: 2 }, risk: 'SAFE', ph: [1, 2, 3],
   tag: 'the home fires', attrs: ['CHA'],
   d: 'A new bridge, a clinic wing, a fire truck. You hold the giant scissors and the district sees you deliver.',
   show: s => s.stage === 'session',
@@ -437,7 +437,7 @@ export const SS27_RibbonCircuit: PlayCard = {
   }
 };
 export const SS28_CharityGala: PlayCard = {
-  id: 'SS28', n: 'Interim Charity Gala', cost: { a: 1 }, risk: 'STD', ph: [1, 2, 3],
+  id: 'SS28', n: 'Interim Charity Gala', cost: { a: 2 }, risk: 'STD', ph: [1, 2, 3],
   tag: 'favor for favor', attrs: ['DIP'],
   d: 'A good cause, a ballroom, and every lobbyist in town buying a table. Goodwill and debts, exchanged over rubber chicken.',
   show: s => s.stage === 'session',
@@ -450,7 +450,7 @@ export const SS28_CharityGala: PlayCard = {
   }
 };
 export const SS29_FaceThreat: PlayCard = {
-  id: 'SS29', n: 'Face Down the Primary Threat', cost: { a: 1 }, risk: 'VOL', ph: [1, 2, 3],
+  id: 'SS29', n: 'Face Down the Primary Threat', cost: { a: 2 }, risk: 'VOL', ph: [1, 2, 3],
   tag: 'the burned bridge', attrs: ['CON'],
   d: 'A challenger is testing the waters back home. You can ignore it — or plant your flag and stare them down.',
   show: s => s.stage === 'session' && Number((s.sessionFlags?.challengerHeat) || 0) > 0,

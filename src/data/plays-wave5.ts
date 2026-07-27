@@ -84,7 +84,7 @@ export const WAVE5_PLAYS: PlayCard[] = [
 
   // ---------------- UNCOMMON — acquired, stronger/niche ----------------
   {
-    id: 'PL85', n: 'Union Hall Endorsement', cost: { a: 1, fav: 1 }, risk: 'STD', ph: [2, 3],
+    id: 'PL85', n: 'Union Hall Endorsement', cost: { a: 2, fav: 1 }, risk: 'STD', ph: [2, 3],
     tag: 'the locals sign on', attrs: ['DIP'], rarity: 'uncommon', residency: 'main', control: 'player',
     d: 'The business agent likes you enough to put it in writing. Stewards walk turf you never could.',
     odds: (s) => clamp(0.6 + s.volPool * 0.02, 0, 0.9),
@@ -95,7 +95,7 @@ export const WAVE5_PLAYS: PlayCard[] = [
     }
   },
   {
-    id: 'PL86', n: 'Targeted Digital Buy', cost: { a: 1, $: 700 }, risk: 'STD', ph: [2, 3],
+    id: 'PL86', n: 'Targeted Digital Buy', cost: { a: 2, $: 700 }, risk: 'STD', ph: [2, 3],
     tag: 'the feed', attrs: ['CRA'], rarity: 'uncommon', residency: 'main', control: 'player',
     d: 'Lookalike audiences, dayparted, A/B tested. The consultant swears by the dashboard.',
     odds: (s) => clamp(0.6 + (s.assets.length ? 0.06 : 0), 0, 0.92),
@@ -107,7 +107,7 @@ export const WAVE5_PLAYS: PlayCard[] = [
     }
   },
   {
-    id: 'PL87', n: 'Charter the Senior Vans', cost: { a: 1, vp: 2 }, risk: 'STD', ph: [3],
+    id: 'PL87', n: 'Charter the Senior Vans', cost: { a: 2, vp: 2 }, risk: 'STD', ph: [3],
     tag: 'the surest voters', attrs: ['CLO'], rarity: 'uncommon', residency: 'main', control: 'player',
     d: 'The seniors vote at ninety percent and love a ride. Turnout you can schedule.',
     odds: () => 0.72,
@@ -129,7 +129,7 @@ export const WAVE5_PLAYS: PlayCard[] = [
     }
   },
   {
-    id: 'PL89', n: 'Megachurch Sunday', cost: { a: 1 }, risk: 'VOL', ph: [1, 2, 3],
+    id: 'PL89', n: 'Megachurch Sunday', cost: { a: 2 }, risk: 'VOL', ph: [1, 2, 3],
     tag: 'the big room', attrs: ['CHA'], rarity: 'uncommon', residency: 'main', control: 'player',
     d: 'Three thousand seats and a pastor who might, or might not, wave you up front.',
     odds: (s) => clamp(0.5 + s.endorsePts * 0.01, 0, 0.9),
@@ -143,7 +143,7 @@ export const WAVE5_PLAYS: PlayCard[] = [
 
   // ---------------- RARE — acquired, powerful ----------------
   {
-    id: 'PL90', n: 'Statewide Figure Endorses', cost: { a: 1, fav: 1 }, risk: 'VOL', ph: [2, 3],
+    id: 'PL90', n: 'Statewide Figure Endorses', cost: { a: 3, fav: 1 }, risk: 'VOL', ph: [2, 3],
     tag: 'the big name', attrs: ['DIP'], rarity: 'rare', residency: 'main', control: 'player',
     d: 'A name people know from television deigns to say yours. The bump is real; so is the debt.',
     odds: (s) => clamp(0.52 + s.endorsePts * 0.015, 0, 0.9),
@@ -155,7 +155,7 @@ export const WAVE5_PLAYS: PlayCard[] = [
     }
   },
   {
-    id: 'PL91', n: 'The Viral Moment', cost: { a: 1 }, risk: 'VOL', ph: [2, 3],
+    id: 'PL91', n: 'The Viral Moment', cost: { a: 3 }, risk: 'VOL', ph: [2, 3],
     tag: 'lightning in a bottle', attrs: ['CHA'], rarity: 'rare', residency: 'main', control: 'player',
     d: 'You say the exact right thing at the exact right second and the internet decides to care.',
     odds: (s) => clamp(0.45 + (s.messageSharp ? 0.12 : 0) + s.momentum * 0.01, 0, 0.9),
@@ -167,7 +167,7 @@ export const WAVE5_PLAYS: PlayCard[] = [
     }
   },
   {
-    id: 'PL92', n: 'Machine Turnout Blitz', cost: { a: 2, vp: 3 }, risk: 'VOL', ph: [3],
+    id: 'PL92', n: 'Machine Turnout Blitz', cost: { a: 4, vp: 3 }, risk: 'VOL', ph: [3],
     tag: 'the whole apparatus', attrs: ['CLO'], rarity: 'rare', residency: 'main', control: 'player',
     d: 'Every captain, every van, every list, one weekend. When the machine moves as one, the count moves with it.',
     odds: (s) => clamp(0.55 + s.endorsePts * 0.01 + s.volPool * 0.02, 0, 0.92),

@@ -12,6 +12,7 @@ import { createCampaign, listPlayableHand, playFromHand, buildCatalog } from '..
 import { createNewState } from '../engine/state.js';
 import { executePlay } from '../engine/play.js';
 import { setDefaultSeed } from '../engine/rng.js';
+import { CAMPAIGN_AP } from '../engine/state.js';
 
 function assert(cond: boolean, msg: string): void {
   if (!cond) throw new Error(msg);
@@ -23,7 +24,7 @@ function main(): void {
   assert(!!ASSETS.A01 && !!ASSETS.A09, 'A01 and A09 must exist (were dead refs)');
 
   setDefaultSeed(99);
-  const s = createNewState({ seed: 99, money: 5000, volPool: 5, ap: 2 });
+  const s = createNewState({ seed: 99, money: 5000, volPool: 5, ap: CAMPAIGN_AP });
 
   // A01 locked until A02
   let shop = buildShopPlays(s);

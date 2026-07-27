@@ -11,6 +11,7 @@ import { executePlay } from '../engine/play.js';
 import { advanceCampaignWeek } from '../engine/calendar.js';
 import { setDefaultSeed } from '../engine/rng.js';
 import { shadowCheck } from '../engine/reputation.js';
+import { CAMPAIGN_AP } from '../engine/state.js';
 
 function assert(cond: boolean, msg: string): void {
   if (!cond) throw new Error(msg);
@@ -27,24 +28,24 @@ function main(): void {
   }
 
   setDefaultSeed(11);
-  const s = createNewState({ seed: 11, money: 1000, ap: 2, tier: 1 });
+  const s = createNewState({ seed: 11, money: 1000, ap: CAMPAIGN_AP, tier: 1 });
   s.ballot = true; // tier path for PAC
 
   // PAC check grants OB1 (not free-text); once-only
   const pac = { ...PL20_PacCheck, odds: () => 0.99 };
-  s.ap = 2;
+  s.ap = CAMPAIGN_AP;
   s.tier = 1;
   executePlay(s, pac);
   assert(s.obls.includes('OB1'), 'PL20 should grant OB1, got: ' + JSON.stringify(s.obls));
   assert(!!s.sessionFlags?.pacCheckTaken, 'pacCheckTaken set');
   assert(!s.obls.some(o => o.includes('association')), 'no free-text PAC obl');
   // Second take must be blocked by show
-  s.ap = 2;
+  s.ap = CAMPAIGN_AP;
   assert(PL20_PacCheck.show ? !PL20_PacCheck.show(s) : false, 'PL20 show false after take');
 
   // Bank note from self-fund
   const bank = { ...PL21_SelfFundCredit, odds: () => 0.99 };
-  s.ap = 2;
+  s.ap = CAMPAIGN_AP;
   executePlay(s, bank);
   assert(s.obls.includes('OB2'), 'PL21 should grant OB2');
 

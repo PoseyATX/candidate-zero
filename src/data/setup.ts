@@ -6,6 +6,7 @@
 import type { AttrId, Attrs, Faces, GameState } from '../engine/types.js';
 import { random } from '../engine/rng.js';
 import { addAlly, addRep } from '../engine/reputation.js';
+import { BALLOT_SIGNATURES } from '../engine/state.js';
 
 export type FaceBoost = Partial<Faces>;
 export type AttrBoost = Partial<Attrs>;
@@ -338,7 +339,7 @@ export function applySetup(state: GameState, sel: SetupSelection): GameState {
   if (region.hook === 'hill') bumpAttrs(state, { INK: 1, CON: 1 });
 
   state.assets.push('REGION_' + region.id.toUpperCase());
-  state.sigNeed = Math.max(200, 450 + region.petitionMod);
+  state.sigNeed = Math.max(200, BALLOT_SIGNATURES + region.petitionMod);
   const attrSummary = Object.entries(state.attrs)
     .map(([k, v]) => `${k}${v}`)
     .join(' ');

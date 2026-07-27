@@ -88,6 +88,10 @@ export interface PlayCard {
   /** Render full-bleed: art fills the whole card face, no name/cost/emblem chrome.
    *  Art source is auto-loaded from src/assets/full-art/<id>.svg — see card-face.ts. */
   fullBleedArt?: boolean;
+  /** Refund 1 AP when this play lands a breakthrough (tier 0). The chain seam:
+   *  it ties the action economy to the risk system, so a breakthrough buys the
+   *  turn back and combo weeks become possible. See engine/play.ts. */
+  refundOnBreak?: boolean;
   /** Chance (0–1) per weekly growth pass to auto-inject this card into the deck
    *  (drawn once per run, kept out of normal draft/growth pools via show:()=>false).
    *  See engine/promo.ts. */

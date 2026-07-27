@@ -19,6 +19,7 @@ import { createNewState } from '../engine/state.js';
 import { addAlly, addRep } from '../engine/reputation.js';
 import { executePlay } from '../engine/play.js';
 import { setDefaultSeed } from '../engine/rng.js';
+import { CAMPAIGN_AP } from '../engine/state.js';
 
 const ROOT = join(import.meta.dirname, '..');
 
@@ -114,20 +115,20 @@ function smokeGrantPaths(): string[] {
     {
       id: 'AL01',
       setup: () => {
-        const s = createNewState({ seed: 1, money: 5000, ap: 2, volPool: 5 });
+        const s = createNewState({ seed: 1, money: 5000, ap: CAMPAIGN_AP, volPool: 5 });
         return s;
       },
       playId: 'PL08'
     },
     {
       id: 'AL09',
-      setup: () => createNewState({ seed: 2, money: 5000, ap: 2, volPool: 5 }),
+      setup: () => createNewState({ seed: 2, money: 5000, ap: CAMPAIGN_AP, volPool: 5 }),
       playId: 'PL21B'
     },
     {
       id: 'AL04',
       setup: () => {
-        const s = createNewState({ seed: 3, money: 500, ap: 4 });
+        const s = createNewState({ seed: 3, money: 500, ap: CAMPAIGN_AP });
         s.prCount = 1; // next PL10 is the second
         return s;
       },
@@ -152,7 +153,7 @@ function smokeGrantPaths(): string[] {
       let ok = s.allies.some(a => a.id === c.id);
       if (!ok && c.playId === 'PL08') {
         for (let i = 0; i < 20 && !ok; i++) {
-          s.ap = 2;
+          s.ap = CAMPAIGN_AP;
           executePlay(s, card, s.groundsArr[0]);
           ok = s.allies.some(a => a.id === c.id);
         }

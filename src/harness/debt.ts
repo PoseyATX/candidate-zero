@@ -46,6 +46,7 @@ import {
 import { PL05_PayFilingFee } from '../data/plays.js';
 import { allShopPlayTemplates } from '../data/assets.js';
 import { createRng, setDefaultSeed as setSeed, useRng } from '../engine/rng.js';
+import { CAMPAIGN_AP } from '../engine/state.js';
 
 function assert(cond: boolean, msg: string): void {
   if (!cond) throw new Error('FAIL: ' + msg);
@@ -75,7 +76,7 @@ function checkResolveHasNoDebt(): void {
 
 function checkSpendNowLever(): void {
   setDefaultSeed(1);
-  const s = createNewState({ seed: 1, money: 100, ap: 2 });
+  const s = createNewState({ seed: 1, money: 100, ap: CAMPAIGN_AP });
   const before = s.money;
   const msg = applySelfLoan(s, 3000);
   assert(s.money === before + 3000, 'self-loan must add cash now');
@@ -282,7 +283,7 @@ function checkNextCycleHarder(): void {
   assert(burdened.debt > 0, 'debt did not vanish between cycles');
   assert(!isDebtCrisis(fresh) || true, 'fresh has no crisis');
   // Not soft-locked: $0 AP plays still work
-  burdened.ap = 2;
+  burdened.ap = CAMPAIGN_AP;
   const freePlay = {
     id: 'PL10',
     n: 'Press',

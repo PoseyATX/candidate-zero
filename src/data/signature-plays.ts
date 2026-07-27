@@ -77,7 +77,7 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   // ---- Pure personas ----
   mk({
     id: 'SIG01', persona: 'PA_CLO', n: 'Fill the Square', attrs: ['CLO'], risk: 'VOL',
-    cost: { a: 2, vp: 3 }, ph: [2, 3], tag: 'signature — The Powerhouse',
+    cost: { a: 4, vp: 3 }, ph: [2, 3], tag: 'signature — The Powerhouse',
     d: 'You do not ask for the room. You fill it, and the turnout operation fills the rest.',
     odds: O(0.58),
     run: (s, o) => {
@@ -89,7 +89,7 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   }),
   mk({
     id: 'SIG02', persona: 'PA_CON', n: 'The Unbending Line', attrs: ['CON'], risk: 'STD',
-    cost: { a: 1 }, ph: [2, 3], tag: 'signature — The True Believer',
+    cost: { a: 3 }, ph: [2, 3], tag: 'signature — The True Believer',
     d: 'The message arrives pre-sharpened and never wavers. You say the same true thing until it is the only thing.',
     odds: O(0.62),
     run: (s, o) => {
@@ -100,7 +100,7 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   }),
   mk({
     id: 'SIG03', persona: 'PA_CRA', n: 'Call In a Marker', attrs: ['CRA'], risk: 'STD',
-    cost: { a: 1, fav: 1 }, ph: [1, 2, 3], tag: 'signature — The Operator',
+    cost: { a: 3, fav: 1 }, ph: [1, 2, 3], tag: 'signature — The Operator',
     d: 'Someone owes you, and today is the day. The angle was always there.',
     odds: O(0.68),
     run: (s, o) => {
@@ -111,7 +111,7 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   }),
   mk({
     id: 'SIG04', persona: 'PA_INK', n: 'The Airtight Filing', attrs: ['INK'], risk: 'SAFE',
-    cost: { a: 1 }, ph: [1], tag: 'signature — The Parliamentarian',
+    cost: { a: 3 }, ph: [1], tag: 'signature — The Parliamentarian',
     d: 'Every box checked, every deadline beaten. The clerk finds nothing because there is nothing to find.',
     odds: O(0.8),
     run: (s, o) => {
@@ -121,7 +121,7 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   }),
   mk({
     id: 'SIG05', persona: 'PA_DIP', n: 'Broker the Grand Bargain', attrs: ['DIP'], risk: 'STD',
-    cost: { a: 1 }, ph: [2, 3], tag: 'signature — The Coalition-Builder',
+    cost: { a: 3 }, ph: [2, 3], tag: 'signature — The Coalition-Builder',
     d: 'You seat the rancher next to the union man and both leave thinking they won.',
     odds: O(0.66),
     run: (s, o) => {
@@ -132,7 +132,7 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   }),
   mk({
     id: 'SIG06', persona: 'PA_CHA', n: 'Remember Every Name', attrs: ['CHA'], risk: 'VOL',
-    cost: { a: 1, vp: 1 }, ph: [1, 2, 3], tag: 'signature — The Natural',
+    cost: { a: 3, vp: 1 }, ph: [1, 2, 3], tag: 'signature — The Natural',
     d: 'The kid, the dog, the surgery last spring. You remember, and they never forget that you did.',
     odds: O(0.6),
     run: (s, o) => {
@@ -146,7 +146,7 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   // ---- Pair personas ----
   mk({
     id: 'SIG07', persona: 'PA_CLO_CON', n: 'March on the Capitol Steps', attrs: ['CLO', 'CON'], risk: 'VOL',
-    cost: { a: 2, vp: 2 }, ph: [2, 3], tag: 'signature — The Movement Champion',
+    cost: { a: 4, vp: 2 }, ph: [2, 3], tag: 'signature — The Movement Champion',
     d: 'Conviction with muscle behind it — a crowd that showed up angry and organized.',
     odds: O(0.57),
     run: (s, o) => {
@@ -158,7 +158,7 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   }),
   mk({
     id: 'SIG08', persona: 'PA_CLO_CRA', n: 'The Elbow', attrs: ['CLO', 'CRA'], risk: 'VOL',
-    cost: { a: 1 }, ph: [2, 3], tag: 'signature — The Bare-Knuckle Populist',
+    cost: { a: 3 }, ph: [2, 3], tag: 'signature — The Bare-Knuckle Populist',
     d: 'Loud out front, and an elbow the establishment never sees coming.',
     odds: O(0.58),
     run: (s, o) => {
@@ -170,7 +170,7 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   }),
   mk({
     id: 'SIG09', persona: 'PA_CLO_INK', n: 'Outwork the Field', attrs: ['CLO', 'INK'], risk: 'SAFE',
-    cost: { a: 2 }, ph: [1, 2, 3], tag: 'signature — The Workhorse',
+    cost: { a: 4 }, ph: [1, 2, 3], tag: 'signature — The Workhorse',
     d: 'Grind plus the rulebook. You are still knocking when the others go home.',
     odds: O(0.82),
     run: (s, o) => {
@@ -180,7 +180,7 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   }),
   mk({
     id: 'SIG10', persona: 'PA_CLO_DIP', n: 'The Family Name Opens the Gate', attrs: ['CLO', 'DIP'], risk: 'STD',
-    cost: { a: 1 }, ph: [1, 2], tag: 'signature — The Rural Patriarch',
+    cost: { a: 3 }, ph: [1, 2], tag: 'signature — The Rural Patriarch',
     d: 'Your name means something here. The chairs already wave you through.',
     odds: O(0.66),
     run: (s, o) => {
@@ -191,7 +191,7 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   }),
   mk({
     id: 'SIG11', persona: 'PA_CLO_CHA', n: 'The Homecoming', attrs: ['CLO', 'CHA'], risk: 'STD',
-    cost: { a: 1 }, ph: [1, 2], tag: 'signature — The Local Legend',
+    cost: { a: 3 }, ph: [1, 2], tag: 'signature — The Local Legend',
     d: 'Star quarterback, then feed-store owner, now this. The county has rooted for you for decades.',
     odds: O(0.68),
     run: (s, o) => {
@@ -202,7 +202,7 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   }),
   mk({
     id: 'SIG12', persona: 'PA_CON_CRA', n: 'Burn It Down to Build It Up', attrs: ['CON', 'CRA'], risk: 'VOL',
-    cost: { a: 1 }, ph: [2, 3], tag: 'signature — The Insurgent',
+    cost: { a: 3 }, ph: [2, 3], tag: 'signature — The Insurgent',
     d: 'A disciplined message and a knife for the primary. You are exactly as angry as you choose to be.',
     odds: O(0.56),
     run: (s, o) => {
@@ -214,7 +214,7 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   }),
   mk({
     id: 'SIG13', persona: 'PA_CON_INK', n: 'File the Whistleblower Complaint', attrs: ['CON', 'INK'], risk: 'VOL',
-    cost: { a: 1 }, ph: [2, 3], tag: 'signature — The Reform Crusader',
+    cost: { a: 3 }, ph: [2, 3], tag: 'signature — The Reform Crusader',
     d: 'A cause and the rulebook to advance it. You file, and the file has teeth.',
     odds: O(0.58),
     run: (s, o) => {
@@ -226,7 +226,7 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   }),
   mk({
     id: 'SIG14', persona: 'PA_CON_DIP', n: 'Cross the Aisle', attrs: ['CON', 'DIP'], risk: 'STD',
-    cost: { a: 1 }, ph: [2, 3], tag: 'signature — The Statesman',
+    cost: { a: 3 }, ph: [2, 3], tag: 'signature — The Statesman',
     d: 'Steady, principled, trusted across the aisle — the kind they call "serious."',
     odds: O(0.65),
     run: (s, o) => {
@@ -237,7 +237,7 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   }),
   mk({
     id: 'SIG15', persona: 'preacher', n: 'Revival Weekend', attrs: ['CON', 'CHA'], risk: 'STD',
-    cost: { a: 2, vp: 1 }, ph: [2, 3], tag: 'signature — The Preacher',
+    cost: { a: 4, vp: 1 }, ph: [2, 3], tag: 'signature — The Preacher',
     d: 'A pulpit is a precinct and Sundays are turnout. You move people, and you mean it.',
     odds: O(0.64),
     run: (s, o) => {
@@ -248,7 +248,7 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   }),
   mk({
     id: 'SIG16', persona: 'PA_CRA_INK', n: 'Work the System', attrs: ['CRA', 'INK'], risk: 'STD',
-    cost: { a: 1 }, ph: [1, 2, 3], tag: 'signature — The Fixer',
+    cost: { a: 3 }, ph: [1, 2, 3], tag: 'signature — The Fixer',
     d: 'You know the rules AND how to bend them. Dangerous in a committee, deadly near a deadline.',
     odds: O(0.67),
     run: (s, o) => {
@@ -259,7 +259,7 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   }),
   mk({
     id: 'SIG17', persona: 'PA_CRA_DIP', n: 'The Grand Trade', attrs: ['CRA', 'DIP'], risk: 'STD',
-    cost: { a: 1 }, ph: [2, 3], tag: 'signature — The Wheeler-Dealer',
+    cost: { a: 3 }, ph: [2, 3], tag: 'signature — The Wheeler-Dealer',
     d: 'Two of everything and a price on each. You can trade your way out of almost anything.',
     odds: O(0.66),
     run: (s, o) => {
@@ -270,7 +270,7 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   }),
   mk({
     id: 'SIG18', persona: 'PA_CRA_CHA', n: 'Steal the Cycle', attrs: ['CRA', 'CHA'], risk: 'VOL',
-    cost: { a: 1, $: 400 }, ph: [2, 3], tag: 'signature — The Showman',
+    cost: { a: 3, $: 400 }, ph: [2, 3], tag: 'signature — The Showman',
     d: 'Timing and charm: you know the line AND the moment to land it. Made for the cameras.',
     odds: O(0.59),
     run: (s, o) => {
@@ -282,7 +282,7 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   }),
   mk({
     id: 'SIG19', persona: 'PA_INK_DIP', n: "The Speaker's Ear", attrs: ['INK', 'DIP'], risk: 'STD',
-    cost: { a: 1 }, ph: [2, 3], tag: 'signature — The Committee Chair-in-Waiting',
+    cost: { a: 3 }, ph: [2, 3], tag: 'signature — The Committee Chair-in-Waiting',
     d: 'Process mastery and the relationships to use it. Leadership is watching this profile.',
     odds: O(0.66),
     run: (s, o) => {
@@ -293,7 +293,7 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   }),
   mk({
     id: 'SIG20', persona: 'PA_INK_CHA', n: "Explain It Like It's Simple", attrs: ['INK', 'CHA'], risk: 'SAFE',
-    cost: { a: 2 }, ph: [1, 2, 3], tag: 'signature — The Homegrown Wonk',
+    cost: { a: 4 }, ph: [1, 2, 3], tag: 'signature — The Homegrown Wonk',
     d: 'You explain the water-district budget so plainly people thank you for it.',
     odds: O(0.8),
     run: (s, o) => {
@@ -303,7 +303,7 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   }),
   mk({
     id: 'SIG21', persona: 'PA_DIP_CHA', n: 'Call In the Family Rolodex', attrs: ['DIP', 'CHA'], risk: 'STD',
-    cost: { a: 1 }, ph: [1, 2], tag: "signature — The Dealmaker's Heir",
+    cost: { a: 3 }, ph: [1, 2], tag: "signature — The Dealmaker's Heir",
     d: 'A known name and a gift for people. Doors open on the family reputation; you keep them open on your own.',
     odds: O(0.67),
     run: (s, o) => {
@@ -315,7 +315,7 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   // ---- Hand-authored classics (must not lack a signature vs PA_* roster) ----
   mk({
     id: 'SIG22', persona: 'teacher', n: 'Parent-Teacher Circuit', attrs: ['CHA', 'DIP'], risk: 'SAFE',
-    cost: { a: 1 }, ph: [1, 2, 3], tag: 'signature — The Teacher',
+    cost: { a: 3 }, ph: [1, 2, 3], tag: 'signature — The Teacher',
     d: 'Twenty years of cafeteria nights. You work the rooms that already know your name.',
     odds: O(0.78),
     run: (s, o) => {
@@ -332,7 +332,7 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   }),
   mk({
     id: 'SIG23', persona: 'veteran', n: 'Halls of Honor', attrs: ['CON', 'CLO'], risk: 'STD',
-    cost: { a: 1 }, ph: [1, 2, 3], tag: 'signature — The Veteran',
+    cost: { a: 3 }, ph: [1, 2, 3], tag: 'signature — The Veteran',
     d: 'The VFW and Legion still stand when the cameras leave. Bio is armor; the halls are turnout.',
     odds: O(0.66),
     run: (s, o) => {
@@ -355,7 +355,7 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   }),
   mk({
     id: 'SIG24', persona: 'smallbiz', n: 'Call In the Store Credit', attrs: ['CRA', 'DIP'], risk: 'STD',
-    cost: { a: 1 }, ph: [1, 2], tag: 'signature — The Feed-Store Owner',
+    cost: { a: 3 }, ph: [1, 2], tag: 'signature — The Feed-Store Owner',
     d: 'Everyone still owes you a favor or a bag of feed. You cash favors before cash.',
     odds: O(0.68),
     run: (s, o) => {

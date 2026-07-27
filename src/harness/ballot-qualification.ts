@@ -14,6 +14,7 @@ import { createNewState } from '../engine/state.js';
 import { executePlay } from '../engine/play.js';
 import { PL04_PetitionDrive } from '../data/plays.js';
 import type { GameState } from '../engine/types.js';
+import { CAMPAIGN_AP } from '../engine/state.js';
 
 function simulatePetitionPath({
   volPool = 0,
@@ -27,7 +28,7 @@ function simulatePetitionPath({
   let missCount = 0;
 
   for (let i = 0; i < trials; i++) {
-    const state: GameState = createNewState({ volPool, sigNeed, ap: 2, apMax: 2 });
+    const state: GameState = createNewState({ volPool, sigNeed, ap: CAMPAIGN_AP, apMax: CAMPAIGN_AP });
     let week = 1;
     let disasters = 0;
     while (state.signatures < sigNeed && week <= deadline) {

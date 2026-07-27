@@ -50,16 +50,36 @@ console.log(`Primary ${PRIMARY_WEEKS}w · General ${GENERAL_WEEKS}w · Total ${C
   console.log('PASSED: phase map (pre-ballot=1, ballot primary=2, general=3)');
 }
 
-// Filing miss under grind
+// Filing miss under grind.
+// Asserted as a RATE, not a single seed. Missing the filing deadline is a
+// probabilistic outcome — a grinding player sometimes stumbles onto the ballot
+// — so pinning seed 7 was really asserting "seed 7 still behaves as it did",
+// which broke the moment the AP economy changed without telling us anything
+// true. What matters is that grinding *usually* costs you the ballot.
 {
-  useRng(createRng(7));
-  setDefaultSeed(7);
-  const c = createCampaign({ seed: 7 });
-  runWeeks(c, PRIMARY_WEEKS, grindFirstStrategy);
-  assert(c.state.over === true, 'grind should end at filing');
-  assert(c.state.outcome === 'missed_filing', `expected missed_filing, got ${c.state.outcome}`);
-  assert(c.state.stage === 'primary', 'should still be primary stage on miss');
-  console.log('PASSED: grind misses filing → missed_filing');
+  const N = 40;
+  let missed = 0;
+  let stillPrimary = 0;
+  for (let i = 0; i < N; i++) {
+    const seed = 7 + i;
+    useRng(createRng(seed));
+    setDefaultSeed(seed);
+    const c = createCampaign({ seed });
+    runWeeks(c, PRIMARY_WEEKS, grindFirstStrategy);
+    if (c.state.outcome === 'missed_filing') {
+      missed++;
+      if (c.state.stage === 'primary') stillPrimary++;
+    }
+  }
+  // Measured 48% at BALLOT_SIGNATURES=700. Raising the bar further does not
+  // separate better — grind sits flat at ~28% ballot from 700 to 1000, so a
+  // higher bar only punishes good play (labor drops 88% -> 45%). 700 is the
+  // max-separation point. The honest claim is "grinding frequently costs you
+  // the filing", not "always".
+  const missPct = Math.round((missed / N) * 100);
+  assert(missPct >= 35, `grind should frequently miss filing (got ${missPct}%)`);
+  assert(stillPrimary === missed, 'a filing miss must leave you in the primary stage');
+  console.log(`PASSED: grind misses filing → missed_filing (${missPct}% of ${N} seeds)`);
 }
 
 // Labor path full campaigns terminate coherently

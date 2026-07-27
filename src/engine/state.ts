@@ -29,6 +29,40 @@ export function createDefaultAttrs(): Attrs {
   return { CLO: 10, CON: 10, CRA: 10, INK: 10, DIP: 10, CHA: 10 };
 }
 
+/**
+ * Weekly action budget.
+ *
+ * Was 2 with 107/117 cards costing exactly 1 AP, which made AP a play counter
+ * rather than an economy: two plays a week, no cost tradeoff anywhere. At 5,
+ * a week is a turn — five light touches, or a heavy lift plus a light one, or
+ * one haymaker. Cards are priced 0-5 against what they actually do.
+ */
+export const CAMPAIGN_AP = 5;
+
+/**
+ * Signatures needed to make the ballot.
+ *
+ * Was 450, set against the 2-AP economy, where a focused campaign cleared the
+ * ballot 99% of the time — no tension at all — and a grinding one still got
+ * there by accident. Re-derived at the 5-AP economy against the real path
+ * (applySetup adds a region petitionMod on top, so the effective bar varies
+ * -80 to +100): at 600 the labor route clears 84.5% and a grinding one misses
+ * filing 72.5%. Higher values only punish good play — grind sits flat at ~27%
+ * from 550 to 700.
+ */
+export const BALLOT_SIGNATURES = 600;
+
+/**
+ * Turf budget, spent by field cards before campaign AP (see play.ts payCost).
+ * Previously a 0/1 bonus from a warm AL09, which meant ground work competed
+ * with ballot-making for the same 2 AP — the structural cause of labor banking
+ * ~2.5x less rapport than money. Turf now has its own budget.
+ */
+export const TURF_AP = 2;
+
+/** Waiting season is a quieter cadence than a campaign week. */
+export const WAITING_AP = 2;
+
 export function createDefaultGrounds(): Ground[] {
   // rivalRap starts at 0; advanceRivalGrounds (calendar onWeekAdvance) banks
   // 5–40 cosmetic opposition each week for the ground picker / logs.
@@ -50,9 +84,9 @@ export function createNewState(overrides: Partial<GameState> = {}): GameState {
     setDefaultSeed(overrides.seed);
   }
   const base: GameState = {
-    week: 1, weeksTotal: CAMPAIGN_WEEKS_TOTAL, ap: 2, apMax: 2, fieldAp: 0,
+    week: 1, weeksTotal: CAMPAIGN_WEEKS_TOTAL, ap: CAMPAIGN_AP, apMax: CAMPAIGN_AP, fieldAp: TURF_AP,
     money: 0, debt: 0, contacts: 0, nameID: 2, volPool: 0, momentum: 0, favors: 0,
-    signatures: 0, sigNeed: 450, ballot: false, hitPieces: 0, exposure: 0,
+    signatures: 0, sigNeed: BALLOT_SIGNATURES, ballot: false, hitPieces: 0, exposure: 0,
     messageSharp: false, clubOdds: 0, walkCount: 0, shadowPlays: 0, disasterLog: [],
     endorsePts: 0, slate: false, absenteeBank: 0, greeters: 0, pledges: 0,
     faces: createInitialFaces(), shFired: {}, groundsArr: createDefaultGrounds(),

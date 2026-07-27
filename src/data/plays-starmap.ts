@@ -49,7 +49,7 @@ function consumePilot(
 export const MV01_PrecinctNetwork: PlayCard = {
   id: PILOT_PRECINCT.verbPlayId,
   n: 'Call in the Precinct Chair network',
-  cost: { a: 1 },
+  cost: { a: 3 },
   risk: 'SAFE',
   ph: [1, 2],
   tag: 'orbit movement',
@@ -81,7 +81,7 @@ export const MV01_PrecinctNetwork: PlayCard = {
 export const MV02_FieldPlan: PlayCard = {
   id: PILOT_CAPTAIN.verbPlayId,
   n: 'Execute the field plan',
-  cost: { a: 1 },
+  cost: { a: 3 },
   risk: 'SAFE',
   ph: [1, 2, 3],
   field: true,
@@ -134,7 +134,7 @@ export const MV02_FieldPlan: PlayCard = {
 export const MV03_CourthouseNod: PlayCard = {
   id: PILOT_JUDGE.verbPlayId,
   n: 'Spend the courthouse nod',
-  cost: { a: 1 },
+  cost: { a: 3 },
   risk: 'SAFE',
   ph: [1, 2, 3],
   tag: 'orbit movement',
@@ -167,7 +167,7 @@ export const MV03_CourthouseNod: PlayCard = {
 export const MV04_PartyApparatus: PlayCard = {
   id: PILOT_PARTY.verbPlayId,
   n: 'Activate the party apparatus',
-  cost: { a: 1 },
+  cost: { a: 3 },
   risk: 'SAFE',
   ph: [1, 2, 3],
   tag: 'orbit movement',
@@ -199,7 +199,7 @@ export const MV04_PartyApparatus: PlayCard = {
 export const MV05_ClubRoster: PlayCard = {
   id: PILOT_CLUB.verbPlayId,
   n: 'Pull the club roster',
-  cost: { a: 1 },
+  cost: { a: 3 },
   risk: 'SAFE',
   ph: [1, 2],
   tag: 'orbit movement',
@@ -231,7 +231,7 @@ export const MV05_ClubRoster: PlayCard = {
 export const MV06_NewsroomNod: PlayCard = {
   id: PILOT_EDITOR.verbPlayId,
   n: 'Call in the fair shake',
-  cost: { a: 1 },
+  cost: { a: 3 },
   risk: 'SAFE',
   ph: [1, 2, 3],
   tag: 'orbit movement',
@@ -262,7 +262,7 @@ export const MV06_NewsroomNod: PlayCard = {
 export const MV07_CorridorBlessing: PlayCard = {
   id: PILOT_FAITH.verbPlayId,
   n: 'Open the corridor',
-  cost: { a: 1 },
+  cost: { a: 3 },
   risk: 'SAFE',
   ph: [1, 2, 3],
   tag: 'orbit movement',
@@ -302,7 +302,7 @@ export const MV07_CorridorBlessing: PlayCard = {
 export const MV08_SlateCard: PlayCard = {
   id: PILOT_SLATE.verbPlayId,
   n: 'Run the slate hard',
-  cost: { a: 1 },
+  cost: { a: 3 },
   risk: 'SAFE',
   ph: [2, 3],
   tag: 'orbit movement',
@@ -337,7 +337,7 @@ export const MV08_SlateCard: PlayCard = {
 export const MV09_FinanceBook: PlayCard = {
   id: PILOT_FINANCE.verbPlayId,
   n: 'Call the finance book',
-  cost: { a: 1 },
+  cost: { a: 3 },
   risk: 'SAFE',
   ph: [1, 2, 3],
   tag: 'orbit movement',
@@ -368,7 +368,7 @@ export const MV09_FinanceBook: PlayCard = {
 export const MV10_DriveTime: PlayCard = {
   id: PILOT_RADIO.verbPlayId,
   n: 'Take the drive-time slot',
-  cost: { a: 1 },
+  cost: { a: 3 },
   risk: 'SAFE',
   ph: [1, 2, 3],
   tag: 'orbit movement',
@@ -400,7 +400,7 @@ export const MV10_DriveTime: PlayCard = {
 export const MV11_LobbyMap: PlayCard = {
   id: PILOT_LOBBY.verbPlayId,
   n: 'Spend the access map',
-  cost: { a: 1 },
+  cost: { a: 3 },
   risk: 'SAFE',
   ph: [2, 3],
   tag: 'orbit movement',
@@ -434,7 +434,7 @@ export const MV11_LobbyMap: PlayCard = {
 export const MV12_PlantGate: PlayCard = {
   id: PILOT_UNION.verbPlayId,
   n: 'Spend the plant-gate nod',
-  cost: { a: 1 },
+  cost: { a: 3 },
   risk: 'SAFE',
   ph: [1, 2, 3],
   field: true,
@@ -472,7 +472,7 @@ export const MV12_PlantGate: PlayCard = {
 export const MV13_RubberChicken: PlayCard = {
   id: PILOT_CHAMBER.verbPlayId,
   n: 'Work the chicken circuit',
-  cost: { a: 1 },
+  cost: { a: 3 },
   risk: 'SAFE',
   ph: [1, 2, 3],
   tag: 'orbit movement',
@@ -504,7 +504,7 @@ export const MV13_RubberChicken: PlayCard = {
 export const MV14_FeedBench: PlayCard = {
   id: PILOT_FEED.verbPlayId,
   n: 'Sit the feed-store bench',
-  cost: { a: 1 },
+  cost: { a: 3 },
   risk: 'SAFE',
   ph: [1, 2],
   tag: 'orbit movement',

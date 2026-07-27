@@ -21,7 +21,7 @@ function rapGain(g: Ground, amt: number, state: GameState) {
 }
 
 export const PL01_BlockWalk: PlayCard = {
-  id: 'PL01', n: 'Block Walk', cost: { a: 1 }, risk: 'SAFE', ph: [1,2,3], field: true, tag: 'the spine',
+  id: 'PL01', n: 'Block Walk', cost: { a: 2 }, risk: 'SAFE', refundOnBreak: true, ph: [1,2,3], field: true, tag: 'the spine',
   attrs: ['CHA'],
   d: 'Boots and a clipboard. The one play that never turns on you. When in doubt. In the general, doors become turnout.',
   odds: (s) => clamp(0.62 + s.volPool*0.02 + (s.assets.includes('A01')?0.12:0) + (s.messageSharp?0.05:0), 0, 0.95),
@@ -50,7 +50,7 @@ export const PL01_BlockWalk: PlayCard = {
 };
 
 export const PL02_PhoneBank: PlayCard = {
-  id: 'PL02', n: 'Phone Bank', cost: { a:1, vp:1 }, risk: 'SAFE', ph: [1,2,3], field: true, tag: 'rain-proof',
+  id: 'PL02', n: 'Phone Bank', cost: { a:2, vp:1 }, risk: 'SAFE', refundOnBreak: true, ph: [1,2,3], field: true, tag: 'rain-proof',
   attrs: ['CHA'],
   d: 'Half the yield, none of the weather. Grandma\'s kitchen table is HQ. In the general, the phone is a GOTV tool.',
   odds: (s) => clamp(0.6 + (s.assets.includes('A09')?0.15:0), 0, 0.95),
@@ -79,7 +79,7 @@ export const PL03_YardSignBlitz: PlayCard = {
 };
 
 export const PL04_PetitionDrive: PlayCard = {
-  id: 'PL04', n: 'Petitions', cost: { a:1 }, risk: 'STD', ph: [1], tag: 'the zero-dollar door',
+  id: 'PL04', n: 'Petitions', cost: { a:2 }, risk: 'STD', ph: [1], tag: 'the zero-dollar door',
   attrs: ['CLO'],
   d: 'Signatures instead of a fee. Labor is the currency you were born holding.',
   show: (s) => !s.ballot,
@@ -103,7 +103,7 @@ export const PL05_PayFilingFee: PlayCard = {
   run: (s) => { s.ballot = true; return 'Receipt in hand. You are on the ballot the expensive way.'; }
 };
 export const PL06_TownHall: PlayCard = {
-  id: 'PL06', n: 'Town Hall', cost: { a:1 }, risk: 'STD', ph: [1,2,3], tag: 'showing up',
+  id: 'PL06', n: 'Town Hall', cost: { a:2 }, risk: 'STD', refundOnBreak: true, ph: [1,2,3], tag: 'showing up',
   attrs: ['CHA'],
   d: 'Folding chairs, burnt coffee, real questions. The kids notice if you skip these.',
   odds: (s) => clamp(0.55 + (s.messageSharp?0.08:0), 0, 0.9),
@@ -111,7 +111,7 @@ export const PL06_TownHall: PlayCard = {
 };
 
 export const PL07_CandidateForum: PlayCard = {
-  id: 'PL07', n: 'Candidate Forum', cost: { a:1 }, risk: 'VOL', ph: [2,3], tag: 'bright lights',
+  id: 'PL07', n: 'Candidate Forum', cost: { a:2 }, risk: 'VOL', ph: [2,3], tag: 'bright lights',
   attrs: ['CON', 'CHA'],
   d: 'Sixty seconds and every rival watching for the stumble.',
   odds: (s) => clamp(0.42 + (s.messageSharp?0.12:0) + (s.debatePrepped?0.1:0) + s.faces.F*0.002 + (s.reps.includes('R06')?0.06:0), 0, 0.9),
@@ -125,7 +125,7 @@ export const PL07_CandidateForum: PlayCard = {
 };
 
 export const PL08_KitchenTable: PlayCard = {
-  id: 'PL08', n: 'Kitchen Table', cost: { a:1 }, risk: 'STD', ph: [1,2], tag: 'pie is not optional',
+  id: 'PL08', n: 'Kitchen Table', cost: { a:2 }, risk: 'STD', refundOnBreak: true, ph: [1,2], tag: 'pie is not optional',
   attrs: ['DIP'],
   d: "A chair's kitchen, her rules. Bring pie; leave with a precinct or nothing. (Primary circuit — out of the general.)",
   odds: (s) => {
@@ -162,7 +162,7 @@ export const PL08_KitchenTable: PlayCard = {
 };
 
 export const PL09_EarnedMedia: PlayCard = {
-  id: 'PL09', n: 'Earned Media', cost: { a:1, m:1 }, risk: 'VOL', ph: [1,2,3], tag: 'the gallery',
+  id: 'PL09', n: 'Earned Media', cost: { a:2, m:1 }, risk: 'VOL', refundOnBreak: true, ph: [1,2,3], tag: 'the gallery',
   attrs: ['CHA'],
   d: 'A county weekly, a drive-time host, a stringer if you\'re lucky.',
   odds: (s) => clamp(0.3 + s.momentum*0.02 + s.faces.F*0.004 + (s.mediaBonus||0) + (warm(s,'AL05')?0.1:0) + (s.regionHook==='metro'?0.1:0), 0, 0.9),
@@ -192,7 +192,7 @@ export const PL10_PressRelease: PlayCard = {
 };
 
 export const PL13_FishFry: PlayCard = {
-  id: 'PL13', n: 'Fish Fry', cost: { a:1, $:150 }, risk: 'SAFE', ph: [1,2,3], field: true, tag: 'clean money',
+  id: 'PL13', n: 'Fish Fry', cost: { a:3, $:150 }, risk: 'SAFE', ph: [1,2,3], field: true, tag: 'clean money',
   attrs: ['CHA'],
   d: 'Five-dollar plates, donation jar, casseroles. Net positive, always.',
   odds: (s) => clamp(0.75 + s.nameID*0.004, 0, 0.95),
@@ -206,7 +206,7 @@ export const PL13_FishFry: PlayCard = {
 };
 
 export const PL14_CourtTheChairs: PlayCard = {
-  id: 'PL14', n: 'Court the Chairs (Pie Circuit)', cost: { a:1 }, risk: 'STD', ph: [1,2], tag: 'gatekeepers',
+  id: 'PL14', n: 'Court the Chairs (Pie Circuit)', cost: { a:3 }, risk: 'STD', ph: [1,2], tag: 'gatekeepers',
   attrs: ['DIP'],
   d: 'The kitchen-table circuit at scale. Phase III chairs are already spoken for.',
   odds: (s) => clamp(0.34 + s.contacts*0.001 + s.faces.G*0.004 - (s.pieMalus||0) - (s.reps.includes('R07')?0.2:0) + (s.reps.includes('R05')?0.15:0), 0, 0.9),
@@ -225,7 +225,7 @@ export const PL14_CourtTheChairs: PlayCard = {
 };
 
 export const PL11_StrawPoll: PlayCard = {
-  id: 'PL11', n: 'Straw Poll Push', cost: { a:1, vp:1 }, risk: 'STD', ph: [1,2], tag: 'club math',
+  id: 'PL11', n: 'Straw Poll Push', cost: { a:2, vp:1 }, risk: 'STD', ph: [1,2], tag: 'club math',
   attrs: ['CLO', 'DIP'],
   d: 'Pack the room, count the hands. Clubs remember who wins their straw.',
   req: (s) => s.backers.includes('B06') || warm(s, 'AL03'),
@@ -244,7 +244,7 @@ export const PL11_StrawPoll: PlayCard = {
 };
 
 export const PL12_ClubSpeech: PlayCard = {
-  id: 'PL12', n: 'Club Speech', cost: { a:1 }, risk: 'STD', ph: [1,2], tag: 'the circuit',
+  id: 'PL12', n: 'Club Speech', cost: { a:2 }, risk: 'STD', refundOnBreak: true, ph: [1,2], tag: 'the circuit',
   attrs: ['CON', 'DIP'],
   d: 'Rubber chicken, real gatekeepers. Read the room or the room reads you.',
   odds: (s) => clamp(0.5 + s.faces.T*0.003 + (s.messageSharp?0.06:0), 0, 0.9),
@@ -256,7 +256,7 @@ export const PL12_ClubSpeech: PlayCard = {
 };
 
 export const PL15_OppoResearch: PlayCard = {
-  id: 'PL15', n: 'Oppo Research', cost: { a:1, $:500 }, risk: 'STD', ph: [2], tag: 'the file',
+  id: 'PL15', n: 'Oppo Research', cost: { a:2, $:500 }, risk: 'STD', ph: [2], tag: 'the file',
   attrs: ['CRA'],
   d: 'A quiet man with a courthouse habit. What he finds becomes yours to spend — or to hold.',
   odds: () => 0.65,
@@ -277,7 +277,7 @@ export const PL17_DebatePrep: PlayCard = {
 };
 
 export const PL19_GOTVWeekend: PlayCard = {
-  id: 'PL19', n: 'Get Out the Vote', cost: { a:1, vp:1 }, risk: 'STD', ph: [3], field: true, tag: 'the point of it all',
+  id: 'PL19', n: 'Get Out the Vote', cost: { a:2, vp:1 }, risk: 'STD', ph: [3], field: true, tag: 'the point of it all',
   attrs: ['CLO'],
   d: 'Rapport is a promise. Turnout is the promise kept. One volunteer and a weekend. The general spine.',
   odds: (s, g) => clamp(0.58 + s.volPool*0.025 + (allyWarmAtGround(s,'AL09',g?.id)?0.1:0) + s.faces.T*0.002, 0, 0.95),
@@ -302,7 +302,7 @@ export const PL19_GOTVWeekend: PlayCard = {
 export const PL23_RidesToPolls: PlayCard = {
   id: 'PL23',
   n: 'Rides to the Polls',
-  cost: { a: 1, vp: 1 },
+  cost: { a: 2, vp: 1 },
   risk: 'SAFE',
   ph: [3],
   field: true,

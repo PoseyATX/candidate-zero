@@ -13,10 +13,17 @@ import { canAffordCash } from './debt.js';
 import { syncMovementFlags } from './entities.js';
 import type { AttrId, GameState, Ground, PlayCard, PlayOutcome, RollResult } from './types.js';
 
+/** Turf AP a field card can draw on; non-field cards can never touch it. */
+function turfBudget(state: GameState, card: PlayCard): number {
+  return card.field ? Math.max(0, state.fieldAp) : 0;
+}
+
 export function canAfford(state: GameState, card: PlayCard): boolean {
   const c = card.cost;
   const apCost = c.a ?? 0;
-  const apCovered = apCost <= state.ap || (apCost > 0 && !!card.field && state.fieldAp > 0);
+  // Field cards spend turf AP first and campaign AP for the remainder, so a
+  // 3-AP field play is affordable on 2 turf + 1 campaign.
+  const apCovered = apCost <= state.ap + turfBudget(state, card);
   if (!apCovered) return false;
   if (!canAffordCash(state, c.$ ?? 0)) return false;
   if ((c.vp ?? 0) > state.volPool) return false;
@@ -46,11 +53,14 @@ export function isPlayable(state: GameState, card: PlayCard): boolean {
 export function payCost(state: GameState, card: PlayCard): void {
   const c = card.cost;
   if (c.a) {
-    if (card.field && state.fieldAp > 0) {
-      state.fieldAp -= 1;
-    } else {
-      state.ap -= c.a;
-    }
+    // Turf first, campaign AP for whatever is left. Previously this deducted a
+    // flat 1 fieldAp no matter the cost, which was harmless when every card
+    // cost 1 and wrong the moment field cards got a real price.
+    let owed = c.a;
+    const fromTurf = Math.min(owed, turfBudget(state, card));
+    state.fieldAp -= fromTurf;
+    owed -= fromTurf;
+    state.ap -= owed;
   }
   if (c.$) state.money -= c.$;
   if (c.vp) state.volPool -= c.vp;
@@ -161,6 +171,21 @@ export function executePlay(
     });
   } else {
     roll = resolve(p, card.risk, state);
+  }
+
+  // Breakthrough refund — the chain seam. A card flagged refundOnBreak buys its
+  // AP back on a tier-0 breakthrough, so a hot week can keep going. Capped at
+  // apMax so it tops up rather than banking an unbounded turn.
+  if (roll.tier === 0 && card.refundOnBreak) {
+    const back = card.cost.a ?? 0;
+    if (back > 0) {
+      state.ap = Math.min(state.apMax, state.ap + back);
+      state.log.push({
+        week: state.week,
+        kind: 'note',
+        text: `${card.n} breaks through — the day opens up again (+${back} AP).`
+      });
+    }
   }
 
   if (roll.tier === 3 && state.parlSave && !state.parlUsed && card.id === 'PL04') {

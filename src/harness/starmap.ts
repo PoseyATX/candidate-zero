@@ -38,6 +38,7 @@ import {
 import { addObl } from '../data/obligations.js';
 import { ALL_PLAYS } from '../data/plays.js';
 import type { PlayCard } from '../engine/types.js';
+import { CAMPAIGN_AP } from '../engine/state.js';
 
 function assert(cond: boolean, msg: string): void {
   if (!cond) throw new Error('FAIL: ' + msg);
@@ -104,7 +105,7 @@ for (const p of PLAYABLE_PILOTS) {
 
 // --- Pilot 1: Precinct Chair e2e ---
 {
-  const s = createNewState({ seed: 2, endorsePts: 0, contacts: 0, volPool: 0, ap: 2 });
+  const s = createNewState({ seed: 2, endorsePts: 0, contacts: 0, volPool: 0, ap: CAMPAIGN_AP });
   s.ballot = true;
   s.stage = 'primary';
   s.allies = [
@@ -126,7 +127,7 @@ for (const p of PLAYABLE_PILOTS) {
 
 // --- Pilot 2: Canvass Captain e2e ---
 {
-  const s = createNewState({ seed: 3, contacts: 0, volPool: 1, ap: 2, fieldAp: 0 });
+  const s = createNewState({ seed: 3, contacts: 0, volPool: 1, ap: CAMPAIGN_AP, fieldAp: 0 });
   s.ballot = true;
   s.stage = 'primary';
   addAlly(s, 'AL09', 3, 'GR01');
@@ -147,7 +148,7 @@ for (const p of PLAYABLE_PILOTS) {
 
 // --- Pilot 2b: field-pressure path without AL09 ---
 {
-  const s = createNewState({ seed: 4, nameID: 10, volPool: 3, ap: 2 });
+  const s = createNewState({ seed: 4, nameID: 10, volPool: 3, ap: CAMPAIGN_AP });
   s.ballot = true;
   s.stage = 'primary';
   syncMovementFlags(s);
@@ -166,7 +167,7 @@ for (const p of PLAYABLE_PILOTS) {
     nameID: 5,
     contacts: 0,
     momentum: 0,
-    ap: 2
+    ap: CAMPAIGN_AP
   });
   s.ballot = true;
   s.stage = 'primary';
@@ -199,7 +200,7 @@ for (const p of PLAYABLE_PILOTS) {
 
 // Multi-orbit: captain + precinct both open
 {
-  const s = createNewState({ seed: 7, nameID: 10, volPool: 3, ap: 2 });
+  const s = createNewState({ seed: 7, nameID: 10, volPool: 3, ap: CAMPAIGN_AP });
   s.ballot = true;
   s.stage = 'primary';
   s.allies = [
@@ -227,7 +228,7 @@ for (const p of PLAYABLE_PILOTS) {
   console.log('PASSED: MV04 County Party e2e');
 }
 {
-  const s = createNewState({ seed: 9, endorsePts: 0, contacts: 0, ap: 2 });
+  const s = createNewState({ seed: 9, endorsePts: 0, contacts: 0, ap: CAMPAIGN_AP });
   s.ballot = true;
   s.stage = 'primary';
   addAlly(s, 'AL03', 2);
@@ -238,7 +239,7 @@ for (const p of PLAYABLE_PILOTS) {
   console.log('PASSED: MV05 Club Leader e2e');
 }
 {
-  const s = createNewState({ seed: 10, nameID: 5, momentum: 0, ap: 2 });
+  const s = createNewState({ seed: 10, nameID: 5, momentum: 0, ap: CAMPAIGN_AP });
   s.ballot = true;
   s.stage = 'primary';
   addAlly(s, 'AL04', 2);
@@ -251,7 +252,7 @@ for (const p of PLAYABLE_PILOTS) {
   console.log('PASSED: MV06 Local Editor e2e');
 }
 {
-  const s = createNewState({ seed: 11, volPool: 0, contacts: 0, ap: 2 });
+  const s = createNewState({ seed: 11, volPool: 0, contacts: 0, ap: CAMPAIGN_AP });
   s.ballot = true;
   s.stage = 'primary';
   s.groundsArr.find(g => g.id === 'GR04')!.gated = true;
@@ -294,7 +295,7 @@ for (const p of PLAYABLE_PILOTS) {
 
 // --- Slate-Maker MV08 ---
 {
-  const s = createNewState({ seed: 15, endorsePts: 1, nameID: 5, contacts: 0, momentum: 0, ap: 2 });
+  const s = createNewState({ seed: 15, endorsePts: 1, nameID: 5, contacts: 0, momentum: 0, ap: CAMPAIGN_AP });
   s.ballot = true;
   s.stage = 'primary';
   addAlly(s, 'AL16', 2);
@@ -338,7 +339,7 @@ assert(getEntity('ENT_SLATE_MAKER')?.primaryLoopId === 'LOOP_ENT_SLATE_MAKER', '
     money: 200,
     contacts: 0,
     endorsePts: 0,
-    ap: 2
+    ap: CAMPAIGN_AP
   });
   s.ballot = true;
   s.stage = 'primary';
@@ -361,7 +362,7 @@ assert(getEntity('ENT_SLATE_MAKER')?.primaryLoopId === 'LOOP_ENT_SLATE_MAKER', '
   console.log('PASSED: MV09 alternate (endorse+cash)');
 }
 {
-  const s = createNewState({ seed: 20, nameID: 5, momentum: 0, contacts: 0, ap: 2 });
+  const s = createNewState({ seed: 20, nameID: 5, momentum: 0, contacts: 0, ap: CAMPAIGN_AP });
   s.ballot = true;
   s.stage = 'primary';
   addAlly(s, 'AL05', 2);
@@ -390,7 +391,7 @@ assert(getEntity('ENT_SLATE_MAKER')?.primaryLoopId === 'LOOP_ENT_SLATE_MAKER', '
     momentum: 0,
     capital: 0,
     favor: 40,
-    ap: 2
+    ap: CAMPAIGN_AP
   });
   s.ballot = true;
   s.stage = 'primary';
@@ -430,7 +431,7 @@ assert(getEntity('ENT_JUNIOR_LOBBYIST')?.primaryLoopId === 'LOOP_ENT_JUNIOR_LOBB
 
 // --- Pack #4: Union / Chamber / Feed-Store (MV12–14) ---
 {
-  const s = createNewState({ seed: 25, nameID: 10, volPool: 4, endorsePts: 0, contacts: 0, ap: 2 });
+  const s = createNewState({ seed: 25, nameID: 10, volPool: 4, endorsePts: 0, contacts: 0, ap: CAMPAIGN_AP });
   s.ballot = true;
   s.stage = 'primary';
   syncMovementFlags(s);
@@ -457,7 +458,7 @@ assert(getEntity('ENT_JUNIOR_LOBBYIST')?.primaryLoopId === 'LOOP_ENT_JUNIOR_LOBB
     money: 1200,
     nameID: 5,
     contacts: 0,
-    ap: 2
+    ap: CAMPAIGN_AP
   });
   s.ballot = true;
   s.stage = 'primary';
@@ -479,7 +480,7 @@ assert(getEntity('ENT_JUNIOR_LOBBYIST')?.primaryLoopId === 'LOOP_ENT_JUNIOR_LOBB
   console.log('PASSED: MV13 alternate (nameID)');
 }
 {
-  const s = createNewState({ seed: 29, contacts: 0, nameID: 5, volPool: 1, ap: 2 });
+  const s = createNewState({ seed: 29, contacts: 0, nameID: 5, volPool: 1, ap: CAMPAIGN_AP });
   s.ballot = true;
   s.stage = 'primary';
   addAlly(s, 'AL07', 2);

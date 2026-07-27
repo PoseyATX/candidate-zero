@@ -6,6 +6,7 @@
 import type { GameState, LegacyState } from './types.js';
 import type { StageTransition } from './calendar.js';
 import { PATH_TO_WAITING_LOOP } from './legacy.js';
+import { WAITING_AP } from './state.js';
 
 /** Compressed "two years" as game weeks. */
 export const WAITING_WEEKS = 4;
@@ -20,8 +21,8 @@ export function enterWaiting(
   // Keep outcome as the campaign result that led here
   state.week = 1;
   state.weeksTotal = WAITING_WEEKS;
-  state.apMax = 1;
-  state.ap = 1;
+  state.apMax = WAITING_AP;
+  state.ap = WAITING_AP;
   state.fieldAp = 0;
   state.waitingPathId = pathId;
   state.waitingLoopId = loopId;

@@ -18,6 +18,7 @@ import { tickOutsideDeck } from './outside.js';
 import { WAITING_WEEKS, onWaitingWeekAdvance } from './waiting.js';
 import type { CampaignOutcome, GameState, Ground } from './types.js';
 import { checkBallotThreshold } from './career.js';
+import { TURF_AP } from './state.js';
 
 /** Primary campaign length (includes filing window). */
 export const PRIMARY_WEEKS = 8;
@@ -381,7 +382,7 @@ export function resolvePrimaryConclusion(state: GameState): StageTransition {
     state.stage = 'general';
     state.week = PRIMARY_WEEKS + 1;
     state.ap = state.apMax;
-    state.fieldAp = warm(state, 'AL09') ? 1 : 0;
+    state.fieldAp = TURF_AP + (warm(state, 'AL09') ? 1 : 0);
     state.momentum = Math.max(0, state.momentum - 1);
     onWeekAdvance(state);
     state.townHallThisWeek = false;
@@ -488,9 +489,7 @@ export function advanceCampaignWeek(state: GameState): StageTransition {
   state.fieldAp =
     state.stage === 'session' || state.stage === 'waiting'
       ? 0
-      : warm(state, 'AL09')
-        ? 1
-        : 0;
+      : TURF_AP + (warm(state, 'AL09') ? 1 : 0);
   state.momentum = Math.max(0, state.momentum - 1);
   state.townHallThisWeek = false;
   if (state.stage === 'session') {

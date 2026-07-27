@@ -17,7 +17,7 @@ function R(n: number): number {
   return random() * n;
 }
 export const PL16_RecruitVolunteers: PlayCard = {
-  id: 'PL16', n: 'Recruit Volunteers', cost: { a: 1 }, risk: 'STD', ph: [1, 2, 3], tag: 'force multiplier',
+  id: 'PL16', n: 'Recruit Volunteers', cost: { a: 2 }, risk: 'STD', ph: [1, 2, 3], tag: 'force multiplier',
   attrs: ['CLO', 'CHA'],
   d: 'An army marches on casseroles. Every volunteer makes every other card better.',
   odds: (s) => clamp(0.5 + s.faces.T * 0.004 + s.nameID * 0.003, 0, 0.95),
@@ -55,7 +55,7 @@ export const PL18_SharpenMessage: PlayCard = {
 };
 
 export const PL20_PacCheck: PlayCard = {
-  id: 'PL20', n: 'Take the PAC Check', cost: { a: 1 }, risk: 'STD', ph: [1, 2, 3], tag: 'the Third House pays well',
+  id: 'PL20', n: 'Take the PAC Check', cost: { a: 3 }, risk: 'STD', ph: [1, 2, 3], tag: 'the Third House pays well',
   attrs: ['CRA', 'DIP'],
   kind: 'bargain',
   trap: true,
@@ -99,7 +99,7 @@ export const PL21_SelfFundCredit: PlayCard = {
 };
 
 export const PL22_ContrastMail: PlayCard = {
-  id: 'PL22', n: 'Contrast Mail', cost: { a: 1, $: 800 }, risk: 'VOL', ph: [2, 3], tag: 'the folder spent',
+  id: 'PL22', n: 'Contrast Mail', cost: { a: 2, $: 800 }, risk: 'VOL', ph: [2, 3], tag: 'the folder spent',
   attrs: ['CRA', 'INK'],
   d: 'What the quiet man found, printed on cheap stock and mailed to every primary voter who votes.',
   // archive:639 also requires A03 Mail Program — keep modular oppoFile primary;
@@ -128,7 +128,7 @@ export const PL22_ContrastMail: PlayCard = {
 };
 
 export const PL21B_PromoteCanvassCaptain: PlayCard = {
-  id: 'PL21B', n: 'Promote a Canvass Captain', cost: { a: 1, vp: 3 }, risk: 'SAFE', ph: [1, 2, 3], field: true, tag: 'the field gets a spine',
+  id: 'PL21B', n: 'Promote a Canvass Captain', cost: { a: 2, vp: 3 }, risk: 'SAFE', ph: [1, 2, 3], field: true, tag: 'the field gets a spine',
   attrs: ['DIP'],
   d: 'One volunteer stops showing up as a volunteer and starts showing up as staff.',
   show: (s) => !findAlly(s, 'AL09'),
@@ -143,7 +143,7 @@ export const PL21B_PromoteCanvassCaptain: PlayCard = {
 };
 
 export const PL39_HireFieldDirector: PlayCard = {
-  id: 'PL39', n: 'Hire a Field Director', cost: { a: 1, $: 2200 }, risk: 'STD', ph: [1, 2], field: true, tag: 'professionalize',
+  id: 'PL39', n: 'Hire a Field Director', cost: { a: 3, $: 2200 }, risk: 'STD', ph: [1, 2], field: true, tag: 'professionalize',
   attrs: ['DIP'], w: 1,
   d: "A professional who has run four of these before. Money buys what volunteers can't always deliver on schedule.",
   req: (s) => !warm(s, 'AL09'),
@@ -162,7 +162,7 @@ export const PL39_HireFieldDirector: PlayCard = {
 
 /** archive:671–673 — See the Slate-Maker → AL16 + OB3 */
 export const PL22B_SeeSlateMaker: PlayCard = {
-  id: 'PL22B', n: 'See the Slate-Maker', cost: { a: 1, $: 1500 }, risk: 'STD', ph: [2, 3], tag: 'the printed word',
+  id: 'PL22B', n: 'See the Slate-Maker', cost: { a: 3, $: 1500 }, risk: 'STD', ph: [2, 3], tag: 'the printed word',
   attrs: ['DIP', 'CRA'],
   d: 'One man prints the card half the primary votes from. His price is never only money.',
   show: (s) => warm(s, 'AL02') && !s.slate,
@@ -180,7 +180,7 @@ export const PL22B_SeeSlateMaker: PlayCard = {
 
 /** archive:712–715 — Prayer Breakfast → AL08 at threshold */
 export const PL30_PrayerBreakfast: PlayCard = {
-  id: 'PL30', n: 'Prayer Breakfast', cost: { a: 1 }, risk: 'SAFE', ph: [1, 2, 3], tag: 'the corridor opens',
+  id: 'PL30', n: 'Prayer Breakfast', cost: { a: 2 }, risk: 'SAFE', ph: [1, 2, 3], tag: 'the corridor opens',
   attrs: ['CON', 'DIP'],
   d: 'Biscuits at six-thirty. The Corridor watches who shows before sunrise.',
   req: (s) => s.backers.includes('B02'),
@@ -212,7 +212,7 @@ export const PL30_PrayerBreakfast: PlayCard = {
 
 /** archive:720–723 — Coffee with the Editor → AL04 on tier 0 if not already */
 export const PL32_CoffeeEditor: PlayCard = {
-  id: 'PL32', n: 'Coffee with the Editor', cost: { a: 1 }, risk: 'STD', ph: [1, 2], tag: 'earned goodwill',
+  id: 'PL32', n: 'Coffee with the Editor', cost: { a: 2 }, risk: 'STD', ph: [1, 2], tag: 'earned goodwill',
   attrs: ['DIP'], w: 2,
   d: 'Not for an endorsement — for a fair shake. The weekly decides who\'s "serious" long before the voters do.',
   odds: (s) => clamp(0.5 + (warm(s, 'AL04') ? 0.15 : 0), 0, 0.9),
@@ -228,7 +228,7 @@ export const PL32_CoffeeEditor: PlayCard = {
 
 /** archive:776–779 — Court the County Judge → AL15 on tier 0 */
 export const PL48_CourtCountyJudge: PlayCard = {
-  id: 'PL48', n: 'Court the County Judge', cost: { a: 1 }, risk: 'VOL', ph: [2, 3], tag: 'the heaviest name',
+  id: 'PL48', n: 'Court the County Judge', cost: { a: 2 }, risk: 'VOL', ph: [2, 3], tag: 'the heaviest name',
   attrs: ['DIP'], w: 1,
   d: 'The one endorsement that moves a whole county. He gives it to winners, so look like one.',
   req: (s) => s.endorsePts >= 3,
