@@ -1,10 +1,11 @@
 /**
  * Card face rendering — pure leaf (no imports from main.ts).
  *
- * Full-bleed card art (PlayCard.fullBleedArt = true) is inlined at build time
- * from src/assets/full-art/<card id>.svg — no fetch, no 404, no raster fallback.
- * To add a new full-bleed card: drop `<id>.svg` in that folder and set
- * `fullBleedArt: true` on the card's data. Nothing else needs to change.
+ * Full-bleed card art (PlayCard.fullBleedArt = true) is discovered at build time
+ * from src/assets/full-art/<card id>.<ext> — no fetch, no 404, no manual registry.
+ * To add a new full-bleed card: drop `<id>.jpg` (or .png/.webp/.avif/.svg) in that
+ * folder and set `fullBleedArt: true` on the card's data. Nothing else changes.
+ * See docs/PROMO-CARDS.md.
  */
 
 import type { GameState, Ground, PlayCard } from '../engine/types.js';
@@ -23,24 +24,43 @@ export type CardArtEntry = { file: string; fullFace?: boolean };
 /** Raster card art (png/webp served from public/assets/cards) — none shipped yet. */
 export const CARD_ART: Record<string, CardArtEntry> = {};
 
+type FullArt =
+  | { kind: 'vector'; svg: string }
+  | { kind: 'raster'; url: string };
+
 // import.meta.glob is a Vite build-time macro — unavailable when this module
 // is loaded directly under plain node/tsx (harness scripts), so guard it.
-let FULL_ART_MODULES: Record<string, string> = {};
+let VECTOR_MODULES: Record<string, string> = {};
+let RASTER_MODULES: Record<string, string> = {};
 try {
-  FULL_ART_MODULES = import.meta.glob('../assets/full-art/*.svg', {
+  // Vector art is inlined (no extra request, themable by CSS).
+  VECTOR_MODULES = import.meta.glob('../assets/full-art/*.svg', {
     eager: true,
     query: '?raw',
+    import: 'default'
+  }) as Record<string, string>;
+  // Raster art resolves to a hashed asset URL, so the image ships as its own
+  // cacheable file instead of being base64'd into the JS bundle.
+  RASTER_MODULES = import.meta.glob('../assets/full-art/*.{jpg,jpeg,png,webp,avif}', {
+    eager: true,
     import: 'default'
   }) as Record<string, string>;
 } catch {
   /* non-Vite runtime (e.g. harness) — full-bleed art unavailable, chrome fallback used */
 }
 
-/** cardId → inline SVG markup, keyed by filename (built from the glob above). */
-const FULL_ART: Record<string, string> = {};
-for (const [path, svg] of Object.entries(FULL_ART_MODULES)) {
-  const id = path.slice(path.lastIndexOf('/') + 1).replace(/\.svg$/, '');
-  FULL_ART[id] = svg;
+/** Filename (minus extension) is the card id: `PR01.jpg` → `PR01`. */
+function artIdFromPath(path: string): string {
+  return path.slice(path.lastIndexOf('/') + 1).replace(/\.[^.]+$/, '');
+}
+
+/** cardId → full-bleed art, discovered from src/assets/full-art at build time. */
+const FULL_ART: Record<string, FullArt> = {};
+for (const [path, svg] of Object.entries(VECTOR_MODULES)) {
+  FULL_ART[artIdFromPath(path)] = { kind: 'vector', svg };
+}
+for (const [path, url] of Object.entries(RASTER_MODULES)) {
+  FULL_ART[artIdFromPath(path)] = { kind: 'raster', url };
 }
 
 function fullBleedArt(card: PlayCard): boolean {
@@ -80,7 +100,11 @@ export function isSafeCardArtUrl(url: string): boolean {
 export function artPlateHtml(cardId: string): string {
   const full = FULL_ART[cardId];
   if (full) {
-    return `<span class="art-plate has-raster art-plate-inline">${full}</span>`;
+    const inner =
+      full.kind === 'vector'
+        ? full.svg
+        : `<img class="art-raster" src="${attrEscape(full.url)}" alt="" decoding="async" />`;
+    return `<span class="art-plate has-raster art-plate-inline">${inner}</span>`;
   }
   const entry = CARD_ART[cardId];
   if (entry?.file) {
