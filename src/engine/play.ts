@@ -11,6 +11,7 @@ import { buildPlayFeedback } from './feedback.js';
 import { repCheck, shadowCheck } from './reputation.js';
 import { canAffordCash } from './debt.js';
 import { syncMovementFlags } from './entities.js';
+import { effectiveApCost, upgradeOddsBonus } from './upgrades.js';
 import type { AttrId, GameState, Ground, PlayCard, PlayOutcome, RollResult } from './types.js';
 
 /** Turf AP a field card can draw on; non-field cards can never touch it. */
@@ -20,7 +21,7 @@ function turfBudget(state: GameState, card: PlayCard): number {
 
 export function canAfford(state: GameState, card: PlayCard): boolean {
   const c = card.cost;
-  const apCost = c.a ?? 0;
+  const apCost = effectiveApCost(state, card);
   // Field cards spend turf AP first and campaign AP for the remainder, so a
   // 3-AP field play is affordable on 2 turf + 1 campaign.
   const apCovered = apCost <= state.ap + turfBudget(state, card);
@@ -52,11 +53,12 @@ export function isPlayable(state: GameState, card: PlayCard): boolean {
 
 export function payCost(state: GameState, card: PlayCard): void {
   const c = card.cost;
-  if (c.a) {
+  const apCost = effectiveApCost(state, card);
+  if (apCost) {
     // Turf first, campaign AP for whatever is left. Previously this deducted a
     // flat 1 fieldAp no matter the cost, which was harmless when every card
     // cost 1 and wrong the moment field cards got a real price.
-    let owed = c.a;
+    let owed = apCost;
     const fromTurf = Math.min(owed, turfBudget(state, card));
     state.fieldAp -= fromTurf;
     owed -= fromTurf;
@@ -156,7 +158,10 @@ export function executePlay(
   let p = card.odds ? card.odds(state, g) : 0.5;
   const attrMod = cardAttrMod(state, card);
   const rivalPen = card.field ? rivalOddsPenalty(g) : 0;
-  p = Math.max(0.02, Math.min(0.95, p + attrMod + groundOddsBonus - rivalPen));
+  // Upgrades shift the odds going INTO resolve; they never touch the roll,
+  // the bands, or the tier mapping (Covenant 4).
+  const upBonus = upgradeOddsBonus(state, card);
+  p = Math.max(0.02, Math.min(0.95, p + attrMod + groundOddsBonus - rivalPen + upBonus));
 
   state.sessionFlags = state.sessionFlags || {};
   const charges = Number(state.sessionFlags.prettyFaceCharges || 0);
@@ -177,7 +182,7 @@ export function executePlay(
   // AP back on a tier-0 breakthrough, so a hot week can keep going. Capped at
   // apMax so it tops up rather than banking an unbounded turn.
   if (roll.tier === 0 && card.refundOnBreak) {
-    const back = card.cost.a ?? 0;
+    const back = effectiveApCost(state, card);
     if (back > 0) {
       state.ap = Math.min(state.apMax, state.ap + back);
       state.log.push({

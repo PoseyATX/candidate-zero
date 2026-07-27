@@ -10,7 +10,7 @@ resolve/odds/yields/RNG. This is the ship-path covenant (ROADMAP Phase 8):
 
 - Source: `src/engine/api.ts` · Contract test: `npm run harness:api`
 - Bundle: `npm run build:engine` → `dist-engine/candidate-zero-engine.{mjs,umd.cjs}`
-- Current version: `ENGINE_API_VERSION = 1.0.0`
+- Current version: `ENGINE_API_VERSION = 1.1.0`
 
 ## The determinism / seed contract
 
@@ -73,6 +73,12 @@ endorsements, ballot, signatures/need, …), `grounds[]`, `actions[]`,
 `dismissOutside`), `canEndWeek`, and the tail of the `log`.
 `apply().events` is the slice of log entries a single command produced —
 for host toasts/animation.
+
+`pendingDraft.options[]` is `{ cardId, name, risk, upgrade }`. `cardId` is
+always a real catalog id, and `upgrade: true` means picking that option
+**improves a card the player already runs** rather than adding a new one —
+the deck's second axis (`src/engine/upgrades.ts`). Hosts never see the
+engine's internal option encoding; `harness:api` asserts that.
 
 **Mobile presentation target:** 9:16 (portrait). Desktop 16:9 may letterbox
 or reflow; primary design is one-handed phone.

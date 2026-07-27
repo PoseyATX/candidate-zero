@@ -2267,3 +2267,30 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   font-style: italic;
   margin-top: 0.1rem;
 }
+
+/* Card upgrades — the deck's second axis has to be visible or investing in a
+   card means nothing at a glance. */
+.up-mark { color: var(--gold); margin-right: 0.2rem; }
+.draft-upgrade { outline-color: var(--gold) !important; }
+/* Rides the top of the art, not the bottom of the card: the card face is a
+   flex column ending in .cost-seal, and a bottom-anchored banner sat straight
+   on top of the price. The art plate is the only region with slack. */
+.up-banner {
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  z-index: 3;
+  background: rgba(20, 16, 12, 0.88);
+  color: #e8d48a;
+  font-family: Cinzel, serif;
+  font-size: 0.52rem;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 0.16rem 0.1rem;
+  border-bottom: 1px solid var(--gold-dim);
+  border-radius: inherit;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  pointer-events: none;
+}

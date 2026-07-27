@@ -134,6 +134,42 @@ for (const seed of SEEDS) {
   assert(view(s).v === ENGINE_API_VERSION, 'view carries api version');
 }
 
+// 6. The draft view never leaks the engine's internal option encoding.
+// A host cannot be asked to know that "UP:PL01" means "sharpen PL01" — the view
+// owes it a real card id, a real name, and an explicit `upgrade` flag.
+{
+  let seen = 0;
+  let leaked: string[] = [];
+  let unnamed: string[] = [];
+  for (const seed of SEEDS) {
+    let snap = newGame({ seed });
+    for (let i = 0; i < 4000; i++) {
+      const v = view(snap);
+      if (v.pendingDraft) {
+        for (const o of v.pendingDraft.options) {
+          seen++;
+          if (o.cardId.includes(':')) leaked.push(o.cardId);
+          // name falling back to the id is how the old bug surfaced to a host.
+          if (!o.name || o.name === o.cardId) unnamed.push(o.cardId);
+          if (typeof o.upgrade !== 'boolean') unnamed.push(`${o.cardId}(no flag)`);
+        }
+      }
+      const cmd = nextCommand(snap);
+      if (!cmd) break;
+      snap = apply(snap, cmd).snapshot;
+    }
+  }
+  assert(seen > 0, `draft options appeared in the host view (${seen} observed)`);
+  assert(
+    leaked.length === 0,
+    `draft cardIds are real catalog ids, never option encodings (${leaked.slice(0, 3).join(', ') || 'clean'})`
+  );
+  assert(
+    unnamed.length === 0,
+    `every draft option carries a real name and an upgrade flag (${unnamed.slice(0, 3).join(', ') || 'clean'})`
+  );
+}
+
 console.log('');
 if (failures) {
   console.error(`API determinism FAILED — ${failures} assertion(s).`);

@@ -56,8 +56,11 @@ import {
 import type { DeckState, GameState, PlayCard } from './types.js';
 import { buildGoalStripInput, formatGoalStrip, type GoalCopyKey } from '../ui/goal-strip.js';
 import { isGroundLocked, groundLockReason } from './play.js';
+import { parseUpgradeOption } from './upgrades.js';
 
-export const ENGINE_API_VERSION = '1.0.0';
+/** 1.1.0 — pendingDraft options gained `upgrade`; cardId is now always a real
+ *  catalog id (previously it could carry the engine's "UP:" option encoding). */
+export const ENGINE_API_VERSION = '1.1.0';
 
 /** Fully reproducible, JSON-serializable game state. */
 export interface EngineSnapshot {
@@ -148,7 +151,13 @@ export interface RenderView {
   grounds: GroundView[];
   actions: ActionOption[];
   goal: GoalView;
-  pendingDraft: { phase: number; options: { cardId: string; name: string; risk: string }[] } | null;
+  /** `cardId` is always a real catalog id. `upgrade` marks an offer to improve a
+   *  card the player already runs rather than to add a new one — hosts must not
+   *  have to know the engine's option encoding to render truthful copy. */
+  pendingDraft: {
+    phase: number;
+    options: { cardId: string; name: string; risk: string; upgrade: boolean }[];
+  } | null;
   /** World weather chrome — host shows, then dismissOutside. Never a hand card. */
   pendingOutside: { id: string; n: string; text: string } | null;
   /** true when there is nothing left but to end the week. */
@@ -300,9 +309,11 @@ export function view(snap: EngineSnapshot): RenderView {
     pendingDraft: pd?.options.length
       ? {
           phase: pd.phase,
-          options: pd.options.map(id => {
+          options: pd.options.map(option => {
+            const upId = parseUpgradeOption(option);
+            const id = upId ?? option;
             const c = campaign.catalog.get(id);
-            return { cardId: id, name: c?.n ?? id, risk: c?.risk ?? '' };
+            return { cardId: id, name: c?.n ?? id, risk: c?.risk ?? '', upgrade: !!upId };
           })
         }
       : null,

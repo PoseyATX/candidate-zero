@@ -152,6 +152,9 @@ export interface GameState {
   personaId: string | null;
   playedCardIds: Record<string, number>;
   pathProgress: Record<string, number>;
+  /** cardId -> upgrade tier. Plain JSON so it survives serialize/deserialize.
+   *  See engine/upgrades.ts — a tier on an owned card, not a second catalog. */
+  cardUpgrades?: Record<string, number>;
   pathsUnlocked: Record<string, boolean>;
   issue: string | null;
   district: DistrictInfo | null;

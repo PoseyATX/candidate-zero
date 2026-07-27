@@ -33,6 +33,12 @@ import { emblemFor, KIND_META } from './card-art.js';
 import { ACT_SHELLS, actFromStage } from './act-shell.js';
 import type { AttrId, RiskClass } from '../engine/types.js';
 import { GROUND_NEIGHBORS } from '../engine/state.js';
+import {
+  parseUpgradeOption,
+  upgradeLabel,
+  upgradeShortLabel,
+  isUpgraded
+} from '../engine/upgrades.js';
 
 /** Full attribute names — never dump CLO/CON on a roomy brief. */
 const ATTR_NAMES: Record<AttrId, string> = {
@@ -233,6 +239,9 @@ function fillDossier(
     whyLocked?: string;
     eyebrow: string;
     confirmLabel: string;
+    /** Set when this dossier is an offer to sharpen a card already owned,
+     *  rather than to add a new one. Changes the headline copy only. */
+    upgradeOffer?: boolean;
     onConfirm: () => void;
   }
 ): void {
@@ -299,7 +308,11 @@ function fillDossier(
         </span>`;
     } else if (detailDraftOption !== null) {
       oddsEl.hidden = false;
-      oddsEl.innerHTML = `
+      oddsEl.innerHTML = opts.upgradeOffer
+        ? `
+        <p class="dossier-odds-num">${attrEscape(upgradeLabel(card))}</p>
+        <p class="dossier-odds-body">You already run this card. Taking it here does not add a second copy — it improves the one you have, for the rest of the run.</p>`
+        : `
         <p class="dossier-odds-num">Add this card to your pool</p>
         <p class="dossier-odds-body">It becomes part of your deck for the rest of this run. You pick one from this draft.</p>`;
     } else {
@@ -417,7 +430,11 @@ export function openCardDetail(campaign: Campaign, index: number): void {
 export function openDraftDetail(campaign: Campaign, optionIndex: number): void {
   const id = campaign.state.pendingDraft?.options[optionIndex];
   if (!id) return;
-  const card = campaign.catalog.get(id);
+  // An option is either a card id or "UP:<card id>" — an offer to sharpen a card
+  // already owned. Both readers must decode it the same way; a raw catalog lookup
+  // on a prefixed id returns undefined and strands the draft forever.
+  const upId = parseUpgradeOption(id);
+  const card = campaign.catalog.get(upId ?? id);
   if (!card) return;
   detailIndex = null;
   detailCampaign = campaign;
@@ -425,8 +442,9 @@ export function openDraftDetail(campaign: Campaign, optionIndex: number): void {
 
   fillDossier(campaign, card, {
     locked: false,
-    eyebrow: 'Phase draft',
-    confirmLabel: 'Add to my pool',
+    eyebrow: upId ? 'Phase draft — sharpen' : 'Phase draft',
+    upgradeOffer: !!upId,
+    confirmLabel: upId ? 'Practise this card' : 'Add to my pool',
     onConfirm: () => {
       if (detailDraftOption === null || !detailCampaign) return;
       const opt = detailDraftOption;
@@ -452,12 +470,18 @@ export function renderDraft(campaign: Campaign): void {
     `<div class="play-section-cards draft-cards">` +
     draft.options
       .map((id, i) => {
-        const card = campaign.catalog.get(id);
+        // An "UP:<id>" option is an offer to sharpen a card already owned.
+        const upId = parseUpgradeOption(id);
+        const card = campaign.catalog.get(upId ?? id);
         if (!card) return '';
+        const label = upId
+          ? `${card.n}. ${upgradeLabel(card)}. Tap for details.`
+          : `${card.n}. Tap for details.`;
         return `
-        <button type="button" class="${cardClasses(card)} draft-card" data-draft="${i}"
-          aria-label="${attrEscape(card.n)}. Tap for details.">
+        <button type="button" class="${cardClasses(card)} draft-card${upId ? ' draft-upgrade' : ''}" data-draft="${i}"
+          aria-label="${attrEscape(label)}">
           ${cardInner(campaign.state, card)}
+          ${upId ? `<span class="up-banner">${attrEscape(upgradeShortLabel(card))}</span>` : ''}
         </button>`;
       })
       .join('') +

@@ -28,6 +28,7 @@ namespace CandidateZero.HostData
         public List<GroundView> grounds;
         public List<ActionView> actions;
         public GoalView goal;
+        /// <summary>`cardId` is always a real catalog id. `upgrade` marks an offer to improve a card the player already runs rather than to add a new one — hosts must not have to know the engine's option encoding to render truthful copy.</summary>
         public PendingDraftView pendingDraft;
         /// <summary>World weather chrome — host shows, then dismissOutside. Never a hand card.</summary>
         public PendingOutsideView pendingOutside;
@@ -136,6 +137,7 @@ namespace CandidateZero.HostData
         public string cardId;
         public string name;
         public string risk;
+        public bool upgrade;
     }
 
     public sealed class PendingOutsideView

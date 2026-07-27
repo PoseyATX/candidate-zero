@@ -8,6 +8,7 @@ import type { DeckState, GameState, PlayCard } from './types.js';
 import { PLAYS } from '../data/plays.js';
 import { random } from './rng.js';
 import { warm } from './reputation.js';
+import { upgradableCardIds, upgradeOptionId, parseUpgradeOption, applyUpgrade } from './upgrades.js';
 
 // Starter deck (early accessibility + dual ballot paths)
 export const STARTER_DECK_IDS: string[] = [
@@ -141,6 +142,13 @@ const rarityOf = (id: string): string => PLAYS.find(p => p.id === id)?.rarity ??
 
 export function buildPhaseDraft(state: GameState, count = 3): { phase: number; options: string[] } {
   const options: string[] = [];
+  // Depth as an alternative to breadth: one slot may offer to sharpen a card
+  // you already run. Rides the existing draft channel rather than inventing a
+  // second offer system. See engine/upgrades.ts.
+  const owned = upgradableCardIds(state, state.deck ?? []);
+  if (owned.length && count > 1) {
+    options.push(upgradeOptionId(owned[Math.floor(random() * owned.length)]!));
+  }
   const working = getAvailableNewCards(state);
   while (options.length < count && working.length > 0) {
     // Weighted pick: sum weights, roll, walk. Keeps rares rare in the draft.
@@ -181,6 +189,23 @@ export function resolvePhaseDraft(
   }
   const cardId = draft.options[pickIndex];
   if (!cardId) return { ok: false, reason: 'Invalid draft index' };
+
+  // Upgrade offer: sharpen a card already owned rather than adding a new one.
+  const upId = parseUpgradeOption(cardId);
+  if (upId) {
+    const ok = applyUpgrade(state, upId);
+    state.pendingDraft = undefined;
+    state.lastPhase = draft.phase as 1 | 2 | 3;
+    if (ok) {
+      state.log.push({
+        week: state.week,
+        kind: 'note',
+        text: `Practised: ${upId}. You have run this play enough times to be good at it.`
+      });
+    }
+    return { ok, cardId: upId, reason: ok ? undefined : 'Already at upgrade cap' };
+  }
+
   if (!state.deck) state.deck = [];
   if (deck) {
     injectIntoDrawPile(deck, state, [cardId]);

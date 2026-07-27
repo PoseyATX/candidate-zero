@@ -11,6 +11,7 @@
 import type { GameState, Ground, PlayCard } from '../engine/types.js';
 import { pickDefaultGround, cardAttrMod } from '../engine/play.js';
 import { emblemFor, kindMark, KIND_META } from './card-art.js';
+import { isUpgraded, effectiveApCost } from '../engine/upgrades.js';
 
 export interface CardFaceOpts {
   camp?: boolean;
@@ -153,10 +154,17 @@ export function attrEscape(s: string): string {
     .replace(/>/g, '&gt;');
 }
 
-export function costParts(card: PlayCard): { seal: string; subs: string[]; full: string } {
+export function costParts(
+  card: PlayCard,
+  state?: GameState
+): { seal: string; subs: string[]; full: string } {
   const c = card.cost;
   const all: string[] = [];
-  if (c.a) all.push(`${c.a} AP`);
+  // Show the price actually charged: an upgraded "cheaper" card costs less, and
+  // a face that still shows the old number is the same class of lie as the AP
+  // pips that did not count down.
+  const ap = state ? effectiveApCost(state, card) : (c.a ?? 0);
+  if (ap) all.push(`${ap} AP`);
   if (c.$) all.push(`$${c.$}`);
   if (c.vp) all.push(`${c.vp} vol`);
   if (c.m) all.push(`${c.m} mom`);
@@ -175,7 +183,7 @@ export function computeCardFaceView(
   const base = card.odds?.(state, g);
   const mod = cardAttrMod(state, card);
   const p = base !== undefined ? Math.max(0.02, Math.min(0.95, base + mod)) : undefined;
-  const { seal, subs } = costParts(card);
+  const { seal, subs } = costParts(card, state);
   const stamp = opts.shop
     ? '<span class="stamp stamp-shop">Shop</span>'
     : opts.camp
@@ -214,13 +222,16 @@ export function cardInner(
   opts: CardFaceOpts = {}
 ): string {
   const v = computeCardFaceView(state, card, opts);
-  const { full } = costParts(card);
+  const { full } = costParts(card, state);
   if (v.fullFace && v.artPlateHtml) {
     return `<span class="card-art card-art-full">${v.artPlateHtml}</span>`;
   }
+  // An upgraded card must be recognisable at a glance, or the second axis is
+  // invisible and the choice to deepen means nothing.
+  const up = isUpgraded(state, card.id) ? '<span class="up-mark" title="Practised">\u2726</span>' : '';
   return `
     <span class="card-art">${v.artPlateHtml}<span class="card-emblem">${v.emblemHtml}</span></span>
-    <span class="name">${attrEscape(v.name)}</span>
+    <span class="name">${up}${attrEscape(v.name)}</span>
     <span class="cost-seal">${attrEscape(full)}</span>
   `;
 }
