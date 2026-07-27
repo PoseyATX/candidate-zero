@@ -15,7 +15,7 @@ A playable **Texas Legislature roguelike deckbuilder**:
 
 | Layer | State |
 |--------|--------|
-| Pure TS engine | Rules SoT + frozen **host API** (`src/engine/api.ts` v1.2.0) |
+| Pure TS engine | Rules SoT + frozen **host API** (`src/engine/api.ts` v1.3.0) |
 | Vite UI | Extracted modules · goal strip · Camp→Hand→Shop · ceremony queue · a11y/smoke |
 | Content | **116** cards · **21** Outside · starmap MV01–14 · SIG01–24 |
 | Unity scaffold | Engine bundle + content JSON + Jint (on hold for editor free-flight) |

@@ -2354,3 +2354,33 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   font-style: italic;
 }
 .dossier-odds-meter.pressed i { background: var(--gold); }
+
+/* Hand cuts — a weekly use-it-or-lose-it budget, so it reads in the HUD the
+   same way AP and heat do: pips that empty. */
+.chip-cuts {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+  border-color: var(--sage);
+  color: #b9d1a9;
+}
+.cut-pip {
+  width: 0.36rem;
+  height: 0.36rem;
+  border: 1px solid var(--sage);
+  display: inline-block;
+  transform: rotate(45deg);
+}
+.cut-pip.on { background: #b9d1a9; border-color: #b9d1a9; }
+.chip-cuts-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.05em;
+  margin-left: 0.15rem;
+}
+.btn-cut { border-color: var(--sage); color: #b9d1a9; }
+.btn-cut:disabled,
+.btn-cut[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  font-size: 0.78rem;
+}

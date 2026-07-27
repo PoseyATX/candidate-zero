@@ -27,6 +27,10 @@ namespace CandidateZero.HostData
         public LedgerView ledger;
         /// <summary>Banked press-your-luck stake. What spending it buys and costs is per-card (the band depends on risk class) — see ActionOption.pressOdds / pressBand. Never applied unless a play command sets `press`.</summary>
         public PressView press;
+        /// <summary>Hand cuts left this week — pitch a card, draw a replacement.</summary>
+        public DiscardsView discards;
+        /// <summary>The full hand, playable or not. `actions` is the playable subset.</summary>
+        public List<HandCardView> hand;
         public List<GroundView> grounds;
         public List<ActionView> actions;
         public GoalView goal;
@@ -92,6 +96,25 @@ namespace CandidateZero.HostData
         public bool canPress;
     }
 
+    public sealed class DiscardsView
+    {
+        public int left;
+        public int max;
+    }
+
+    public sealed class HandCardView
+    {
+        public int handIndex;
+        public string cardId;
+        public string name;
+        public string risk;
+        public string costLabel;
+        /// <summary>true when this card also appears in `actions`.</summary>
+        public bool playable;
+        /// <summary>'' when this card may be pitched for a fresh draw, else why it may not.</summary>
+        public string cycleBlocked;
+    }
+
     public sealed class GroundView
     {
         public string id;
@@ -120,6 +143,8 @@ namespace CandidateZero.HostData
         /// <summary>true → this play wants a groundId (a field play).</summary>
         public bool field;
         public string costLabel;
+        /// <summary>'' when this card may be pitched for a fresh draw, else why it may not.</summary>
+        public string cycleBlocked;
         /// <summary>effective success probability given current state, or null if odds-less.</summary>
         public float? approxOdds;
         /// <summary>Odds this play would gain if the command sets `press`. 0 when no heat.</summary>

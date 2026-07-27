@@ -21,6 +21,7 @@ import {
   injectIntoDrawPile
 } from './deck.js';
 import { executePlay, isPlayable, type PlayOpts } from './play.js';
+import { cycleCard, cycleBlockReason, resetDiscards, type CycleResult } from './flow.js';
 import { createNewState, getPhase } from './state.js';
 import {
   PRIMARY_WEEKS,
@@ -540,6 +541,8 @@ export function startWeek(campaign: Campaign): string[] {
     ensureGeneralTools(campaign);
   }
   markWeekStart(campaign.state);
+  // Cuts refresh with the week — the limit is what makes cycling a decision.
+  resetDiscards(campaign.state);
 
   // Session / waiting: no campaign deck growth (different kits)
   if (campaign.state.stage === 'session') {
@@ -622,6 +625,18 @@ export function playFromHand(
   if (outcome.ok) advancePaths(campaign.state, card.id, campaign.deck);
   discardCard(campaign.deck, id);
   return outcome;
+}
+
+/** Pitch a hand card and draw a replacement. See engine/flow.ts. */
+export function cycleFromHand(campaign: Campaign, handIndex: number): CycleResult {
+  return cycleCard(campaign.state, campaign.deck, handIndex, id =>
+    campaign.catalog.get(id)?.n ?? id
+  );
+}
+
+/** Why a hand card cannot be pitched right now, '' when it can. */
+export function cycleReason(campaign: Campaign, handIndex: number): string {
+  return cycleBlockReason(campaign.state, campaign.deck, handIndex);
 }
 
 export function endWeekInPlace(campaign: Campaign): StageTransition {

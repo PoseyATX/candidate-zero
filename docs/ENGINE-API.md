@@ -10,7 +10,7 @@ resolve/odds/yields/RNG. This is the ship-path covenant (ROADMAP Phase 8):
 
 - Source: `src/engine/api.ts` · Contract test: `npm run harness:api`
 - Bundle: `npm run build:engine` → `dist-engine/candidate-zero-engine.{mjs,umd.cjs}`
-- Current version: `ENGINE_API_VERSION = 1.2.0`
+- Current version: `ENGINE_API_VERSION = 1.3.0`
 
 ## The determinism / seed contract
 
@@ -53,6 +53,7 @@ ENGINE_API_VERSION: string
 ```ts
 type Command =
   | { type: 'play'; handIndex: number; groundId?: string; press?: boolean } // groundId required only when the action.field flag is true; press spends banked heat
+  | { type: 'cycle'; handIndex: number }                    // pitch a hand card, draw a replacement
   | { type: 'draft'; option: number }                      // resolve a pending phase draft
   | { type: 'endWeek' }
   | { type: 'dismissOutside' }                            // clear Outside weather chrome
@@ -73,6 +74,15 @@ endorsements, ballot, signatures/need, …), `grounds[]`, `actions[]`,
 `dismissOutside`), `canEndWeek`, and the tail of the `log`.
 `apply().events` is the slice of log entries a single command produced —
 for host toasts/animation.
+
+`hand[]` is every card physically in hand, playable or not — `actions` is
+deliberately "what you can do right now" and lists only playable cards, which
+left the `cycle` command with no discoverable target. Each entry carries
+`playable` and `cycleBlocked` (`''` when the card may be pitched, else the
+player-facing reason). `discards` is `{ left, max }`; cuts reset at week start,
+cost no AP, and the per-week limit is the whole cost. Pre-ballot, your last
+ballot-access card cannot be pitched — `ensureBallotAccessInHand` only runs at
+week start, so the guard lives in `src/engine/flow.ts`.
 
 `press` carries the player's banked press-your-luck stake:
 `{ heat, max, canPress }`. What spending it buys and costs is per-card, since

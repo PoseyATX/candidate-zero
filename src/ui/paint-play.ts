@@ -7,6 +7,7 @@ import {
   listPlayableHand,
   pickPhaseDraft,
   campIndexToCardId,
+  cycleReason,
   snapshot,
   type Campaign
 } from '../engine/loop.js';
@@ -40,6 +41,7 @@ import {
   isUpgraded
 } from '../engine/upgrades.js';
 import { quotePress, pressLabel } from '../engine/heat.js';
+import { discardsLeft } from '../engine/flow.js';
 
 /** Full attribute names — never dump CLO/CON on a roomy brief. */
 const ATTR_NAMES: Record<AttrId, string> = {
@@ -126,6 +128,7 @@ function $(id: string): HTMLElement {
 }
 
 export type PlayCommit = (index: number, ground?: Ground, press?: boolean) => void;
+export type CycleCommit = (index: number) => void;
 export type AfterPaint = () => void;
 
 let pendingGroundIndex: number | null = null;
@@ -149,11 +152,17 @@ let detailDraftOption: number | null = null;
 /** Whether the open dossier has the press wager armed. Reset on every open. */
 let detailPress = false;
 let commitHook: PlayCommit | null = null;
+let cycleHook: CycleCommit | null = null;
 let afterPaintHook: AfterPaint | null = null;
 
-export function setPlayHooks(commit: PlayCommit, afterPaint: AfterPaint): void {
+export function setPlayHooks(
+  commit: PlayCommit,
+  afterPaint: AfterPaint,
+  cycle?: CycleCommit
+): void {
   commitHook = commit;
   afterPaintHook = afterPaint;
+  cycleHook = cycle ?? null;
 }
 
 const SESSION_PIPELINE_IDS = new Set([
@@ -422,6 +431,31 @@ function fillDossier(
             : `Press ${quote.heat} — ${pressLabel(quote)}`;
         }
         paintOdds(detailPress ? quote.odds : 0);
+      };
+    }
+  }
+
+  // Cutting matters most on a card you *cannot* play, so this is offered even
+  // when the dossier is locked — unlike Play, which is disabled there.
+  const cutBtn = root.querySelector('#btn-cut-detail') as HTMLButtonElement | null;
+  if (cutBtn) {
+    const idx = detailIndex;
+    const blocked = idx === null || detailDraftOption !== null
+      ? 'unavailable'
+      : cycleReason(campaign, idx);
+    const offerCut = detailDraftOption === null && idx !== null;
+    cutBtn.hidden = !offerCut;
+    if (offerCut) {
+      const left = discardsLeft(state);
+      cutBtn.disabled = !!blocked;
+      cutBtn.setAttribute('aria-disabled', blocked ? 'true' : 'false');
+      cutBtn.textContent = blocked
+        ? blocked
+        : `Cut it — draw another (${left} left)`;
+      cutBtn.onclick = () => {
+        if (blocked || idx === null) return;
+        closeCardDetail();
+        cycleHook?.(idx);
       };
     }
   }

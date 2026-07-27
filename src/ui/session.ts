@@ -8,6 +8,7 @@ import {
   createIncumbentCampaign,
   continueAfterWaiting,
   playFromHand,
+  cycleFromHand,
   startWeek,
   endWeekInPlace,
   maybeOfferPhaseDraft,
@@ -69,7 +70,7 @@ let hooksWired = false;
 function ensurePlayHooks(): void {
   if (hooksWired) return;
   hooksWired = true;
-  setPlayHooks(commitPlay, paint);
+  setPlayHooks(commitPlay, paint, commitCycle);
 }
 
 /** ?promo=<CARD_ID> forces that promo card in for QA/proof (any registered promo, not just PR01). */
@@ -113,6 +114,20 @@ export function openActSplash(
 export function applyStageChrome(): void {
   if (!campaign) return;
   applyStageChromeShell(campaign.state);
+}
+
+/** Pitch a hand card for a fresh draw. See engine/flow.ts. */
+export function commitCycle(index: number): void {
+  if (!campaign) return;
+  const r = cycleFromHand(campaign, index);
+  if (!r.ok) {
+    campaign.state.log.push({
+      week: campaign.state.week,
+      kind: 'note',
+      text: r.reason ?? 'Cut refused'
+    });
+  }
+  paint();
 }
 
 export function commitPlay(index: number, ground?: Ground, press?: boolean): void {

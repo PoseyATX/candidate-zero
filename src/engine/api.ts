@@ -36,6 +36,8 @@ import {
   maybeOfferPhaseDraft,
   pickPhaseDraft,
   campIndexToCardId,
+  cycleFromHand,
+  cycleReason,
   CAMP_PETITION,
   CAMP_FILING_FEE,
   type Campaign
@@ -58,12 +60,15 @@ import { buildGoalStripInput, formatGoalStrip, type GoalCopyKey } from '../ui/go
 import { isGroundLocked, groundLockReason } from './play.js';
 import { parseUpgradeOption } from './upgrades.js';
 import { heatOf, canPress, quotePress, MAX_HEAT } from './heat.js';
+import { discardsLeft, MAX_DISCARDS } from './flow.js';
 
-/** 1.2.0 — the view gained `press` (banked press-your-luck stake) and the play
+/** 1.3.0 — added the `cycle` command (pitch a hand card, draw a replacement),
+ *  `discards` on the view, and `cycleBlocked` on each action. See engine/flow.ts.
+ *  1.2.0 — the view gained `press` (banked press-your-luck stake) and the play
  *  command gained an optional `press` flag. See engine/heat.ts.
  *  1.1.0 — pendingDraft options gained `upgrade`; cardId is now always a real
  *  catalog id (previously it could carry the engine's "UP:" option encoding). */
-export const ENGINE_API_VERSION = '1.2.0';
+export const ENGINE_API_VERSION = '1.3.0';
 
 /** Fully reproducible, JSON-serializable game state. */
 export interface EngineSnapshot {
@@ -80,6 +85,9 @@ export type Command =
   /** `press` spends banked heat on this play: better odds, wider disaster band
    *  (engine/heat.ts). Ignored when no heat is banked. */
   | { type: 'play'; handIndex: number; groundId?: string; press?: boolean }
+  /** Pitch a hand card and draw a replacement (engine/flow.ts). Limited per
+   *  week; costs no AP. `ok:false` with a reason when the cut is not allowed. */
+  | { type: 'cycle'; handIndex: number }
   | { type: 'endWeek' }
   | { type: 'draft'; option: number }
   /** Host dismisses Outside weather chrome (see clearPendingOutside). */
@@ -98,6 +106,8 @@ export interface ActionOption {
   /** true → this play wants a groundId (a field play). */
   field: boolean;
   costLabel: string;
+  /** '' when this card may be pitched for a fresh draw, else why it may not. */
+  cycleBlocked: string;
   /** effective success probability given current state, or null if odds-less. */
   approxOdds: number | null;
   /** Odds this play would gain if the command sets `press`. 0 when no heat. */
@@ -105,6 +115,30 @@ export interface ActionOption {
   /** Disaster band it would cost. Always 0 for SAFE — Covenant 5 holds even
    *  when the player is buying risk deliberately. */
   pressBand: number;
+}
+
+/**
+ * Every card physically in hand — including the ones you cannot play.
+ *
+ * `actions` is deliberately "what you can do right now" and so lists only
+ * playable cards. That left the `cycle` command with no discoverable target: a
+ * host could not see the dead card it wanted to pitch. This is the hand as it
+ * actually sits on the table.
+ *
+ * `lockReason` is not exposed yet — the rich version lives in the web UI and is
+ * DOM-coupled. A host gets `playable` and can say "unavailable" until that is
+ * extracted into the engine.
+ */
+export interface HandCardView {
+  handIndex: number;
+  cardId: string;
+  name: string;
+  risk: string;
+  costLabel: string;
+  /** true when this card also appears in `actions`. */
+  playable: boolean;
+  /** '' when this card may be pitched for a fresh draw, else why it may not. */
+  cycleBlocked: string;
 }
 
 export interface GroundView {
@@ -162,6 +196,10 @@ export interface RenderView {
    *  per-card (the band depends on risk class) — see ActionOption.pressOdds /
    *  pressBand. Never applied unless a play command sets `press`. */
   press: { heat: number; max: number; canPress: boolean };
+  /** Hand cuts left this week — pitch a card, draw a replacement. */
+  discards: { left: number; max: number };
+  /** The full hand, playable or not. `actions` is the playable subset. */
+  hand: HandCardView[];
   grounds: GroundView[];
   actions: ActionOption[];
   goal: GoalView;
@@ -257,6 +295,22 @@ export function newGame(opts: { seed: number; setup?: Partial<SetupSelection> })
   return capture(seed, setup, campaign);
 }
 
+function handView(campaign: Campaign, actions: ActionOption[]): HandCardView[] {
+  const playable = new Set(actions.map(a => a.handIndex));
+  return campaign.deck.hand.map((id, index) => {
+    const card = campaign.catalog.get(id);
+    return {
+      handIndex: index,
+      cardId: id,
+      name: card?.n ?? id,
+      risk: card?.risk ?? '',
+      costLabel: card ? costLabel(card) : '',
+      playable: playable.has(index),
+      cycleBlocked: cycleReason(campaign, index)
+    };
+  });
+}
+
 /** Available actions for the current snapshot (drives a host's action UI). */
 export function legalActions(snap: EngineSnapshot): ActionOption[] {
   const campaign = hydrate(snap);
@@ -271,6 +325,7 @@ export function legalActions(snap: EngineSnapshot): ActionOption[] {
     camp: index < 0,
     field: !!card.field,
     costLabel: costLabel(card),
+    cycleBlocked: cycleReason(campaign, index),
     approxOdds: effectiveOdds(campaign.state, card),
     pressOdds: quotePress(campaign.state, card).odds,
     pressBand: quotePress(campaign.state, card).band
@@ -311,6 +366,8 @@ export function view(snap: EngineSnapshot): RenderView {
       sigNeed: s.sigNeed
     },
     press: { heat: heatOf(s), max: MAX_HEAT, canPress: canPress(s) },
+    discards: { left: discardsLeft(s), max: MAX_DISCARDS },
+    hand: handView(campaign, actions),
     grounds: s.groundsArr.map(g => ({
       id: g.id,
       n: g.n,
@@ -376,6 +433,17 @@ export function apply(snap: EngineSnapshot, command: Command): ApplyResult {
     }
     case 'draft': {
       const r = pickPhaseDraft(campaign, command.option);
+      ok = r.ok;
+      reason = r.reason;
+      break;
+    }
+    case 'cycle': {
+      if (s.pendingDraft?.options.length) {
+        ok = false;
+        reason = 'resolve the phase draft first';
+        break;
+      }
+      const r = cycleFromHand(campaign, command.handIndex);
       ok = r.ok;
       reason = r.reason;
       break;

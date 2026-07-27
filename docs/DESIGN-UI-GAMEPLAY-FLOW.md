@@ -31,7 +31,7 @@ This design proposes an **incremental, presentation-only** redesign that (1) mak
 |-------|------|------|
 | Data | `src/data/` | Cards, setup, Outside, signatures, starmap |
 | Engine | `src/engine/` | Pure rules; `loop.ts` Campaign session |
-| Host API | `src/engine/api.ts` v1.2.0 | Frozen binding for Unity/other hosts later |
+| Host API | `src/engine/api.ts` v1.3.0 | Frozen binding for Unity/other hosts later |
 | UI | `src/ui/main.ts` (1462 lines), `styles.css` (1685), `card-art.ts` (180), `index.html` | Presentation only |
 | Gates | `npm run harness`, `smoke:ui`, `a11y` | Must stay green per PR |
 

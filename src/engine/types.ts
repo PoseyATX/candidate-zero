@@ -203,6 +203,8 @@ export interface GameState {
   /** Banked press-your-luck stake — see engine/heat.ts. Earned by landing
    *  plays, wiped by failing one, worth nothing until deliberately spent. */
   heat?: number;
+  /** Hand cuts taken this week — see engine/flow.ts. Reset at week start. */
+  discardsUsed?: number;
   lastPhase?: 1 | 2 | 3;
   pendingDraft?: { phase: number; options: string[] };
   pendingOutside?: { id: string; n: string; text: string } | null;

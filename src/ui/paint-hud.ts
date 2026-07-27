@@ -19,6 +19,7 @@ import {
 } from './goal-strip.js';
 import { TURF_AP } from '../engine/state.js';
 import { heatOf, MAX_HEAT } from '../engine/heat.js';
+import { discardsLeft, MAX_DISCARDS } from '../engine/flow.js';
 
 function $(id: string): HTMLElement {
   const el = document.getElementById(id);
@@ -96,6 +97,16 @@ export function renderHud(campaign: Campaign): void {
       ).join('') +
       `<span class="chip-heat-label">heat ${heat}</span></span>`
     : '';
+  // Cuts are a use-it-or-lose-it weekly budget, so they have to be visible
+  // without opening a card — otherwise players discover them by accident.
+  const cuts = discardsLeft(s);
+  const cutsChip = s.stage === 'session' || s.stage === 'waiting'
+    ? ''
+    : `<span class="chip chip-cuts" title="Hand cuts left this week — pitch a card you cannot use and draw a replacement. They do not carry over.">` +
+      Array.from({ length: MAX_DISCARDS }, (_, i) =>
+        `<i class="cut-pip ${i < cuts ? 'on' : ''}"></i>`
+      ).join('') +
+      `<span class="chip-cuts-label">cut${cuts === 1 ? '' : 's'} ${cuts}</span></span>`;
   const act = ACT_SHELLS[actFromStage(s.stage)];
   const actChip = `<span class="chip chip-act chip-act-${act.id}" title="${act.actNum}: ${act.title}">${act.tag}</span>`;
   const ballotHud =
@@ -117,6 +128,7 @@ export function renderHud(campaign: Campaign): void {
     <span class="hud-item"><span class="pips" title="Action points">${pips}</span>${fieldChip}</span>
     <span class="hud-item hud-cash" title="Cash on hand">$${snap.money}${debtChip}${oblChip}</span>
     ${heatChip ? `<span class="hud-item">${heatChip}</span>` : ''}
+    ${cutsChip ? `<span class="hud-item">${cutsChip}</span>` : ''}
     ${spendNote}
     <span class="hud-item" title="Week ${snap.week} of ${s.weeksTotal}"><span class="hud-week">W${snap.week}/${s.weeksTotal}</span>
       <span class="hud-meter hud-meter-week"><i style="width:${weekPct}%"></i></span>

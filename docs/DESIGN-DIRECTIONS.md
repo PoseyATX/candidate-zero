@@ -126,6 +126,26 @@ There's no draw, cycle, retain, or discard-for-value play — the deck functions
 small amount of card-flow (draw 2, retain, tutor a card, shuffle something back) turns 23 cards into
 an engine. Cheap to build, disproportionate payoff, and it directly attacks the 37/117 number.
 
+**Built, 2026-07-27 — `engine/flow.ts`.** Two hand cuts per week: pitch a card, draw a replacement,
+free in AP, limit resets weekly. Discard rather than retain, because retain interacts badly with the
+weekly AP reset (you would bank cards you could not afford, then dump them) and dissolves the
+self-contained tactical week the AP work established.
+
+I deprioritised this last pass on a measurement I later corrected, and the case got *stronger* while
+I was building other things: upgrades give you a reason to want one specific card and heat rewards
+chaining landings, and both are hostage to the shuffle if you cannot dig.
+
+**Measured:** a naive bot that pitches unplayable cards went 16.1% → 18.9% win and 22.6% → 25.9%
+ballot over 800 seeds (~2 SE — real but modest). It does not erase Act I tension, and the reason is
+worth recording honestly: there was less there than the design targets claim. `harness:ballot` says
+the *unorganized* end (volPool=0) already qualified 96% of the time before any of this, so
+"unorganized paths have real miss risk" is aspirational rather than descriptive. **That is a live
+finding, not something I quietly tuned around.** If the filing deadline is meant to have teeth, it
+needs them added deliberately — cutting is not what took them away.
+
+**Still unbuilt from this entry:** draw-during-week, retain, and tutor. Cuts are the cheapest slice
+of card-flow, not all of it.
+
 ---
 
 ## Reversed from my last pass
