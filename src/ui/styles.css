@@ -2313,10 +2313,11 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   display: inline-block;
 }
 .heat-pip.on { background: var(--gold); border-color: var(--gold); }
-.chip-heat-label {
-  font-size: 0.6rem;
-  letter-spacing: 0.05em;
-  margin-left: 0.15rem;
+.chip-heat-label,
+.chip-cuts-label {
+  font-size: 0.58rem;
+  letter-spacing: 0.03em;
+  margin-left: 0.12rem;
 }
 
 .press-toggle {
@@ -2326,7 +2327,10 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   width: 100%;
   box-sizing: border-box;
   margin-bottom: 0.5rem;
-  padding: 0.5rem 0.7rem;
+  /* 44px minimum tap target — the layout audit measured this at 33px, which is
+     under the guideline on the one control that commits a wager. */
+  min-height: 44px;
+  padding: 0.6rem 0.7rem;
   background: rgba(20, 16, 12, 0.5);
   border: 1px dashed var(--gold-dim);
   border-radius: 0.4rem;
@@ -2372,11 +2376,6 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   transform: rotate(45deg);
 }
 .cut-pip.on { background: #b9d1a9; border-color: #b9d1a9; }
-.chip-cuts-label {
-  font-size: 0.6rem;
-  letter-spacing: 0.05em;
-  margin-left: 0.15rem;
-}
 .btn-cut { border-color: var(--sage); color: #b9d1a9; }
 .btn-cut:disabled,
 .btn-cut[aria-disabled='true'] {

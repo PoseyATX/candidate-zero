@@ -405,6 +405,23 @@ async function main() {
     assert(/Act IV|Waiting/i.test(tut), 'tutorial includes Act IV / Waiting');
     assert(/goal strip/i.test(tut), 'tutorial mentions goal strip');
     assert(/tax|harder|opposition/i.test(tut) && /field/i.test(tut), 'tutorial teaches contested ground / field odds');
+
+    // Five systems shipped (AP economy, rival, contested ground, upgrades,
+    // heat/press, cuts) and the tutorial learned about none of them until a
+    // playtest pass caught it. One assertion per system, so the onboarding
+    // cannot silently rot behind the engine again.
+    const TUTORIAL_SYSTEMS = [
+      ['hand cuts', /\bcuts?\b/i],
+      ['heat', /\bheat\b/i],
+      ['pressing the wager', /press/i],
+      ['no-pity honesty', /never rigged|no pity|losing never/i],
+      ['card upgrades', /practise|practised/i],
+      ['session casework', /casework/i],
+      ['turf budget', /turf/i]
+    ];
+    for (const [label, re] of TUTORIAL_SYSTEMS) {
+      assert(re.test(tut), `tutorial teaches ${label}`);
+    }
     await page.locator('#btn-tut-back').click();
 
     // 4. Zero console/page errors across the whole run.

@@ -643,7 +643,10 @@ export function renderPlayables(campaign: Campaign): void {
     ? `<p class="hint">Out of actions — shop buys (0 AP) still work, or end the week.</p>`
     : !playable.length && !allHand.length
       ? `<p class="hint">Nothing playable. End week.</p>`
-      : `<p class="hint kit-label">${act.kitLabel}</p>`;
+      // Deliberately empty: act.kitLabel is already the Hand section's
+      // sub-label below, and printing it here rendered it twice verbatim
+      // ("Campaign plays" under the panel heading and again under HAND).
+      : '';
 
   const campHtml = campEntries
     .map(({ index, card, fromHand }) => {

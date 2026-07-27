@@ -95,7 +95,7 @@ export function renderHud(campaign: Campaign): void {
       Array.from({ length: MAX_HEAT }, (_, i) =>
         `<i class="heat-pip ${i < heat ? 'on' : ''}"></i>`
       ).join('') +
-      `<span class="chip-heat-label">heat ${heat}</span></span>`
+      `<span class="chip-heat-label">heat</span></span>`
     : '';
   // Cuts are a use-it-or-lose-it weekly budget, so they have to be visible
   // without opening a card — otherwise players discover them by accident.
@@ -106,7 +106,7 @@ export function renderHud(campaign: Campaign): void {
       Array.from({ length: MAX_DISCARDS }, (_, i) =>
         `<i class="cut-pip ${i < cuts ? 'on' : ''}"></i>`
       ).join('') +
-      `<span class="chip-cuts-label">cut${cuts === 1 ? '' : 's'} ${cuts}</span></span>`;
+      `<span class="chip-cuts-label">cuts</span></span>`;
   const act = ACT_SHELLS[actFromStage(s.stage)];
   const actChip = `<span class="chip chip-act chip-act-${act.id}" title="${act.actNum}: ${act.title}">${act.tag}</span>`;
   const ballotHud =
