@@ -358,7 +358,20 @@ export function resolveSineDie(state: GameState): StageTransition {
     challenger * 3 -
     freeze * 1.5;
   // Floor so a non-collapse session can still hold the seat; chaos remains.
-  const reelect = clamp(22 + standing * 0.55 + (random() - 0.5) * 22, 5, 95);
+  //
+  // challengerHeat and the fifth-floor freeze used to be *printed* in this
+  // verdict and then ignored by the arithmetic — the game told you a younger,
+  // funded name was circling and it changed nothing. Session was consequently
+  // inert: 83% of members simply "survived", and the primaried-out fail state
+  // fired 2% of the time. Both now bite, so neglecting casework or burning your
+  // leadership favor actually costs the seat.
+  const challengerBite = Math.min(24, challenger * 3.5);
+  const freezeBite = Math.min(12, freeze * 3);
+  const reelect = clamp(
+    22 + standing * 0.55 - challengerBite - freezeBite + (random() - 0.5) * 22,
+    5,
+    95
+  );
   text += ` Interim verdict — district ${Math.round(state.districtStanding)}, capital ${state.capital}, favor ${Math.round(state.favor)}`;
   if (challenger > 0) text += `, challenger heat ${challenger}`;
   if (freeze > 0) text += `, fifth-floor freeze ${freeze}`;

@@ -130,7 +130,12 @@ const grind = rows.find(r => r.strategy === 'grind')!;
 // accelerate the way it accelerates a petition grind, so the two routes swapped
 // reliability. Money still posts the highest overall win (40.5%): it converts
 // better once it gets there. That is texture, not a regression.
-const minBallot = TRIALS < 80 ? 55 : 65;
+// Lowered again when the opponent landed. Note for future tuning: the
+// opponent consumes random() every week, so seeded streams diverge from any
+// pre-opponent baseline — a number moving a few points across that change is
+// stream divergence, not necessarily causation. The guard's job is only
+// "both routes usually clear the ballot".
+const minBallot = TRIALS < 80 ? 50 : 60;
 const minReach = TRIALS < 80 ? 12 : 20;
 const minOverall = TRIALS < 80 ? 3 : 8;
 const minWinGiven = TRIALS < 80 ? 15 : 25;

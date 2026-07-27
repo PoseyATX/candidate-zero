@@ -19,6 +19,7 @@ import { WAITING_WEEKS, onWaitingWeekAdvance } from './waiting.js';
 import type { CampaignOutcome, GameState, Ground } from './types.js';
 import { checkBallotThreshold } from './career.js';
 import { TURF_AP } from './state.js';
+import { opponentTurn } from './opponent.js';
 
 /** Primary campaign length (includes filing window). */
 export const PRIMARY_WEEKS = 8;
@@ -100,17 +101,14 @@ export function getGroundPenalty(
  * Opposition organizers bank presence weekly (5–40 on a random ground).
  * Has teeth: rivalOddsPenalty on field plays + win-math pressure.
  */
+/**
+ * One opposition move per week. Delegates to engine/opponent.ts, which reads
+ * the board and decides — this used to be "random ground, random 5-40", i.e.
+ * weather rather than an adversary. Kept as a named export because calendar
+ * and the harnesses already call it.
+ */
 export function advanceRivalGrounds(state: GameState): void {
-  const grounds = state.groundsArr;
-  if (!grounds.length) return;
-  const g = grounds[Math.floor(random() * grounds.length)]!;
-  const amt = 5 + Math.floor(random() * 36); // 5–40
-  g.rivalRap = (g.rivalRap ?? 0) + amt;
-  state.log.push({
-    week: state.week,
-    kind: 'note',
-    text: `Opposition organizers worked ${g.n} — +${amt} (they hold ${g.rivalRap} there now). Contested turf is harder.`
-  });
+  opponentTurn(state);
 }
 
 /** Mean opposition presence across grounds (0 if none). */

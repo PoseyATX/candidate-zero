@@ -7,6 +7,7 @@ import type { AttrId, Attrs, Faces, GameState } from '../engine/types.js';
 import { random } from '../engine/rng.js';
 import { addAlly, addRep } from '../engine/reputation.js';
 import { BALLOT_SIGNATURES } from '../engine/state.js';
+import { setArchetype, archetypeForDistrict } from '../engine/opponent.js';
 
 export type FaceBoost = Partial<Faces>;
 export type AttrBoost = Partial<Attrs>;
@@ -340,6 +341,10 @@ export function applySetup(state: GameState, sel: SetupSelection): GameState {
 
   state.assets.push('REGION_' + region.id.toUpperCase());
   state.sigNeed = Math.max(200, BALLOT_SIGNATURES + region.petitionMod);
+  // Who you are running against is decided by where you filed: a safe seat is
+  // held by a machine, a competitive one draws an insurgent, the wrong-party
+  // trap is defended by an incumbent who goes negative early.
+  setArchetype(state, archetypeForDistrict(state));
   const attrSummary = Object.entries(state.attrs)
     .map(([k, v]) => `${k}${v}`)
     .join(' ');
