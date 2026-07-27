@@ -16,7 +16,10 @@ export function resolve(
   p: number,
   risk: RiskClass,
   state: GameState,
-  rollOverride?: number
+  rollOverride?: number,
+  /** Extra disaster band the player *bought* by pressing heat (engine/heat.ts).
+   *  Defaults to 0, so every existing caller resolves bit-identically. */
+  bandBonus = 0
 ): RollResult {
   p = clamp(p, 0.02, 0.95);
 
@@ -39,6 +42,11 @@ export function resolve(
       (warm(state, 'AL11') ? 0.02 : 0) -
       (hasRep(state, 'R10') ? 0.01 : 0)
   );
+
+  // Covenant 5: SAFE means safe. A pressed wager can buy better odds on safe
+  // work, but it can never open a disaster band that the risk class promised
+  // would not exist. The guard is here, at the only place band is decided.
+  if (risk !== 'SAFE') band += Math.max(0, bandBonus);
 
   const roll = rollOverride !== undefined ? rollOverride : random();
   let tier: 0 | 1 | 2 | 3;

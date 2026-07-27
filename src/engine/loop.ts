@@ -20,7 +20,7 @@ import {
   resolvePhaseDraft,
   injectIntoDrawPile
 } from './deck.js';
-import { executePlay, isPlayable } from './play.js';
+import { executePlay, isPlayable, type PlayOpts } from './play.js';
 import { createNewState, getPhase } from './state.js';
 import {
   PRIMARY_WEEKS,
@@ -588,7 +588,8 @@ export function startWeek(campaign: Campaign): string[] {
 export function playFromHand(
   campaign: Campaign,
   handIndex: number,
-  ground?: Ground
+  ground?: Ground,
+  opts: PlayOpts = {}
 ): PlayOutcome {
   const campId = campIndexToCardId(campaign, handIndex);
   if (campId) {
@@ -601,7 +602,7 @@ export function playFromHand(
       return { ok: false, reason: 'Not playable', cardId: card.id, cardName: card.n };
     }
     // Shop / camp actions are not physical hand cards — no discard.
-    const campOutcome = executePlay(campaign.state, card, ground);
+    const campOutcome = executePlay(campaign.state, card, ground, opts);
     if (campOutcome.ok) advancePaths(campaign.state, card.id, campaign.deck);
     return campOutcome;
   }
@@ -617,7 +618,7 @@ export function playFromHand(
     return { ok: false, reason: 'Not playable', cardId: card.id, cardName: card.n };
   }
   takeFromHand(campaign.deck, handIndex);
-  const outcome = executePlay(campaign.state, card, ground);
+  const outcome = executePlay(campaign.state, card, ground, opts);
   if (outcome.ok) advancePaths(campaign.state, card.id, campaign.deck);
   discardCard(campaign.deck, id);
   return outcome;

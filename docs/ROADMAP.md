@@ -613,7 +613,7 @@ shipped as the host binding boundary:
 
 - **`src/engine/api.ts`** — the one frozen surface a host binds to:
   `newGame`, `view`, `legalActions`, `apply`, `serialize`/`deserialize`,
-  `setupOptions`, `ENGINE_API_VERSION` (1.1.0). Pure, JSON-serializable,
+  `setupOptions`, `ENGINE_API_VERSION` (1.2.0). Pure, JSON-serializable,
   deterministic; wraps the existing engine with **zero rule changes**.
 - **Seed/save contract** — the RNG is mulberry32 (state = one uint32
   counter), so a game reproduces exactly from `{ seed, rng, setup, state,

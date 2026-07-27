@@ -2294,3 +2294,63 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   border-bottom-right-radius: 0;
   pointer-events: none;
 }
+
+/* Heat / press-your-luck. The stake has to read at a glance in the HUD, and
+   the wager has to be an explicit, reversible arm-then-commit in the dossier —
+   never something that fires on the same tap as "play". */
+.chip-heat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+  border-color: var(--gold);
+  color: #e8d48a;
+}
+.heat-pip {
+  width: 0.36rem;
+  height: 0.36rem;
+  border-radius: 50%;
+  border: 1px solid var(--gold-dim);
+  display: inline-block;
+}
+.heat-pip.on { background: var(--gold); border-color: var(--gold); }
+.chip-heat-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.05em;
+  margin-left: 0.15rem;
+}
+
+.press-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem 0.7rem;
+  background: rgba(20, 16, 12, 0.5);
+  border: 1px dashed var(--gold-dim);
+  border-radius: 0.4rem;
+  /* Not var(--gold-dim) as text: it failed AA on this panel background, the
+     same way the ground-picker neighbour line did. */
+  color: #e8d48a;
+  font-family: Cinzel, serif;
+  font-size: 0.74rem;
+  text-align: left;
+  cursor: pointer;
+}
+.press-toggle:hover { border-color: var(--gold); }
+.press-toggle.on {
+  border-style: solid;
+  border-color: var(--gold);
+  background: rgba(120, 84, 20, 0.35);
+  color: #f4e6b4;
+}
+.press-flame { font-size: 0.95rem; line-height: 1; }
+.press-toggle.on .press-flame { color: var(--gold); }
+.dossier-odds-press {
+  margin: 0.35rem 0 0;
+  color: #e8d48a;
+  font-size: 0.74rem;
+  font-style: italic;
+}
+.dossier-odds-meter.pressed i { background: var(--gold); }

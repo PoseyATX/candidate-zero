@@ -100,7 +100,7 @@ function getAvailableNewCards(state: GameState): string[] {
 /**
  * Mandatory weekly draw: always add 1 new card from the growing pool.
  * Called at the start of every week (or end of previous).
- * Bonus draws come from perks/legacy (AL11, handBonus, etc).
+ * Bonus draws come from perks (AL11).
  */
 export function enforceWeeklyDraw(state: GameState): string[] {
   const drawn: string[] = [];
@@ -112,8 +112,8 @@ export function enforceWeeklyDraw(state: GameState): string[] {
     state.deck.push(newId);
     drawn.push(newId);
   }
-  // Bonus draws (from allies/perks/legacy)
-  const bonus = (state.handBonus || 0) + (warmAllyBonus(state) ? 1 : 0);
+  // Bonus draws (from allies/perks)
+  const bonus = warmAllyBonus(state) ? 1 : 0;
   for (let i = 0; i < bonus; i++) {
     const extraPool = getAvailableNewCards(state);
     if (extraPool.length === 0) break;

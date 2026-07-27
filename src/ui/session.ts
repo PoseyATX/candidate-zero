@@ -115,10 +115,10 @@ export function applyStageChrome(): void {
   applyStageChromeShell(campaign.state);
 }
 
-export function commitPlay(index: number, ground?: Ground): void {
+export function commitPlay(index: number, ground?: Ground, press?: boolean): void {
   if (!campaign) return;
   const wasBallot = campaign.state.ballot;
-  const outcome = playFromHand(campaign, index, ground);
+  const outcome = playFromHand(campaign, index, ground, { press });
   if (!outcome.ok) {
     campaign.state.log.push({
       week: campaign.state.week,

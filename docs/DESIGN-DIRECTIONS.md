@@ -92,6 +92,27 @@ skill lives.
 to refuse. If the game is better without a slot machine at its centre, the covenant is the thing
 that should change.
 
+**Built (partly), 2026-07-27 — `engine/heat.ts`.** Not the full rip. The complaint was that skill
+expressed itself in selection only and then watched; the intervention was to add a decision that
+happens *with* the dice rather than before them, rather than to make resolution deterministic and
+invalidate every card's `odds` plus the Phase 5 matrix. Landing plays bank heat; heat is worth
+nothing until spent; spending it buys odds on one play and pays for them with a wider disaster band.
+Sequencing now matters, which was the stated goal.
+
+The fuller rip — randomness moved to draw/situation, resolution deterministic — is still on the
+table and is *not* foreclosed by this. What heat does not do is make the moment of resolution itself
+interesting; it makes the approach to it interesting. If that turns out to be the wrong half of the
+problem, tear heat out with the rest.
+
+**Measured, not assumed:** across 1200 seeds with context-blind bot policies, press-always,
+press-only-when-free, press-only-at-max and never-press all landed inside one standard error of each
+other (15.8–17.1% win). So the wager is a variance dial, not power creep — and no policy dominates.
+It also means bots cannot demonstrate a skill edge here; whether a human extracts value by pressing
+when the marginal success actually matters is untested and only play will answer it. The first
+tuning pass (flat +5%/point) made spamming the best line and holding pointless; the shipped curve is
+superlinear (+3/8/15/24%) so patience is the play, and `harness:heat` asserts the curve stays that
+way.
+
 ### 5. Card upgrades
 
 I argued against these last pass on grounds of catalog surface. That was me avoiding work, not

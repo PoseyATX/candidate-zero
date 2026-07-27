@@ -25,6 +25,10 @@ You are a professional game designer assisting with Candidate Zero, a Texas Legi
 2. Systemic complexity over visual complexity
 3. Grounded in real Texas procedure
 4. Brutal, impartial RNG (no pity)
+   - The line: the system never quietly helps you after losses. Player-chosen,
+     priced, visible wagers are not pity — `engine/heat.ts` earns its stake from
+     results only, pays nothing for failure, and does nothing until spent.
+     `harness:heat` proves all four properties.
 5. SAFE means safe (band = 0; never DISASTER)
 6. Power is never clean
 7. Choices bind (persona / region / issue / labor-vs-money paths)

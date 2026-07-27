@@ -25,6 +25,8 @@ namespace CandidateZero.HostData
         public int weeksTotal;
         public IdentityView identity;
         public LedgerView ledger;
+        /// <summary>Banked press-your-luck stake. What spending it buys and costs is per-card (the band depends on risk class) — see ActionOption.pressOdds / pressBand. Never applied unless a play command sets `press`.</summary>
+        public PressView press;
         public List<GroundView> grounds;
         public List<ActionView> actions;
         public GoalView goal;
@@ -83,6 +85,13 @@ namespace CandidateZero.HostData
         public int sigNeed;
     }
 
+    public sealed class PressView
+    {
+        public int heat;
+        public int max;
+        public bool canPress;
+    }
+
     public sealed class GroundView
     {
         public string id;
@@ -113,6 +122,10 @@ namespace CandidateZero.HostData
         public string costLabel;
         /// <summary>effective success probability given current state, or null if odds-less.</summary>
         public float? approxOdds;
+        /// <summary>Odds this play would gain if the command sets `press`. 0 when no heat.</summary>
+        public float pressOdds;
+        /// <summary>Disaster band it would cost. Always 0 for SAFE — Covenant 5 holds even when the player is buying risk deliberately.</summary>
+        public float pressBand;
     }
 
     public sealed class GoalView

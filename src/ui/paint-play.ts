@@ -39,6 +39,7 @@ import {
   upgradeShortLabel,
   isUpgraded
 } from '../engine/upgrades.js';
+import { quotePress, pressLabel } from '../engine/heat.js';
 
 /** Full attribute names — never dump CLO/CON on a roomy brief. */
 const ATTR_NAMES: Record<AttrId, string> = {
@@ -124,11 +125,14 @@ function $(id: string): HTMLElement {
   return el;
 }
 
-export type PlayCommit = (index: number, ground?: Ground) => void;
+export type PlayCommit = (index: number, ground?: Ground, press?: boolean) => void;
 export type AfterPaint = () => void;
 
 let pendingGroundIndex: number | null = null;
 let pendingGroundCard: PlayCard | null = null;
+/** The press wager armed in the dossier, held across the ground picker so a
+ *  field play does not silently drop it between "Play" and "choose a ground". */
+let pendingGroundPress = false;
 
 function groundOdds(s: GameState, card: PlayCard, g: Ground): number {
   const base = card.odds ? card.odds(s, g) : 0.5;
@@ -142,6 +146,8 @@ let detailIndex: number | null = null;
 let detailCampaign: Campaign | null = null;
 /** When set, the detail sheet is a phase-draft pick (not a hand play). */
 let detailDraftOption: number | null = null;
+/** Whether the open dossier has the press wager armed. Reset on every open. */
+let detailPress = false;
 let commitHook: PlayCommit | null = null;
 let afterPaintHook: AfterPaint | null = null;
 
@@ -226,6 +232,7 @@ export function closeCardDetail(): void {
   detailIndex = null;
   detailCampaign = null;
   detailDraftOption = null;
+  detailPress = false;
   const root = document.getElementById('card-detail');
   if (root) root.classList.add('hidden');
   document.body.classList.remove('dossier-open');
@@ -297,15 +304,29 @@ function fillDossier(
       'No further detail is on file for this play. Trust the title and the cost.';
   }
 
+  // The stated odds must move when the player arms a press, or the dossier
+  // repeats the AP-counter lie: a number that does not respond to the thing the
+  // player just did. `pressBonus` is 0 until the wager is armed.
+  const paintOdds = (pressBonus: number): void => {
+    if (!oddsEl || !odds || detailDraftOption !== null) return;
+    const shown = Math.max(0.02, Math.min(0.95, (view.oddsPct ?? 0) + pressBonus));
+    const copy = oddsCopy(shown) ?? odds;
+    const note = pressBonus > 0
+      ? `<p class="dossier-odds-press">Pressed — up from ${Math.round((view.oddsPct ?? 0) * 100)}%. A failure here wipes the streak either way.</p>`
+      : '';
+    oddsEl.innerHTML = `
+      <p class="dossier-odds-num">${attrEscape(copy.headline)}</p>
+      <p class="dossier-odds-body">${attrEscape(copy.body)}</p>
+      ${note}
+      <span class="dossier-odds-meter${pressBonus > 0 ? ' pressed' : ''}" aria-hidden="true">
+        <i style="width:${Math.round(shown * 100)}%"></i>
+      </span>`;
+  };
+
   if (oddsEl) {
     if (odds && detailDraftOption === null) {
       oddsEl.hidden = false;
-      oddsEl.innerHTML = `
-        <p class="dossier-odds-num">${attrEscape(odds.headline)}</p>
-        <p class="dossier-odds-body">${attrEscape(odds.body)}</p>
-        <span class="dossier-odds-meter" aria-hidden="true">
-          <i style="width:${Math.round((view.oddsPct ?? 0) * 100)}%"></i>
-        </span>`;
+      paintOdds(0);
     } else if (detailDraftOption !== null) {
       oddsEl.hidden = false;
       oddsEl.innerHTML = opts.upgradeOffer
@@ -372,6 +393,39 @@ function fillDossier(
     }
   }
 
+  // Press: the one decision that happens *with* the dice rather than before
+  // them. Only offered on a real, playable, odds-bearing play — pressing a
+  // card that cannot roll would charge the streak for nothing.
+  const pressBtn = root.querySelector('#btn-press') as HTMLButtonElement | null;
+  const pressCopy = root.querySelector('#press-copy') as HTMLElement | null;
+  const quote = quotePress(state, card);
+  const pressable =
+    detailDraftOption === null && !locked && !!card.odds && quote.heat > 0;
+  detailPress = false;
+  if (pressBtn) {
+    pressBtn.hidden = !pressable;
+    pressBtn.setAttribute('aria-pressed', 'false');
+    pressBtn.classList.remove('on');
+    if (pressable) {
+      // The accessible name must not depend on the copy span having been
+      // filled yet — an empty button is a critical axe failure, and the gate
+      // caught exactly that.
+      pressBtn.setAttribute('aria-label', `Press ${quote.heat}: ${pressLabel(quote)}`);
+      if (pressCopy) pressCopy.textContent = `Press ${quote.heat} — ${pressLabel(quote)}`;
+      pressBtn.onclick = () => {
+        detailPress = !detailPress;
+        pressBtn.setAttribute('aria-pressed', detailPress ? 'true' : 'false');
+        pressBtn.classList.toggle('on', detailPress);
+        if (pressCopy) {
+          pressCopy.textContent = detailPress
+            ? `Pressing ${quote.heat} — ${pressLabel(quote)}`
+            : `Press ${quote.heat} — ${pressLabel(quote)}`;
+        }
+        paintOdds(detailPress ? quote.odds : 0);
+      };
+    }
+  }
+
   if (backBtn) backBtn.onclick = () => closeCardDetail();
 
   if (playBtn) {
@@ -419,9 +473,11 @@ export function openCardDetail(campaign: Campaign, index: number): void {
       const idx = detailIndex;
       const camp = detailCampaign;
       const c = cardForIndex(camp, idx);
+      // Read the wager before closing — closeCardDetail resets it.
+      const press = detailPress;
       closeCardDetail();
-      if (c?.field) openGroundPicker(camp, idx, c);
-      else commitHook?.(idx);
+      if (c?.field) openGroundPicker(camp, idx, c, press);
+      else commitHook?.(idx, undefined, press);
     }
   });
 }
@@ -704,9 +760,15 @@ function renderWaitingPlayables(
   wirePlayCards(grid, campaign, false);
 }
 
-export function openGroundPicker(campaign: Campaign, index: number, card: PlayCard): void {
+export function openGroundPicker(
+  campaign: Campaign,
+  index: number,
+  card: PlayCard,
+  press = false
+): void {
   pendingGroundIndex = index;
   pendingGroundCard = card;
+  pendingGroundPress = press;
   $('gp-title').textContent = `${card.n} — where do you work it?`;
   renderGroundPicker(campaign);
   $('ground-picker').classList.remove('hidden');
@@ -715,6 +777,7 @@ export function openGroundPicker(campaign: Campaign, index: number, card: PlayCa
 export function closeGroundPicker(): void {
   pendingGroundIndex = null;
   pendingGroundCard = null;
+  pendingGroundPress = false;
   $('ground-picker').classList.add('hidden');
 }
 
@@ -787,8 +850,10 @@ export function renderGroundPicker(campaign: Campaign): void {
         if (btn.dataset.locked === '1') return;
         const ground = campaign.state.groundsArr.find(g => g.id === btn.dataset.ground);
         const index = pendingGroundIndex;
+        // Read before closing — closeGroundPicker clears the armed wager.
+        const press = pendingGroundPress;
         closeGroundPicker();
-        commitHook?.(index, ground);
+        commitHook?.(index, ground, press);
       });
     });
 }

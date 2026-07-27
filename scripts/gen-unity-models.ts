@@ -41,8 +41,21 @@ const CHECK_MODE = process.argv.includes('--check');
 
 /** TS number is ambiguous. Default is int; these are genuinely fractional. */
 const FLOAT_FIELDS = new Set([
-  'approxOdds', 'rapport', 'rivalRap', 'gotv', 'prop'
+  'approxOdds', 'rapport', 'rivalRap', 'gotv', 'prop', 'pressOdds', 'pressBand'
 ]);
+
+/**
+ * A hand-maintained allowlist fails silently: a new fractional field defaults
+ * to `int` and a host truncates 0.15 to 0 with nothing to catch it. `pressOdds`
+ * and `pressBand` shipped that way for one generation. This backstop catches
+ * the common naming shapes for a 0–1 quantity so the allowlist is a correction,
+ * not the only line of defence.
+ */
+const FLOAT_NAME = /(odds|band|rate|pct|percent|mult|share|ratio|chance|weight)$/i;
+
+function isFloatField(propName: string): boolean {
+  return FLOAT_FIELDS.has(propName) || FLOAT_NAME.test(propName);
+}
 
 /** TS type name -> C# class name (keeps existing call sites compiling). */
 const RENAME: Record<string, string> = {
@@ -232,7 +245,7 @@ function mapType(
 
   if (t.flags & ts.TypeFlags.StringLike) return 'string';
   if (t.flags & ts.TypeFlags.NumberLike) {
-    return FLOAT_FIELDS.has(propName) ? 'float' : 'int';
+    return isFloatField(propName) ? 'float' : 'int';
   }
   if (t.flags & ts.TypeFlags.Any || t.flags & ts.TypeFlags.Unknown) return 'JToken';
 

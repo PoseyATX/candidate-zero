@@ -18,6 +18,7 @@ import {
   renderGoalStrip
 } from './goal-strip.js';
 import { TURF_AP } from '../engine/state.js';
+import { heatOf, MAX_HEAT } from '../engine/heat.js';
 
 function $(id: string): HTMLElement {
   const el = document.getElementById(id);
@@ -84,6 +85,17 @@ export function renderHud(campaign: Campaign): void {
     snap.debt > 0 && snap.availableCash < snap.money
       ? `<span class="hud-item" title="Service reserve — elevated debt tightens spend, not odds">$${snap.availableCash}<span class="hud-sub">spend</span></span>`
       : '';
+  // Heat has to be visible before the player opens a card, or the decision to
+  // keep a streak alive never enters their head — it is only a decision if you
+  // can see it accumulating. Hidden at zero so it never reads as an empty duty.
+  const heat = heatOf(s);
+  const heatChip = heat
+    ? `<span class="chip chip-heat" title="Banked streak — spend it on one play for better odds and a wider disaster band. A failed play wipes it.">` +
+      Array.from({ length: MAX_HEAT }, (_, i) =>
+        `<i class="heat-pip ${i < heat ? 'on' : ''}"></i>`
+      ).join('') +
+      `<span class="chip-heat-label">heat ${heat}</span></span>`
+    : '';
   const act = ACT_SHELLS[actFromStage(s.stage)];
   const actChip = `<span class="chip chip-act chip-act-${act.id}" title="${act.actNum}: ${act.title}">${act.tag}</span>`;
   const ballotHud =
@@ -104,6 +116,7 @@ export function renderHud(campaign: Campaign): void {
     <span class="hud-item">${actChip}</span>
     <span class="hud-item"><span class="pips" title="Action points">${pips}</span>${fieldChip}</span>
     <span class="hud-item hud-cash" title="Cash on hand">$${snap.money}${debtChip}${oblChip}</span>
+    ${heatChip ? `<span class="hud-item">${heatChip}</span>` : ''}
     ${spendNote}
     <span class="hud-item" title="Week ${snap.week} of ${s.weeksTotal}"><span class="hud-week">W${snap.week}/${s.weeksTotal}</span>
       <span class="hud-meter hud-meter-week"><i style="width:${weekPct}%"></i></span>

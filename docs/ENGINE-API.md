@@ -10,7 +10,7 @@ resolve/odds/yields/RNG. This is the ship-path covenant (ROADMAP Phase 8):
 
 - Source: `src/engine/api.ts` · Contract test: `npm run harness:api`
 - Bundle: `npm run build:engine` → `dist-engine/candidate-zero-engine.{mjs,umd.cjs}`
-- Current version: `ENGINE_API_VERSION = 1.1.0`
+- Current version: `ENGINE_API_VERSION = 1.2.0`
 
 ## The determinism / seed contract
 
@@ -52,7 +52,7 @@ ENGINE_API_VERSION: string
 
 ```ts
 type Command =
-  | { type: 'play'; handIndex: number; groundId?: string } // groundId required only when the action.field flag is true
+  | { type: 'play'; handIndex: number; groundId?: string; press?: boolean } // groundId required only when the action.field flag is true; press spends banked heat
   | { type: 'draft'; option: number }                      // resolve a pending phase draft
   | { type: 'endWeek' }
   | { type: 'dismissOutside' }                            // clear Outside weather chrome
@@ -73,6 +73,13 @@ endorsements, ballot, signatures/need, …), `grounds[]`, `actions[]`,
 `dismissOutside`), `canEndWeek`, and the tail of the `log`.
 `apply().events` is the slice of log entries a single command produced —
 for host toasts/animation.
+
+`press` carries the player's banked press-your-luck stake:
+`{ heat, max, canPress }`. What spending it buys and costs is per-card, since
+the disaster band depends on risk class — see `ActionOption.pressOdds` /
+`pressBand`, which are `0` when nothing is banked and `pressBand` is always `0`
+for SAFE. A host applies it by setting `press: true` on a `play` command;
+banked heat changes nothing on its own. See `src/engine/heat.ts`.
 
 `pendingDraft.options[]` is `{ cardId, name, risk, upgrade }`. `cardId` is
 always a real catalog id, and `upgrade: true` means picking that option

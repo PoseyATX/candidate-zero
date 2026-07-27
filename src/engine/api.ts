@@ -57,10 +57,13 @@ import type { DeckState, GameState, PlayCard } from './types.js';
 import { buildGoalStripInput, formatGoalStrip, type GoalCopyKey } from '../ui/goal-strip.js';
 import { isGroundLocked, groundLockReason } from './play.js';
 import { parseUpgradeOption } from './upgrades.js';
+import { heatOf, canPress, quotePress, MAX_HEAT } from './heat.js';
 
-/** 1.1.0 — pendingDraft options gained `upgrade`; cardId is now always a real
+/** 1.2.0 — the view gained `press` (banked press-your-luck stake) and the play
+ *  command gained an optional `press` flag. See engine/heat.ts.
+ *  1.1.0 — pendingDraft options gained `upgrade`; cardId is now always a real
  *  catalog id (previously it could carry the engine's "UP:" option encoding). */
-export const ENGINE_API_VERSION = '1.1.0';
+export const ENGINE_API_VERSION = '1.2.0';
 
 /** Fully reproducible, JSON-serializable game state. */
 export interface EngineSnapshot {
@@ -74,7 +77,9 @@ export interface EngineSnapshot {
 }
 
 export type Command =
-  | { type: 'play'; handIndex: number; groundId?: string }
+  /** `press` spends banked heat on this play: better odds, wider disaster band
+   *  (engine/heat.ts). Ignored when no heat is banked. */
+  | { type: 'play'; handIndex: number; groundId?: string; press?: boolean }
   | { type: 'endWeek' }
   | { type: 'draft'; option: number }
   /** Host dismisses Outside weather chrome (see clearPendingOutside). */
@@ -95,6 +100,11 @@ export interface ActionOption {
   costLabel: string;
   /** effective success probability given current state, or null if odds-less. */
   approxOdds: number | null;
+  /** Odds this play would gain if the command sets `press`. 0 when no heat. */
+  pressOdds: number;
+  /** Disaster band it would cost. Always 0 for SAFE — Covenant 5 holds even
+   *  when the player is buying risk deliberately. */
+  pressBand: number;
 }
 
 export interface GroundView {
@@ -148,6 +158,10 @@ export interface RenderView {
     signatures: number;
     sigNeed: number;
   };
+  /** Banked press-your-luck stake. What spending it buys and costs is
+   *  per-card (the band depends on risk class) — see ActionOption.pressOdds /
+   *  pressBand. Never applied unless a play command sets `press`. */
+  press: { heat: number; max: number; canPress: boolean };
   grounds: GroundView[];
   actions: ActionOption[];
   goal: GoalView;
@@ -257,7 +271,9 @@ export function legalActions(snap: EngineSnapshot): ActionOption[] {
     camp: index < 0,
     field: !!card.field,
     costLabel: costLabel(card),
-    approxOdds: effectiveOdds(campaign.state, card)
+    approxOdds: effectiveOdds(campaign.state, card),
+    pressOdds: quotePress(campaign.state, card).odds,
+    pressBand: quotePress(campaign.state, card).band
   }));
 }
 
@@ -294,6 +310,7 @@ export function view(snap: EngineSnapshot): RenderView {
       signatures: s.signatures,
       sigNeed: s.sigNeed
     },
+    press: { heat: heatOf(s), max: MAX_HEAT, canPress: canPress(s) },
     grounds: s.groundsArr.map(g => ({
       id: g.id,
       n: g.n,
@@ -348,7 +365,9 @@ export function apply(snap: EngineSnapshot, command: Command): ApplyResult {
         ? s.groundsArr.find(g => g.id === command.groundId)
         : undefined;
       const wasBallot = s.ballot;
-      const outcome = playFromHand(campaign, command.handIndex, ground);
+      const outcome = playFromHand(campaign, command.handIndex, ground, {
+        press: command.press
+      });
       ok = outcome.ok;
       reason = outcome.reason;
       // Mirror the UI: reaching the ballot opens a phase draft.

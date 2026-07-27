@@ -200,7 +200,9 @@ export interface GameState {
   moneyClash?: boolean;
   strawBonus?: number;
   deck?: string[];
-  handBonus?: number;
+  /** Banked press-your-luck stake — see engine/heat.ts. Earned by landing
+   *  plays, wiped by failing one, worth nothing until deliberately spent. */
+  heat?: number;
   lastPhase?: 1 | 2 | 3;
   pendingDraft?: { phase: number; options: string[] };
   pendingOutside?: { id: string; n: string; text: string } | null;

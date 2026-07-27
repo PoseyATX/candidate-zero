@@ -12,6 +12,7 @@ import { repCheck, shadowCheck } from './reputation.js';
 import { canAffordCash } from './debt.js';
 import { syncMovementFlags } from './entities.js';
 import { effectiveApCost, upgradeOddsBonus } from './upgrades.js';
+import { bankHeat, canPress, quotePress, pressLabel } from './heat.js';
 import type { AttrId, GameState, Ground, PlayCard, PlayOutcome, RollResult } from './types.js';
 
 /** Turf AP a field card can draw on; non-field cards can never touch it. */
@@ -110,10 +111,16 @@ export function cardAttrMod(state: GameState, card: PlayCard): number {
   return sum / card.attrs.length;
 }
 
+export interface PlayOpts {
+  /** Spend banked heat on this play: better odds, wider band. See engine/heat.ts. */
+  press?: boolean;
+}
+
 export function executePlay(
   state: GameState,
   card: PlayCard,
-  ground?: Ground
+  ground?: Ground,
+  opts: PlayOpts = {}
 ): PlayOutcome {
   if (!isPhaseLegal(state, card)) {
     return { ok: false, reason: `Not legal in phase ${getPhase(state)}`, cardId: card.id, cardName: card.n };
@@ -161,7 +168,19 @@ export function executePlay(
   // Upgrades shift the odds going INTO resolve; they never touch the roll,
   // the bands, or the tier mapping (Covenant 4).
   const upBonus = upgradeOddsBonus(state, card);
-  p = Math.max(0.02, Math.min(0.95, p + attrMod + groundOddsBonus - rivalPen + upBonus));
+
+  // Press: the player cashes a landed streak for better odds on this one play,
+  // and pays for them with a wider disaster band. Read the wager before the
+  // roll and spend it whatever happens — a press you can take back is not one.
+  const pressed = !!opts.press && canPress(state);
+  const wager = pressed ? quotePress(state, card) : null;
+  const pressOdds = wager?.odds ?? 0;
+  const pressBand = wager?.band ?? 0;
+
+  p = Math.max(
+    0.02,
+    Math.min(0.95, p + attrMod + groundOddsBonus - rivalPen + upBonus + pressOdds)
+  );
 
   state.sessionFlags = state.sessionFlags || {};
   const charges = Number(state.sessionFlags.prettyFaceCharges || 0);
@@ -175,7 +194,15 @@ export function executePlay(
       text: `Pretty Face — breakthrough forced (${state.sessionFlags.prettyFaceCharges} left).`
     });
   } else {
-    roll = resolve(p, card.risk, state);
+    roll = resolve(p, card.risk, state, undefined, pressBand);
+  }
+
+  if (wager) {
+    state.log.push({
+      week: state.week,
+      kind: 'note',
+      text: `Pressed ${wager.heat}: ${pressLabel(wager)}`
+    });
   }
 
   // Breakthrough refund — the chain seam. A card flagged refundOnBreak buys its
@@ -202,6 +229,13 @@ export function executePlay(
       text: "The Parliamentarian's save: DISASTER read down to SETBACK on procedure."
     });
   }
+
+  // A press is spent whatever the roll said — that is the wager. Then the final
+  // tier (post-parlSave) decides what the meter carries forward: landing builds
+  // it, failing wipes it. Order matters, so a pressed win restarts the streak
+  // at 1 rather than keeping the stake it just cashed.
+  if (pressed) state.heat = 0;
+  bankHeat(state, roll.tier);
 
   const text = card.run ? card.run(state, roll, g) : `${card.n} resolves.`;
 
