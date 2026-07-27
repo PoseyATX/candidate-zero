@@ -24,9 +24,10 @@ import {
   meanRivalRapport,
   primaryWinProbability
 } from '../engine/calendar.js';
-import { createNewState } from '../engine/state.js';
+import { createNewState, GROUND_NEIGHBORS } from '../engine/state.js';
 import { createRng, setDefaultSeed, useRng } from '../engine/rng.js';
 import type { GameState, Ground } from '../engine/types.js';
+import { bankRapport } from '../engine/reputation.js';
 
 const TRIALS = Number(process.env.CZ_TRIALS ?? 50);
 
@@ -174,6 +175,58 @@ for (const r of rows) {
 }
 // Spread should touch at least as many grounds as focus (focus can starve under rival teeth)
 assert(laborSpread.avgContested + 0.01 >= laborFocus.avgContested, 'spread should contest >= focus');
+
+// --- The county is a board (adjacency + bleed) ---
+{
+  // Symmetry: if A borders B then B borders A. A one-way map would make
+  // rapport bleed in a direction the player cannot reason about.
+  const asym: string[] = [];
+  for (const [id, nbs] of Object.entries(GROUND_NEIGHBORS)) {
+    for (const nb of nbs) {
+      if (!(GROUND_NEIGHBORS[nb] ?? []).includes(id)) asym.push(`${id}->${nb}`);
+    }
+  }
+  assert(asym.length === 0, `ground adjacency is symmetric (${asym.join(', ') || 'ok'})`);
+
+  const degrees = Object.values(GROUND_NEIGHBORS).map(n => n.length);
+  assert(
+    Math.min(...degrees) >= 2 && Math.max(...degrees) <= 3,
+    `every ground borders 2-3 others (got ${Math.min(...degrees)}-${Math.max(...degrees)}) — ` +
+      `deriving adjacency from shared aff codes gave 5-6, which is not a board`
+  );
+
+  // Working a ground carries into its neighbours, and nowhere else.
+  const s = createNewState({ seed: 77 });
+  const target = s.groundsArr.find(g => g.id === 'GR01')!;
+  bankRapport(target, 20, s);
+  const nbs = GROUND_NEIGHBORS.GR01!;
+  const gainedNb = nbs
+    .map(id => s.groundsArr.find(g => g.id === id)!)
+    .filter(g => !g.gated)
+    .every(g => g.rapport > 0);
+  const strangers = s.groundsArr.filter(
+    g => g.id !== 'GR01' && !nbs.includes(g.id)
+  );
+  assert(gainedNb, 'working a ground carries rapport into its neighbours');
+  assert(
+    strangers.every(g => g.rapport === 0),
+    'rapport does not carry to non-adjacent turf'
+  );
+  assert(
+    target.rapport > (s.groundsArr.find(g => g.id === nbs[0]!)?.rapport ?? 0),
+    'the ground you actually worked still gains most'
+  );
+
+  // Closed turf gets no spillover — you have not been walked in yet.
+  const s2 = createNewState({ seed: 78 });
+  const corridor = s2.groundsArr.find(g => g.id === 'GR04')!;
+  assert(corridor.gated === true, 'GR04 ships gated (precondition)');
+  for (const id of GROUND_NEIGHBORS.GR04 ?? []) {
+    const nb = s2.groundsArr.find(g => g.id === id)!;
+    bankRapport(nb, 30, s2);
+  }
+  assert(corridor.rapport === 0, 'a locked ground receives no neighbour bleed');
+}
 
 // --- Ground win-condition guardrail (calibrated 2026-07-27) ---
 // The condition sat at 0% met in every strategy from Phase 1 until the

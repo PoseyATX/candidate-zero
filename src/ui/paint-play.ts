@@ -32,6 +32,7 @@ import {
 import { emblemFor, KIND_META } from './card-art.js';
 import { ACT_SHELLS, actFromStage } from './act-shell.js';
 import type { AttrId, RiskClass } from '../engine/types.js';
+import { GROUND_NEIGHBORS } from '../engine/state.js';
 
 /** Full attribute names — never dump CLO/CON on a roomy brief. */
 const ATTR_NAMES: Record<AttrId, string> = {
@@ -714,6 +715,11 @@ export function renderGroundPicker(campaign: Campaign): void {
       const workedThisWeek = (s.groundPlays?.[g.id] ?? 0) > 0;
       const locked = isGroundLocked(g);
       const lockWhy = groundLockReason(g);
+      // The county is a board — working here carries into neighbouring turf.
+      const nbNames = (GROUND_NEIGHBORS[g.id] ?? [])
+        .map(id => s.groundsArr.find(x => x.id === id))
+        .filter((x): x is Ground => !!x && !x.gated)
+        .map(x => x.n);
       const pct = card ? Math.round(groundOdds(s, card, g) * 100) : null;
       const rivalPen = card && card.field ? Math.round(rivalOddsPenalty(g) * 100) : 0;
       const oddsHtml =
@@ -742,6 +748,7 @@ export function renderGroundPicker(campaign: Campaign): void {
           <span class="gp-foot">
             <span>pool ${g.pool}</span>
             ${locked ? `<span class="gp-lockwhy">${attrEscape(lockWhy)}</span>` : ''}
+            ${!locked && nbNames.length ? `<span class="gp-nb" title="Word carries: working here banks a share of the rapport next door">carries to ${attrEscape(nbNames.join(' · '))}</span>` : ''}
             ${workedThisWeek && !locked ? '<span class="gp-worked">worked · ½ rapport</span>' : ''}
           </span>
         </button>`;

@@ -19,6 +19,7 @@
 import type { GameState, Ground } from './types.js';
 import { addObl } from '../data/obligations.js';
 import { groundAffinityMult } from '../data/setup.js';
+import { GROUND_NEIGHBORS, NEIGHBOR_BLEED } from './state.js';
 
 export function hasRep(state: GameState, id: string): boolean {
   return state.reps.includes(id);
@@ -208,4 +209,17 @@ export function bankRapport(g: Ground, amt: number, state: GameState): void {
   amt = amt * groundAffinityMult(state.assets ?? [], g.aff);
   amt = Math.round(amt * (state.groundRapMult ?? 1));
   g.rapport = Math.max(0, Math.min(100, g.rapport + amt));
+
+  // The county is a board: word travels to neighbouring turf. A coherent
+  // regional campaign compounds; a scattered one does not. Bleed is not
+  // re-multiplied by affinity — it is spillover, not work done there.
+  if (amt <= 0) return;
+  const bleed = Math.round(amt * NEIGHBOR_BLEED);
+  if (bleed <= 0) return;
+  for (const id of GROUND_NEIGHBORS[g.id] ?? []) {
+    const nb = state.groundsArr.find(x => x.id === id);
+    // Closed turf gets no spillover — you have not been walked in yet.
+    if (!nb || nb.gated) continue;
+    nb.rapport = Math.max(0, Math.min(100, nb.rapport + bleed));
+  }
 }

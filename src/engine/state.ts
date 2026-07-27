@@ -63,6 +63,37 @@ export const TURF_AP = 2;
 /** Waiting season is a quieter cadence than a campaign week. */
 export const WAITING_AP = 2;
 
+/**
+ * The county as a board, not eight independent counters.
+ *
+ * Deriving adjacency from shared `aff` codes produced a near-complete graph
+ * (5-6 neighbours of a possible 7), which is noise. This map is the fiction:
+ * a town core (courthouse, subdivisions, plant gate, southside), a rural belt
+ * (FM roads, church corridor, VFW), and lake country bridging the two.
+ * Symmetric by construction — see harness:grounds.
+ */
+export const GROUND_NEIGHBORS: Record<string, string[]> = {
+  GR01: ['GR03', 'GR05', 'GR08'], // Courthouse Square — the town core
+  GR02: ['GR04', 'GR06', 'GR07'], // The FM Roads — the rural spine
+  GR03: ['GR01', 'GR07'],         // New Subdivisions — new money, edge of town
+  GR04: ['GR02', 'GR06', 'GR08'], // Church Corridor
+  GR05: ['GR01', 'GR08'],         // The Plant Gate
+  GR06: ['GR02', 'GR04'],         // VFW & Legion Halls
+  GR07: ['GR02', 'GR03'],         // Lake Country
+  GR08: ['GR01', 'GR04', 'GR05']  // Southside Blocks
+};
+
+/**
+ * Share of rapport that carries into a neighbouring ground.
+ *
+ * Calibrated against harness:grounds. Higher values flood the map: at 0.25 a
+ * focused campaign met the ground win-condition 88% of the time and a spread
+ * one contested 6.6 of 8 grounds, which breaks the Phase 1 design target of
+ * "a few, not all eight". At 0.12 focus contests ~2.9 and spread ~4.1, and the
+ * condition sits inside its guarded band.
+ */
+export const NEIGHBOR_BLEED = 0.12;
+
 export function createDefaultGrounds(): Ground[] {
   // rivalRap starts at 0; advanceRivalGrounds (calendar onWeekAdvance) banks
   // 5–40 cosmetic opposition each week for the ground picker / logs.

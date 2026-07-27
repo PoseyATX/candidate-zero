@@ -2254,3 +2254,16 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
 .pips-turf { margin-left: 0.4rem; }
 .pip-turf { border-color: var(--sage); border-style: dashed; }
 .pip-turf.on { background: var(--sage); border-color: var(--sage); border-style: solid; }
+
+/* Neighbour spill — the ground picker has to show that the map is a board,
+   otherwise the spatial decision is invisible and players optimise a number. */
+.gp-nb {
+  display: block;
+  /* Not var(--sage) (#6b7a5e) — that failed AA contrast on the picker card and
+     the a11y gate caught it across all 7 unlocked grounds. This is the same
+     light sage already used by .chip-field. */
+  color: #b9d1a9;
+  font-size: 0.62rem;
+  font-style: italic;
+  margin-top: 0.1rem;
+}
