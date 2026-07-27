@@ -203,7 +203,6 @@ export function cardClasses(card: PlayCard, opts: CardFaceOpts = {}): string {
     'play-card',
     `risk-${card.risk.toLowerCase()}`,
     kind !== 'action' ? `kind-${kind}` : '',
-    kind === 'promo' ? 'kind-promo' : '',
     fullFace ? 'full-art' : '',
     opts.shop ? 'shop' : '',
     opts.camp && !opts.shop ? 'camp' : '',
