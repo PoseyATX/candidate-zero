@@ -2247,3 +2247,10 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   color: #c9a06a;
   font-style: italic;
 }
+
+/* Turf AP: a second budget, not a bonus. Field plays spend these before
+   campaign AP, so they must read as pips that empty — a "+N field" chip made
+   a 3-AP field play look like it only cost 1. */
+.pips-turf { margin-left: 0.4rem; }
+.pip-turf { border-color: var(--sage); border-style: dashed; }
+.pip-turf.on { background: var(--sage); border-color: var(--sage); border-style: solid; }

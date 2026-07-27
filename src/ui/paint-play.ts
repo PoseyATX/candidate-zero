@@ -46,7 +46,12 @@ const ATTR_NAMES: Record<AttrId, string> = {
 function costInEnglish(card: PlayCard): string {
   const c = card.cost;
   const parts: string[] = [];
-  if (c.a) parts.push(c.a === 1 ? '1 action point' : `${c.a} action points`);
+  if (c.a) {
+    const ap = c.a === 1 ? '1 action point' : `${c.a} action points`;
+    // Field work draws on the turf budget before campaign AP. Without saying so,
+    // a 3-AP field play appears to cost 1 because the rest left the turf pool.
+    parts.push(card.field ? `${ap} — turf budget first, then campaign AP` : ap);
+  }
   if (c.$) parts.push(`$${c.$}`);
   if (c.vp) parts.push(c.vp === 1 ? '1 volunteer' : `${c.vp} volunteers`);
   if (c.m) parts.push(c.m === 1 ? '1 momentum' : `${c.m} momentum`);
@@ -156,7 +161,13 @@ function lockReason(campaign: Campaign, card: PlayCard): string {
   if (!isPhaseLegal(state, card)) return `Phase ${card.ph.join('/')} only`;
   if (!canAfford(state, card)) {
     const c = card.cost;
-    if ((c.a ?? 0) > state.ap && !(card.field && state.fieldAp > 0)) return 'No AP left';
+    // Must mirror canAfford: field cards spend turf AP first, then campaign AP,
+    // so the real budget is ap + (field ? fieldAp : 0). The pre-split rule here
+    // could report the wrong reason on a partly-affordable field play.
+    const turf = card.field ? Math.max(0, state.fieldAp) : 0;
+    if ((c.a ?? 0) > state.ap + turf) {
+      return card.field && turf > 0 ? 'Not enough AP or turf' : 'No AP left';
+    }
     const spend = snapshot(state).availableCash;
     if ((c.$ ?? 0) > spend) {
       return (state.debt || 0) > 0 && spend < state.money

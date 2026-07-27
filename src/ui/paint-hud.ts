@@ -17,6 +17,7 @@ import {
   buildGoalStripInput,
   renderGoalStrip
 } from './goal-strip.js';
+import { TURF_AP } from '../engine/state.js';
 
 function $(id: string): HTMLElement {
   const el = document.getElementById(id);
@@ -48,10 +49,23 @@ function attrChipsHtml(attrs: Record<string, number>): string {
 export function renderHud(campaign: Campaign): void {
   const s = campaign.state;
   const snap = snapshot(s);
+  // Two budgets, both shown as pips that empty.
+  //
+  // Turf AP used to render as a "+N field" chip, which read as a bonus rather
+  // than a counter — so a 3-AP field card would take 2 from turf and 1 from
+  // campaign, the main pips would drop by ONE, and the player would reasonably
+  // report that the AP counter does not count down. Every point a play spends
+  // must now be visible leaving somewhere.
+  const turfMax = Math.max(snap.fieldAp, TURF_AP);
   const pips = Array.from({ length: s.apMax }, (_, i) =>
     `<i class="pip ${i < snap.ap ? 'on' : ''}"></i>`
   ).join('');
-  const fieldChip = snap.fieldAp ? `<span class="chip chip-field">+${snap.fieldAp} field</span>` : '';
+  const turfPips = Array.from({ length: turfMax }, (_, i) =>
+    `<i class="pip pip-turf ${i < snap.fieldAp ? 'on' : ''}"></i>`
+  ).join('');
+  const fieldChip = turfMax
+    ? `<span class="pips pips-turf" title="Turf action points — field plays spend these first, then your campaign AP">${turfPips}</span>`
+    : '';
   const debtChip =
     snap.debt > 0
       ? `<span class="chip chip-debt" title="Debt does not tax odds — win/loss branch only">−$${snap.debt}</span>`
