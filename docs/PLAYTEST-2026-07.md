@@ -246,11 +246,18 @@ said by how much. Every play now reports what it actually moved — `+74 signatu
 (`ledgerMark` / `formatDeltas` in `src/engine/feedback.ts`). Internal to the engine — no host API
 change.
 
-## Verified by construction, not by screenshot
+## 16. The draft screenshot — GAP NOW CLOSED
 
-The draft-row screenshot. My browser driver reached a phase draft before these changes and could not
-after (the deck changed, so seeds diverge), and I stopped chasing it rather than burn more time. What
-I did verify: the draft uses the identical `cardClasses(card)` row renderer as the hand, and both the
-`#draft.card-grid` container and the `#draft .draft-cards` inner grid resolve to a single 1fr column
-in the built CSS. `smoke:ui` drives drafts and is green. That is sound but it is not a picture, and
-the distinction is worth keeping honest.
+Round 2 shipped with this unverified, and it is worth recording why it was hard and what it caught.
+
+Drafts fire on a *phase* change, and `getPhase` returns 1 until you are on the ballot and 2 after —
+so **reaching the ballot is the trigger**. My drivers kept missing it because they wandered instead of
+driving at the ballot doors. Once pointed there (seed 11), the draft lands at W7.
+
+Measured: 3 options at **366×67, 366×67, 366×64** — full width, and "Statewide Figure Endorses" reads
+whole. Before the row change that name was exactly the sort that became "Statewide Figure…".
+
+Chasing the picture caught a regression the construction argument would never have found: the
+**"PRACTISED · −1 AP" banner was still `position: absolute; top: 0`** from the portrait layout, so on
+a 64px row it sat directly on top of the card's name. It is an inline chip in the row body now. The
+rule holds — "verified by construction" is not the same as looking at it.

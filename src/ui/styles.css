@@ -2291,13 +2291,13 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
    card means nothing at a glance. */
 .up-mark { color: var(--gold); margin-right: 0.2rem; }
 .draft-upgrade { outline-color: var(--gold) !important; }
-/* Rides the top of the art, not the bottom of the card: the card face is a
-   flex column ending in .cost-seal, and a bottom-anchored banner sat straight
-   on top of the price. The art plate is the only region with slack. */
+/* Was an absolute overlay across the top of the portrait art. In a 64px row
+   that lands straight on the card's name, so it is an inline chip now — it sits
+   in the row body under the title, where it reads as a label on the offer. */
 .up-banner {
-  position: absolute;
-  left: 0; right: 0; top: 0;
-  z-index: 3;
+  display: inline-block;
+  align-self: flex-start;
+  margin-top: 0.12rem;
   background: rgba(20, 16, 12, 0.88);
   color: #e8d48a;
   font-family: Cinzel, serif;
@@ -2306,11 +2306,9 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   letter-spacing: 0.06em;
   text-transform: uppercase;
   text-align: center;
-  padding: 0.16rem 0.1rem;
-  border-bottom: 1px solid var(--gold-dim);
-  border-radius: inherit;
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
+  padding: 0.1rem 0.3rem;
+  border: 1px solid var(--gold-dim);
+  border-radius: 2px;
   pointer-events: none;
 }
 
