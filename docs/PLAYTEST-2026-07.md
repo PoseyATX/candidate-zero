@@ -167,3 +167,90 @@ and a warning on a two-per-week action risks nagging. Flagged so the choice is o
 
 34-harness chain, `smoke:ui` (45 assertions), `a11y` 0 critical/serious, typecheck, build,
 `check:card-art`, `check:log-markers` — all green.
+
+---
+
+# Round 2 — alpha player notes, 2026-07-28
+
+Direct player feedback: heavy scrolling to reach cards, phase-draft cards "smashed down to 1 letter",
+no 1-AP cards to spend a 5-AP week on, and "clicking blindly… the interface is very cryptic as far as
+what you are supposed to be doing."
+
+## 11. My scroll measurement was wrong — CORRECTED
+
+Round 1 reported "SCROLL page 844px vs screen 844px (1.00 screens), End Week reachable without
+scrolling." The document does not scroll; `.mtab-panel` does (`styles.css`, `overflow-y: auto`). I
+measured `document.scrollingElement`, got the fixed viewport height back, and reported "no scrolling"
+about a screen that scrolled ~1.8×. The player was right and the instrument was pointed at the wrong
+element. Every scroll number below measures `.mtab-panel`.
+
+## 12. Card faces are text rows now — FIXED
+
+`.play-card` was `aspect-ratio: 2/3; max-width: 172px` — a ~250px portrait card whose emblem owned
+78% of the height, with the name clamped to two lines. Five of those is ~750px in a ~620px panel.
+
+Replaced with a full-width row: **cost anchor** (big AP numeral, money/vol beneath), name at full
+width, risk chip. Art is gone from the *list* and still renders in the dossier; sponsor full-bleed
+cards (PR01) keep their art as a banner row.
+
+Measured at 390×844: panel content **1103px → 621px in a 621px panel = 1.78 → 1.00 screens**. Cards
+**172×258 → 366×64**. No name clipped. Minimum tap target 64px.
+
+Three things blocked this and each had to be found separately:
+- **`src/ui/card-lock.css`** — a "HARD LOCK" file loaded after `styles.css` forcing
+  `aspect-ratio: 2/3 !important` and a 3-row art/name/cost grid. Its stated purpose ("art plate size
+  never changes with title length") died with the art. Rewritten; the promo and full-bleed rules are
+  what survived.
+- **`.card-grid { align-items: start }`** on a column flex container made every section shrink-wrap,
+  capping rows at ~63% of the panel with dead space to the right.
+- **`.name { order: 2 }`**, left from the portrait stack, put the tagline *above* the title.
+
+## 13. The squashed draft was the container, not the cards — FIXED
+
+`#draft.card-grid` resolved to `grid-template-columns: 1fr 1fr`. The heading spans both columns
+(`.card-grid > .hint`), so the card container landed in **one** of them and every draft card rendered
+at half width — hence "Charter the…". The inner `.draft-cards` grid was never the problem, and my
+first fix targeted the wrong rule (a later declaration in the same block silently won). Now single
+column at every width.
+
+## 14. A 5-AP week bought 2.7 plays — FIXED
+
+The catalog has 12 one-AP cards; the *starter deck* had two, and one of those (Yard Signs) also wants
+$150 against a $200 opening bankroll.
+
+| | before | after |
+|---|---|---|
+| deck size | 18 | 26 |
+| cards ≤1 AP | 4 (22%) | 11 (42%) |
+| mean AP | 1.83 | 1.62 |
+| plays per 5-AP week | 2.7 | **3.1** |
+
+Added `PL80`/`PL84`/`PL83` ×2 each — 1 AP, cash-free, phase-1 legal, ungated.
+
+**This is where measuring mattered.** Six extra cards dropped the money path's week-8 ballot rate from
+**72% to 47%**, by thinning both the filing fee (PL05) and the fundraiser that pays for it (PL13).
+`ensureBallotAccessInHand` is no help — it prefers PL04, so the labor door gets the net and the money
+door does not. One more of each restored it.
+
+Final week-8 ballot rates (400 trials, SE ~2.4pp) vs baseline: labor **87** (84.5), money **68.5**
+(72), hybrid **94.8** (94), grind **26.8** (31.3). Every path within ~2 SE, and the grind control did
+not get easier. A *second* PL13 fixed money outright (85.5%) but pushed grind to 45% — keeping what
+little tension Act I has beat closing a 3.5pp gap.
+
+## 15. "Clicking blindly" — FIXED
+
+The per-play toast was pure flavour: `Petitions: GAIN. Bank it.` The ledger moved; the screen never
+said by how much. Every play now reports what it actually moved — `+74 signatures`, `+6 contacts`,
+`−$150` — in the toast and the log line, alongside the flavour rather than instead of it.
+`buildPlayFeedback` already took a `before` snapshot for milestones, so this extends that path
+(`ledgerMark` / `formatDeltas` in `src/engine/feedback.ts`). Internal to the engine — no host API
+change.
+
+## Verified by construction, not by screenshot
+
+The draft-row screenshot. My browser driver reached a phase draft before these changes and could not
+after (the deck changed, so seeds diverge), and I stopped chasing it rather than burn more time. What
+I did verify: the draft uses the identical `cardClasses(card)` row renderer as the hand, and both the
+`#draft.card-grid` container and the `#draft .draft-cards` inner grid resolve to a single 1fr column
+in the built CSS. `smoke:ui` drives drafts and is green. That is sound but it is not a picture, and
+the distinction is worth keeping honest.

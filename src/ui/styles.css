@@ -823,6 +823,10 @@ body.dossier-open {
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
+  /* .card-grid sets align-items:start, which on a column flex container makes
+     every section shrink-wrap instead of filling — card rows came out ~63% of
+     the panel with dead space on the right. */
+  align-items: stretch;
 }
 #playables .play-section {
   display: flex;
@@ -849,14 +853,16 @@ body.dossier-open {
 #playables .play-section-cards,
 #draft .draft-cards {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.7rem;
-  align-items: start;
+  /* One column: card rows are full-width. Two columns of rows would re-create
+     the truncation problem the rows exist to solve. */
+  grid-template-columns: 1fr;
+  gap: 0.4rem;
+  align-items: stretch;
 }
-@media (min-width: 560px) {
+@media (min-width: 700px) {
   #playables .play-section-cards,
   #draft .draft-cards {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 1fr 1fr;
   }
 }
 #playables .play-section[data-section="camp"] .play-section-label {
@@ -938,14 +944,20 @@ body.dossier-open {
    Aged-paper grain + corner brackets = Southern-gothic / Art-Deco brief. */
 .play-card {
   position: relative;
-  aspect-ratio: 2 / 3;
+  /* Was aspect-ratio 2/3 at max-width 172px — a ~250px-tall portrait card, so a
+     five-card hand ran ~750px inside a ~600px scroll panel and long names got
+     clamped to "Charter the…". This is a full-width row instead: cost anchor,
+     name, risk. Roughly 64px, so the hand fits one screen and names read whole.
+     Alpha feedback, 2026-07-27. */
   width: 100%;
-  max-width: 172px;
+  min-height: 64px;
   text-align: left;
   font: inherit;
   cursor: pointer;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.6rem;
   /* Kind channel (see .kind-* below): --wash tints the paper, --accent
      colors the frame brackets/inner rule. Defaults = neutral action card. */
   --wash: transparent;
@@ -1058,14 +1070,18 @@ body.dossier-open {
 
 /* --- Title plate (bottom band) — 2-line clamp --- */
 .play-card .name {
-  order: 2;
+  /* order was for the portrait art/name/cost stack; in a row the DOM order is
+     already correct, and a stale order:2 pushed the tag above the title. */
+  order: 0;
   font-family: Cinzel, serif;
   font-weight: 700;
   font-size: 0.9rem;
   line-height: 1.15;
-  text-align: center;
+  /* Left, not centred: a centred title over a left-aligned tag reads ragged in
+     a row, and the eye should run cost -> name -> risk in a straight line. */
+  text-align: left;
   letter-spacing: 0.01em;
-  margin: 0.35rem 0.2rem 0.15rem;
+  margin: 0;
   color: var(--ink);
   text-shadow: 0 1px 0 rgba(255, 250, 235, 0.5);
   display: -webkit-box;
@@ -1158,7 +1174,7 @@ body.dossier-open {
 
 /* --- Cost band under title (full cost string; multi-term fits here) --- */
 .play-card .cost-seal {
-  order: 3;
+  order: 0;
   position: relative;
   top: auto;
   right: auto;
@@ -2219,14 +2235,17 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
 }
 
 /* Draft grid (when not nested under .draft-cards) keeps 2-col fallback. */
+/* #draft holds a heading plus the .draft-cards container. As a 2-column grid
+   the heading spanned both columns (.card-grid > .hint) and the card container
+   landed in ONE of them — so every draft card rendered at half width and its
+   name crushed to "Charter the…". That is the squashed draft alpha players
+   reported; the inner .draft-cards grid was never the problem. Single column,
+   at every width. */
+#draft.card-grid,
 #draft.card-grid:not(:has(.draft-cards)) {
-  grid-template-columns: 1fr 1fr;
-  gap: 0.7rem;
-}
-@media (min-width: 560px) {
-  #draft.card-grid:not(:has(.draft-cards)) {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  grid-template-columns: 1fr;
+  align-items: stretch;
+  gap: 0.5rem;
 }
 
 /* Locked ground (Ground.gated): visible with its reason, never selectable —
@@ -2382,4 +2401,155 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   opacity: 0.55;
   cursor: not-allowed;
   font-size: 0.78rem;
+}
+
+/* ============================================================
+   CARD ROWS — text-first faces (alpha feedback 2026-07-27)
+   Cost leads, name reads in full, art moves to the dossier.
+   The parchment / bracket / Cinzel language is unchanged; only
+   the geometry and the emphasis moved.
+   ============================================================ */
+
+/* Cost anchor: the number you actually plan around. */
+.play-card .cost-anchor {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 3.1rem;
+  padding: 0.15rem 0.35rem;
+  border-right: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  line-height: 1;
+}
+.play-card .cost-num {
+  font-family: Cinzel, serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--ink);
+  text-shadow: 0 1px 0 rgba(255, 250, 235, 0.55);
+}
+.play-card .cost-unit {
+  font-family: Cinzel, serif;
+  font-size: 0.56rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #6d5836;
+  margin-top: 0.1rem;
+}
+.play-card .cost-extra {
+  font-size: 0.56rem;
+  color: #7a5a2c;
+  margin-top: 0.18rem;
+  white-space: nowrap;
+}
+.play-card .cost-anchor-free .cost-num { font-size: 1.15rem; color: #6d5836; }
+
+/* Body: name in full — no clamp, no ellipsis. This is the truncation fix. */
+.play-card .row-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.play-card .row-body .name {
+  font-family: Cinzel, serif;
+  font-weight: 700;
+  font-size: 0.92rem;
+  line-height: 1.15;
+  color: var(--ink);
+  text-shadow: 0 1px 0 rgba(255, 250, 235, 0.5);
+  /* Deliberately no -webkit-line-clamp / overflow hidden. */
+  overflow-wrap: anywhere;
+}
+.play-card .row-tag,
+.play-card .row-lock {
+  font-size: 0.66rem;
+  line-height: 1.2;
+  color: #6d5836;
+  font-style: italic;
+}
+.play-card .row-lock { color: #8a2f26; font-style: normal; }
+
+/* Risk chip, right edge. */
+.play-card .row-risk {
+  flex: 0 0 auto;
+  font-family: Cinzel, serif;
+  font-size: 0.56rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.12rem 0.3rem;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  opacity: 0.85;
+}
+.risk-chip-safe { color: #3f6b34; }
+.risk-chip-std { color: #6d5836; }
+.risk-chip-vol { color: #8a2f26; }
+.risk-chip-choice { color: #4a5f7a; }
+
+/* The practised mark rides the name. */
+.play-card .row-body .up-mark { margin-right: 0.25rem; }
+
+/* Sponsor cards keep their art: a full-width banner row. */
+.play-card.full-art {
+  min-height: 0;
+  padding: 0;
+  display: block;
+}
+.play-card.full-art .card-art-full {
+  display: block;
+  width: 100%;
+}
+.play-card.full-art .card-art-full .art-plate,
+.play-card.full-art .card-art-full img,
+.play-card.full-art .card-art-full svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Hover lift is wrong for a list; keep it a flat, honest press. */
+.play-card:hover {
+  transform: none;
+  outline-color: var(--gold);
+}
+.play-card:active { transform: translateY(1px); }
+
+/* The numbers a play actually moved. Alpha players reported "clicking blindly":
+   the toast asserted GAIN and nothing visible changed. */
+.toast-deltas {
+  margin-top: 0.2rem;
+  font-family: Cinzel, serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+  color: #e8d48a;
+}
+
+/* Cards read as a held hand, not a list: each row overlaps the one above it and
+   casts a shadow upward onto it. .play-card is already position:relative, so
+   DOM order alone paints each card over its predecessor — no z-index needed. */
+#playables .play-section-cards,
+#draft .draft-cards {
+  gap: 0;
+}
+#playables .play-section-cards > .play-card + .play-card,
+#draft .draft-cards > .play-card + .play-card {
+  margin-top: -7px;
+}
+#playables .play-section-cards > .play-card,
+#draft .draft-cards > .play-card {
+  box-shadow:
+    inset 0 0 22px rgba(122, 90, 44, 0.18),
+    /* upward cast onto the card above — this is what sells the stack */
+    0 -6px 10px -2px rgba(0, 0, 0, 0.45),
+    0 2px 3px rgba(0, 0, 0, 0.4);
+}
+/* The top card of a section has nothing above it to shade. */
+#playables .play-section-cards > .play-card:first-child,
+#draft .draft-cards > .play-card:first-child {
+  box-shadow:
+    inset 0 0 22px rgba(122, 90, 44, 0.18),
+    0 2px 3px rgba(0, 0, 0, 0.4);
 }

@@ -3,6 +3,7 @@
  */
 
 import { STAMPS } from '../engine/resolve.js';
+import { formatDeltas } from '../engine/feedback.js';
 import type { PlayFeedback } from '../engine/feedback.js';
 import type { Campaign } from '../engine/loop.js';
 
@@ -35,7 +36,15 @@ export function showJuice(fb: PlayFeedback): void {
   const t = document.createElement('div');
   t.className = `toast toast-${fb.beat}`;
   t.setAttribute('role', 'status');
-  t.innerHTML = `<div class="toast-stamp">${fb.stamp}${streak}</div><div class="toast-body">${escapeHtml(fb.juice)}</div>`;
+  // The number is the point: "GAIN. Bank it." with nothing moving on screen is
+  // what alpha players called clicking blindly.
+  const deltas = formatDeltas(fb.deltas ?? []);
+  const deltaHtml = deltas
+    ? `<div class="toast-deltas">${escapeHtml(deltas)}</div>`
+    : '';
+  t.innerHTML =
+    `<div class="toast-stamp">${fb.stamp}${streak}</div>` +
+    `<div class="toast-body">${escapeHtml(fb.juice)}</div>${deltaHtml}`;
   host.appendChild(t);
   while (host.children.length > 3) {
     host.firstElementChild?.remove();

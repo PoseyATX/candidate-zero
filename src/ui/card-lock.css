@@ -1,71 +1,17 @@
 /**
- * HARD LOCK — every .play-card is 2:3. Art plate size never changes with title length.
- * Loaded after styles.css. Do not reintroduce flex:1 on .card-art.
+ * CARD ROW LOCK — loaded after styles.css.
+ *
+ * This file used to hard-lock every .play-card to a 2:3 portrait grid
+ * (art / name / cost) with !important, so that "art plate size never changes
+ * with title length". That constraint died with the art: alpha players reported
+ * heavy scrolling and draft names crushed to "Charter the…", and the fix was to
+ * drop the emblem from the list and make the face a full-width text row.
+ *
+ * A portrait lock here would silently undo that, so the standard-card rules are
+ * gone rather than commented out. What remains is what still earns its keep:
+ * the promo shell, and the full-bleed sponsor art (PR01), which is the one card
+ * whose art IS the face and must survive.
  */
-
-.play-card {
-  aspect-ratio: 2 / 3 !important;
-  width: 100%;
-  max-width: 172px;
-  height: auto !important;
-  display: grid !important;
-  grid-template-rows: minmax(0, 1fr) 2.55em 1.55em !important;
-  grid-template-columns: minmax(0, 1fr) !important;
-  flex-direction: unset !important;
-  align-content: stretch !important;
-  box-sizing: border-box;
-}
-
-.play-card.choice-card {
-  grid-template-rows: minmax(0, 1fr) 2.8em !important;
-}
-
-.play-card .card-art {
-  grid-row: 1 !important;
-  grid-column: 1 !important;
-  order: unset !important;
-  flex: none !important;
-  width: auto !important;
-  height: 100% !important;
-  min-height: 0 !important;
-  max-height: none !important;
-  margin: 0.2rem 0.28rem 0 !important;
-  align-self: stretch !important;
-}
-
-.choice-card .card-art {
-  height: 100% !important;
-}
-
-.play-card .name {
-  grid-row: 2 !important;
-  grid-column: 1 !important;
-  order: unset !important;
-  flex: none !important;
-  margin: 0.1rem 0.2rem 0 !important;
-  min-height: 0 !important;
-  max-height: none !important;
-  height: auto !important;
-  align-self: center !important;
-  word-break: normal !important;
-  overflow-wrap: normal !important;
-  hyphens: manual !important;
-  font-size: clamp(0.68rem, 2.6vw, 0.9rem) !important;
-}
-
-.play-card .cost-seal {
-  grid-row: 3 !important;
-  grid-column: 1 !important;
-  order: unset !important;
-  flex: none !important;
-  margin: 0.05rem 0.3rem 0.18rem !important;
-  align-self: center !important;
-}
-
-.play-card.draft-card {
-  max-width: 172px !important;
-  width: 100% !important;
-}
 
 /* PR01 promo — pastel pink shell when full-art is off. No "ultra promo" badge. */
 .play-card.kind-promo {
@@ -81,27 +27,25 @@
     0 1px 2px rgba(0, 0, 0, 0.35),
     0 8px 18px rgba(180, 60, 100, 0.25) !important;
 }
-.play-card.kind-promo .name {
+.play-card.kind-promo .name,
+.play-card.kind-promo .cost-num {
   color: #6b2038 !important;
 }
-.play-card.kind-promo .cost-seal {
+.play-card.kind-promo .cost-unit,
+.play-card.kind-promo .cost-extra,
+.play-card.kind-promo .row-tag {
   color: #9a3050 !important;
-  border-color: rgba(180, 70, 100, 0.7) !important;
-  background: linear-gradient(180deg, #fce4ec, #f5c6d6) !important;
-}
-.play-card.kind-promo .card-emblem {
-  color: #b84868 !important;
 }
 
 /* ============================================================
    FULL-FACE PROMO ART (PR01)
-   Single inlined SVG owns the entire 2:3 card. No title, no cost,
-   no parchment plate, no emblem. Grid collapses to one cell.
+   The artwork IS the card and carries its own title and framing.
+   As a row it becomes a full-width banner: no parchment, no chrome.
    ============================================================ */
 .play-card.full-art {
-  grid-template-rows: minmax(0, 1fr) !important;
-  grid-template-columns: minmax(0, 1fr) !important;
+  display: block !important;
   padding: 0 !important;
+  min-height: 0 !important;
   overflow: hidden !important;
   background-image: none !important;
   background: #f0d4e4 !important;
@@ -112,68 +56,49 @@
     0 8px 18px rgba(180, 60, 100, 0.28) !important;
 }
 
-/* The sole child fills the single grid cell completely */
 .play-card.full-art > .card-art,
 .play-card.full-art .card-art-full {
-  grid-row: 1 / -1 !important;
-  grid-column: 1 / -1 !important;
+  display: block !important;
+  width: 100% !important;
   margin: 0 !important;
   padding: 0 !important;
   border: none !important;
   background: none !important;
-  height: 100% !important;
-  width: 100% !important;
-  min-height: 0 !important;
-  max-height: none !important;
-  align-self: stretch !important;
-  justify-self: stretch !important;
-  display: block !important;
   position: relative !important;
   overflow: hidden !important;
   border-radius: inherit;
 }
 
-/* Intermediate plate + the SVG itself must expand to 100% */
 .play-card.full-art .art-plate,
 .play-card.full-art .art-plate.has-raster,
 .play-card.full-art .art-plate-inline {
-  position: absolute !important;
-  inset: 0 !important;
   display: block !important;
   width: 100% !important;
-  height: 100% !important;
   margin: 0 !important;
   padding: 0 !important;
   border: none !important;
   background: none !important;
-  z-index: 0 !important;
 }
 
+/* The art keeps its own aspect ratio rather than being squashed into a row. */
 .play-card.full-art .art-plate-inline svg,
 .play-card.full-art .art-plate svg,
 .play-card.full-art .art-raster {
   display: block !important;
   width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-  object-position: center center !important;
+  height: auto !important;
   max-width: none !important;
   max-height: none !important;
 }
 
-/* Kill any residual chrome that the JS might still emit */
+/* Kill any residual chrome the JS might still emit on a full-art face. */
 .play-card.full-art .name,
 .play-card.full-art .cost-seal,
+.play-card.full-art .cost-anchor,
+.play-card.full-art .row-body,
+.play-card.full-art .row-risk,
 .play-card.full-art .card-emblem,
 .play-card.full-art .kind-seal,
 .play-card.full-art .stamp {
   display: none !important;
-}
-
-.play-card .card-art .art-raster,
-.play-card .card-art.has-raster img,
-.play-card .card-art .has-raster img,
-.play-card .card-art .art-plate img {
-  object-fit: cover !important;
-  object-position: center center !important;
 }

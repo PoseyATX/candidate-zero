@@ -359,6 +359,9 @@ export function endWeek(): void {
           : 'hit',
     intensity: 0.7,
     margin: 0,
+    // The week summary carries its own totals inside `juice`, so the per-play
+    // delta strip stays empty here rather than repeating them.
+    deltas: [],
     juice: summary.juice
   });
   weekPlays = [];

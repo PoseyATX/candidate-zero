@@ -17,6 +17,12 @@ export type NearMissKind =
   | 'skirted_disaster'
   | 'brushed_disaster';
 
+/** What the play actually moved on the ledger, in plain player-facing words. */
+export interface LedgerDelta {
+  label: string;
+  amount: number;
+}
+
 export interface PlayFeedback {
   stamp: (typeof STAMPS)[number];
   beat: Beat;
@@ -29,6 +35,12 @@ export interface PlayFeedback {
   milestone?: string;
   /** One-line juice — never claims the RNG was soft. */
   juice: string;
+  /**
+   * The numbers that moved. Alpha players said they were "clicking blindly" —
+   * the toast asserted GAIN and nothing visibly changed, because the flavour
+   * line never carried a figure. This is that figure.
+   */
+  deltas: LedgerDelta[];
 }
 
 export interface WeekSummary {
@@ -225,11 +237,69 @@ function checkMilestones(
  * Build feedback for a resolved play. Mutates streak counters on state.feedback only.
  * Call AFTER card.run has applied yields so milestones see new ballot/sigs.
  */
+/** Fields worth reporting on a single play, in the order a player scans them. */
+const DELTA_FIELDS: { key: keyof LedgerLike; label: string }[] = [
+  { key: 'signatures', label: 'signatures' },
+  { key: 'contacts', label: 'contacts' },
+  { key: 'money', label: '$' },
+  { key: 'nameID', label: 'name ID' },
+  { key: 'volPool', label: 'volunteers' },
+  { key: 'momentum', label: 'momentum' },
+  { key: 'endorsePts', label: 'endorsements' },
+  { key: 'favors', label: 'favors' }
+];
+
+interface LedgerLike {
+  signatures: number;
+  contacts: number;
+  money: number;
+  nameID: number;
+  volPool: number;
+  momentum: number;
+  endorsePts: number;
+  favors: number;
+}
+
+/** Snapshot the fields a single play can move. Cheap; called per play. */
+export function ledgerMark(state: GameState): LedgerLike {
+  return {
+    signatures: state.signatures,
+    contacts: state.contacts,
+    money: state.money,
+    nameID: state.nameID,
+    volPool: state.volPool,
+    momentum: state.momentum,
+    endorsePts: state.endorsePts,
+    favors: state.favors
+  };
+}
+
+function diffLedger(before: LedgerLike, state: GameState): LedgerDelta[] {
+  const after = ledgerMark(state);
+  const out: LedgerDelta[] = [];
+  for (const { key, label } of DELTA_FIELDS) {
+    const d = after[key] - before[key];
+    if (d !== 0) out.push({ label, amount: Math.round(d * 100) / 100 });
+  }
+  return out;
+}
+
+/** "+42 signatures · +6 contacts" — empty string when nothing moved. */
+export function formatDeltas(deltas: LedgerDelta[]): string {
+  return deltas
+    .map(d => {
+      const sign = d.amount >= 0 ? '+' : '−';
+      const n = Math.abs(d.amount);
+      return d.label === '$' ? `${sign}$${n}` : `${sign}${n} ${d.label}`;
+    })
+    .join(' · ');
+}
+
 export function buildPlayFeedback(
   state: GameState,
   card: PlayCard,
   roll: RollResult,
-  before: { ballot: boolean; sigs: number; stage: GameState['stage'] }
+  before: { ballot: boolean; sigs: number; stage: GameState['stage']; ledger?: LedgerLike }
 ): PlayFeedback {
   const fb = ensureFb(state);
   const stamp = STAMPS[roll.tier];
@@ -262,7 +332,8 @@ export function buildPlayFeedback(
     nearMiss: near?.kind,
     streak,
     milestone,
-    juice
+    juice,
+    deltas: before.ledger ? diffLedger(before.ledger, state) : []
   };
   fb.lastPlay = feedback;
   return feedback;

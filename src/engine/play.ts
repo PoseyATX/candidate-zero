@@ -7,7 +7,7 @@
 import { resolve, STAMPS } from './resolve.js';
 import { getPhase } from './state.js';
 import { getGroundPenalty, rivalOddsPenalty } from './calendar.js';
-import { buildPlayFeedback } from './feedback.js';
+import { buildPlayFeedback, ledgerMark, formatDeltas } from './feedback.js';
 import { repCheck, shadowCheck } from './reputation.js';
 import { canAffordCash } from './debt.js';
 import { syncMovementFlags } from './entities.js';
@@ -159,7 +159,11 @@ export function executePlay(
   const before = {
     ballot: state.ballot,
     sigs: state.signatures,
-    stage: state.stage
+    stage: state.stage,
+    // Snapshot the ledger so the player can be told what the play actually
+    // moved. "GAIN. Bank it." with no number is why alpha players said they
+    // were clicking blindly.
+    ledger: ledgerMark(state)
   };
 
   let p = card.odds ? card.odds(state, g) : 0.5;
@@ -253,10 +257,13 @@ export function executePlay(
     tier: roll.tier,
     beat: feedback.beat
   });
+  const deltaText = formatDeltas(feedback.deltas);
   state.log.push({
     week: state.week,
     kind: 'juice',
-    text: feedback.juice,
+    // Same reason as the toast: a log of "GAIN. Bank it." twenty times over
+    // tells a player nothing about whether the week went anywhere.
+    text: deltaText ? `${feedback.juice}  ${deltaText}` : feedback.juice,
     cardId: card.id,
     tier: roll.tier,
     beat: feedback.beat

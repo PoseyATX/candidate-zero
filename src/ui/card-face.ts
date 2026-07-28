@@ -216,23 +216,72 @@ export function computeCardFaceView(
   };
 }
 
+/**
+ * The cost anchor: AP as a big numeral with everything else beneath it.
+ *
+ * Cost is the number a player actually plans around, and on the old portrait
+ * face it was the smallest thing on the card \u2014 a seal under an emblem that ate
+ * 78% of the height. Here it leads.
+ */
+function costAnchorHtml(card: PlayCard, state?: GameState): string {
+  const c = card.cost;
+  const ap = state ? effectiveApCost(state, card) : (c.a ?? 0);
+  const extras: string[] = [];
+  if (c.$) extras.push(`$${c.$}`);
+  if (c.vp) extras.push(`${c.vp} vol`);
+  if (c.m) extras.push(`${c.m} mom`);
+  if (c.fav) extras.push(`${c.fav} fav`);
+  const sub = extras.length
+    ? `<span class="cost-extra">${attrEscape(extras.join(' \u00b7 '))}</span>`
+    : '';
+  if (!ap) {
+    // Free-in-AP plays (shop buys, filing fee) still need the money to read.
+    return `<span class="cost-anchor cost-anchor-free">
+      <span class="cost-num">${extras.length ? '\u2014' : '0'}</span>
+      <span class="cost-unit">AP</span>${sub}
+    </span>`;
+  }
+  return `<span class="cost-anchor">
+    <span class="cost-num">${ap}</span>
+    <span class="cost-unit">AP</span>${sub}
+  </span>`;
+}
+
+const RISK_SHORT: Record<string, string> = {
+  SAFE: 'safe',
+  STD: 'std',
+  VOL: 'vol',
+  CHOICE: 'fork'
+};
+
 export function cardInner(
   state: GameState,
   card: PlayCard,
   opts: CardFaceOpts = {}
 ): string {
   const v = computeCardFaceView(state, card, opts);
-  const { full } = costParts(card, state);
   if (v.fullFace && v.artPlateHtml) {
+    // Sponsor cards keep their full-bleed art \u2014 it is the whole point of them.
     return `<span class="card-art card-art-full">${v.artPlateHtml}</span>`;
   }
   // An upgraded card must be recognisable at a glance, or the second axis is
   // invisible and the choice to deepen means nothing.
-  const up = isUpgraded(state, card.id) ? '<span class="up-mark" title="Practised">\u2726</span>' : '';
+  const up = isUpgraded(state, card.id)
+    ? '<span class="up-mark" title="Practised">\u2726</span>'
+    : '';
+  const risk = RISK_SHORT[card.risk] ?? card.risk.toLowerCase();
+  const tag = card.tag ? `<span class="row-tag">${attrEscape(card.tag)}</span>` : '';
+  const lock =
+    opts.locked && opts.lockReason
+      ? `<span class="row-lock">${attrEscape(opts.lockReason)}</span>`
+      : '';
   return `
-    <span class="card-art">${v.artPlateHtml}<span class="card-emblem">${v.emblemHtml}</span></span>
-    <span class="name">${up}${attrEscape(v.name)}</span>
-    <span class="cost-seal">${attrEscape(full)}</span>
+    ${costAnchorHtml(card, state)}
+    <span class="row-body">
+      <span class="name">${up}${attrEscape(v.name)}</span>
+      ${lock || tag}
+    </span>
+    <span class="row-risk risk-chip-${card.risk.toLowerCase()}">${attrEscape(risk)}</span>
   `;
 }
 
