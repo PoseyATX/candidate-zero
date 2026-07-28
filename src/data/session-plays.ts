@@ -10,6 +10,7 @@ import type { PlayCard } from '../engine/types.js';
 import {
   applyPacClaimOnReferral,
   billOdds,
+  CALENDAR_OPENS_WEEK,
   refusePacClaim,
   sessionPipelineBlocked,
   setBillStage
@@ -185,7 +186,7 @@ export const SS05_CalendarSlot: PlayCard = {
     s.stage === 'session' &&
     !!s.bill &&
     s.bill.pipelineStage === 4 &&
-    s.week >= 9 &&
+    s.week >= CALENDAR_OPENS_WEEK &&
     !s.sessionFlags?.pipelineUsed &&
     !sessionPipelineBlocked(s, 'SS05'),
   odds: s => billOdds(s, 0.3) + (s.favor > 65 ? 0.15 : 0),

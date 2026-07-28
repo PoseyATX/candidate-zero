@@ -261,3 +261,57 @@ Chasing the picture caught a regression the construction argument would never ha
 **"PRACTISED · −1 AP" banner was still `position: absolute; top: 0`** from the portrait layout, so on
 a 64px row it sat directly on top of the card's name. It is an inline chip in the row body now. The
 rule holds — "verified by construction" is not the same as looking at it.
+
+
+---
+
+# Round 3 — Session's prize, 2026-07-28
+
+Following §7. I flagged "zero laws in 6000 runs" three times and each time caveated it as partly
+policy blindness. That caveat was too generous, and measuring properly showed why.
+
+## 17. The bill pipeline is near-impassable — PARTLY FIXED
+
+A policy that drives the bill **every single week** — casework first to hold the seat, then the
+earliest available pipeline motion — passed a law in **4 of 97 sessions (4.1%)**. A policy that
+ignores the bill passed 0. So the earlier zero was not only blindness; deliberate play barely moves
+it.
+
+Where it dies, of 97 sessions reached (furthest stage):
+
+| stage | 2 | 3 | **4** | 5 | 6 | 7 | 8 (passed) |
+|---|---|---|---|---|---|---|---|
+| runs | 9 | 15 | **41** | 9 | 13 | 6 | 4 |
+
+**Stage 4 is the wall** — 42% of bills die there. Stage 4 is "reported out, waiting on Calendars",
+and SS05 ("the narrowest door") is gated on `week >= 9`.
+
+### The bug: the game charged you for a wait it imposed
+
+`billOdds` subtracts `heat × 0.05`, and `applyBillStallHeat` adds +1 heat for every week a bill sits
+at the same stage. A bill reported out in week 5 therefore sat four weeks it had **no legal way to
+avoid** and arrived at Calendars with roughly −20% odds — turning SS05's 0.30 base into ~0.10 on the
+one roll the whole Act builds toward.
+
+Punishing a stall the player chose is the mechanic working. Punishing one the calendar imposed is
+not. `applyBillStallHeat` now skips heat while `billBlockedByCalendar(state)` holds, and the week-9
+gate moved into an exported `CALENDAR_OPENS_WEEK` so the card's `show` and the heat rule cannot
+drift apart.
+
+**Measured: 4.1% → 7.2% of sessions reached (4 → 7 laws of 97).** Stage-4 deaths 41 → 37.
+
+## 18. What still gates it — YOUR CALL
+
+Real, but not mine to keep tuning unilaterally. Two designed locks remain on the same door:
+
+- **One pipeline motion per week** (`sessionFlags.pipelineUsed`), so seven stages need seven
+  successful weeks out of fourteen, and stage 5 cannot even be *attempted* before week 9. That
+  leaves ~6 attempts for the last 3 stages.
+- **`sessionPipelineBlocked`** hides SS05 and SS06 outright when a Speaker freeze coincides with
+  favor < 40 — a second lock on the same two stages.
+
+Both are thematically right (Calendars really is where Texas bills die, and leadership really does
+freeze you out). The question is whether Act III's *named prize* should fire ~7% of the time. That
+is a difficulty decision, not a bug, and it is yours. If you want it meaningfully more reachable, the
+cheapest honest levers in order: let a spare 3 AP buy a second pipeline motion in a week; drop the
+Calendars gate to week 7; or raise SS05's 0.30 base.
