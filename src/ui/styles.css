@@ -118,7 +118,7 @@ h1 {
   display: none;
   position: sticky;
   top: 0;
-  z-index: 30;
+  z-index: var(--z-hud);
   align-items: center;
   gap: 0.8rem;
   flex-wrap: wrap;
@@ -481,7 +481,7 @@ body.dossier-open {
 .card-detail {
   position: fixed;
   inset: 0;
-  z-index: 110;
+  z-index: var(--z-dossier);
   display: flex;
   align-items: stretch;
   justify-content: center;
@@ -1343,7 +1343,7 @@ body.dossier-open {
 .act-splash {
   position: fixed;
   inset: 0;
-  z-index: 80;
+  z-index: var(--z-splash);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1403,7 +1403,7 @@ body.dossier-open {
 .outside-weather {
   position: fixed;
   inset: 0;
-  z-index: 85; /* above act splash if both queue (weather first in flow) */
+  z-index: var(--z-weather); /* above act splash if both queue (weather first in flow) */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1672,7 +1672,7 @@ body.dossier-open {
 .ground-picker {
   position: fixed;
   inset: 0;
-  z-index: 60;
+  z-index: var(--z-picker);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1989,30 +1989,53 @@ body.dossier-open {
    (assigned in main.ts renderDraft) — no separate rule needed here. */
 
 /* Fixed toast stack — Phase 6; never reflows card grids */
+/* ============================================================
+   OVERLAY LAYERS — one scale, declared once.
+   These were scattered literals and had drifted into a tie:
+   .act-splash and .toast-host were BOTH z-index 80, so which
+   one covered the other came down to DOM order. A transient
+   notice must never outrank a dialog the player has to answer.
+   ============================================================ */
+:root {
+  --z-hud: 30;
+  --z-toast: 70;      /* transient, below every dialog */
+  --z-picker: 100;
+  --z-splash: 104;
+  --z-weather: 106;   /* weather queues over the act splash */
+  --z-dossier: 110;
+}
+
+/* Anchored above the End Week footer, not at top:12%.
+   At the top it sat directly on the act strip, the goal strip and the phase
+   draft heading — the three things a player reads to know what to do. Down
+   here it briefly covers the tail of the card list instead, which is where
+   the thumb already is after a tap. One toast at a time (see paint-log.ts),
+   so this never becomes a stack. */
 .toast-host {
   position: fixed;
   left: 50%;
-  top: 12%;
+  bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 4.6rem);
   transform: translateX(-50%);
-  z-index: 80;
+  z-index: var(--z-toast);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.35rem;
   width: min(420px, 92vw);
   pointer-events: none;
 }
 .toast {
   width: 100%;
+  box-sizing: border-box;
   background: linear-gradient(175deg, #efe3c6, #e0cfa9);
   color: var(--ink);
   border: 1px solid var(--gold);
-  outline: 2px solid var(--gold-dim);
-  outline-offset: 2px;
-  padding: 0.7rem 1rem;
+  /* The second ring plus its offset made every toast read as a heavy plaque. */
+  padding: 0.45rem 0.7rem;
+  border-radius: 3px;
   text-align: center;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
-  animation: toast-in 0.35s ease-out both;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+  animation: toast-in 0.3s ease-out both;
   pointer-events: none;
 }
 .toast-stamp {
@@ -2225,7 +2248,7 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   display: flex;
   align-items: flex-end;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 100;
+  z-index: var(--z-picker);
 }
 #ground-picker .gp-panel {
   width: 100%;

@@ -315,3 +315,53 @@ freeze you out). The question is whether Act III's *named prize* should fire ~7%
 is a difficulty decision, not a bug, and it is yours. If you want it meaningfully more reachable, the
 cheapest honest levers in order: let a spare 3 AP buy a second pipeline motion in a week; drop the
 Calendars gate to week 7; or raise SS05's 0.30 base.
+
+
+---
+
+# Round 4 — popups, 2026-07-28
+
+Player note: "the pop ups are getting very messy."
+
+## 19. Overlay layers had drifted into a tie — FIXED
+
+z-index was scattered literals across `styles.css`, and two of them had collided:
+
+| surface | was | now |
+|---|---|---|
+| HUD | 30 | `--z-hud: 30` |
+| toast host | **80** | `--z-toast: 70` |
+| act splash | **80** | `--z-splash: 104` |
+| outside weather | 85 | `--z-weather: 106` |
+| ground picker | 60 *and* 100 | `--z-picker: 100` |
+| dossier | 110 | `--z-dossier: 110` |
+
+The act splash and the toast host were **both 80**, so which covered which came down to DOM order.
+A transient notice must never outrank a dialog the player has to answer; toasts now sit below every
+modal. The ground picker carried two different values in two rules. One scale, declared once at
+`:root`.
+
+## 20. Three toasts at once, on top of the copy that tells you what to do — FIXED
+
+`showJuice` kept **up to three** toasts alive for 2.8s each, and `.toast-host` was fixed at
+`top: 12%` — directly over the act strip, the goal strip and the phase-draft heading. A brisk week
+put a wall of parchment across exactly the region a player reads to know what to do next. It is
+visible burying the draft heading in this document's own round-2 screenshots.
+
+- **One toast at a time.** A newer result replaces an older one; the log keeps the full history.
+- **Moved to just above the End Week footer**, so it briefly covers the tail of the card list
+  instead of the headings — and that is where the thumb already is after a tap.
+- **Lighter chrome**: dropped the second outline ring and its offset, halved the padding.
+- **Suppressed while a dialog is open** rather than queued: by the time a splash is dismissed the
+  result is already in the log and the ledger, and a stale toast arriving afterwards was a good part
+  of what read as mess.
+
+Verified at 390×844: 1 toast (was up to 3), host z 70, anchored ~630px with the goal strip, act strip
+and every card row unobstructed.
+
+## 21. Modal frequency — OBSERVATION, YOUR CALL
+
+A full run raises roughly **3 act splashes and 6 weather dialogs** — nine forced dismissals, each a
+full-screen interrupt. Nothing is broken and the ceremony-queue assertion is green; but if "messy"
+still describes it after the above, the remaining lever is *how often the game stops you*, which is a
+pacing decision rather than a layering bug.
