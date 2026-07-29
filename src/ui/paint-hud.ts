@@ -20,6 +20,7 @@ import {
 import { TURF_AP } from '../engine/state.js';
 import { heatOf, MAX_HEAT } from '../engine/heat.js';
 import { discardsLeft, MAX_DISCARDS } from '../engine/flow.js';
+import { reducedMotion } from './motion.js';
 
 function $(id: string): HTMLElement {
   const el = document.getElementById(id);
@@ -48,6 +49,14 @@ function attrChipsHtml(attrs: Record<string, number>): string {
 /**
  * Compact persistent HUD — mobile deckbuilder convention.
  */
+/**
+ * Last painted values, so the HUD can animate the *change* rather than the
+ * state. renderHud rebuilds its innerHTML every paint, which throws away any
+ * running animation — so the diff has to be computed here and baked into the
+ * new markup as a one-shot class.
+ */
+let prevHud: { ap: number; fieldAp: number; heat: number; cuts: number } | null = null;
+
 export function renderHud(campaign: Campaign): void {
   const s = campaign.state;
   const snap = snapshot(s);
@@ -59,11 +68,16 @@ export function renderHud(campaign: Campaign): void {
   // report that the AP counter does not count down. Every point a play spends
   // must now be visible leaving somewhere.
   const turfMax = Math.max(snap.fieldAp, TURF_AP);
+  // A pip between the old count and the new one is a pip that just drained;
+  // flag it so CSS can play the spend once. Without this the counter simply
+  // teleports and the spend is invisible — the same complaint as the numbers.
+  const spent = (i: number, now: number, before: number | undefined): string =>
+    before !== undefined && !reducedMotion() && i >= now && i < before ? ' pip-spent' : '';
   const pips = Array.from({ length: s.apMax }, (_, i) =>
-    `<i class="pip ${i < snap.ap ? 'on' : ''}"></i>`
+    `<i class="pip ${i < snap.ap ? 'on' : ''}${spent(i, snap.ap, prevHud?.ap)}"></i>`
   ).join('');
   const turfPips = Array.from({ length: turfMax }, (_, i) =>
-    `<i class="pip pip-turf ${i < snap.fieldAp ? 'on' : ''}"></i>`
+    `<i class="pip pip-turf ${i < snap.fieldAp ? 'on' : ''}${spent(i, snap.fieldAp, prevHud?.fieldAp)}"></i>`
   ).join('');
   const fieldChip = turfMax
     ? `<span class="pips pips-turf" title="Turf action points — field plays spend these first, then your campaign AP">${turfPips}</span>`
@@ -90,10 +104,17 @@ export function renderHud(campaign: Campaign): void {
   // keep a streak alive never enters their head — it is only a decision if you
   // can see it accumulating. Hidden at zero so it never reads as an empty duty.
   const heat = heatOf(s);
-  const heatChip = heat
-    ? `<span class="chip chip-heat" title="Banked streak — spend it on one play for better odds and a wider disaster band. A failed play wipes it.">` +
+  // Losing a streak is the moment heat matters most, but the chip is hidden at
+  // zero — so there would be nothing on screen to react. Keep it for the one
+  // paint after a wipe, empty and marked, then let it disappear.
+  const justWiped = !!prevHud && heat === 0 && prevHud.heat > 0 && !reducedMotion();
+  const heatChip = (heat || justWiped)
+    ? `<span class="chip chip-heat${justWiped ? ' chip-wiped' : ''}" title="Banked streak — spend it on one play for better odds and a wider disaster band. A failed play wipes it.">` +
       Array.from({ length: MAX_HEAT }, (_, i) =>
-        `<i class="heat-pip ${i < heat ? 'on' : ''}"></i>`
+        // A streak building is the one moment heat is meant to feel like
+        // something, so the newly-lit pip gets the beat rather than the meter.
+        `<i class="heat-pip ${i < heat ? 'on' : ''}` +
+        `${prevHud && !reducedMotion() && i >= (prevHud.heat ?? 0) && i < heat ? ' heat-pip-lit' : ''}"></i>`
       ).join('') +
       `<span class="chip-heat-label">heat</span></span>`
     : '';
@@ -104,7 +125,8 @@ export function renderHud(campaign: Campaign): void {
     ? ''
     : `<span class="chip chip-cuts" title="Hand cuts left this week — pitch a card you cannot use and draw a replacement. They do not carry over.">` +
       Array.from({ length: MAX_DISCARDS }, (_, i) =>
-        `<i class="cut-pip ${i < cuts ? 'on' : ''}"></i>`
+        `<i class="cut-pip ${i < cuts ? 'on' : ''}` +
+        `${spent(i, cuts, prevHud?.cuts)}"></i>`
       ).join('') +
       `<span class="chip-cuts-label">cuts</span></span>`;
   const act = ACT_SHELLS[actFromStage(s.stage)];
@@ -135,6 +157,13 @@ export function renderHud(campaign: Campaign): void {
     </span>
     <span class="hud-item">${ballotHud}</span>
   `;
+
+  prevHud = { ap: snap.ap, fieldAp: snap.fieldAp, heat, cuts };
+}
+
+/** New run — forget the previous HUD so week 1 does not animate from nothing. */
+export function resetHudMotion(): void {
+  prevHud = null;
 }
 
 /**

@@ -7,6 +7,7 @@ import type { GameState } from '../engine/types.js';
 import { stageWeek } from '../engine/state.js';
 import { snapshot } from '../engine/loop.js';
 import { WAITING_WEEKS } from '../engine/waiting.js';
+import { pulse } from './motion.js';
 
 export interface GoalStripInput {
   stage: 'primary' | 'general' | 'session' | 'waiting';
@@ -284,6 +285,14 @@ export function renderGoalStrip(input: GoalStripInput): void {
     if (el) el.textContent = text;
   };
   setLine('.goal-primary-text', primary);
+  // The progress line is the persistent counter behind the toast's "+51
+  // signatures". Flashing it when it changes ties the one-off number to the
+  // running total, which is the half of "am I getting anywhere" a transient
+  // toast cannot answer on its own.
+  const progressEl = root.querySelector('.goal-progress-text');
+  if (progressEl && progressEl.textContent && progressEl.textContent !== progress) {
+    pulse(progressEl, 'goal-moved', 700);
+  }
   setLine('.goal-progress-text', progress);
   setLine('.goal-next-text', next);
   // Fallback: legacy three bare divs

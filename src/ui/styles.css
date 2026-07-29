@@ -2574,3 +2574,96 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
     inset 0 0 22px rgba(122, 90, 44, 0.18),
     0 2px 3px rgba(0, 0, 0, 0.4);
 }
+
+/* ============================================================
+   MOTION — spends PlayFeedback.beat / .intensity, which the
+   engine has always computed and the UI never read.
+   See src/ui/motion.ts for the two rules this obeys.
+   ============================================================ */
+
+/* Toast entrance scaled by the engine's own intensity: a BREAKTHROUGH should
+   land harder than a SETBACK, and --hit is exactly that number. */
+.toast {
+  --hit: 0.5;
+  animation: toast-hit calc(0.26s + (var(--hit) * 0.14s)) cubic-bezier(0.2, 1.5, 0.4, 1) both;
+}
+@keyframes toast-hit {
+  from {
+    opacity: 0;
+    transform: translateY(calc(8px + (var(--hit) * 10px))) scale(calc(0.97 - (var(--hit) * 0.03)));
+  }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+/* A disaster shoves; a whisper does not. */
+.toast-crash { animation-name: toast-hit, toast-shake; animation-duration: 0.3s, 0.34s; }
+@keyframes toast-shake {
+  0%, 100% { margin-left: 0; }
+  25% { margin-left: calc(var(--hit) * -6px); }
+  75% { margin-left: calc(var(--hit) * 6px); }
+}
+
+/* The figures count up (motion.ts countUp) — this just keeps them from
+   reflowing the row as the digits change width. */
+.toast-deltas .delta {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+  min-width: 1.5em;
+}
+.toast-deltas .delta-sep { opacity: 0.6; }
+
+/* AP / turf / cut pips: show the spend, don't teleport past it. */
+.pip.pip-spent,
+.cut-pip.pip-spent {
+  animation: pip-spend 0.42s ease-out both;
+}
+@keyframes pip-spend {
+  0% { background: var(--gold); border-color: var(--gold); transform: scale(1.35); }
+  60% { transform: scale(0.9); }
+  100% { background: transparent; transform: scale(1); }
+}
+
+/* Heat is the system that measures as EV-neutral, so what it has to offer is
+   the feeling of a streak building. Give the newly-lit pip the beat. */
+.heat-pip.heat-pip-lit { animation: heat-light 0.5s ease-out both; }
+@keyframes heat-light {
+  0% { transform: scale(0.4); box-shadow: 0 0 0 0 var(--gold); }
+  50% { transform: scale(1.5); box-shadow: 0 0 6px 2px var(--gold); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 transparent; }
+}
+/* Losing the streak: the chip is kept for one paint purely so there is
+   something on screen to break. */
+.chip-heat.chip-wiped { animation: heat-wipe 0.45s ease-in both; }
+@keyframes heat-wipe {
+  0% { opacity: 1; border-color: var(--gold); transform: translateX(0); }
+  30% { transform: translateX(-3px); border-color: var(--oxblood-bright); }
+  60% { transform: translateX(3px); }
+  100% { opacity: 0; transform: translateX(0) scale(0.94); }
+}
+
+/* ============================================================
+   REDUCED MOTION — required, and the a11y gate cannot catch it:
+   axe does not test motion preferences. Everything above is
+   decoration over a UI that is already correct without it, so
+   this can safely be a blanket stop.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Exit animation must outrank the .toast entrance rule above it. */
+.toast.toast-out { animation: toast-out 0.28s ease-in forwards; }
+
+/* The running total reacting when it moves. */
+.goal-progress-text.goal-moved { animation: goal-moved 0.7s ease-out both; }
+@keyframes goal-moved {
+  0% { color: var(--gold); transform: translateX(-2px); }
+  35% { color: var(--gold); }
+  100% { transform: translateX(0); }
+}
