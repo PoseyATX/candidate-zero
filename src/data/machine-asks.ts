@@ -47,4 +47,3 @@ export const MACHINE_ASK_PLAYS: PlayCard[] = Object.values(ALLIES).map(a => ({
   run: s => grantAsk(s, a.id)
 }));
 
-export const MACHINE_ASK_IDS = MACHINE_ASK_PLAYS.map(c => c.id);

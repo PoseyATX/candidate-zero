@@ -347,7 +347,13 @@ h1 {
   }
   .ledger-identity {
     position: sticky;
-    top: 2.6rem; /* under sticky HUD */
+    /* MUST be 0. This was 2.6rem back when the PAGE scrolled under a sticky
+       HUD; the scroll container is now .mtab-panel, which starts below the HUD
+       already. A non-zero offset here buys nothing and costs twice: it opens a
+       42px blank gap at the top of the dossier at rest, and it shoves the band
+       down over the Force band below, permanently hiding that band's label and
+       its whole first row (Contacts / Name ID). */
+    top: 0;
     z-index: 25;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
   }
@@ -2726,6 +2732,8 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   color: var(--gold-dim);
   text-transform: uppercase;
 }
+/* A door you are about to lose has to read louder than one you hold. */
+.mach-door-risk { color: #d99a5b; }
 .mach-shutlist { margin-top: 0.25rem; color: #8f7f72; font-size: 0.68rem; }
 .mach-shutlist .k { color: #a2685e; }
 

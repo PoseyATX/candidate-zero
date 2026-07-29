@@ -168,7 +168,6 @@ const MD_AL09: PlayCard = {
 };
 
 export const MACHINE_DOOR_PLAYS: PlayCard[] = [MD_AL16, MD_AL02, MD_AL12, MD_AL09];
-export const MACHINE_DOOR_IDS = MACHINE_DOOR_PLAYS.map(c => c.id);
 
 /**
  * Doors permanently closed: members who hold one and have gone. This is the

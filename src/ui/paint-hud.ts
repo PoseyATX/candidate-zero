@@ -285,7 +285,15 @@ export function renderLedger(campaign: Campaign, legacy?: LegacyState): void {
           // a card you are about to stop being able to draw.
           const doorId = doorCardId(m.id);
           const door = doorId ? MACHINE_DOOR_PLAYS.find(c => c.id === doorId) : undefined;
-          const doorBit = door ? `<span class="mach-door">${door.n}</span>` : '';
+          // A cooling member who holds a door is the sharpest warning the
+          // dossier can give: the bar going down is abstract, "this card is
+          // one bad cycle from gone" is not.
+          const atRisk = door && (t === 'cooling' || t === 'owes');
+          const doorBit = door
+            ? `<span class="mach-door${atRisk ? ' mach-door-risk' : ''}">${door.n}${
+                t === 'cooling' ? ' — one cycle from gone' : ''
+              }</span>`
+            : '';
           return `<div class="mach-row mach-${t}">
             <span class="mach-name">${memberName(m.id)}${doorBit}</span>
             <span class="mach-tier">${tierLabel(t)}</span>
@@ -314,8 +322,11 @@ export function renderLedger(campaign: Campaign, legacy?: LegacyState): void {
       // the player understands a loss in.
       const shut = closedDoors(gone.map(d => d.id));
       const shutRow = shut.length
+        // Cards only. The Gone / With him rows directly above already name the
+        // people, and most doors are named for their holder — "The Old Bull
+        // Makes a Call — The Old Bull is gone" says it twice.
         ? `<div class="ledger-wide mach-shutlist"><span class="k">Shut</span> ${shut
-            .map(x => `${x.card} — ${x.ally} is gone`)
+            .map(x => x.card)
             .join(' · ')}</div>`
         : '';
       machineBand = `
