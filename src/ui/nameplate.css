@@ -101,7 +101,7 @@
   line-height: 1.15;
 }
 .id-card-tag {
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #7d6530;
@@ -154,7 +154,8 @@
 }
 .id-seed-label input {
   width: 6.5rem;
-  padding: 0.35rem 0.4rem;
+  min-height: 44px; /* a text field is a tap target — was 27px */
+  padding: 0.35rem 0.5rem;
   border: 1px solid var(--gold-dim);
   background: var(--walnut-2);
   color: var(--parchment);

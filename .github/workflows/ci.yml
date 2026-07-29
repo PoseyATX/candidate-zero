@@ -69,3 +69,6 @@ jobs:
 
       - name: Accessibility audit (axe-core WCAG 2 A/AA; fails on any critical/serious)
         run: npm run a11y
+
+      - name: Layout & touch audit (WCAG 1.4.10 reflow at 320px + 2.5.8 target size; axe checks neither)
+        run: npm run a11y:layout

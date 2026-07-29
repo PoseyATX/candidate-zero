@@ -40,7 +40,12 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  gap: 1rem;
+  /* WCAG 1.4.10 (Reflow): at 320px the masthead + both buttons exceeded the
+     viewport and pushed .top-actions to right:326, so EVERY screen scrolled
+     horizontally. Wrapping here and on .top-actions costs a line on the
+     narrowest phones and buys the whole app's reflow conformance. */
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
   border-top: 3px double var(--gold);
   border-bottom: 3px double var(--gold);
   padding: 0.6rem 0.75rem;
@@ -64,8 +69,16 @@ h1 {
   color: var(--parchment);
 }
 
+.top > div {
+  min-width: 0; /* let the masthead shrink instead of forcing overflow */
+}
+
 .top-actions {
   display: flex;
+  /* THIS is the line that actually clears the 320px overflow — verified by
+     removing it and watching a11y:layout go red on four screens. Letting the
+     button pair stack is what frees the width; .top wrapping alone did not. */
+  flex-wrap: wrap;
   gap: 0.6rem;
   align-items: center;
 }
@@ -78,7 +91,8 @@ h1 {
 .seed-label input {
   width: 7rem;
   margin-left: 0.35rem;
-  padding: 0.3rem 0.4rem;
+  min-height: 44px; /* text fields are tap targets too */
+  padding: 0.3rem 0.5rem;
   border: 1px solid var(--gold-dim);
   background: var(--walnut-2);
   color: var(--parchment);
@@ -94,6 +108,13 @@ h1 {
   border: 1px solid var(--gold-dim);
   background: transparent;
   color: var(--gold);
+  /* Every secondary button in the app inherits this. They measured 27-42px
+     tall; a thumb wants 44 (WCAG 2.5.5). display:inline-flex so min-height
+     actually centres the label instead of just padding the box. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
   padding: 0.5rem 0.95rem;
   transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
@@ -162,7 +183,7 @@ h1 {
 
 .chip {
   font-family: Cinzel, serif;
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   border: 1px solid var(--gold-dim);
@@ -226,7 +247,7 @@ h1 {
 
 .ledger-band-label {
   font-family: Cinzel, serif;
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   /* a11y: --gold-dim was 3.07:1 on walnut-2 (< AA 4.5); --gold is 5.46:1 */
@@ -274,7 +295,7 @@ h1 {
 }
 .attr-k {
   font-family: Cinzel, serif;
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   letter-spacing: 0.08em;
   color: var(--gold);
   text-transform: uppercase;
@@ -396,7 +417,7 @@ h1 {
   white-space: nowrap;
 }
 .hud-who-issue {
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   letter-spacing: 0.03em;
   color: var(--gold-dim, #a88b4a);
   max-width: 7.5rem;
@@ -407,7 +428,7 @@ h1 {
   font-family: Inter, system-ui, sans-serif;
 }
 .hud-sub {
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--gold-dim);
@@ -446,7 +467,7 @@ h1 {
 .goal-row:first-child { margin-top: 0; }
 .goal-label {
   font-family: Cinzel, serif;
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -533,7 +554,13 @@ body.dossier-open {
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(201, 162, 77, 0.45);
   border-radius: 999px;
-  padding: 0.4rem 0.85rem;
+  /* Dismissing a modal must not need a precise tap: was 73x27. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.4rem 0.95rem;
   cursor: pointer;
 }
 .dossier-close:hover,
@@ -611,6 +638,21 @@ body.dossier-open {
   object-fit: cover;
   object-position: center;
   display: block;
+}
+
+/* Phone: the emblem plate is decoration and the description is the reason the
+   panel exists. At 16rem/5:4 it ate ~230px before a single word of text, which
+   put the payoff line below the fold once descriptions got longer. Half-height
+   keeps the flourish and lifts the first two sentences onto the first screen.
+   (Full-bleed promo art is exempt below — there the art IS the card.) */
+@media (max-width: 800px) {
+  .dossier-art {
+    margin: 0.15rem 0 0.6rem;
+  }
+  .dossier-art-frame:not(.dossier-art-full) {
+    width: min(58%, 9.5rem);
+    aspect-ratio: 3 / 2;
+  }
 }
 
 .dossier-art-frame.risk-safe { box-shadow: inset 0 0 0 3px rgba(46, 107, 48, 0.45), 0 8px 24px rgba(0, 0, 0, 0.4); }
@@ -1200,7 +1242,7 @@ body.dossier-open {
   text-align: center;
   font-family: Cinzel, serif;
   font-weight: 700;
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   line-height: 1.1;
   letter-spacing: 0.04em;
   color: var(--oxblood);
@@ -1222,7 +1264,7 @@ body.dossier-open {
   top: 50%;
   transform: translate(-50%, -50%) rotate(-12deg);
   font-family: Cinzel, serif;
-  font-size: 0.6rem;
+  font-size: 0.69rem;
   font-weight: 700;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -1479,7 +1521,7 @@ body.dossier-open {
   color: var(--gold);
 }
 .alpha-tag.stage-tag {
-  font-size: 0.55rem;
+  font-size: 0.65rem;
   vertical-align: middle;
 }
 .alpha-tag.stage-tag-primary {
@@ -1545,7 +1587,7 @@ body.dossier-open {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-family: Cinzel, serif;
-  font-size: 0.6rem;
+  font-size: 0.69rem;
 }
 .play-card .risk-tag::before {
   content: '';
@@ -1563,7 +1605,7 @@ body.dossier-open {
 }
 
 .play-card .attrs {
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   letter-spacing: 0.14em;
   color: var(--oxblood);
   text-transform: uppercase;
@@ -1661,6 +1703,11 @@ body.dossier-open {
   opacity: 0.9;
   letter-spacing: inherit;
   text-transform: none;
+  /* Was 92x12 — under even the 24px minimum of WCAG 2.5.8. Padding gives it a
+     real hit area without moving the text. */
+  display: inline-block;
+  min-height: 24px;
+  padding: 0.35rem 0.2rem;
 }
 
 .foot .kofi:hover,
@@ -1738,7 +1785,7 @@ body.dossier-open {
   color: var(--parchment);
 }
 .gp-tag {
-  font-size: 0.55rem;
+  font-size: 0.65rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--gold);
@@ -1758,7 +1805,7 @@ body.dossier-open {
 }
 .gp-odds-best { color: var(--gold); }
 .gp-pen {
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   font-weight: 500;
   color: #d98a6a;
   letter-spacing: 0.02em;
@@ -1766,7 +1813,7 @@ body.dossier-open {
 .gp-meters { display: flex; flex-direction: column; gap: 0.28rem; }
 .gp-meter { display: grid; grid-template-columns: 1.7rem 1fr 1.6rem; align-items: center; gap: 0.35rem; }
 .gp-mlabel {
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--parchment-dim);
@@ -1880,7 +1927,7 @@ body.dossier-open {
 .title-id-label {
   display: block;
   font-family: Cinzel, serif;
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--gold);
@@ -1916,7 +1963,7 @@ body.dossier-open {
   display: inline-block;
   vertical-align: 0.35em;
   font-family: Cinzel, serif;
-  font-size: 0.5rem;
+  font-size: 0.64rem;
   font-weight: 600;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -2237,10 +2284,13 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
      muted-but-legible inactive; active state is --gold + underline. */
   color: var(--parchment-dim);
   font-family: 'Inter', sans-serif;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  /* The most-tapped control in the game was 34px tall. 44px is the platform
+     minimum for a thumb (WCAG 2.5.5); this is the one place it matters most. */
+  min-height: 44px;
   padding: 0.7rem 0;
   cursor: pointer;
 }
@@ -2311,7 +2361,7 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
      the a11y gate caught it across all 7 unlocked grounds. This is the same
      light sage already used by .chip-field. */
   color: #b9d1a9;
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   font-style: italic;
   margin-top: 0.1rem;
 }
@@ -2330,7 +2380,7 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   background: rgba(20, 16, 12, 0.88);
   color: #e8d48a;
   font-family: Cinzel, serif;
-  font-size: 0.52rem;
+  font-size: 0.64rem;
   line-height: 1.2;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -2361,7 +2411,7 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
 .heat-pip.on { background: var(--gold); border-color: var(--gold); }
 .chip-heat-label,
 .chip-cuts-label {
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   letter-spacing: 0.03em;
   margin-left: 0.12rem;
 }
@@ -2458,14 +2508,14 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
 }
 .play-card .cost-unit {
   font-family: Cinzel, serif;
-  font-size: 0.56rem;
+  font-size: 0.66rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #6d5836;
   margin-top: 0.1rem;
 }
 .play-card .cost-extra {
-  font-size: 0.56rem;
+  font-size: 0.66rem;
   color: #7a5a2c;
   margin-top: 0.18rem;
   white-space: nowrap;
@@ -2503,7 +2553,7 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
 .play-card .row-risk {
   flex: 0 0 auto;
   font-family: Cinzel, serif;
-  font-size: 0.56rem;
+  font-size: 0.66rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 0.12rem 0.3rem;
@@ -2698,14 +2748,14 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
 .mach-name { grid-area: name; font-family: Cinzel, serif; font-size: 0.78rem; color: var(--parchment); }
 .mach-tier {
   grid-area: tier;
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 0.05rem 0.3rem;
   border: 1px solid currentColor;
   border-radius: 2px;
 }
-.mach-meta { grid-area: meta; font-size: 0.62rem; color: var(--parchment-dim); }
+.mach-meta { grid-area: meta; font-size: 0.7rem; color: var(--parchment-dim); }
 .mach-bar {
   grid-area: bar;
   display: block;
@@ -2727,7 +2777,7 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
 /* The card this relationship unlocks, named on the roster row. */
 .mach-door {
   display: block;
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   letter-spacing: 0.04em;
   color: var(--gold-dim);
   text-transform: uppercase;
