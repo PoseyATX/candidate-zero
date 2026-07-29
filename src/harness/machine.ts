@@ -1,0 +1,197 @@
+/**
+ * The Machine harness — the thing the player builds and can lose.
+ * Run: npm run harness:machine
+ *
+ * The load-bearing assertions are the ones about LOSS. A meta-layer that only
+ * ever accumulates is wallpaper; what makes a player take the careful line in
+ * week 12 is that the County Chairwoman can be gone, permanently, by name. So:
+ * standing must be able to fall, people must be able to walk, and a walked
+ * member must never come back.
+ */
+
+import { createNewState } from '../engine/state.js';
+import { emptyLegacy } from '../engine/legacy.js';
+import {
+  settleMachine,
+  seatMachine,
+  getMachine,
+  findMember,
+  tierOf,
+  hasDeparted,
+  runQuality,
+  memberName,
+  rosterForDisplay,
+  WITH_YOU_AT,
+  MAX_STANDING
+} from '../engine/machine.js';
+import type { CampaignOutcome, GameState, LegacyState } from '../engine/types.js';
+
+let failed = 0;
+function assert(cond: boolean, msg: string): void {
+  if (cond) console.log(`PASS: ${msg}`);
+  else {
+    console.error(`FAIL: ${msg}`);
+    failed++;
+  }
+}
+
+console.log('=== CANDIDATE ZERO — The Machine ===\n');
+
+function stateWith(allies: { id: string; warm: number }[], over: Partial<GameState> = {}): GameState {
+  const s = createNewState({ seed: 1 });
+  s.allies = allies.map(a => ({ id: a.id, warm: a.warm, age: 0 }));
+  Object.assign(s, over);
+  return s;
+}
+
+/** Run a whole cycle: settle, then start the next run and seat. */
+function cycle(
+  legacy: LegacyState,
+  allies: { id: string; warm: number }[],
+  kind: CampaignOutcome,
+  over: Partial<GameState> = {}
+): void {
+  const s = stateWith(allies, over);
+  legacy.runs.push({ epithet: 'test', kind });
+  settleMachine(legacy, s, kind, legacy.runs.length);
+}
+
+// --- Building it ---
+{
+  const legacy = emptyLegacy();
+  assert(getMachine(legacy).members.length === 0, 'a first-time player has no machine');
+
+  cycle(legacy, [{ id: 'AL02', warm: 2 }], 'won_general');
+  const m = findMember(getMachine(legacy), 'AL02');
+  assert(!!m, `working with someone banks them (${memberName('AL02')})`);
+  assert((m?.runs ?? 0) === 1, 'the cycle count starts at one');
+  assert((m?.standing ?? 0) > 0, 'they arrive with standing');
+}
+
+// --- It deepens across runs, and that is what makes losing one hurt ---
+{
+  const legacy = emptyLegacy();
+  for (let i = 0; i < 4; i++) cycle(legacy, [{ id: 'AL02', warm: 2 }], 'won_general');
+  const m = findMember(getMachine(legacy), 'AL02')!;
+  assert(m.runs === 4, 'four cycles together are counted');
+  assert(m.standing >= WITH_YOU_AT, `four good cycles puts them with you (${m.standing})`);
+  assert(m.standing <= MAX_STANDING, 'standing is capped');
+}
+
+// --- The payoff lands in week 1, not in a menu ---
+{
+  const legacy = emptyLegacy();
+  for (let i = 0; i < 3; i++) cycle(legacy, [{ id: 'AL02', warm: 2 }], 'won_general');
+  const next = createNewState({ seed: 2 });
+  assert(next.allies.length === 0, 'a fresh run starts with nobody');
+  const seated = seatMachine(next, legacy);
+  assert(seated.includes('AL02'), 'someone who is with you is seated at run start');
+  assert(next.allies.some(a => a.id === 'AL02' && a.warm > 0), 'and they are actually warm');
+
+  // Seating twice must not double them up.
+  const again = seatMachine(next, legacy);
+  assert(again.length === 0 && next.allies.filter(a => a.id === 'AL02').length === 1,
+    'seating is idempotent — no duplicate allies');
+}
+
+// --- Someone who merely OWES you is not a free head start ---
+{
+  const legacy = emptyLegacy();
+  cycle(legacy, [{ id: 'AL04', warm: 1 }], 'lost_primary');
+  const m = findMember(getMachine(legacy), 'AL04')!;
+  assert(tierOf(m) !== 'with', `one thin cycle leaves them owing, not with you (${m.standing})`);
+  const next = createNewState({ seed: 3 });
+  assert(!seatMachine(next, legacy).includes('AL04'), 'owed favours are not seated — they must be worked');
+}
+
+// --- LOSS: a bad cycle costs standing ---
+{
+  const legacy = emptyLegacy();
+  for (let i = 0; i < 4; i++) cycle(legacy, [{ id: 'AL02', warm: 2 }], 'won_general');
+  const peak = findMember(getMachine(legacy), 'AL02')!.standing;
+  // Now several cycles where this person is NOT worked and the runs go badly.
+  for (let i = 0; i < 3; i++) cycle(legacy, [], 'missed_filing', { disasterLog: [3, 6] });
+  const after = findMember(getMachine(legacy), 'AL02');
+  assert(
+    !after || after.standing < peak,
+    `neglect plus bad cycles costs standing (${peak} -> ${after ? after.standing : 'gone'})`
+  );
+}
+
+// --- LOSS: they walk, and it is permanent ---
+{
+  const legacy = emptyLegacy();
+  cycle(legacy, [{ id: 'AL02', warm: 1 }], 'lost_primary');
+  let walked = false;
+  for (let i = 0; i < 12 && !walked; i++) {
+    const out = cycle2(legacy);
+    if (out.walked.includes('AL02')) walked = true;
+  }
+  function cycle2(l: LegacyState) {
+    const s = stateWith([], { disasterLog: [1, 2, 3], debt: 500 });
+    l.runs.push({ epithet: 'test', kind: 'missed_filing' });
+    return settleMachine(l, s, 'missed_filing', l.runs.length);
+  }
+  assert(walked, 'a long enough cold streak makes someone walk');
+  assert(hasDeparted(getMachine(legacy), 'AL02'), 'the departure is recorded by name');
+  assert(!findMember(getMachine(legacy), 'AL02'), 'and they are off the roster');
+
+  // The scar is permanent: working with them again must not re-add them.
+  cycle(legacy, [{ id: 'AL02', warm: 3 }], 'won_general');
+  assert(
+    !findMember(getMachine(legacy), 'AL02'),
+    'someone who walked never rejoins — that door does not reopen'
+  );
+}
+
+// --- Run quality: losing well beats winning ugly ---
+{
+  // A disciplined loss means you MADE the ballot and then lost the race —
+  // ballot:false is the missed-filing path, which is a different (worse) story.
+  const clean = runQuality(stateWith([], { ballot: true }), 'lost_primary');
+  const ugly = runQuality(
+    stateWith([], { ballot: true, disasterLog: [1, 2, 3, 4], debt: 900, obls: ['O1', 'O2'] }),
+    'won_general'
+  );
+  assert(
+    clean > ugly,
+    `a disciplined loss keeps your people better than a chaotic win (${clean.toFixed(2)} vs ${ugly.toFixed(2)}) — Covenant 6`
+  );
+  const best = runQuality(stateWith([], { ballot: true }), 'won_general');
+  assert(best > clean, 'and a clean win is still the best outcome');
+  const missed = runQuality(stateWith([], {}), 'missed_filing');
+  assert(missed < clean, `never reaching the ballot is worse than losing the race (${missed.toFixed(2)} vs ${clean.toFixed(2)})`);
+}
+
+// --- Save/replay safety ---
+{
+  const legacy = emptyLegacy();
+  cycle(legacy, [{ id: 'AL02', warm: 2 }], 'won_general');
+  const round = JSON.parse(JSON.stringify(legacy)) as LegacyState;
+  assert(!!findMember(getMachine(round), 'AL02'), 'the machine survives a JSON round trip');
+  const old = { runs: [], traits: [], carry: {} } as LegacyState;
+  assert(getMachine(old).members.length === 0, 'a save written before the machine existed still loads');
+}
+
+// --- Display ordering is stable and player-facing ---
+{
+  const legacy = emptyLegacy();
+  cycle(legacy, [{ id: 'AL04', warm: 1 }], 'lost_primary');
+  for (let i = 0; i < 3; i++) cycle(legacy, [{ id: 'AL02', warm: 2 }], 'won_general');
+  const roster = rosterForDisplay(legacy);
+  assert(roster.length >= 2, 'the roster lists everyone');
+  assert(
+    roster[0]!.standing >= roster[roster.length - 1]!.standing,
+    'strongest relationship first'
+  );
+  assert(
+    roster.every(r => memberName(r.id) !== r.id),
+    'every member renders as a person, not an id'
+  );
+}
+
+if (failed) {
+  console.error(`\nMachine harness FAILED — ${failed} assertion(s)`);
+  process.exit(1);
+}
+console.log('\nThe Machine green.');

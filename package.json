@@ -37,7 +37,7 @@
     "harness:waiting": "npx tsx src/harness/waiting.ts",
     "harness:signatures": "npx tsx src/harness/signatures.ts",
     "harness:observe": "npx tsx src/harness/observe.ts",
-    "harness": "npm run harness:resolve && npm run harness:smoke && npm run harness:ballot && npm run harness:strategies && npm run harness:ac1 && npm run harness:ac1-parity && npm run harness:audit && npm run harness:calendar && npm run harness:setup && npm run harness:yields && npm run harness:full && npm run harness:dopamine && npm run harness:grounds && npm run harness:dead-refs && npm run harness:shop && npm run harness:obligations && npm run harness:debt && npm run harness:session && npm run harness:starmap && npm run harness:matrix && npm run harness:outside && npm run harness:chronicle && npm run harness:waiting && npm run harness:api && npm run harness:paths && npm run harness:content && npm run harness:signatures && npm run harness:observe && npm run harness:card-art && npm run harness:opponent && npm run harness:upgrades && npm run harness:heat && npm run harness:flow && npm run check:card-art && npm run check:log-markers",
+    "harness": "npm run harness:resolve && npm run harness:smoke && npm run harness:ballot && npm run harness:strategies && npm run harness:ac1 && npm run harness:ac1-parity && npm run harness:audit && npm run harness:calendar && npm run harness:setup && npm run harness:yields && npm run harness:full && npm run harness:dopamine && npm run harness:grounds && npm run harness:dead-refs && npm run harness:shop && npm run harness:obligations && npm run harness:debt && npm run harness:session && npm run harness:starmap && npm run harness:matrix && npm run harness:outside && npm run harness:chronicle && npm run harness:waiting && npm run harness:api && npm run harness:paths && npm run harness:content && npm run harness:signatures && npm run harness:observe && npm run harness:card-art && npm run harness:opponent && npm run harness:upgrades && npm run harness:heat && npm run harness:flow && npm run harness:machine && npm run check:card-art && npm run check:log-markers",
     "smoke:ui": "node scripts/ui-smoke.mjs",
     "a11y": "node scripts/a11y-audit.mjs",
     "promo:new": "node scripts/new-promo.mjs",
@@ -59,7 +59,8 @@
     "harness:content": "npx tsx src/harness/content.ts",
     "harness:paths": "npx tsx src/harness/paths.ts",
     "harness:heat": "npx tsx src/harness/heat.ts",
-    "harness:flow": "npx tsx src/harness/flow.ts"
+    "harness:flow": "npx tsx src/harness/flow.ts",
+    "harness:machine": "npx tsx src/harness/machine.ts"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",

@@ -2667,3 +2667,70 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   35% { color: var(--gold); }
   100% { transform: translateX(0); }
 }
+
+/* ============================================================
+   THE MACHINE — the persistent roster (engine/machine.ts).
+   Reads as a list of people, not a stat block: the hook is that
+   these are names you can lose, so names get the weight.
+   ============================================================ */
+.ledger-themachine .mach-hint {
+  margin: 0 0 0.45rem;
+  font-size: 0.68rem;
+  font-style: italic;
+  color: var(--parchment-dim);
+}
+.mach-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  grid-template-areas: 'name tier meta' 'bar bar bar';
+  align-items: center;
+  gap: 0.15rem 0.4rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid rgba(154, 130, 79, 0.18);
+}
+.mach-row:last-of-type { border-bottom: 0; }
+.mach-name { grid-area: name; font-family: Cinzel, serif; font-size: 0.78rem; color: var(--parchment); }
+.mach-tier {
+  grid-area: tier;
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.05rem 0.3rem;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+}
+.mach-meta { grid-area: meta; font-size: 0.62rem; color: var(--parchment-dim); }
+.mach-bar {
+  grid-area: bar;
+  display: block;
+  height: 3px;
+  background: rgba(154, 130, 79, 0.25);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.mach-bar i { display: block; height: 100%; background: var(--gold); }
+
+.mach-with .mach-tier { color: #b9d1a9; }
+.mach-with .mach-bar i { background: #b9d1a9; }
+.mach-owes .mach-tier { color: var(--gold); }
+/* Cooling is a warning, and it should read as one. */
+.mach-cooling .mach-tier { color: #d99a5b; }
+.mach-cooling .mach-bar i { background: #d99a5b; }
+
+.mach-gonelist { margin-top: 0.4rem; color: #a2685e; font-size: 0.68rem; }
+
+/* Terminal screen: who stayed, who walked. */
+.machine-changes { list-style: none; margin: 0.6rem 0 0; padding: 0; }
+.machine-changes li {
+  padding: 0.3rem 0.5rem;
+  margin-bottom: 0.25rem;
+  border-left: 2px solid var(--gold-dim);
+  font-size: 0.82rem;
+}
+.machine-changes .mach-joined { border-left-color: #b9d1a9; color: #cfe0c2; }
+.machine-changes .mach-cooled { border-left-color: #d99a5b; color: #e8c39a; }
+.machine-changes .mach-walked {
+  border-left-color: var(--oxblood-bright);
+  color: #e8b4a8;
+  background: rgba(138, 47, 38, 0.14);
+}

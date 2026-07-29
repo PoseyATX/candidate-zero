@@ -20,6 +20,8 @@ import {
 import { TURF_AP } from '../engine/state.js';
 import { heatOf, MAX_HEAT } from '../engine/heat.js';
 import { discardsLeft, MAX_DISCARDS } from '../engine/flow.js';
+import { rosterForDisplay, getMachine, tierOf, tierLabel, memberName } from '../engine/machine.js';
+import type { LegacyState } from '../engine/types.js';
 import { reducedMotion } from './motion.js';
 
 function $(id: string): HTMLElement {
@@ -169,7 +171,7 @@ export function resetHudMotion(): void {
 /**
  * Dossier ledger — Phase 6 hierarchy (docs/UI-IA.md).
  */
-export function renderLedger(campaign: Campaign): void {
+export function renderLedger(campaign: Campaign, legacy?: LegacyState): void {
   const s = campaign.state;
   const snap = snapshot(s);
   const allyBits = s.allies
@@ -181,7 +183,7 @@ export function renderLedger(campaign: Campaign): void {
               .map(id => s.groundsArr.find(x => x.id === id)?.n ?? id)
               .join(', ')}`
           : '';
-      return `${a.id}${g}`;
+      return `${memberName(a.id)}${g}`;
     })
     .join(' · ');
   const assetBits = s.assets.filter(a => /^A\d+/.test(a)).join(' · ');
@@ -265,6 +267,41 @@ export function renderLedger(campaign: Campaign): void {
       </div>
     </div>`;
 
+  // The persistent roster — the thing a player is actually building. Shown
+  // in-run rather than only on a menu, because a relationship you cannot see is
+  // one you will not protect.
+  let machineBand = '';
+  if (legacy) {
+    const roster = rosterForDisplay(legacy);
+    const gone = getMachine(legacy).departed;
+    if (roster.length || gone.length) {
+      const rows = roster
+        .map(m => {
+          const t = tierOf(m);
+          const cycles = m.runs === 1 ? '1 cycle' : `${m.runs} cycles`;
+          return `<div class="mach-row mach-${t}">
+            <span class="mach-name">${memberName(m.id)}</span>
+            <span class="mach-tier">${tierLabel(t)}</span>
+            <span class="mach-meta">${cycles}</span>
+            <span class="mach-bar"><i style="width:${Math.max(3, Math.min(100, m.standing))}%"></i></span>
+          </div>`;
+        })
+        .join('');
+      const goneRow = gone.length
+        ? `<div class="ledger-wide mach-gonelist"><span class="k">Gone</span> ${gone
+            .map(d => memberName(d.id))
+            .join(' · ')}</div>`
+        : '';
+      machineBand = `
+        <div class="ledger-band ledger-themachine">
+          <div class="ledger-band-label">The Machine</div>
+          <p class="mach-hint">The people who take your call. Built across cycles — and lost the same way.</p>
+          ${rows || '<div class="ledger-wide">Nobody yet. Work with someone and they may stay.</div>'}
+          ${goneRow}
+        </div>`;
+    }
+  }
+
   $('ledger').innerHTML = `
     <div class="ledger-dossier">
       <div class="ledger-band ledger-identity">
@@ -275,12 +312,13 @@ export function renderLedger(campaign: Campaign): void {
       ${forceBand}
       ${vitalsBand}
       <div class="ledger-band ledger-machine">
-        <div class="ledger-band-label">Machine</div>
-        <div class="ledger-wide"><span class="k">Allies</span> ${allyBits || '—'}</div>
+        <div class="ledger-band-label">This cycle</div>
+        <div class="ledger-wide"><span class="k">Working with</span> ${allyBits || '—'}</div>
         <div class="ledger-wide"><span class="k">Assets</span> ${assetBits || '—'}</div>
         <div class="ledger-wide"><span class="k">Obligations</span> ${oblBits || '—'}</div>
         ${s.over && s.outcome ? `<div class="ledger-wide"><span class="k">Outcome</span> ${s.outcome}</div>` : ''}
       </div>
+      ${machineBand}
     </div>
   `;
   applyStageChrome(s);

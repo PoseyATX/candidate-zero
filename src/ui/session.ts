@@ -100,7 +100,7 @@ export function paint(): void {
   if (!campaign) return;
   closeCardDetail();
   renderHud(campaign);
-  renderLedger(campaign);
+  renderLedger(campaign, legacy);
   renderDraft(campaign);
   renderPlayables(campaign);
   renderLog(campaign);
