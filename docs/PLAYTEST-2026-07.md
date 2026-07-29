@@ -246,11 +246,122 @@ said by how much. Every play now reports what it actually moved — `+74 signatu
 (`ledgerMark` / `formatDeltas` in `src/engine/feedback.ts`). Internal to the engine — no host API
 change.
 
-## Verified by construction, not by screenshot
+## 16. The draft screenshot — GAP NOW CLOSED
 
-The draft-row screenshot. My browser driver reached a phase draft before these changes and could not
-after (the deck changed, so seeds diverge), and I stopped chasing it rather than burn more time. What
-I did verify: the draft uses the identical `cardClasses(card)` row renderer as the hand, and both the
-`#draft.card-grid` container and the `#draft .draft-cards` inner grid resolve to a single 1fr column
-in the built CSS. `smoke:ui` drives drafts and is green. That is sound but it is not a picture, and
-the distinction is worth keeping honest.
+Round 2 shipped with this unverified, and it is worth recording why it was hard and what it caught.
+
+Drafts fire on a *phase* change, and `getPhase` returns 1 until you are on the ballot and 2 after —
+so **reaching the ballot is the trigger**. My drivers kept missing it because they wandered instead of
+driving at the ballot doors. Once pointed there (seed 11), the draft lands at W7.
+
+Measured: 3 options at **366×67, 366×67, 366×64** — full width, and "Statewide Figure Endorses" reads
+whole. Before the row change that name was exactly the sort that became "Statewide Figure…".
+
+Chasing the picture caught a regression the construction argument would never have found: the
+**"PRACTISED · −1 AP" banner was still `position: absolute; top: 0`** from the portrait layout, so on
+a 64px row it sat directly on top of the card's name. It is an inline chip in the row body now. The
+rule holds — "verified by construction" is not the same as looking at it.
+
+
+---
+
+# Round 3 — Session's prize, 2026-07-28
+
+Following §7. I flagged "zero laws in 6000 runs" three times and each time caveated it as partly
+policy blindness. That caveat was too generous, and measuring properly showed why.
+
+## 17. The bill pipeline is near-impassable — PARTLY FIXED
+
+A policy that drives the bill **every single week** — casework first to hold the seat, then the
+earliest available pipeline motion — passed a law in **4 of 97 sessions (4.1%)**. A policy that
+ignores the bill passed 0. So the earlier zero was not only blindness; deliberate play barely moves
+it.
+
+Where it dies, of 97 sessions reached (furthest stage):
+
+| stage | 2 | 3 | **4** | 5 | 6 | 7 | 8 (passed) |
+|---|---|---|---|---|---|---|---|
+| runs | 9 | 15 | **41** | 9 | 13 | 6 | 4 |
+
+**Stage 4 is the wall** — 42% of bills die there. Stage 4 is "reported out, waiting on Calendars",
+and SS05 ("the narrowest door") is gated on `week >= 9`.
+
+### The bug: the game charged you for a wait it imposed
+
+`billOdds` subtracts `heat × 0.05`, and `applyBillStallHeat` adds +1 heat for every week a bill sits
+at the same stage. A bill reported out in week 5 therefore sat four weeks it had **no legal way to
+avoid** and arrived at Calendars with roughly −20% odds — turning SS05's 0.30 base into ~0.10 on the
+one roll the whole Act builds toward.
+
+Punishing a stall the player chose is the mechanic working. Punishing one the calendar imposed is
+not. `applyBillStallHeat` now skips heat while `billBlockedByCalendar(state)` holds, and the week-9
+gate moved into an exported `CALENDAR_OPENS_WEEK` so the card's `show` and the heat rule cannot
+drift apart.
+
+**Measured: 4.1% → 7.2% of sessions reached (4 → 7 laws of 97).** Stage-4 deaths 41 → 37.
+
+## 18. What still gates it — YOUR CALL
+
+Real, but not mine to keep tuning unilaterally. Two designed locks remain on the same door:
+
+- **One pipeline motion per week** (`sessionFlags.pipelineUsed`), so seven stages need seven
+  successful weeks out of fourteen, and stage 5 cannot even be *attempted* before week 9. That
+  leaves ~6 attempts for the last 3 stages.
+- **`sessionPipelineBlocked`** hides SS05 and SS06 outright when a Speaker freeze coincides with
+  favor < 40 — a second lock on the same two stages.
+
+Both are thematically right (Calendars really is where Texas bills die, and leadership really does
+freeze you out). The question is whether Act III's *named prize* should fire ~7% of the time. That
+is a difficulty decision, not a bug, and it is yours. If you want it meaningfully more reachable, the
+cheapest honest levers in order: let a spare 3 AP buy a second pipeline motion in a week; drop the
+Calendars gate to week 7; or raise SS05's 0.30 base.
+
+
+---
+
+# Round 4 — popups, 2026-07-28
+
+Player note: "the pop ups are getting very messy."
+
+## 19. Overlay layers had drifted into a tie — FIXED
+
+z-index was scattered literals across `styles.css`, and two of them had collided:
+
+| surface | was | now |
+|---|---|---|
+| HUD | 30 | `--z-hud: 30` |
+| toast host | **80** | `--z-toast: 70` |
+| act splash | **80** | `--z-splash: 104` |
+| outside weather | 85 | `--z-weather: 106` |
+| ground picker | 60 *and* 100 | `--z-picker: 100` |
+| dossier | 110 | `--z-dossier: 110` |
+
+The act splash and the toast host were **both 80**, so which covered which came down to DOM order.
+A transient notice must never outrank a dialog the player has to answer; toasts now sit below every
+modal. The ground picker carried two different values in two rules. One scale, declared once at
+`:root`.
+
+## 20. Three toasts at once, on top of the copy that tells you what to do — FIXED
+
+`showJuice` kept **up to three** toasts alive for 2.8s each, and `.toast-host` was fixed at
+`top: 12%` — directly over the act strip, the goal strip and the phase-draft heading. A brisk week
+put a wall of parchment across exactly the region a player reads to know what to do next. It is
+visible burying the draft heading in this document's own round-2 screenshots.
+
+- **One toast at a time.** A newer result replaces an older one; the log keeps the full history.
+- **Moved to just above the End Week footer**, so it briefly covers the tail of the card list
+  instead of the headings — and that is where the thumb already is after a tap.
+- **Lighter chrome**: dropped the second outline ring and its offset, halved the padding.
+- **Suppressed while a dialog is open** rather than queued: by the time a splash is dismissed the
+  result is already in the log and the ledger, and a stale toast arriving afterwards was a good part
+  of what read as mess.
+
+Verified at 390×844: 1 toast (was up to 3), host z 70, anchored ~630px with the goal strip, act strip
+and every card row unobstructed.
+
+## 21. Modal frequency — OBSERVATION, YOUR CALL
+
+A full run raises roughly **3 act splashes and 6 weather dialogs** — nine forced dismissals, each a
+full-screen interrupt. Nothing is broken and the ceremony-queue assertion is green; but if "messy"
+still describes it after the above, the remaining lever is *how often the game stops you*, which is a
+pacing decision rather than a layering bug.

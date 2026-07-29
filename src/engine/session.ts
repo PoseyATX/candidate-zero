@@ -396,10 +396,45 @@ export function resolveSineDie(state: GameState): StageTransition {
 }
 
 /**
+ * Calendars does not meet until week 9 — SS05 ("the narrowest door") is gated on
+ * it. Exported so the gate lives in one place: the card's `show` reads it too,
+ * and stall heat below must know about it.
+ */
+export const CALENDAR_OPENS_WEEK = 9;
+
+/** Stage 4 is "reported out, waiting on Calendars" — the one gated wait. */
+const CALENDAR_WAIT_STAGE = 4;
+
+/**
+ * True when the bill physically cannot move this week: it is sitting at the
+ * Calendars stage and Calendars has not convened yet.
+ */
+export function billBlockedByCalendar(state: GameState): boolean {
+  return (
+    !!state.bill &&
+    state.bill.pipelineStage === CALENDAR_WAIT_STAGE &&
+    state.week < CALENDAR_OPENS_WEEK
+  );
+}
+
+/**
  * Stall heat: bill sitting at the same stage burns political oxygen.
+ *
+ * Except when the rules are what pinned it. SS05 cannot be attempted before
+ * week 9, so a bill reported out in week 5 sat four weeks it had no way to
+ * avoid — and billOdds charges 5% per point of heat, so the game handed you a
+ * penalty for obeying it. Reaching "the narrowest door" at ~10% instead of its
+ * 30% base is why a deliberate bill-driving policy passed a law 4.1% of the
+ * time (4 of 97 sessions measured; 41 of those died sitting at this exact
+ * stage). Punishing a stall the player chose is the mechanic working; punishing
+ * one the calendar imposed is not.
  */
 export function applyBillStallHeat(state: GameState): string {
   if (!state.bill || state.bill.pipelineStage < 1 || state.bill.pipelineStage >= 8) {
+    return '';
+  }
+  if (billBlockedByCalendar(state)) {
+    // The clock still runs — the stall counter does not reset — but no heat.
     return '';
   }
   const weeks = (state.bill.weeksAtStage ?? 0) + 1;

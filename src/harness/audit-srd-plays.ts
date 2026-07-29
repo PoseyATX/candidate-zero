@@ -8,6 +8,8 @@ import { ALL_PLAYS, PLAY_COUNT, SHOP_PLAYS } from '../data/plays.js';
 import { SESSION_PLAYS } from '../data/session-plays.js';
 import { WAITING_PLAYS } from '../data/waiting-plays.js';
 import { OUTSIDE_EVENTS } from '../data/outside-events.js';
+import { SIGNATURE_PLAYS } from '../data/signature-plays.js';
+import { PATH_REWARDS } from '../data/paths.js';
 import type { AttrId, CardControl, CardResidency, PlayCard, RiskClass } from '../engine/types.js';
 
 const ATTRS = new Set<AttrId>(['CLO', 'CON', 'CRA', 'INK', 'DIP', 'CHA']);
@@ -32,8 +34,12 @@ interface Row {
 
 function audit(card: PlayCard): Row {
   const issues: string[] = [];
-  // PL## campaign, MV## starmap movement verbs, PR## sponsor promo cards
-  if (!card.id || !(/^(PL\d{2}[A-Z]?|MV\d{2}|PR\d{2})$/.test(card.id))) issues.push('bad id');
+  // PL## campaign, MV## starmap movement verbs, PR## sponsor promo cards,
+  // MD_AL## machine doors (data/machine-doors.ts — keyed to the member who
+  // holds them, so the id has to carry the ally id rather than a serial).
+  if (!card.id || !(/^(PL\d{2}[A-Z]?|MV\d{2}|PR\d{2}|MD_AL\d{2})$/.test(card.id))) {
+    issues.push('bad id');
+  }
   if (!card.n) issues.push('missing name');
   if (!RISKS.has(card.risk)) issues.push(`bad risk ${card.risk}`);
   if (!card.ph?.length) issues.push('no phases');
@@ -202,6 +208,55 @@ for (const a of ATTRS) {
     console.error(`FAIL: no play tagged with ${a}`);
     process.exitCode = 1;
   }
+}
+
+/**
+ * Card prose must not lie about attributes.
+ *
+ * Every card description names the attribute(s) that carry it, because the
+ * dossier's "Attributes that help" row says WHICH but never HOW. That prose is
+ * hand-written and the attrs array is data, so the two can drift silently — and
+ * a description that names the wrong attribute is worse than one that names
+ * none, since a player will build around it. Four of these were wrong when the
+ * descriptions were first written; this is why they were caught.
+ */
+const ATTR_WORD: Record<AttrId, string> = {
+  CLO: 'Close',
+  CON: 'Conviction',
+  CRA: 'Craft',
+  INK: 'Ink',
+  DIP: 'Diplomacy',
+  CHA: 'Charm'
+};
+{
+  const seen = new Set<string>();
+  let mismatches = 0;
+  const everyCard: PlayCard[] = [
+    ...ALL_PLAYS, ...SHOP_PLAYS, ...SESSION_PLAYS, ...WAITING_PLAYS,
+    ...SIGNATURE_PLAYS, ...PATH_REWARDS
+  ];
+  for (const c of everyCard) {
+    if (seen.has(c.id)) continue;
+    seen.add(c.id);
+    const own = new Set((c.attrs ?? []).map(a => ATTR_WORD[a]));
+    for (const word of Object.values(ATTR_WORD)) {
+      if (!new RegExp(`\\b${word}\\b`).test(c.d || '')) continue;
+      if (own.has(word)) continue;
+      // Close/Craft/Charm are ordinary English too — only flag the game sense.
+      const gameSense = new RegExp(
+        `${word} (is the attribute|and |carr|work|do|sign|writ|handle|pitch)`
+      );
+      if (!['Close', 'Craft', 'Charm'].includes(word) || gameSense.test(c.d || '')) {
+        console.error(
+          `FAIL: ${c.id} ${c.n} — description names "${word}" but its attrs are ` +
+            `[${(c.attrs ?? []).map(a => ATTR_WORD[a]).join(', ') || 'none'}]`
+        );
+        mismatches++;
+      }
+    }
+  }
+  if (mismatches) process.exitCode = 1;
+  else console.log(`PASS: ${seen.size} card descriptions name only attributes the card actually has`);
 }
 
 if (failed.length) {

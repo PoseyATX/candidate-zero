@@ -11,7 +11,15 @@ import type {
 } from './types.js';
 import { hasRep } from './reputation.js';
 import { generalWinProbability, primaryWinProbability } from './calendar.js';
+import { doorCardId, MACHINE_DOOR_PLAYS } from '../data/machine-doors.js';
 import { applyLegacyDebt, isDebtCrisis, mergeDebtIntoCarry } from './debt.js';
+import {
+  seatMachine,
+  settleMachine,
+  applyPoachPenalty,
+  memberName,
+  type MachineOutcome
+} from './machine.js';
 
 const STORAGE_KEY = 'cz_legacy_v1';
 
@@ -41,7 +49,11 @@ export function loadLegacy(): LegacyState {
       traits: Array.isArray(parsed.traits) ? parsed.traits : [],
       carry: parsed.carry ?? {},
       name: parsed.name,
-      identity: parsed.identity
+      identity: parsed.identity,
+      // loadLegacy allow-lists fields, so anything not named here is silently
+      // dropped on reload. The machine was invisible for exactly that reason:
+      // it settled correctly, saved correctly, and evaporated on next load.
+      machine: parsed.machine
     };
   } catch {
     return emptyLegacy();
@@ -195,6 +207,37 @@ export function applyLegacy(state: GameState, legacy: LegacyState): void {
     state.faces.P += 8;
     state.faces.O += 8;
   }
+  // The people who are with you are already with you — this is the felt payoff
+  // for having built a machine, and it lands in week 1 rather than in a menu.
+  const seated = seatMachine(state, legacy);
+  if (seated.length) {
+    state.log.push({
+      week: state.week,
+      kind: 'note',
+      text: `Your people are already in: ${seated.map(memberName).join(', ')}.`
+    });
+    // Name the doors they open. A privilege the player cannot see is one they
+    // will not miss when it shuts (see data/machine-doors.ts).
+    const opened = seated
+      .map(id => {
+        const cardId = doorCardId(id);
+        const card = cardId ? MACHINE_DOOR_PLAYS.find(c => c.id === cardId) : undefined;
+        return card ? `${card.n} (${memberName(id)})` : null;
+      })
+      .filter((x): x is string => !!x);
+    if (opened.length) {
+      state.log.push({
+        week: state.week,
+        kind: 'note',
+        text: `That opens what nobody else can reach: ${opened.join(', ')}.`
+      });
+    }
+  }
+
+  // ...and the people who are not. Same moment, deliberately: the run opens by
+  // showing both what you kept and what is now aimed at you.
+  applyPoachPenalty(state, legacy);
+
   applyLegacyDebt(state, legacy);
 
   if (legacy.carry.waitingLoopId) {
@@ -317,6 +360,22 @@ export function recordRun(legacy: LegacyState, state: GameState, kind: CampaignO
   legacy.runs.push({ epithet: buildEpithet(state, kind, share), kind });
   const base = { contacts: state.contacts, nameID: state.nameID };
   legacy.carry = mergeDebtIntoCarry(base, state, kind);
+  // Settle the machine AFTER the run is recorded, so runIndex is the number of
+  // the cycle just finished — the departure line reads "since your third".
+  lastMachineOutcome = settleMachine(legacy, state, kind, legacy.runs.length);
+}
+
+/**
+ * What the machine did at the end of the last run, for the terminal screen.
+ * Held here rather than returned so recordRun's signature stays put for its
+ * existing callers.
+ */
+let lastMachineOutcome: MachineOutcome | null = null;
+
+export function takeMachineOutcome(): MachineOutcome | null {
+  const o = lastMachineOutcome;
+  lastMachineOutcome = null;
+  return o;
 }
 
 export const PATH_TO_WAITING_LOOP: Record<string, string> = {

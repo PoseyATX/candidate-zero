@@ -32,7 +32,11 @@ export const WA01_WorkTheList: PlayCard = {
   control: 'player',
   entityScope: ['LOOP_WAITING_PERENNIAL', 'LOOP_WAITING_ADVOCATE', 'LOOP_WAITING_HOME'],
   attrs: ['CHA'],
-  d: 'Call the names that still pick up. The county forgets slower when you dial.',
+  d:
+    'Call the names that still pick up. The county forgets slower when you dial. ' +
+    'Banks up to 35 contacts straight into your NEXT filing — nothing in the interim helps this run, ' +
+    'it all carries forward. Charm is the attribute and it almost never fails. ' +
+    'Available on every interim path, and the reliable floor when nothing better is showing.',
   show: s => waitingShow(s),
   odds: () => 0.9,
   run: (s, o) => {
@@ -53,7 +57,11 @@ export const WA02_IssueForum: PlayCard = {
   control: 'player',
   entityScope: ['LOOP_WAITING_ADVOCATE'],
   attrs: ['CON', 'CHA'],
-  d: 'The candidate lost; the cause did not. Folding chairs and a sharp message.',
+  d:
+    'The candidate lost; the cause did not. Folding chairs and a sharp message. ' +
+    'The Advocate path\'s big one: 40 contacts and name ID banked forward, and it leaves your ' +
+    'MESSAGE SHARP going into the next filing — a permanent odds bonus you would otherwise have to ' +
+    'buy back with an action. Conviction and Charm carry it.',
   show: s => waitingShow(s, ['advocate']),
   odds: () => 0.75,
   run: (s, o) => {
@@ -78,7 +86,11 @@ export const WA03_CarryTheBag: PlayCard = {
   control: 'player',
   entityScope: ['LOOP_WAITING_STAFFER'],
   attrs: ['INK', 'CRA'],
-  d: 'Two years inside. Briefs, desks, and where the levers hide.',
+  d:
+    'Two years inside. Briefs, desks, and where the levers hide. ' +
+    'The Staffer path: raises your Parliamentarian and Operator faces directly — the two that matter ' +
+    'most if you ever reach a Session — and a good result banks a favour on top. ' +
+    'Ink and Craft. Safe, and the closest thing to a permanent upgrade the interim offers.',
   show: s => waitingShow(s, ['staffer']),
   odds: () => 0.88,
   run: (s, o) => {
@@ -100,7 +112,12 @@ export const WA04_MendFence: PlayCard = {
   control: 'player',
   entityScope: ['LOOP_WAITING_HOME'],
   attrs: ['CHA'],
-  d: 'Fix what broke. Coach the team. Let the mailers fade a little.',
+  d:
+    'Fix what broke. Coach the team. Let the mailers fade a little. ' +
+    'The only card in the game that HEALS: it banks volunteers and burns off exposure, ' +
+    'and a breakthrough erases a hit piece outright. ' +
+    'Charm is the attribute and it is about as safe as anything gets. ' +
+    'If you came out of a run with scars, this is what the two years are for.',
   show: s => waitingShow(s, ['home', 'perennial']),
   odds: () => 0.92,
   run: (s, o) => {
@@ -122,7 +139,11 @@ export const WA05_LunchLobby: PlayCard = {
   control: 'player',
   entityScope: ['LOOP_WAITING_EXMEMBER', 'LOOP_ELECTED_HIGHER_SENATE'],
   attrs: ['DIP', 'CRA'],
-  d: 'Title still warm. Doors still open. No vote — only lunch.',
+  d:
+    'Title still warm. Doors still open. No vote — only lunch. ' +
+    'The richest interim card: a favour, $300, name ID and a point of political capital in one action. ' +
+    'Diplomacy and Craft. ' +
+    'Ex-member and exploratory paths only — it is the one real dividend of having held the seat.',
   show: s => waitingShow(s, ['exmember', 'senate', 'statewide']),
   odds: () => 0.8,
   run: (s, o) => {
@@ -146,7 +167,11 @@ export const WA06_Rolodex: PlayCard = {
   residency: 'special',
   control: 'player',
   attrs: ['DIP'],
-  d: 'Birthdays, funerals, fish fries you are not running. Yet.',
+  d:
+    'Birthdays, funerals, fish fries you are not running. Yet. ' +
+    'Name ID and contacts banked forward, safely, on every path — the interim workhorse. ' +
+    'Diplomacy is the attribute. ' +
+    'Where Work the List banks bulk contacts, this trades some of that volume for name recognition.',
   show: s => waitingShow(s),
   odds: () => 0.9,
   run: (s, o) => {
@@ -167,7 +192,12 @@ export const WA07_QuietMoney: PlayCard = {
   control: 'player',
   kind: 'bargain',
   attrs: ['CRA'],
-  d: 'A retainer, a speech fee, a board. Not a campaign — not yet.',
+  d:
+    'A retainer, a speech fee, a board. Not a campaign — not yet. ' +
+    'The only way to bank real MONEY into the next filing, which is the difference between the ' +
+    'filing fee and eight Saturdays of petitions. Up to $900. ' +
+    'Craft is the attribute. It costs Loyalist standing every time it pays — ' +
+    'the interim has its own version of the PAC check, and this is it.',
   show: s => waitingShow(s, ['perennial', 'exmember', 'senate', 'statewide']),
   odds: () => 0.7,
   run: (s, o) => {
@@ -191,7 +221,11 @@ export const WA08_DraftBrief: PlayCard = {
   residency: 'special',
   control: 'player',
   attrs: ['INK', 'CON'],
-  d: 'White paper, memo, bill draft that waits for a sponsor.',
+  d:
+    'White paper, memo, bill draft that waits for a sponsor. ' +
+    'Parliamentarian face, name ID banked forward, and — the real prize — your message stays SHARP ' +
+    'into the next filing, which widens the odds on half your deck from week one. ' +
+    'Ink and Conviction. Safe, and it costs nothing but the hour.',
   show: s => waitingShow(s, ['advocate', 'staffer', 'senate', 'statewide']),
   odds: () => 0.85,
   run: (s, o) => {
@@ -212,7 +246,12 @@ export const WA09_TestWaters: PlayCard = {
   residency: 'special',
   control: 'player',
   attrs: ['DIP', 'CLO'],
-  d: 'Quiet calls about a larger map. Senate row or the statewide ballot.',
+  d:
+    'Quiet calls about a larger map — Senate row or the statewide ballot. ' +
+    'The only VOLATILE card in the interim, and the odds are the worst here by a wide margin. ' +
+    'A breakthrough banks name ID, a favour and 50 contacts; a disaster is a leak — ' +
+    '"EX-MEMBER EYES HIGHER OFFICE" — and a hit piece you carry into the next run. ' +
+    'Diplomacy and Close. Play it when the two years are otherwise spent, not first.',
   show: s => waitingShow(s, ['senate', 'statewide', 'exmember']),
   odds: () => 0.55,
   run: (s, o) => {
@@ -237,7 +276,11 @@ export const WA10_NightClass: PlayCard = {
   id: 'WA10', n: 'Teach a Night Class', cost: { a: 1 }, risk: 'SAFE', ph: [1, 2, 3],
   tag: 'waiting', kind: 'action', residency: 'special', control: 'player',
   entityScope: WAIT_SCOPE, attrs: ['CHA'],
-  d: 'Civics at the community college, two evenings a week. Thirty adults who now know your name and your handshake.',
+  d:
+    'Civics at the community college, two evenings a week. Thirty adults who now know your name ' +
+    'and your handshake. Banks contacts forward at a rate just under Work the List, safely. ' +
+    'Charm is the attribute. ' +
+    'A second reliable contact card, so a long interim is not four identical phone calls.',
   show: s => waitingShow(s),
   odds: () => 0.9,
   run: (s, o) => {
@@ -250,7 +293,12 @@ export const WA11_WeeklyColumn: PlayCard = {
   id: 'WA11', n: 'Write the Weekly Column', cost: { a: 1 }, risk: 'STD', ph: [1, 2, 3],
   tag: 'waiting', kind: 'action', residency: 'special', control: 'player',
   entityScope: WAIT_SCOPE, attrs: ['INK'],
-  d: 'A standing byline in the county paper. Slow, unglamorous, and it keeps your name in print between the elections.',
+  d:
+    'A standing byline in the county paper. Slow, unglamorous, and it keeps your name in print ' +
+    'between the elections. Pure name ID banked forward — the interim\'s specialist, where the ' +
+    'others trade in contacts. Ink is the attribute. ' +
+    'The only one of the three cheap interim cards that can whiff, so it is a small gamble for a ' +
+    'stat the others barely touch.',
   show: s => waitingShow(s),
   odds: () => 0.7,
   run: (s, o) => {
@@ -263,7 +311,11 @@ export const WA12_CharityRun: PlayCard = {
   id: 'WA12', n: 'Run the Charity 5K', cost: { a: 1 }, risk: 'SAFE', ph: [1, 2, 3],
   tag: 'waiting', kind: 'action', residency: 'special', control: 'player',
   entityScope: WAIT_SCOPE, attrs: ['CHA'],
-  d: 'A bib, a starting pistol, and a banner with your name over the finish line. Good works, well photographed.',
+  d:
+    'A bib, a starting pistol, and a banner with your name over the finish line. Good works, ' +
+    'well photographed. Banks a little of both contacts and name ID, safely, every time. ' +
+    'Charm is the attribute. ' +
+    'The balanced option when you do not want to commit the whole interim to one column.',
   show: s => waitingShow(s),
   odds: () => 0.9,
   run: (s, o) => {

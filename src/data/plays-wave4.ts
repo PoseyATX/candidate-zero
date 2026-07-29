@@ -19,7 +19,12 @@ function R(n: number): number {
 export const PL16_RecruitVolunteers: PlayCard = {
   id: 'PL16', n: 'Recruit Volunteers', cost: { a: 2 }, risk: 'STD', ph: [1, 2, 3], tag: 'force multiplier',
   attrs: ['CLO', 'CHA'],
-  d: 'An army marches on casseroles. Every volunteer makes every other card better.',
+  d:
+    'An army marches on casseroles. Every volunteer makes every other card better — ' +
+    'they raise the odds on Block Walk, Petitions and GOTV, and several cards spend them as fuel. ' +
+    'A breakthrough is +4, a solid result +2. ' +
+    'Close and Charm do the asking, helped by your True-Believer face and name ID. ' +
+    'Play it EARLY: volunteers compound, and a disaster here costs you one instead.',
   odds: (s) => clamp(0.5 + s.faces.T * 0.004 + s.nameID * 0.003, 0, 0.95),
   run: (s, o) => {
     if (o.tier <= 1) {
@@ -39,7 +44,13 @@ export const PL16_RecruitVolunteers: PlayCard = {
 export const PL18_SharpenMessage: PlayCard = {
   id: 'PL18', n: 'Sharpen the Message', cost: { a: 1 }, risk: 'STD', ph: [1, 2], tag: 'one issue, said right',
   attrs: ['CON'],
-  d: 'You are not running on nine things. You are running on one thing, said so it stays said.',
+  d:
+    'You are not running on nine things. You are running on one thing, said so it stays said. ' +
+    'One AP for a PERMANENT campaign-wide bonus — a sharp message widens the odds on Block Walk, ' +
+    'Town Hall, Club Speech and the Candidate Forum for the rest of the run, and hands you ' +
+    'True-Believer standing on top. ' +
+    'Conviction is the attribute. Cheap, early, and one of the best AP you will ever spend; ' +
+    'a disaster costs standing but you can come back and try again.',
   show: (s) => !s.messageSharp,
   odds: (s) => clamp(0.6 + s.faces.T * 0.003, 0, 0.95),
   run: (s, o) => {
@@ -59,7 +70,13 @@ export const PL20_PacCheck: PlayCard = {
   attrs: ['CRA', 'DIP'],
   kind: 'bargain',
   trap: true,
-  d: 'A man in a good suit admires your race. The check is real. So is the string tied to it. Once. Session will collect.',
+  d:
+    'A man in a good suit admires your race. The check is real. So is the string tied to it. ' +
+    'Roughly $1,400–$2,300 in one action — the fastest money in the game and the most expensive. ' +
+    'It costs 12 Loyalist standing on the spot and hangs the PAC String (OB1) on you, which drags ' +
+    'every week after and WILL be collected in Session. ' +
+    'Craft and Diplomacy handle the meeting. Once per campaign. ' +
+    'Take it when the filing fee is the only thing between you and the ballot, not because it is offered.',
   // Once per campaign — never a free-money ATM. Crisis may open early (debt.ts).
   show: (s) =>
     pacCheckAvailable(s) &&
@@ -91,7 +108,12 @@ export const PL21_SelfFundCredit: PlayCard = {
   attrs: ['CRA'],
   kind: 'bargain',
   trap: true,
-  d: "The bank will lend against the homestead. Campaigns have eaten better men's farms. Spend it now — the bill lands on the win/loss branch, not your odds.",
+  d:
+    "The bank will lend against the homestead. Campaigns have eaten better men's farms. " +
+    '$3,000 now for one action, with no string, no standing hit and no roll to speak of — ' +
+    'the debt is real but it lands on the win/loss branch at the END of the run, not on your odds during it. ' +
+    'Craft signs the paperwork. Once per run. ' +
+    'Win and it retires cheap; lose and you carry the note into the next cycle.',
   // Phase 3: once-per-run spend-now lever (debt.ts applySelfLoan)
   show: (s) => !s.selfLoanTaken,
   odds: () => 0.95,
@@ -101,7 +123,12 @@ export const PL21_SelfFundCredit: PlayCard = {
 export const PL22_ContrastMail: PlayCard = {
   id: 'PL22', n: 'Contrast Mail', cost: { a: 2, $: 800 }, risk: 'VOL', ph: [2, 3], tag: 'the folder spent',
   attrs: ['CRA', 'INK'],
-  d: 'What the quiet man found, printed on cheap stock and mailed to every primary voter who votes.',
+  d:
+    'What the quiet man found, printed on cheap stock and mailed to every primary voter who votes. ' +
+    'The payoff for Oppo Research, and it needs that file in hand. A good piece is momentum and ' +
+    'a large name-ID swing; a bad one is REVERSED — two hit pieces, more exposure, and momentum lost. ' +
+    'Craft and Ink write it, Operator standing helps, and every point of exposure you have already ' +
+    'taken makes it likelier to blow back. Playing it costs Operator standing regardless.',
   // archive:639 also requires A03 Mail Program — keep modular oppoFile primary;
   // A03 is still a real shop unlock for parity / future tightening.
   req: (s) => s.oppoFile,
@@ -130,7 +157,13 @@ export const PL22_ContrastMail: PlayCard = {
 export const PL21B_PromoteCanvassCaptain: PlayCard = {
   id: 'PL21B', n: 'Promote a Canvass Captain', cost: { a: 2, vp: 3 }, risk: 'SAFE', ph: [1, 2, 3], field: true, tag: 'the field gets a spine',
   attrs: ['DIP'],
-  d: 'One volunteer stops showing up as a volunteer and starts showing up as staff.',
+  d:
+    'One volunteer stops showing up as a volunteer and starts showing up as staff. ' +
+    'Spends three volunteers to buy a permanent +1 field AP every week — an extra action for the ' +
+    'rest of the run — and plants the Canvass Captain on the ground you play it at, where she ' +
+    'boosts Block Walk and GOTV specifically. ' +
+    'Diplomacy is the attribute and it almost never fails. ' +
+    'Choose the ground deliberately: her bonus is local, not district-wide.',
   show: (s) => !findAlly(s, 'AL09'),
   odds: () => 0.95,
   run: (s, _o, g) => {
@@ -145,7 +178,12 @@ export const PL21B_PromoteCanvassCaptain: PlayCard = {
 export const PL39_HireFieldDirector: PlayCard = {
   id: 'PL39', n: 'Hire a Field Director', cost: { a: 3, $: 2200 }, risk: 'STD', ph: [1, 2], field: true, tag: 'professionalize',
   attrs: ['DIP'], w: 1,
-  d: "A professional who has run four of these before. Money buys what volunteers can't always deliver on schedule.",
+  d:
+    "A professional who has run four of these before. Money buys what volunteers can't always deliver " +
+    'on schedule. Same prize as promoting a captain — a permanent +1 field AP and a field lead planted ' +
+    'on the ground you hire her onto — but paid in cash rather than in three volunteers. ' +
+    'Diplomacy is the attribute. ' +
+    'The card for a campaign with money and no bodies; it disappears once you already have a captain.',
   req: (s) => !warm(s, 'AL09'),
   odds: () => 0.8,
   run: (s, o, g) => {
@@ -164,7 +202,12 @@ export const PL39_HireFieldDirector: PlayCard = {
 export const PL22B_SeeSlateMaker: PlayCard = {
   id: 'PL22B', n: 'See the Slate-Maker', cost: { a: 3, $: 1500 }, risk: 'STD', ph: [2, 3], tag: 'the printed word',
   attrs: ['DIP', 'CRA'],
-  d: 'One man prints the card half the primary votes from. His price is never only money.',
+  d:
+    'One man prints the card half the primary votes from. His price is never only money. ' +
+    'The open road onto the slate: 3 AP and $1,500, and he will not take the meeting until the ' +
+    'County Chairwoman is warm to you. Land it and you are on the printed card — worth a great deal ' +
+    'in a primary — and he takes a marker (OB3) that he will spend on one future endorsement of his choosing. ' +
+    'Diplomacy and Craft carry the room. Miss and you keep the check; he keeps the door.',
   show: (s) => warm(s, 'AL02') && !s.slate,
   odds: () => 0.75,
   run: (s, o) => {
@@ -182,7 +225,12 @@ export const PL22B_SeeSlateMaker: PlayCard = {
 export const PL30_PrayerBreakfast: PlayCard = {
   id: 'PL30', n: 'Prayer Breakfast', cost: { a: 2 }, risk: 'SAFE', ph: [1, 2, 3], tag: 'the corridor opens',
   attrs: ['CON', 'DIP'],
-  d: 'Biscuits at six-thirty. The Corridor watches who shows before sunrise.',
+  d:
+    'Biscuits at six-thirty. The Corridor watches who shows before sunrise. ' +
+    'Banks True-Believer and Grandee standing plus rapport in the Corridor every time, safely. ' +
+    'Show up TWICE with the Corridor at 30 rapport and the Pastor comes with you — which opens ' +
+    'that ground for good, adds volunteers and hands you his directory. ' +
+    'Conviction and Diplomacy carry it. A slow card that pays a large lump if you commit to it.',
   req: (s) => s.backers.includes('B02'),
   odds: () => 0.85,
   run: (s, o) => {
@@ -214,7 +262,12 @@ export const PL30_PrayerBreakfast: PlayCard = {
 export const PL32_CoffeeEditor: PlayCard = {
   id: 'PL32', n: 'Coffee with the Editor', cost: { a: 2 }, risk: 'STD', ph: [1, 2], tag: 'earned goodwill',
   attrs: ['DIP'], w: 2,
-  d: 'Not for an endorsement — for a fair shake. The weekly decides who\'s "serious" long before the voters do.',
+  d:
+    'Not for an endorsement — for a fair shake. The weekly decides who is "serious" long before the ' +
+    'voters do. Banks name ID, and a breakthrough puts the Beat Reporter in your corner, which ' +
+    'quietly upgrades Earned Media results afterward. ' +
+    'Diplomacy is the attribute, and a reporter who already likes you makes it easier still. ' +
+    'Nothing bad happens on a miss — he is just noncommittal.',
   odds: (s) => clamp(0.5 + (warm(s, 'AL04') ? 0.15 : 0), 0, 0.9),
   run: (s, o) => {
     if (o.tier <= 1) {
@@ -230,7 +283,14 @@ export const PL32_CoffeeEditor: PlayCard = {
 export const PL48_CourtCountyJudge: PlayCard = {
   id: 'PL48', n: 'Court the County Judge', cost: { a: 2 }, risk: 'VOL', ph: [2, 3], tag: 'the heaviest name',
   attrs: ['DIP'], w: 1,
-  d: 'The one endorsement that moves a whole county. He gives it to winners, so look like one.',
+  d:
+    'The one endorsement that moves a whole county. He gives it to winners, so look like one. ' +
+    'Needs 3 endorsement points before he will take the meeting, and the odds climb with every ' +
+    'point beyond that and with your Grandee face. ' +
+    'A breakthrough is the County Judge himself plus more endorsement and name ID; ' +
+    'anything less is a warm word or a deferral. Diplomacy is the attribute. ' +
+    'VOLATILE — overplay it and he reasserts his independence at your expense. ' +
+    'Bank endorsements first, then ask.',
   req: (s) => s.endorsePts >= 3,
   odds: (s) => clamp(0.35 + s.endorsePts * 0.02 + s.faces.G * 0.003, 0, 0.8),
   run: (s, o) => {
@@ -258,7 +318,11 @@ export const PL48_CourtCountyJudge: PlayCard = {
 export const PL29_AttendFuneral: PlayCard = {
   id: 'PL29', n: 'Attend the Funeral', cost: { a: 1 }, risk: 'SAFE', ph: [1, 2, 3], tag: 'the morality lesson',
   attrs: ['CHA'],
-  d: 'A beloved judge has died. You can be present, or you can be seen. Presence earns the living.',
+  d:
+    'A beloved judge has died. You can be present, or you can be seen. Presence earns the living. ' +
+    'One AP, near-certain, for a large jump in Grandee standing and the Retired Judge in your corner. ' +
+    'Charm is the attribute but this one is really about showing up. ' +
+    'It appears only in the week of the funeral and is gone after — take it while it is on the table.',
   show: (s) => s.funeralWeek === s.week,
   odds: () => 0.95,
   run: (s) => {

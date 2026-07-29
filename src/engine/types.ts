@@ -335,6 +335,9 @@ export interface LegacyState {
   name?: string;
   /** Persistent identity from the 3-step card nameplate. */
   identity?: FiledIdentity;
+  /** The people who take your call, across runs — see engine/machine.ts.
+   *  Optional so every save written before it existed still loads. */
+  machine?: import('./machine.js').MachineState;
 }
 
 export interface DeckState {

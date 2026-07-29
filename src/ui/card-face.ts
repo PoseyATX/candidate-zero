@@ -18,6 +18,8 @@ export interface CardFaceOpts {
   shop?: boolean;
   locked?: boolean;
   lockReason?: string;
+  /** Draft-only: label the offer as sharpening a card already owned. */
+  upgradeBanner?: string;
 }
 
 export type CardArtEntry = { file: string; fullFace?: boolean };
@@ -280,6 +282,7 @@ export function cardInner(
     <span class="row-body">
       <span class="name">${up}${attrEscape(v.name)}</span>
       ${lock || tag}
+      ${opts.upgradeBanner ? `<span class="up-banner">${attrEscape(opts.upgradeBanner)}</span>` : ''}
     </span>
     <span class="row-risk risk-chip-${card.risk.toLowerCase()}">${attrEscape(risk)}</span>
   `;

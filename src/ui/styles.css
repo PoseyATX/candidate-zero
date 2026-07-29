@@ -40,7 +40,12 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  gap: 1rem;
+  /* WCAG 1.4.10 (Reflow): at 320px the masthead + both buttons exceeded the
+     viewport and pushed .top-actions to right:326, so EVERY screen scrolled
+     horizontally. Wrapping here and on .top-actions costs a line on the
+     narrowest phones and buys the whole app's reflow conformance. */
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
   border-top: 3px double var(--gold);
   border-bottom: 3px double var(--gold);
   padding: 0.6rem 0.75rem;
@@ -64,8 +69,16 @@ h1 {
   color: var(--parchment);
 }
 
+.top > div {
+  min-width: 0; /* let the masthead shrink instead of forcing overflow */
+}
+
 .top-actions {
   display: flex;
+  /* THIS is the line that actually clears the 320px overflow — verified by
+     removing it and watching a11y:layout go red on four screens. Letting the
+     button pair stack is what frees the width; .top wrapping alone did not. */
+  flex-wrap: wrap;
   gap: 0.6rem;
   align-items: center;
 }
@@ -78,7 +91,8 @@ h1 {
 .seed-label input {
   width: 7rem;
   margin-left: 0.35rem;
-  padding: 0.3rem 0.4rem;
+  min-height: 44px; /* text fields are tap targets too */
+  padding: 0.3rem 0.5rem;
   border: 1px solid var(--gold-dim);
   background: var(--walnut-2);
   color: var(--parchment);
@@ -94,6 +108,13 @@ h1 {
   border: 1px solid var(--gold-dim);
   background: transparent;
   color: var(--gold);
+  /* Every secondary button in the app inherits this. They measured 27-42px
+     tall; a thumb wants 44 (WCAG 2.5.5). display:inline-flex so min-height
+     actually centres the label instead of just padding the box. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
   padding: 0.5rem 0.95rem;
   transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
@@ -118,7 +139,7 @@ h1 {
   display: none;
   position: sticky;
   top: 0;
-  z-index: 30;
+  z-index: var(--z-hud);
   align-items: center;
   gap: 0.8rem;
   flex-wrap: wrap;
@@ -162,7 +183,7 @@ h1 {
 
 .chip {
   font-family: Cinzel, serif;
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   border: 1px solid var(--gold-dim);
@@ -226,7 +247,7 @@ h1 {
 
 .ledger-band-label {
   font-family: Cinzel, serif;
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   /* a11y: --gold-dim was 3.07:1 on walnut-2 (< AA 4.5); --gold is 5.46:1 */
@@ -274,7 +295,7 @@ h1 {
 }
 .attr-k {
   font-family: Cinzel, serif;
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   letter-spacing: 0.08em;
   color: var(--gold);
   text-transform: uppercase;
@@ -347,7 +368,13 @@ h1 {
   }
   .ledger-identity {
     position: sticky;
-    top: 2.6rem; /* under sticky HUD */
+    /* MUST be 0. This was 2.6rem back when the PAGE scrolled under a sticky
+       HUD; the scroll container is now .mtab-panel, which starts below the HUD
+       already. A non-zero offset here buys nothing and costs twice: it opens a
+       42px blank gap at the top of the dossier at rest, and it shoves the band
+       down over the Force band below, permanently hiding that band's label and
+       its whole first row (Contacts / Name ID). */
+    top: 0;
     z-index: 25;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
   }
@@ -390,7 +417,7 @@ h1 {
   white-space: nowrap;
 }
 .hud-who-issue {
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   letter-spacing: 0.03em;
   color: var(--gold-dim, #a88b4a);
   max-width: 7.5rem;
@@ -401,7 +428,7 @@ h1 {
   font-family: Inter, system-ui, sans-serif;
 }
 .hud-sub {
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--gold-dim);
@@ -440,7 +467,7 @@ h1 {
 .goal-row:first-child { margin-top: 0; }
 .goal-label {
   font-family: Cinzel, serif;
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -481,7 +508,7 @@ body.dossier-open {
 .card-detail {
   position: fixed;
   inset: 0;
-  z-index: 110;
+  z-index: var(--z-dossier);
   display: flex;
   align-items: stretch;
   justify-content: center;
@@ -527,7 +554,13 @@ body.dossier-open {
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(201, 162, 77, 0.45);
   border-radius: 999px;
-  padding: 0.4rem 0.85rem;
+  /* Dismissing a modal must not need a precise tap: was 73x27. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.4rem 0.95rem;
   cursor: pointer;
 }
 .dossier-close:hover,
@@ -605,6 +638,21 @@ body.dossier-open {
   object-fit: cover;
   object-position: center;
   display: block;
+}
+
+/* Phone: the emblem plate is decoration and the description is the reason the
+   panel exists. At 16rem/5:4 it ate ~230px before a single word of text, which
+   put the payoff line below the fold once descriptions got longer. Half-height
+   keeps the flourish and lifts the first two sentences onto the first screen.
+   (Full-bleed promo art is exempt below — there the art IS the card.) */
+@media (max-width: 800px) {
+  .dossier-art {
+    margin: 0.15rem 0 0.6rem;
+  }
+  .dossier-art-frame:not(.dossier-art-full) {
+    width: min(58%, 9.5rem);
+    aspect-ratio: 3 / 2;
+  }
 }
 
 .dossier-art-frame.risk-safe { box-shadow: inset 0 0 0 3px rgba(46, 107, 48, 0.45), 0 8px 24px rgba(0, 0, 0, 0.4); }
@@ -1194,7 +1242,7 @@ body.dossier-open {
   text-align: center;
   font-family: Cinzel, serif;
   font-weight: 700;
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   line-height: 1.1;
   letter-spacing: 0.04em;
   color: var(--oxblood);
@@ -1216,7 +1264,7 @@ body.dossier-open {
   top: 50%;
   transform: translate(-50%, -50%) rotate(-12deg);
   font-family: Cinzel, serif;
-  font-size: 0.6rem;
+  font-size: 0.69rem;
   font-weight: 700;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -1343,7 +1391,7 @@ body.dossier-open {
 .act-splash {
   position: fixed;
   inset: 0;
-  z-index: 80;
+  z-index: var(--z-splash);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1403,7 +1451,7 @@ body.dossier-open {
 .outside-weather {
   position: fixed;
   inset: 0;
-  z-index: 85; /* above act splash if both queue (weather first in flow) */
+  z-index: var(--z-weather); /* above act splash if both queue (weather first in flow) */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1473,7 +1521,7 @@ body.dossier-open {
   color: var(--gold);
 }
 .alpha-tag.stage-tag {
-  font-size: 0.55rem;
+  font-size: 0.65rem;
   vertical-align: middle;
 }
 .alpha-tag.stage-tag-primary {
@@ -1539,7 +1587,7 @@ body.dossier-open {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-family: Cinzel, serif;
-  font-size: 0.6rem;
+  font-size: 0.69rem;
 }
 .play-card .risk-tag::before {
   content: '';
@@ -1557,7 +1605,7 @@ body.dossier-open {
 }
 
 .play-card .attrs {
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   letter-spacing: 0.14em;
   color: var(--oxblood);
   text-transform: uppercase;
@@ -1655,6 +1703,11 @@ body.dossier-open {
   opacity: 0.9;
   letter-spacing: inherit;
   text-transform: none;
+  /* Was 92x12 — under even the 24px minimum of WCAG 2.5.8. Padding gives it a
+     real hit area without moving the text. */
+  display: inline-block;
+  min-height: 24px;
+  padding: 0.35rem 0.2rem;
 }
 
 .foot .kofi:hover,
@@ -1672,7 +1725,7 @@ body.dossier-open {
 .ground-picker {
   position: fixed;
   inset: 0;
-  z-index: 60;
+  z-index: var(--z-picker);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1732,7 +1785,7 @@ body.dossier-open {
   color: var(--parchment);
 }
 .gp-tag {
-  font-size: 0.55rem;
+  font-size: 0.65rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--gold);
@@ -1752,7 +1805,7 @@ body.dossier-open {
 }
 .gp-odds-best { color: var(--gold); }
 .gp-pen {
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   font-weight: 500;
   color: #d98a6a;
   letter-spacing: 0.02em;
@@ -1760,7 +1813,7 @@ body.dossier-open {
 .gp-meters { display: flex; flex-direction: column; gap: 0.28rem; }
 .gp-meter { display: grid; grid-template-columns: 1.7rem 1fr 1.6rem; align-items: center; gap: 0.35rem; }
 .gp-mlabel {
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--parchment-dim);
@@ -1874,7 +1927,7 @@ body.dossier-open {
 .title-id-label {
   display: block;
   font-family: Cinzel, serif;
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--gold);
@@ -1910,7 +1963,7 @@ body.dossier-open {
   display: inline-block;
   vertical-align: 0.35em;
   font-family: Cinzel, serif;
-  font-size: 0.5rem;
+  font-size: 0.64rem;
   font-weight: 600;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -1989,30 +2042,53 @@ body.dossier-open {
    (assigned in main.ts renderDraft) — no separate rule needed here. */
 
 /* Fixed toast stack — Phase 6; never reflows card grids */
+/* ============================================================
+   OVERLAY LAYERS — one scale, declared once.
+   These were scattered literals and had drifted into a tie:
+   .act-splash and .toast-host were BOTH z-index 80, so which
+   one covered the other came down to DOM order. A transient
+   notice must never outrank a dialog the player has to answer.
+   ============================================================ */
+:root {
+  --z-hud: 30;
+  --z-toast: 70;      /* transient, below every dialog */
+  --z-picker: 100;
+  --z-splash: 104;
+  --z-weather: 106;   /* weather queues over the act splash */
+  --z-dossier: 110;
+}
+
+/* Anchored above the End Week footer, not at top:12%.
+   At the top it sat directly on the act strip, the goal strip and the phase
+   draft heading — the three things a player reads to know what to do. Down
+   here it briefly covers the tail of the card list instead, which is where
+   the thumb already is after a tap. One toast at a time (see paint-log.ts),
+   so this never becomes a stack. */
 .toast-host {
   position: fixed;
   left: 50%;
-  top: 12%;
+  bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 4.6rem);
   transform: translateX(-50%);
-  z-index: 80;
+  z-index: var(--z-toast);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.35rem;
   width: min(420px, 92vw);
   pointer-events: none;
 }
 .toast {
   width: 100%;
+  box-sizing: border-box;
   background: linear-gradient(175deg, #efe3c6, #e0cfa9);
   color: var(--ink);
   border: 1px solid var(--gold);
-  outline: 2px solid var(--gold-dim);
-  outline-offset: 2px;
-  padding: 0.7rem 1rem;
+  /* The second ring plus its offset made every toast read as a heavy plaque. */
+  padding: 0.45rem 0.7rem;
+  border-radius: 3px;
   text-align: center;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
-  animation: toast-in 0.35s ease-out both;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+  animation: toast-in 0.3s ease-out both;
   pointer-events: none;
 }
 .toast-stamp {
@@ -2208,10 +2284,13 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
      muted-but-legible inactive; active state is --gold + underline. */
   color: var(--parchment-dim);
   font-family: 'Inter', sans-serif;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  /* The most-tapped control in the game was 34px tall. 44px is the platform
+     minimum for a thumb (WCAG 2.5.5); this is the one place it matters most. */
+  min-height: 44px;
   padding: 0.7rem 0;
   cursor: pointer;
 }
@@ -2225,7 +2304,7 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   display: flex;
   align-items: flex-end;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 100;
+  z-index: var(--z-picker);
 }
 #ground-picker .gp-panel {
   width: 100%;
@@ -2282,7 +2361,7 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
      the a11y gate caught it across all 7 unlocked grounds. This is the same
      light sage already used by .chip-field. */
   color: #b9d1a9;
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   font-style: italic;
   margin-top: 0.1rem;
 }
@@ -2291,26 +2370,24 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
    card means nothing at a glance. */
 .up-mark { color: var(--gold); margin-right: 0.2rem; }
 .draft-upgrade { outline-color: var(--gold) !important; }
-/* Rides the top of the art, not the bottom of the card: the card face is a
-   flex column ending in .cost-seal, and a bottom-anchored banner sat straight
-   on top of the price. The art plate is the only region with slack. */
+/* Was an absolute overlay across the top of the portrait art. In a 64px row
+   that lands straight on the card's name, so it is an inline chip now — it sits
+   in the row body under the title, where it reads as a label on the offer. */
 .up-banner {
-  position: absolute;
-  left: 0; right: 0; top: 0;
-  z-index: 3;
+  display: inline-block;
+  align-self: flex-start;
+  margin-top: 0.12rem;
   background: rgba(20, 16, 12, 0.88);
   color: #e8d48a;
   font-family: Cinzel, serif;
-  font-size: 0.52rem;
+  font-size: 0.64rem;
   line-height: 1.2;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   text-align: center;
-  padding: 0.16rem 0.1rem;
-  border-bottom: 1px solid var(--gold-dim);
-  border-radius: inherit;
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
+  padding: 0.1rem 0.3rem;
+  border: 1px solid var(--gold-dim);
+  border-radius: 2px;
   pointer-events: none;
 }
 
@@ -2334,7 +2411,7 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
 .heat-pip.on { background: var(--gold); border-color: var(--gold); }
 .chip-heat-label,
 .chip-cuts-label {
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   letter-spacing: 0.03em;
   margin-left: 0.12rem;
 }
@@ -2431,14 +2508,14 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
 }
 .play-card .cost-unit {
   font-family: Cinzel, serif;
-  font-size: 0.56rem;
+  font-size: 0.66rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #6d5836;
   margin-top: 0.1rem;
 }
 .play-card .cost-extra {
-  font-size: 0.56rem;
+  font-size: 0.66rem;
   color: #7a5a2c;
   margin-top: 0.18rem;
   white-space: nowrap;
@@ -2476,7 +2553,7 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
 .play-card .row-risk {
   flex: 0 0 auto;
   font-family: Cinzel, serif;
-  font-size: 0.56rem;
+  font-size: 0.66rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 0.12rem 0.3rem;
@@ -2552,4 +2629,187 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   box-shadow:
     inset 0 0 22px rgba(122, 90, 44, 0.18),
     0 2px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================================
+   MOTION — spends PlayFeedback.beat / .intensity, which the
+   engine has always computed and the UI never read.
+   See src/ui/motion.ts for the two rules this obeys.
+   ============================================================ */
+
+/* Toast entrance scaled by the engine's own intensity: a BREAKTHROUGH should
+   land harder than a SETBACK, and --hit is exactly that number. */
+.toast {
+  --hit: 0.5;
+  animation: toast-hit calc(0.26s + (var(--hit) * 0.14s)) cubic-bezier(0.2, 1.5, 0.4, 1) both;
+}
+@keyframes toast-hit {
+  from {
+    opacity: 0;
+    transform: translateY(calc(8px + (var(--hit) * 10px))) scale(calc(0.97 - (var(--hit) * 0.03)));
+  }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+/* A disaster shoves; a whisper does not. */
+.toast-crash { animation-name: toast-hit, toast-shake; animation-duration: 0.3s, 0.34s; }
+@keyframes toast-shake {
+  0%, 100% { margin-left: 0; }
+  25% { margin-left: calc(var(--hit) * -6px); }
+  75% { margin-left: calc(var(--hit) * 6px); }
+}
+
+/* The figures count up (motion.ts countUp) — this just keeps them from
+   reflowing the row as the digits change width. */
+.toast-deltas .delta {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+  min-width: 1.5em;
+}
+.toast-deltas .delta-sep { opacity: 0.6; }
+
+/* AP / turf / cut pips: show the spend, don't teleport past it. */
+.pip.pip-spent,
+.cut-pip.pip-spent {
+  animation: pip-spend 0.42s ease-out both;
+}
+@keyframes pip-spend {
+  0% { background: var(--gold); border-color: var(--gold); transform: scale(1.35); }
+  60% { transform: scale(0.9); }
+  100% { background: transparent; transform: scale(1); }
+}
+
+/* Heat is the system that measures as EV-neutral, so what it has to offer is
+   the feeling of a streak building. Give the newly-lit pip the beat. */
+.heat-pip.heat-pip-lit { animation: heat-light 0.5s ease-out both; }
+@keyframes heat-light {
+  0% { transform: scale(0.4); box-shadow: 0 0 0 0 var(--gold); }
+  50% { transform: scale(1.5); box-shadow: 0 0 6px 2px var(--gold); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 transparent; }
+}
+/* Losing the streak: the chip is kept for one paint purely so there is
+   something on screen to break. */
+.chip-heat.chip-wiped { animation: heat-wipe 0.45s ease-in both; }
+@keyframes heat-wipe {
+  0% { opacity: 1; border-color: var(--gold); transform: translateX(0); }
+  30% { transform: translateX(-3px); border-color: var(--oxblood-bright); }
+  60% { transform: translateX(3px); }
+  100% { opacity: 0; transform: translateX(0) scale(0.94); }
+}
+
+/* ============================================================
+   REDUCED MOTION — required, and the a11y gate cannot catch it:
+   axe does not test motion preferences. Everything above is
+   decoration over a UI that is already correct without it, so
+   this can safely be a blanket stop.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Exit animation must outrank the .toast entrance rule above it. */
+.toast.toast-out { animation: toast-out 0.28s ease-in forwards; }
+
+/* The running total reacting when it moves. */
+.goal-progress-text.goal-moved { animation: goal-moved 0.7s ease-out both; }
+@keyframes goal-moved {
+  0% { color: var(--gold); transform: translateX(-2px); }
+  35% { color: var(--gold); }
+  100% { transform: translateX(0); }
+}
+
+/* ============================================================
+   THE MACHINE — the persistent roster (engine/machine.ts).
+   Reads as a list of people, not a stat block: the hook is that
+   these are names you can lose, so names get the weight.
+   ============================================================ */
+.ledger-themachine .mach-hint {
+  margin: 0 0 0.45rem;
+  font-size: 0.68rem;
+  font-style: italic;
+  color: var(--parchment-dim);
+}
+.mach-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  grid-template-areas: 'name tier meta' 'bar bar bar';
+  align-items: center;
+  gap: 0.15rem 0.4rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid rgba(154, 130, 79, 0.18);
+}
+.mach-row:last-of-type { border-bottom: 0; }
+.mach-name { grid-area: name; font-family: Cinzel, serif; font-size: 0.78rem; color: var(--parchment); }
+.mach-tier {
+  grid-area: tier;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.05rem 0.3rem;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+}
+.mach-meta { grid-area: meta; font-size: 0.7rem; color: var(--parchment-dim); }
+.mach-bar {
+  grid-area: bar;
+  display: block;
+  height: 3px;
+  background: rgba(154, 130, 79, 0.25);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.mach-bar i { display: block; height: 100%; background: var(--gold); }
+
+.mach-with .mach-tier { color: #b9d1a9; }
+.mach-with .mach-bar i { background: #b9d1a9; }
+.mach-owes .mach-tier { color: var(--gold); }
+/* Cooling is a warning, and it should read as one. */
+.mach-cooling .mach-tier { color: #d99a5b; }
+.mach-cooling .mach-bar i { background: #d99a5b; }
+
+.mach-gonelist { margin-top: 0.4rem; color: #a2685e; font-size: 0.68rem; }
+/* The card this relationship unlocks, named on the roster row. */
+.mach-door {
+  display: block;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+}
+/* A door you are about to lose has to read louder than one you hold. */
+.mach-door-risk { color: #d99a5b; }
+.mach-shutlist { margin-top: 0.25rem; color: #8f7f72; font-size: 0.68rem; }
+.mach-shutlist .k { color: #a2685e; }
+
+/* Poached reads hotter than merely gone — these people are on the board. */
+.mach-rivallist { margin-top: 0.25rem; color: #e8b4a8; font-size: 0.68rem; }
+.mach-rivallist .k { color: var(--oxblood-bright); }
+
+/* Terminal screen: who stayed, who walked. */
+.machine-changes { list-style: none; margin: 0.6rem 0 0; padding: 0; }
+.machine-changes li {
+  padding: 0.3rem 0.5rem;
+  margin-bottom: 0.25rem;
+  border-left: 2px solid var(--gold-dim);
+  font-size: 0.82rem;
+}
+.machine-changes .mach-joined { border-left-color: #b9d1a9; color: #cfe0c2; }
+.machine-changes .mach-cooled { border-left-color: #d99a5b; color: #e8c39a; }
+.machine-changes .mach-walked {
+  border-left-color: var(--oxblood-bright);
+  color: #e8b4a8;
+  background: rgba(138, 47, 38, 0.14);
+}
+/* The sharpest line on the screen: not a loss, an opponent. */
+.machine-changes .mach-poached {
+  border-left-color: var(--oxblood-bright);
+  border-left-width: 3px;
+  color: #f0c4b8;
+  background: rgba(138, 47, 38, 0.24);
 }

@@ -570,8 +570,7 @@ export function renderDraft(campaign: Campaign): void {
         return `
         <button type="button" class="${cardClasses(card)} draft-card${upId ? ' draft-upgrade' : ''}" data-draft="${i}"
           aria-label="${attrEscape(label)}">
-          ${cardInner(campaign.state, card)}
-          ${upId ? `<span class="up-banner">${attrEscape(upgradeShortLabel(card))}</span>` : ''}
+          ${cardInner(campaign.state, card, { upgradeBanner: upId ? upgradeShortLabel(card) : '' })}
         </button>`;
       })
       .join('') +

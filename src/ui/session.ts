@@ -46,7 +46,9 @@ import {
   type SetupSelection
 } from '../data/setup.js';
 import { openActSplash as openActSplashShell, applyStageChrome as applyStageChromeShell } from './act-shell.js';
-import { renderHud, renderLedger } from './paint-hud.js';
+import { renderHud, renderLedger,
+  resetHudMotion
+} from './paint-hud.js';
 import {
   renderDraft,
   renderPlayables,
@@ -98,7 +100,7 @@ export function paint(): void {
   if (!campaign) return;
   closeCardDetail();
   renderHud(campaign);
-  renderLedger(campaign);
+  renderLedger(campaign, legacy);
   renderDraft(campaign);
   renderPlayables(campaign);
   renderLog(campaign);
@@ -156,6 +158,8 @@ export function startRun(setup: SetupSelection, seed: number, lockIdentity = fal
     saveLegacy(legacy);
   }
   campaign = createCampaign({ seed, setup });
+  // Week 1 must not animate as though five AP had just drained from nothing.
+  resetHudMotion();
   const kit = kitIdsForSetup(setup);
   if (kit.length) {
     injectIntoDrawPile(campaign.deck, campaign.state, kit);
