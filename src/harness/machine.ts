@@ -21,6 +21,8 @@ import {
   runQuality,
   memberName,
   rosterForDisplay,
+  poachedIds,
+  applyPoachPenalty,
   WITH_YOU_AT,
   MAX_STANDING
 } from '../engine/machine.js';
@@ -282,6 +284,87 @@ function cycle(
   assert(card.show!(idle), 'and visible exactly when that member calls');
   const other = MACHINE_ASK_PLAYS.find(c => c.id === askCardId('AL04'))!;
   assert(!other.show!(idle), 'only the asker\'s card appears, not the whole roster');
+}
+
+// --- The poach: attrition with a face on it ---
+{
+  /**
+   * Build someone up over `warmRuns` good cycles, then freeze them out.
+   *
+   * The re-seed has to happen AFTER stateWith — createNewState seeds the global
+   * RNG itself, so seeding before it is silently overwritten and every trial
+   * rolls the identical number. (It did: the first version of this test
+   * reported 60/60 poached, which is what tipped me off.)
+   */
+  function burnOut(seed: number, warmRuns: number): LegacyState {
+    const legacy = emptyLegacy();
+    for (let i = 0; i < warmRuns; i++) cycle(legacy, [{ id: 'AL02', warm: 3 }], 'won_general');
+    for (let i = 0; i < 30 && findMember(getMachine(legacy), 'AL02'); i++) {
+      const s = stateWith([], { disasterLog: [1, 2, 3], ballot: false });
+      useRng(createRng(seed * 977 + i));
+      legacy.runs.push({ epithet: 'test', kind: 'missed_filing' });
+      settleMachine(legacy, s, 'missed_filing', legacy.runs.length);
+    }
+    return legacy;
+  }
+
+  // Over many seeds, some of the deep relationships go to the opposition.
+  let poachedRuns = 0;
+  const trials = 60;
+  for (let seed = 0; seed < trials; seed++) {
+    if (poachedIds(burnOut(seed, 3)).length) poachedRuns++;
+  }
+  assert(poachedRuns > 0, `people with real history get poached (${poachedRuns}/${trials} seeds)`);
+  assert(
+    poachedRuns < trials,
+    `and some just go quiet — the poach is a roll, not a rule (${poachedRuns}/${trials})`
+  );
+
+  // A one-cycle acquaintance is not worth the other campaign's trouble.
+  let shallowPoached = 0;
+  for (let seed = 0; seed < trials; seed++) {
+    if (poachedIds(burnOut(seed, 1)).length) shallowPoached++;
+  }
+  assert(
+    shallowPoached === 0,
+    `a single-cycle contact is never poached — only what you invested in (${shallowPoached})`
+  );
+
+  // The scar is still permanent for the poached, same as anyone who walked.
+  const bitten = (() => {
+    for (let seed = 0; seed < 400; seed++) {
+      const l = burnOut(seed, 3);
+      if (poachedIds(l).length) return l;
+    }
+    return null;
+  })();
+  assert(!!bitten, 'found a poached departure to inspect');
+  if (bitten) {
+    const rec = getMachine(bitten).departed.find(d => d.id === 'AL02');
+    assert(rec?.toRival === true, 'the departure is recorded as going to the rival, not just gone');
+    cycle(bitten, [{ id: 'AL02', warm: 3 }], 'won_general');
+    assert(
+      !findMember(getMachine(bitten), 'AL02'),
+      'somebody working the other side does not come back either'
+    );
+
+    // And it costs you on the ground next run.
+    const s = createNewState({ seed: 7 });
+    const before = s.groundsArr.reduce((n, g) => n + (g.rivalRap ?? 0), 0);
+    const applied = applyPoachPenalty(s, bitten);
+    const after = s.groundsArr.reduce((n, g) => n + (g.rivalRap ?? 0), 0);
+    assert(applied > 0, `the poach hands the rival a head start (${applied})`);
+    assert(after > before, `and it lands on real ground (${before} -> ${after})`);
+    assert(
+      s.log.some(l => /other side/.test(l.text)),
+      'the player is told, by name, who is working against them'
+    );
+  }
+
+  // No poached members, no penalty — a clean roster costs nothing.
+  const clean = emptyLegacy();
+  const cs = createNewState({ seed: 8 });
+  assert(applyPoachPenalty(cs, clean) === 0, 'nothing lost, nothing owed');
 }
 
 if (failed) {

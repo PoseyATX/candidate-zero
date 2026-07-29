@@ -26,6 +26,7 @@
 import type { GameState, LegacyState, CampaignOutcome } from './types.js';
 import { ALLIES } from '../data/allies.js';
 import { askAdjustedIds, pendingAskAdjustment } from './ask.js';
+import { random } from './rng.js';
 
 /** Standing bounds. Below WALK_AT they leave for good. */
 export const MAX_STANDING = 100;
@@ -58,6 +59,45 @@ export function seatedIds(state: GameState): string[] {
 /** Below this they are one bad cycle from walking — surfaced as a warning. */
 export const COOLING_AT = 20;
 
+/** Chance a departing member with real history joins the opposition instead of
+ *  simply going quiet. Attrition needs a face or it is just a number falling. */
+export const POACH_CHANCE = 0.5;
+
+/** How much head start each poached member hands the rival on their turf. */
+export const POACH_RIVAL_RAP = 8;
+
+/** Everyone the opposition has taken from you, across all runs. */
+export function poachedIds(legacy: LegacyState): string[] {
+  return getMachine(legacy)
+    .departed.filter(d => d.toRival)
+    .map(d => d.id);
+}
+
+/**
+ * The standing cost of what you let go: people now working against you start
+ * the rival with rapport on the ground. Applied at run start, next to seating,
+ * so the same screen shows what you kept and what is now aimed at you.
+ */
+export function applyPoachPenalty(state: GameState, legacy: LegacyState): number {
+  const taken = poachedIds(legacy);
+  if (!taken.length || !state.groundsArr.length) return 0;
+  const per = POACH_RIVAL_RAP;
+  let applied = 0;
+  for (let i = 0; i < taken.length; i++) {
+    const g = state.groundsArr[i % state.groundsArr.length]!;
+    g.rivalRap = Math.min(100, (g.rivalRap ?? 0) + per);
+    applied += per;
+  }
+  state.log.push({
+    week: state.week,
+    kind: 'note',
+    text:
+      `${taken.map(memberName).join(', ')} ${taken.length === 1 ? 'is' : 'are'} working for the ` +
+      `other side now. They know your ground as well as you do.`
+  });
+  return applied;
+}
+
 export type MachineTier = 'with' | 'owes' | 'cooling' | 'gone';
 
 export interface MachineMember {
@@ -71,10 +111,24 @@ export interface MachineMember {
   since: number;
 }
 
-/** Names of people who have walked. Permanent — this is the scar. */
+/**
+ * People who have walked. Permanent — this is the scar.
+ *
+ * `toRival` is the difference between "she drifted away" and "she is working
+ * for him now". Silent decay is forgettable; a name on the other side is the
+ * thing that makes a player protect the roster.
+ */
+export interface DepartedMember {
+  id: string;
+  run: number;
+  why: string;
+  /** They did not just leave — the other campaign picked them up. */
+  toRival?: boolean;
+}
+
 export type MachineState = {
   members: MachineMember[];
-  departed: { id: string; run: number; why: string }[];
+  departed: DepartedMember[];
 };
 
 export function emptyMachine(): MachineState {
@@ -143,6 +197,8 @@ export interface MachineOutcome {
   deepened: string[];
   cooled: string[];
   walked: string[];
+  /** Walked AND recruited by the opposition — a subset of `walked`. */
+  poached: string[];
   /** One line per event, already player-facing. */
   lines: string[];
 }
@@ -161,7 +217,7 @@ export function settleMachine(
 ): MachineOutcome {
   const machine = getMachine(legacy);
   const q = runQuality(state, kind);
-  const out: MachineOutcome = { joined: [], deepened: [], cooled: [], walked: [], lines: [] };
+  const out: MachineOutcome = { joined: [], deepened: [], cooled: [], walked: [], poached: [], lines: [] };
 
   // 1. Anyone you worked with this run banks into the machine.
   for (const ally of state.allies) {
@@ -228,9 +284,22 @@ export function settleMachine(
   const survivors: MachineMember[] = [];
   for (const m of machine.members) {
     if (m.standing <= WALK_AT) {
-      machine.departed.push({ id: m.id, run: runIndex, why });
+      // Someone who put real cycles in does not simply retire — the other
+      // campaign has been waiting for exactly this. Deeper relationships are
+      // the ones worth poaching, so the people you invested most in are the
+      // ones who hurt most on the way out.
+      const poached = m.runs >= 2 && random() < POACH_CHANCE;
+      machine.departed.push({ id: m.id, run: runIndex, why, toRival: poached || undefined });
       out.walked.push(m.id);
-      out.lines.push(`${memberName(m.id)} is gone — ${why}. That door does not reopen.`);
+      if (poached) {
+        out.poached.push(m.id);
+        out.lines.push(
+          `${memberName(m.id)} is gone — and took your playbook across the street. ` +
+            `They are working the other side now.`
+        );
+      } else {
+        out.lines.push(`${memberName(m.id)} is gone — ${why}. That door does not reopen.`);
+      }
     } else {
       survivors.push(m);
     }

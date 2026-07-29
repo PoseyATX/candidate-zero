@@ -101,7 +101,16 @@ export function renderTerminalOutcome(ctx: TerminalRenderCtx): void {
       );
     }
     for (const id of mo.walked) {
+      // "Gone" is a number falling. "Gone to him" is a face. The poached line
+      // is deliberately the last and sharpest thing on the screen.
+      if (mo.poached.includes(id)) continue;
       rows.push(`<li class="mach-walked"><b>${esc(memberName(id))}</b> is gone. That door does not reopen.</li>`);
+    }
+    for (const id of mo.poached) {
+      rows.push(
+        `<li class="mach-poached"><b>${esc(memberName(id))}</b> is working for the other side now. ` +
+          `They know your ground as well as you do.</li>`
+      );
     }
     machineBlock = `<ul class="machine-changes">${rows.join('')}</ul>`;
   }

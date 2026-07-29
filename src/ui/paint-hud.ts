@@ -287,11 +287,22 @@ export function renderLedger(campaign: Campaign, legacy?: LegacyState): void {
           </div>`;
         })
         .join('');
-      const goneRow = gone.length
-        ? `<div class="ledger-wide mach-gonelist"><span class="k">Gone</span> ${gone
-            .map(d => memberName(d.id))
-            .join(' · ')}</div>`
-        : '';
+      // Two lists, not one. Someone who drifted away is a loss; someone the
+      // other campaign picked up is a standing threat, and the dossier should
+      // not flatten the difference.
+      const left = gone.filter(d => !d.toRival);
+      const taken = gone.filter(d => d.toRival);
+      const goneRow =
+        (left.length
+          ? `<div class="ledger-wide mach-gonelist"><span class="k">Gone</span> ${left
+              .map(d => memberName(d.id))
+              .join(' · ')}</div>`
+          : '') +
+        (taken.length
+          ? `<div class="ledger-wide mach-rivallist"><span class="k">With him</span> ${taken
+              .map(d => memberName(d.id))
+              .join(' · ')}</div>`
+          : '');
       machineBand = `
         <div class="ledger-band ledger-themachine">
           <div class="ledger-band-label">The Machine</div>

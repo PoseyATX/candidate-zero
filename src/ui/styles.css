@@ -2718,6 +2718,9 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
 .mach-cooling .mach-bar i { background: #d99a5b; }
 
 .mach-gonelist { margin-top: 0.4rem; color: #a2685e; font-size: 0.68rem; }
+/* Poached reads hotter than merely gone — these people are on the board. */
+.mach-rivallist { margin-top: 0.25rem; color: #e8b4a8; font-size: 0.68rem; }
+.mach-rivallist .k { color: var(--oxblood-bright); }
 
 /* Terminal screen: who stayed, who walked. */
 .machine-changes { list-style: none; margin: 0.6rem 0 0; padding: 0; }
@@ -2733,4 +2736,11 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   border-left-color: var(--oxblood-bright);
   color: #e8b4a8;
   background: rgba(138, 47, 38, 0.14);
+}
+/* The sharpest line on the screen: not a loss, an opponent. */
+.machine-changes .mach-poached {
+  border-left-color: var(--oxblood-bright);
+  border-left-width: 3px;
+  color: #f0c4b8;
+  background: rgba(138, 47, 38, 0.24);
 }

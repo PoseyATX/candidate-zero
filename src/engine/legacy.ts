@@ -12,7 +12,13 @@ import type {
 import { hasRep } from './reputation.js';
 import { generalWinProbability, primaryWinProbability } from './calendar.js';
 import { applyLegacyDebt, isDebtCrisis, mergeDebtIntoCarry } from './debt.js';
-import { seatMachine, settleMachine, memberName, type MachineOutcome } from './machine.js';
+import {
+  seatMachine,
+  settleMachine,
+  applyPoachPenalty,
+  memberName,
+  type MachineOutcome
+} from './machine.js';
 
 const STORAGE_KEY = 'cz_legacy_v1';
 
@@ -210,6 +216,10 @@ export function applyLegacy(state: GameState, legacy: LegacyState): void {
       text: `Your people are already in: ${seated.map(memberName).join(', ')}.`
     });
   }
+
+  // ...and the people who are not. Same moment, deliberately: the run opens by
+  // showing both what you kept and what is now aimed at you.
+  applyPoachPenalty(state, legacy);
 
   applyLegacyDebt(state, legacy);
 
