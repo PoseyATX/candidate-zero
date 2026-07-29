@@ -25,6 +25,7 @@
 
 import type { GameState, LegacyState, CampaignOutcome } from './types.js';
 import { ALLIES } from '../data/allies.js';
+import { askAdjustedIds, pendingAskAdjustment } from './ask.js';
 
 /** Standing bounds. Below WALK_AT they leave for good. */
 export const MAX_STANDING = 100;
@@ -43,6 +44,17 @@ export const WITH_YOU_AT = 45;
  * and it keeps the meta layer a head start rather than a win button.
  */
 export const SEATS_PER_RUN = 3;
+
+/** Flag marking someone as seated from the machine this run — see seatMachine. */
+export const SEATED_PREFIX = 'machineSeated:';
+
+/** Ids seated from the machine this run. The only people who may ask. */
+export function seatedIds(state: GameState): string[] {
+  const flags = state.sessionFlags ?? {};
+  return Object.keys(flags)
+    .filter(k => k.startsWith(SEATED_PREFIX) && flags[k])
+    .map(k => k.slice(SEATED_PREFIX.length));
+}
 /** Below this they are one bad cycle from walking — surfaced as a warning. */
 export const COOLING_AT = 20;
 
@@ -188,6 +200,22 @@ export function settleMachine(
     }
   }
 
+  // 2b. Favours honoured and refused this run (engine/ask.ts). Settlement is
+  //     the single writer for standing, so asks bank an adjustment during the
+  //     run and it lands here rather than drifting mid-week.
+  for (const id of askAdjustedIds(state)) {
+    const adj = pendingAskAdjustment(state, id);
+    if (!adj) continue;
+    const m = findMember(machine, id);
+    if (!m) continue;
+    const before = m.standing;
+    m.standing = Math.max(0, Math.min(MAX_STANDING, m.standing + adj));
+    if (adj < 0 && !out.cooled.includes(id) && tierOf(m) === 'cooling' && before >= COOLING_AT) {
+      out.cooled.push(id);
+      out.lines.push(`${memberName(id)} asked, and you did not answer.`);
+    }
+  }
+
   // 3. Attrition. Permanent, named, and the reason any of this matters.
   const why =
     kind === 'missed_filing'
@@ -233,6 +261,12 @@ export function seatMachine(state: GameState, legacy: LegacyState): string[] {
     // than one that just crossed the line.
     const warmAmt = m.standing >= 80 ? 3 : 2;
     state.allies.push({ id: m.id, warm: warmAmt, age: 0 });
+    // Mark them as machine-seated. Only these people can call in a favour —
+    // an ally you picked up mid-run has no standing to spend and no claim on
+    // you, and letting every warm ally ask made asks fire in runs with no
+    // machine at all (measured: money-path ballot 68.5% -> 62%).
+    state.sessionFlags = state.sessionFlags || {};
+    state.sessionFlags[`${SEATED_PREFIX}${m.id}`] = 1;
     seated.push(m.id);
   }
   return seated;

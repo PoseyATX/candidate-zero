@@ -24,6 +24,18 @@ import {
   WITH_YOU_AT,
   MAX_STANDING
 } from '../engine/machine.js';
+import {
+  askerId,
+  maybeOpenAsk,
+  grantAsk,
+  settleUnansweredAsk,
+  pendingAskAdjustment,
+  ASK_GRANT_STANDING,
+  ASK_REFUSE_STANDING
+} from '../engine/ask.js';
+import { MACHINE_ASK_PLAYS, askCardId } from '../data/machine-asks.js';
+import { ALLIES } from '../data/allies.js';
+import { createRng, useRng } from '../engine/rng.js';
 import type { CampaignOutcome, GameState, LegacyState } from '../engine/types.js';
 
 let failed = 0;
@@ -188,6 +200,88 @@ function cycle(
     roster.every(r => memberName(r.id) !== r.id),
     'every member renders as a person, not an id'
   );
+}
+
+// --- THE ASK: what the machine costs you (Covenant 6) ---
+{
+  const s0 = createNewState({ seed: 40 });
+  assert(askerId(s0) === null, 'nobody is asking on a fresh week');
+  assert(maybeOpenAsk(s0, []) === null, 'with nobody seated, nobody can ask — a stranger has no claim');
+
+  // Force an ask, then honour it.
+  useRng(createRng(7));
+  const s1 = createNewState({ seed: 41 });
+  let opened: string | null = null;
+  for (let i = 0; i < 200 && !opened; i++) opened = maybeOpenAsk(s1, ['AL02']);
+  assert(opened === 'AL02', 'someone seated can call in a favour');
+  assert(askerId(s1) === 'AL02', 'and the asker is readable for the card gate');
+
+  // One at a time — a second roll must not stack a rival claim.
+  const second = maybeOpenAsk(s1, ['AL04']);
+  assert(second === null && askerId(s1) === 'AL02', 'only one favour is open at a time');
+
+  grantAsk(s1, 'AL02');
+  assert(askerId(s1) === null, 'honouring closes the ask');
+  assert(pendingAskAdjustment(s1, 'AL02') > 0, 'honouring earns standing');
+  assert(settleUnansweredAsk(s1) === null, 'a closed ask cannot also be refused');
+}
+
+// --- Refusing is the clock running out, and it costs more than a grant earns ---
+{
+  useRng(createRng(9));
+  const s = createNewState({ seed: 42 });
+  let opened: string | null = null;
+  for (let i = 0; i < 200 && !opened; i++) opened = maybeOpenAsk(s, ['AL02']);
+  assert(!!opened, 'an ask opened for the refusal case');
+  const line = settleUnansweredAsk(s);
+  assert(!!line, 'closing the week on an open favour is itself an answer');
+  assert(pendingAskAdjustment(s, 'AL02') < 0, 'refusing costs standing');
+  assert(
+    Math.abs(ASK_REFUSE_STANDING) > ASK_GRANT_STANDING,
+    `a favour refused is remembered harder than one honoured (${ASK_REFUSE_STANDING} vs +${ASK_GRANT_STANDING})`
+  );
+}
+
+// --- Ask adjustments land through settlement, the single writer for standing ---
+{
+  const legacy = emptyLegacy();
+  for (let i = 0; i < 4; i++) cycle(legacy, [{ id: 'AL02', warm: 2 }], 'won_general');
+  const before = findMember(getMachine(legacy), 'AL02')!.standing;
+
+  const s = stateWith([{ id: 'AL02', warm: 2 }], { ballot: true });
+  // Two refusals in one run.
+  for (let k = 0; k < 2; k++) {
+    useRng(createRng(100 + k));
+    let opened: string | null = null;
+    for (let i = 0; i < 200 && !opened; i++) opened = maybeOpenAsk(s, ['AL02']);
+    settleUnansweredAsk(s);
+  }
+  legacy.runs.push({ epithet: 'test', kind: 'lost_primary' });
+  settleMachine(legacy, s, 'lost_primary', legacy.runs.length);
+  const after = findMember(getMachine(legacy), 'AL02')!.standing;
+  assert(
+    after < before + 20,
+    `refused favours drag standing at settlement (${before} -> ${after})`
+  );
+}
+
+// --- The ask card exists for every member and is gated to the asker ---
+{
+  assert(MACHINE_ASK_PLAYS.length === Object.keys(ALLIES).length,
+    `one ask card per member (${MACHINE_ASK_PLAYS.length})`);
+  const card = MACHINE_ASK_PLAYS.find(c => c.id === askCardId('AL02'))!;
+  assert(!!card, 'the ask card id is derivable from the member id');
+  assert(card.n.includes(memberName('AL02')), `the card is named for the person (${card.n})`);
+  assert((card.cost.a ?? 0) > 0, 'honouring costs AP — a dialog would have cost nothing');
+
+  const idle = createNewState({ seed: 43 });
+  assert(!card.show!(idle), 'the card is invisible when nobody is asking');
+  useRng(createRng(11));
+  let opened: string | null = null;
+  for (let i = 0; i < 200 && !opened; i++) opened = maybeOpenAsk(idle, ['AL02']);
+  assert(card.show!(idle), 'and visible exactly when that member calls');
+  const other = MACHINE_ASK_PLAYS.find(c => c.id === askCardId('AL04'))!;
+  assert(!other.show!(idle), 'only the asker\'s card appears, not the whole roster');
 }
 
 if (failed) {
