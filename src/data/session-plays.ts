@@ -29,7 +29,11 @@ export const SS01_FileBill: PlayCard = {
   ph: [1, 2, 3],
   tag: 'H.B. ____',
   attrs: ['INK'],
-  d: 'Your name, your issue, a number. It exists now, which is more than most ideas get.',
+  d:
+    'Your name, your issue, a number. It exists now, which is more than most ideas get. ' +
+    'Step ONE of the bill pipeline and effectively automatic — but you only get ONE pipeline move ' +
+    'per week, so the session is a race against the clock from here. ' +
+    'Ink is the attribute. File early; every week you wait is a week the calendar eats at the far end.',
   show: s => s.stage === 'session' && !!s.bill && s.bill.pipelineStage === 0,
   odds: () => 0.95,
   run: s => {
@@ -48,7 +52,12 @@ export const SS02_SeekReferral: PlayCard = {
   ph: [1, 2, 3],
   tag: "the Speaker's desk",
   attrs: ['DIP'],
-  d: "Bills go where the Speaker sends them. (Opens wk 2.) If the PAC holds a claim, they collect before the desk moves.",
+  d:
+    'Bills go where the Speaker sends them. Step TWO, and it opens in week 2. ' +
+    'Land it and you are in committee; miss and the desk sits on you while the clock runs. ' +
+    'Diplomacy is the attribute, and the odds ride on your bill\'s health and heat. ' +
+    'If the Third House holds a claim on you, THEY COLLECT HERE — before the desk moves — ' +
+    'unless you have already refused them.',
   show: s =>
     s.stage === 'session' &&
     !!s.bill &&
@@ -92,7 +101,12 @@ export const SS_PAC_Refuse: PlayCard = {
   tag: 'the string pulls',
   kind: 'bargain',
   attrs: ['CON'],
-  d: 'They want an aye on a quiet association bill. Refuse and keep your district — pay in heat and ink.',
+  d:
+    'They want an aye on a quiet association bill, and the check you took in the campaign says you owe it. ' +
+    'Costs no action at all — the price is paid in heat and ink, not AP. ' +
+    'Refuse and you keep your district clean and your bill takes the damage; ' +
+    'stay silent and they simply collect at referral instead. ' +
+    'Conviction is the attribute. There is no version of this that is free.',
   show: s =>
     s.stage === 'session' &&
     !!(s.sessionFlags?.pac_lender_claim || s.obls.includes('OB1')) &&
@@ -111,7 +125,12 @@ export const SS03_CourtChair: PlayCard = {
   ph: [1, 2, 3],
   tag: 'the gatekeeper',
   attrs: ['DIP'],
-  d: 'The chair decides what gets heard. (Hearings open wk 4.) Kitchen-table rules, marble floors.',
+  d:
+    'The chair decides what gets heard — kitchen-table rules, marble floors. ' +
+    'Step THREE, open from week 4. Success buys a hearing date and standing with the committee, ' +
+    'and a breakthrough banks political capital on top. ' +
+    'Diplomacy is the attribute and strong Operator standing gives a real edge. ' +
+    'Push the chair on a disaster and the chair remembers.',
   show: s =>
     s.stage === 'session' &&
     !!s.bill &&
@@ -143,7 +162,13 @@ export const SS04_Testimony: PlayCard = {
   ph: [1, 2, 3],
   tag: 'on the record',
   attrs: ['CON', 'CHA'],
-  d: 'Witnesses, a timer, members reading their phones. (Votes-out open wk 6.)',
+  d:
+    'Witnesses, a timer, members reading their phones. Step FOUR, open from week 6, ' +
+    'and the first genuinely dangerous one. ' +
+    'A breakthrough votes the bill out unanimously with capital and name ID; a solid result gets it ' +
+    'out on party lines. Left pending is committee for quietly bleeding. ' +
+    'Conviction and Charm carry the room, and a sharp message widens the odds. ' +
+    'A disaster piles heat on the bill, and heat is what kills bills at the far end.',
   show: s =>
     s.stage === 'session' &&
     !!s.bill &&
@@ -181,7 +206,12 @@ export const SS05_CalendarSlot: PlayCard = {
   ph: [1, 2, 3],
   tag: 'the narrowest door',
   attrs: ['CRA', 'DIP'],
-  d: 'Calendars decides what the House even sees. (Opens wk 9.) Favor is the only currency here.',
+  d:
+    'Calendars decides what the House even sees. Step FIVE, open from week 9, and the narrowest ' +
+    'door in the building — the base odds here are the worst in the pipeline. ' +
+    'Favor is the only currency that helps: above 65 it is a large, direct bonus. ' +
+    'Craft and Diplomacy work the room. Spend the session banking favor from errands BEFORE you ' +
+    'arrive here, because leaning on Calendars empty-handed costs you what favor you had.',
   show: s =>
     s.stage === 'session' &&
     !!s.bill &&
@@ -215,7 +245,13 @@ export const SS06_FloorFight: PlayCard = {
   ph: [1, 2, 3],
   tag: 'the whole House watching',
   attrs: ['CRA', 'CLO'],
-  d: 'Amendments fly, points of order lurk, the back mic is loaded. (Floor opens wk 11.)',
+  d:
+    'Amendments fly, points of order lurk, the back mic is loaded. Step SIX, open from week 11. ' +
+    'Pass clean and you take capital, name ID, and a nod from the Old Bulls; pass ugly and the bill ' +
+    'carries hostile amendments like buckshot but survives. ' +
+    'Craft and Close carry it, and every point of political capital you have banked raises the odds — ' +
+    'this is what Whip a Vote Trade and Study the Rules were FOR. ' +
+    'A sustained point of order sends you back to committee with the clock grinning.',
   show: s =>
     s.stage === 'session' &&
     !!s.bill &&
@@ -261,7 +297,12 @@ export const SS07_WorkSenate: PlayCard = {
   ph: [1, 2, 3],
   tag: 'the other chamber',
   attrs: ['INK', 'DIP'],
-  d: 'Thirty-one senators, the Lt. Governor, and the Tag in wait. (Opens wk 13.)',
+  d:
+    'Thirty-one senators, the Lt. Governor, and the Tag lying in wait. Step SEVEN, open from week 13 — ' +
+    'the last gate, run at the worst possible moment in the calendar. ' +
+    'Ink and Diplomacy carry it. A miss is a TAG: forty-eight hours lost, and a session at week 13 ' +
+    'does not have forty-eight hours. A disaster kills it outright at 11:58 on a procedural motion. ' +
+    'Arrive here with the bill cool and the clock unspent, or do not arrive here at all.',
   show: s =>
     s.stage === 'session' &&
     !!s.bill &&
@@ -294,7 +335,13 @@ export const SS08_Casework: PlayCard = {
   ph: [1, 2, 3],
   tag: 'the home fires',
   attrs: ['CHA'],
-  d: "A veteran's benefits, a stop-sign petition, a widow's property line. The seat is kept here, not in Austin.",
+  d:
+    "A veteran's benefits, a stop-sign petition, a widow's property line. The seat is kept here, " +
+    'not in Austin. The only full answer to the district standing that drains every week you spend ' +
+    'in the Capitol — and the only reliable way to cool a primary challenger. ' +
+    'Charm is the attribute and it is SAFE. ' +
+    'Gains shrink above 75 standing, so play it to hold the floor, not to top off a district ' +
+    'that already loves you.',
   show: s => s.stage === 'session',
   odds: () => 0.85,
   run: (s, o) => {
@@ -327,7 +374,12 @@ export const SS09_SpeakerErrand: PlayCard = {
   ph: [1, 2, 3],
   tag: 'favor for favor',
   attrs: ['DIP'],
-  d: 'Carry a small unpleasant thing for leadership. It costs your name a little; it buys your bill a lot.',
+  d:
+    'Carry a small unpleasant thing for leadership. It costs your name a little; it buys your bill a lot. ' +
+    '+8 favor for 2 standing — and favor is the ONLY currency that opens Calendars, ' +
+    'the narrowest gate in the session. ' +
+    'It also thaws a leadership freeze and clears a standing demand. ' +
+    'Diplomacy is the attribute. Run errands early; you cannot buy the calendar slot in the week you need it.',
   show: s => s.stage === 'session',
   odds: () => 0.75,
   run: (s, o) => {
@@ -357,7 +409,12 @@ export const SS10_WhipTrade: PlayCard = {
   ph: [1, 2, 3],
   tag: 'the favor economy',
   attrs: ['CRA'],
-  d: 'Your aye for his, payable when called. The whole building runs on this ledger.',
+  d:
+    'Your aye for his, payable when called. The whole building runs on this ledger. ' +
+    'Banks political capital, which is what widens the odds on the Floor Fight later — ' +
+    'this card is an investment, not a payoff. ' +
+    'Craft is the attribute and Operator standing helps. ' +
+    'A leak reads as cynical and costs you standing, which it was, but still.',
   show: s => s.stage === 'session',
   odds: s => 0.65 + s.faces.O * 0.004,
   run: (s, o) => {
@@ -380,7 +437,12 @@ export const SS12_StudyRules: PlayCard = {
   ph: [1, 2, 3],
   tag: 'the manual',
   attrs: ['INK'],
-  d: "Most members never read them. The ones who do own the ones who don't.",
+  d:
+    "Most members never read them. The ones who do own the ones who don't. " +
+    'Safe, reliable, and quietly one of the best cards in the session: Parliamentarian standing ' +
+    'plus political capital every single time, with no downside at all. ' +
+    'Ink is the attribute. ' +
+    'The capital is what you will spend on the floor; the Parliamentarian face is what survives the run.',
   show: s => s.stage === 'session',
   odds: () => 0.9,
   run: s => {
@@ -399,7 +461,12 @@ export const SS13_PlayWrit: PlayCard = {
   ph: [1, 2, 3],
   tag: "the Old Bull's gift",
   attrs: ['INK'],
-  d: 'One procedural miracle, pre-paid. Spend it where the session bends.',
+  d:
+    'One procedural miracle, pre-paid. Costs NO action and cannot fail. ' +
+    'Jumps your bill a whole pipeline stage and cools it a notch — which, in a session where you ' +
+    'get one pipeline move a week, is a week bought back outright. ' +
+    'With no bill to move it converts to three ayes\' worth of capital instead. ' +
+    'Ink is the attribute. Spend it at the narrowest gate you face, not the first one.',
   show: s => s.stage === 'session' && !!s.sessionFlags?.writ,
   odds: () => 1,
   run: s => {
@@ -427,7 +494,11 @@ const SESSION_ENTITY_SCOPE = ['ENT_FRESHMAN_MEMBER', 'ENT_STATE_REP'] as const;
 export const SS27_RibbonCircuit: PlayCard = {
   id: 'SS27', n: 'Ribbon-Cutting Circuit', cost: { a: 2 }, risk: 'SAFE', ph: [1, 2, 3],
   tag: 'the home fires', attrs: ['CHA'],
-  d: 'A new bridge, a clinic wing, a fire truck. You hold the giant scissors and the district sees you deliver.',
+  d:
+    'A new bridge, a clinic wing, a fire truck. You hold the giant scissors and the district sees you deliver. ' +
+    'District standing plus name ID, safely, every time. ' +
+    'Charm is the attribute. It pays less standing than Casework but adds name ID and never diminishes — ' +
+    'the card for a member who is already well liked at home and wants to be well known.',
   show: s => s.stage === 'session',
   odds: () => 0.85,
   run: (s, o) => {
@@ -440,7 +511,12 @@ export const SS27_RibbonCircuit: PlayCard = {
 export const SS28_CharityGala: PlayCard = {
   id: 'SS28', n: 'Interim Charity Gala', cost: { a: 2 }, risk: 'STD', ph: [1, 2, 3],
   tag: 'favor for favor', attrs: ['DIP'],
-  d: 'A good cause, a ballroom, and every lobbyist in town buying a table. Goodwill and debts, exchanged over rubber chicken.',
+  d:
+    'A good cause, a ballroom, and every lobbyist in town buying a table. ' +
+    'One of the few ways to bank an actual FAVOR token — the currency the Union Hall and the ' +
+    'statewide endorsements demand — plus a little district standing. ' +
+    'Diplomacy is the attribute. ' +
+    'A disaster is a donor photo in the paper, and it costs more than the night gave.',
   show: s => s.stage === 'session',
   odds: () => 0.7,
   run: (s, o) => {
@@ -453,7 +529,13 @@ export const SS28_CharityGala: PlayCard = {
 export const SS29_FaceThreat: PlayCard = {
   id: 'SS29', n: 'Face Down the Primary Threat', cost: { a: 2 }, risk: 'VOL', ph: [1, 2, 3],
   tag: 'the burned bridge', attrs: ['CON'],
-  d: 'A challenger is testing the waters back home. You can ignore it — or plant your flag and stare them down.',
+  d:
+    'A challenger is testing the waters back home. You can ignore it — or plant your flag and stare them down. ' +
+    'Appears only while challenger heat is live. A breakthrough drops that heat two notches and ' +
+    'adds momentum; a solid result drops it one. ' +
+    'Conviction is the attribute and district standing raises the odds, so face them from strength. ' +
+    'VOLATILE, and the failure is the real risk: punch down from a weak position and you LEGITIMIZE ' +
+    'them, raising the heat instead. Casework cools them more slowly but never backfires.',
   show: s => s.stage === 'session' && Number((s.sessionFlags?.challengerHeat) || 0) > 0,
   odds: (s) => clamp(0.55 + s.districtStanding * 0.003, 0, 0.9),
   run: (s, o) => {

@@ -36,9 +36,12 @@ export const MACHINE_ASK_PLAYS: PlayCard[] = Object.values(ALLIES).map(a => ({
   tag: 'a favour, called in',
   kind: 'ally',
   d:
-    `${a.n} wants something from you, and wants it now. Honour it and you are ` +
-    `owed more than you spend. Ignore it — cut the card, or just let the week ` +
-    `close — and they will remember that too.`,
+    `${a.n} wants something from you, and wants it now. One action, and it cannot fail — ` +
+    `the decision is whether you can spare the AP, not whether you succeed. ` +
+    `Honour it and their standing in your machine rises, which carries across runs and keeps ` +
+    `whatever they open for you open. Refuse — cut the card, or simply let the week close — and ` +
+    `it costs them half again as much standing as honouring would have gained. ` +
+    `There is no third option and no way to make it free.`,
   // Only ever visible when this specific member is the one asking this week.
   show: s => askerId(s) === a.id,
   // SAFE and always lands: the drama is in whether you spend the AP, not in a

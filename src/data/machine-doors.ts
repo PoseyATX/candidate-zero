@@ -68,8 +68,12 @@ const MD_AL16: PlayCard = {
   kind: 'ally',
   attrs: ['DIP', 'CRA'],
   d:
-    'He does not take the meeting. He takes the call, because you have taken his ' +
-    'for three cycles. Your name is on the card before the printer runs.',
+    'He does not take the meeting. He takes the call, because you have taken his for three cycles. ' +
+    'Puts you on the printed slate for 2 AP and $400 — against the open route, which wants 3 AP, ' +
+    '$1,500, a warm County Chairwoman and a roll that fails a quarter of the time. ' +
+    'Diplomacy and Craft, and it does not miss. ' +
+    'He still takes his marker (OB3), and it vanishes the moment you are on the slate — or the ' +
+    'moment he leaves your machine.',
   show: gate('AL16'),
   req: s => seated(s, 'AL16') && !s.slate,
   odds: () => 0.95,
@@ -99,8 +103,12 @@ const MD_AL02: PlayCard = {
   kind: 'ally',
   attrs: ['CRA'],
   d:
-    'Not the voter file everyone buys. The other one — who actually shows in ' +
-    'March, who answers, who brings four more. She has kept it since 1998.',
+    'Not the voter file everyone buys. The other one — who actually shows in March, who answers, ' +
+    'who brings four more. She has kept it since 1998. ' +
+    '140 contacts AND 40 signatures for 2 AP, with Operator standing on top: no other single card ' +
+    'moves both the ballot and the list at once. ' +
+    'Craft is the attribute and it does not miss. ' +
+    'It exists only while she is with you.',
   show: gate('AL02'),
   req: gate('AL02'),
   odds: () => 0.95,
@@ -127,8 +135,13 @@ const MD_AL12: PlayCard = {
   kind: 'ally',
   attrs: ['CON', 'DIP'],
   d:
-    'He has been in that building since before you could vote and he is not ' +
-    'spending this on a stranger. He is spending it on you.',
+    'He has been in that building since before you could vote, and he is not spending this on a ' +
+    'stranger. He is spending it on you. ' +
+    '3 endorsement points for 2 AP with no roll — the cheapest endorsement in the game — plus ' +
+    'name ID and lifts to your Parliamentarian and Grandee faces. ' +
+    'Conviction and Diplomacy. ' +
+    'Endorsement points are what the County Judge and the statewide names count before they will ' +
+    'take your call, so this compounds. It exists only while he does.',
   show: gate('AL12'),
   req: gate('AL12'),
   odds: () => 0.95,
@@ -155,8 +168,12 @@ const MD_AL09: PlayCard = {
   kind: 'ally',
   attrs: ['CLO'],
   d:
-    'She does not need to be recruited, briefed, or fed. She has a crew, a ' +
-    'route, and a clipboard, and she has been waiting for you to file.',
+    'She does not need to be recruited, briefed, or fed. She has a crew, a route, and a clipboard, ' +
+    'and she has been waiting for you to file. ' +
+    'Four volunteers and 40 contacts for ONE action, guaranteed — Recruit Volunteers wants two ' +
+    'actions and a roll to do less. ' +
+    'Close is the attribute. Volunteers widen the odds on Block Walk, Petitions and GOTV, so this ' +
+    'is the cheapest week-one card in the game. It exists only while she is with you.',
   show: gate('AL09'),
   req: gate('AL09'),
   odds: () => 0.95,

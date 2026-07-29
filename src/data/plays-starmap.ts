@@ -58,7 +58,13 @@ export const MV01_PrecinctNetwork: PlayCard = {
   control: 'player',
   entityScope: [PILOT_PRECINCT.entityId],
   attrs: ['DIP'],
-  d: 'The chairs you banked open a door: lists, volunteers, a quiet county nod. Special kit — Precinct Chair orbit.',
+  d:
+    'The chairs you banked open a door: lists, volunteers, a quiet county nod. ' +
+    'Pays 2 endorsement points, 40 contacts and a volunteer in one action block. ' +
+    'Diplomacy is the attribute. ' +
+    'A relationship you already earned, spent all at once. Three actions, near-certain, ' +
+    'and ONE-SHOT — the orbit is consumed and this card does not come back this run. ' +
+    'Unlocked by the Precinct Chair orbit.',
   show: s => isMovementVerbAvailable(s, PILOT_PRECINCT.verbPlayId),
   odds: () => 0.95,
   run: s => {
@@ -91,7 +97,13 @@ export const MV02_FieldPlan: PlayCard = {
   control: 'player',
   entityScope: [PILOT_CAPTAIN.entityId],
   attrs: ['CLO', 'DIP'],
-  d: 'The captain\'s route book becomes the week\'s law. Special kit — Canvass Captain orbit. Field AP and turf GOTV.',
+  d:
+    "The captain's route book becomes the week's law. " +
+    'The one orbit that pays FORWARD: a permanent +1 field AP every week after, plus volunteers, ' +
+    'contacts and turf turnout. Close and Diplomacy. ' +
+    'A relationship you already earned, spent all at once. Three actions, near-certain, ' +
+    'and ONE-SHOT — the orbit is consumed and this card does not come back this run. ' +
+    'Spend it early — an extra action compounds over every week that is left.',
   show: s => isMovementVerbAvailable(s, PILOT_CAPTAIN.verbPlayId),
   odds: () => 0.92,
   run: (s, _o, g) => {
@@ -143,7 +155,13 @@ export const MV03_CourthouseNod: PlayCard = {
   control: 'player',
   entityScope: [PILOT_JUDGE.entityId],
   attrs: ['DIP', 'CLO'],
-  d: 'The heaviest local name spends itself once. Special kit — County Judge orbit. Endorsement gravity and name heat.',
+  d:
+    'The heaviest local name spends itself once. ' +
+    '3 endorsement points, a large name-ID jump, momentum and contacts together — ' +
+    'the broadest single payout on the map. Diplomacy. ' +
+    'A relationship you already earned, spent all at once. Three actions, near-certain, ' +
+    'and ONE-SHOT — the orbit is consumed and this card does not come back this run. ' +
+    'Unlocked by the County Judge orbit.',
   show: s => isMovementVerbAvailable(s, PILOT_JUDGE.verbPlayId),
   odds: () => 0.9,
   run: s => {
@@ -176,7 +194,13 @@ export const MV04_PartyApparatus: PlayCard = {
   control: 'player',
   entityScope: [PILOT_PARTY.entityId],
   attrs: ['DIP', 'CLO'],
-  d: 'The Chairwoman opens the file and the volunteer list. Special kit — County Party orbit.',
+  d:
+    'The Chairwoman opens the file and the volunteer list. ' +
+    'The only orbit that pays in CASH as well as bodies: $400, 50 contacts, two volunteers and ' +
+    '2 endorsement points. Diplomacy. ' +
+    'A relationship you already earned, spent all at once. Three actions, near-certain, ' +
+    'and ONE-SHOT — the orbit is consumed and this card does not come back this run. ' +
+    'The one to reach for when the filing fee is still unpaid.',
   show: s => isMovementVerbAvailable(s, PILOT_PARTY.verbPlayId),
   odds: () => 0.9,
   run: s => {
@@ -208,7 +232,13 @@ export const MV05_ClubRoster: PlayCard = {
   control: 'player',
   entityScope: [PILOT_CLUB.entityId],
   attrs: ['DIP', 'CHA'],
-  d: 'Every name that votes straw. Special kit — Club Leader orbit.',
+  d:
+    'Every name that votes straw, handed over at once. ' +
+    'The largest raw contact haul of any orbit — 60 — plus a volunteer, momentum and an endorsement point. ' +
+    'Diplomacy. ' +
+    'A relationship you already earned, spent all at once. Three actions, near-certain, ' +
+    'and ONE-SHOT — the orbit is consumed and this card does not come back this run. ' +
+    'Unlocked by the Club Leader orbit.',
   show: s => isMovementVerbAvailable(s, PILOT_CLUB.verbPlayId),
   odds: () => 0.92,
   run: s => {
@@ -240,7 +270,13 @@ export const MV06_NewsroomNod: PlayCard = {
   control: 'player',
   entityScope: [PILOT_EDITOR.entityId],
   attrs: ['CHA', 'CRA'],
-  d: 'Not an endorsement — the benefit of the doubt in print. Special kit — Local Editor orbit.',
+  d:
+    'Not an endorsement — the benefit of the doubt in print, which lasts longer. ' +
+    'Pure profile: a large name-ID jump, momentum, and a real lift to your Firebrand face. ' +
+    'No contacts, no bodies. Charm and Craft. ' +
+    'A relationship you already earned, spent all at once. Three actions, near-certain, ' +
+    'and ONE-SHOT — the orbit is consumed and this card does not come back this run. ' +
+    'Take it when you are unknown, not when you are unloved.',
   show: s => isMovementVerbAvailable(s, PILOT_EDITOR.verbPlayId),
   odds: () => 0.88,
   run: s => {
@@ -271,7 +307,13 @@ export const MV07_CorridorBlessing: PlayCard = {
   control: 'player',
   entityScope: [PILOT_FAITH.entityId],
   attrs: ['CON', 'DIP'],
-  d: 'The Pastor\'s hand on both of yours. Directory and volunteers. Special kit — Faith Leader orbit.',
+  d:
+    "The Pastor's hand on both of yours, and the directory that comes with it. " +
+    'Three volunteers, contacts, and heavy lifts to both your True-Believer and Grandee faces — ' +
+    'the most FACE movement of any orbit, which is what shapes who you are by the end of the run. ' +
+    'Conviction and Diplomacy. ' +
+    'A relationship you already earned, spent all at once. Three actions, near-certain, ' +
+    'and ONE-SHOT — the orbit is consumed and this card does not come back this run. ',
   show: s => isMovementVerbAvailable(s, PILOT_FAITH.verbPlayId),
   odds: () => 0.9,
   run: s => {
@@ -311,7 +353,13 @@ export const MV08_SlateCard: PlayCard = {
   control: 'player',
   entityScope: [PILOT_SLATE.entityId],
   attrs: ['CRA', 'DIP'],
-  d: 'Half the primary votes from a printed card. Special kit — Slate-Maker orbit. His marker was already on it.',
+  d:
+    'Half the primary votes come off a printed card, and yours is on it. ' +
+    'The heaviest orbit on the board: 3 endorsement points, the biggest name-ID swing of any of them, ' +
+    'momentum, contacts and Firebrand standing. Diplomacy and Craft. ' +
+    'A relationship you already earned, spent all at once. Three actions, near-certain, ' +
+    'and ONE-SHOT — the orbit is consumed and this card does not come back this run. ' +
+    'His marker was already on it — this spends the relationship, it does not buy it.',
   show: s => isMovementVerbAvailable(s, PILOT_SLATE.verbPlayId),
   odds: () => 0.9,
   run: s => {
@@ -346,7 +394,13 @@ export const MV09_FinanceBook: PlayCard = {
   control: 'player',
   entityScope: [PILOT_FINANCE.entityId],
   attrs: ['CRA', 'CLO'],
-  d: 'The Finance Chair opens the call sheet. Special kit — money spine, not a free weekly drip forever.',
+  d:
+    'The Finance Chair opens the call sheet and starts dialling. ' +
+    '$900 in one block — the largest single sum any orbit pays — plus contacts and an endorsement point. ' +
+    'Craft and Close. ' +
+    'A relationship you already earned, spent all at once. Three actions, near-certain, ' +
+    'and ONE-SHOT — the orbit is consumed and this card does not come back this run. ' +
+    'A money spine, deliberately not a weekly drip.',
   show: s => isMovementVerbAvailable(s, PILOT_FINANCE.verbPlayId),
   odds: () => 0.92,
   run: s => {
@@ -377,7 +431,13 @@ export const MV10_DriveTime: PlayCard = {
   control: 'player',
   entityScope: [PILOT_RADIO.entityId],
   attrs: ['CHA', 'CRA'],
-  d: 'Open mic between farm reports and the noon news. Special kit — Radio Host orbit. Name heat, not an endorsement.',
+  d:
+    'An open mic between the farm reports and the noon news. ' +
+    'Name heat rather than a nod: a large name-ID jump, momentum, Firebrand standing and some contacts. ' +
+    'Charm and Craft. ' +
+    'A relationship you already earned, spent all at once. Three actions, near-certain, ' +
+    'and ONE-SHOT — the orbit is consumed and this card does not come back this run. ' +
+    'It makes you known, not liked — pair it with something that makes you liked.',
   show: s => isMovementVerbAvailable(s, PILOT_RADIO.verbPlayId),
   odds: () => 0.9,
   run: s => {
@@ -409,7 +469,14 @@ export const MV11_LobbyMap: PlayCard = {
   control: 'player',
   entityScope: [PILOT_LOBBY.entityId],
   attrs: ['DIP', 'CRA'],
-  d: 'A junior lobbyist with a conscience walks you the side door. Special kit — access, not a vote.',
+  d:
+    'A junior lobbyist with a conscience walks you in the side door. ' +
+    'Access, not a vote: 45 contacts, an endorsement point, momentum, and — uniquely among the ' +
+    'orbits — a point of POLITICAL CAPITAL, which is session currency. ' +
+    'Craft and Diplomacy. ' +
+    'A relationship you already earned, spent all at once. Three actions, near-certain, ' +
+    'and ONE-SHOT — the orbit is consumed and this card does not come back this run. ' +
+    'The orbit that pays into a term you have not won yet.',
   show: s => isMovementVerbAvailable(s, PILOT_LOBBY.verbPlayId),
   odds: () => 0.88,
   run: s => {
@@ -444,7 +511,13 @@ export const MV12_PlantGate: PlayCard = {
   control: 'player',
   entityScope: [PILOT_UNION.entityId],
   attrs: ['CLO', 'DIP'],
-  d: 'The local president puts a hand on your shoulder at shift change. Special kit — Union orbit. Volunteers and doors.',
+  d:
+    'The local president puts a hand on your shoulder at shift change and the hall follows. ' +
+    'Three volunteers, 2 endorsement points, contacts and Grandee standing — the bodies orbit. ' +
+    'Diplomacy and Close. ' +
+    'A relationship you already earned, spent all at once. Three actions, near-certain, ' +
+    'and ONE-SHOT — the orbit is consumed and this card does not come back this run. ' +
+    'Volunteers raise the odds on half your deck, so this one keeps paying after it is spent.',
   show: s => isMovementVerbAvailable(s, PILOT_UNION.verbPlayId),
   odds: () => 0.9,
   run: (s, _o, g) => {
@@ -481,7 +554,13 @@ export const MV13_RubberChicken: PlayCard = {
   control: 'player',
   entityScope: [PILOT_CHAMBER.entityId],
   attrs: ['DIP', 'CHA'],
-  d: 'Rubber chicken, name tags, reliable voters. Special kit — Chamber orbit. Money and polite weight.',
+  d:
+    'Rubber chicken, name tags, and the most reliable voters in the county. ' +
+    'The balanced orbit: $500, 2 endorsement points, name ID and contacts all at once. ' +
+    'Diplomacy and Charm. ' +
+    'A relationship you already earned, spent all at once. Three actions, near-certain, ' +
+    'and ONE-SHOT — the orbit is consumed and this card does not come back this run. ' +
+    'Nothing it gives is the largest of its kind; it is the one that gives some of everything.',
   show: s => isMovementVerbAvailable(s, PILOT_CHAMBER.verbPlayId),
   odds: () => 0.9,
   run: s => {
@@ -513,7 +592,13 @@ export const MV14_FeedBench: PlayCard = {
   control: 'player',
   entityScope: [PILOT_FEED.entityId],
   attrs: ['CHA', 'CON'],
-  d: 'Unofficial senate on the bench out front. Special kit — Feed-Store orbit. Rumor is infrastructure.',
+  d:
+    'The unofficial senate meets on the bench out front, and rumour is infrastructure. ' +
+    '55 contacts — nearly the best on the map — plus name ID, momentum and a volunteer, for free. ' +
+    'Charm and Conviction. ' +
+    'A relationship you already earned, spent all at once. Three actions, near-certain, ' +
+    'and ONE-SHOT — the orbit is consumed and this card does not come back this run. ' +
+    'The cheapest-feeling orbit and one of the most productive.',
   show: s => isMovementVerbAvailable(s, PILOT_FEED.verbPlayId),
   odds: () => 0.92,
   run: s => {
