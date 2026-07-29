@@ -11,6 +11,7 @@ import type {
 } from './types.js';
 import { hasRep } from './reputation.js';
 import { generalWinProbability, primaryWinProbability } from './calendar.js';
+import { doorCardId, MACHINE_DOOR_PLAYS } from '../data/machine-doors.js';
 import { applyLegacyDebt, isDebtCrisis, mergeDebtIntoCarry } from './debt.js';
 import {
   seatMachine,
@@ -215,6 +216,22 @@ export function applyLegacy(state: GameState, legacy: LegacyState): void {
       kind: 'note',
       text: `Your people are already in: ${seated.map(memberName).join(', ')}.`
     });
+    // Name the doors they open. A privilege the player cannot see is one they
+    // will not miss when it shuts (see data/machine-doors.ts).
+    const opened = seated
+      .map(id => {
+        const cardId = doorCardId(id);
+        const card = cardId ? MACHINE_DOOR_PLAYS.find(c => c.id === cardId) : undefined;
+        return card ? `${card.n} (${memberName(id)})` : null;
+      })
+      .filter((x): x is string => !!x);
+    if (opened.length) {
+      state.log.push({
+        week: state.week,
+        kind: 'note',
+        text: `That opens what nobody else can reach: ${opened.join(', ')}.`
+      });
+    }
   }
 
   // ...and the people who are not. Same moment, deliberately: the run opens by

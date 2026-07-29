@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "counts": {
-    "cards": 117,
+    "cards": 121,
     "personas": 24,
     "issues": 18,
     "districts": 4,
@@ -1788,6 +1788,128 @@
         "CHA"
       ],
       "residency": "special",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "MD_AL16",
+      "name": "The Card, Direct",
+      "tagline": "he already put you on it",
+      "description": "He does not take the meeting. He takes the call, because you have taken his for three cycles. Your name is on the card before the printer runs.",
+      "risk": "SAFE",
+      "kind": "ally",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 2,
+        "money": 400,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP",
+        "CRA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "MD_AL02",
+      "name": "The Chairwoman's List",
+      "tagline": "the names that vote every time",
+      "description": "Not the voter file everyone buys. The other one — who actually shows in March, who answers, who brings four more. She has kept it since 1998.",
+      "risk": "SAFE",
+      "kind": "ally",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 2,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CRA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "MD_AL12",
+      "name": "The Old Bull Makes a Call",
+      "tagline": "thirty years of owed favours",
+      "description": "He has been in that building since before you could vote and he is not spending this on a stranger. He is spending it on you.",
+      "risk": "SAFE",
+      "kind": "ally",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 2,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CON",
+        "DIP"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "MD_AL09",
+      "name": "The Captain's Crew",
+      "tagline": "she brings her own people",
+      "description": "She does not need to be recruited, briefed, or fed. She has a crew, a route, and a clipboard, and she has been waiting for you to file.",
+      "risk": "SAFE",
+      "kind": "ally",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO"
+      ],
+      "residency": "main",
       "control": "player",
       "entityScope": [],
       "deck": "main"

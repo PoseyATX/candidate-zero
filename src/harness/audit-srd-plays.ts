@@ -32,8 +32,12 @@ interface Row {
 
 function audit(card: PlayCard): Row {
   const issues: string[] = [];
-  // PL## campaign, MV## starmap movement verbs, PR## sponsor promo cards
-  if (!card.id || !(/^(PL\d{2}[A-Z]?|MV\d{2}|PR\d{2})$/.test(card.id))) issues.push('bad id');
+  // PL## campaign, MV## starmap movement verbs, PR## sponsor promo cards,
+  // MD_AL## machine doors (data/machine-doors.ts — keyed to the member who
+  // holds them, so the id has to carry the ally id rather than a serial).
+  if (!card.id || !(/^(PL\d{2}[A-Z]?|MV\d{2}|PR\d{2}|MD_AL\d{2})$/.test(card.id))) {
+    issues.push('bad id');
+  }
   if (!card.n) issues.push('missing name');
   if (!RISKS.has(card.risk)) issues.push(`bad risk ${card.risk}`);
   if (!card.ph?.length) issues.push('no phases');

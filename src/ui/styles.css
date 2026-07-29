@@ -2718,6 +2718,17 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
 .mach-cooling .mach-bar i { background: #d99a5b; }
 
 .mach-gonelist { margin-top: 0.4rem; color: #a2685e; font-size: 0.68rem; }
+/* The card this relationship unlocks, named on the roster row. */
+.mach-door {
+  display: block;
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+}
+.mach-shutlist { margin-top: 0.25rem; color: #8f7f72; font-size: 0.68rem; }
+.mach-shutlist .k { color: #a2685e; }
+
 /* Poached reads hotter than merely gone — these people are on the board. */
 .mach-rivallist { margin-top: 0.25rem; color: #e8b4a8; font-size: 0.68rem; }
 .mach-rivallist .k { color: var(--oxblood-bright); }

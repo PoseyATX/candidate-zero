@@ -11,6 +11,7 @@ import { allShopPlayTemplates } from './assets.js';
 import { STARMAP_PLAYS } from './plays-starmap.js';
 import { WAVE5_PLAYS } from './plays-wave5.js';
 import { PROMO_PLAYS } from './promo-plays.js';
+import { MACHINE_DOOR_PLAYS } from './machine-doors.js';
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
@@ -342,7 +343,10 @@ export const ALL_PLAYS: PlayCard[] = [
   ...WAVE4_PLAYS,
   ...STARMAP_PLAYS,
   ...WAVE5_PLAYS,
-  ...PROMO_PLAYS
+  ...PROMO_PLAYS,
+  // Machine doors: in the pool, but `show` keeps them invisible unless the
+  // member who holds the door is seated this run (see data/machine-doors.ts).
+  ...MACHINE_DOOR_PLAYS
 ];
 
 export const PLAYS = ALL_PLAYS;

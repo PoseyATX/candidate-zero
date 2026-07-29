@@ -36,6 +36,8 @@ import {
   ASK_REFUSE_STANDING
 } from '../engine/ask.js';
 import { MACHINE_ASK_PLAYS, askCardId } from '../data/machine-asks.js';
+import { MACHINE_DOOR_PLAYS, DOOR_BY_ALLY, closedDoors } from '../data/machine-doors.js';
+import { ALL_PLAYS } from '../data/plays.js';
 import { ALLIES } from '../data/allies.js';
 import { createRng, useRng } from '../engine/rng.js';
 import type { CampaignOutcome, GameState, LegacyState } from '../engine/types.js';
@@ -365,6 +367,78 @@ function cycle(
   const clean = emptyLegacy();
   const cs = createNewState({ seed: 8 });
   assert(applyPoachPenalty(cs, clean) === 0, 'nothing lost, nothing owed');
+}
+
+// --- Doors: content that exists only while a member does ---
+{
+  // Every door names a real member and a real card, both ways.
+  for (const [allyId, cardId] of Object.entries(DOOR_BY_ALLY)) {
+    assert(!!ALLIES[allyId], `door holder ${allyId} is a real member`);
+    assert(
+      MACHINE_DOOR_PLAYS.some(c => c.id === cardId),
+      `${memberName(allyId)}'s door resolves to a card (${cardId})`
+    );
+  }
+  assert(
+    MACHINE_DOOR_PLAYS.every(c => ALL_PLAYS.some(p => p.id === c.id)),
+    'doors are in the live catalog — a card nothing can draw is not content'
+  );
+
+  const cold = createNewState({ seed: 5 });
+  assert(
+    MACHINE_DOOR_PLAYS.every(c => !c.show!(cold)),
+    'a first-time player sees no doors at all'
+  );
+  assert(
+    MACHINE_DOOR_PLAYS.every(c => !c.req!(cold)),
+    'and cannot play one even if it somehow reached their hand'
+  );
+
+  // Build the Slate-Maker into the machine, then seat him.
+  const legacy = emptyLegacy();
+  for (let i = 0; i < 3; i++) cycle(legacy, [{ id: 'AL16', warm: 3 }], 'won_general');
+  const held = findMember(getMachine(legacy), 'AL16');
+  assert(tierOf(held!) === 'with', 'three good cycles puts the Slate-Maker with you');
+
+  const open = createNewState({ seed: 6 });
+  seatMachine(open, legacy);
+  const slateDoor = MACHINE_DOOR_PLAYS.find(c => c.id === DOOR_BY_ALLY['AL16'])!;
+  assert(slateDoor.show!(open), 'seating him opens the door');
+  assert(slateDoor.req!(open), 'and it is playable');
+  // It is meaningfully cheaper than the route everyone else has to take.
+  const pl22b = ALL_PLAYS.find(p => p.id === 'PL22B')!;
+  assert(
+    (slateDoor.cost.$ ?? 0) < (pl22b.cost.$ ?? 0),
+    `the door undercuts the open route ($${slateDoor.cost.$} vs $${pl22b.cost.$})`
+  );
+  slateDoor.run!(open, { tier: 0, roll: 0, p: 1, band: 0 });
+  assert(open.slate, 'playing it puts you on the card');
+  assert(open.obls.length > 0, 'and it still costs you a marker — access is never a gift');
+  assert(!slateDoor.req!(open), 'once you are on the slate the door has nothing left to give');
+
+  // Now lose him. The door has to shut, permanently, and be nameable.
+  for (let i = 0; i < 30 && findMember(getMachine(legacy), 'AL16'); i++) {
+    const s = stateWith([], { disasterLog: [1, 2, 3], ballot: false });
+    useRng(createRng(1234 + i));
+    legacy.runs.push({ epithet: 'test', kind: 'missed_filing' });
+    settleMachine(legacy, s, 'missed_filing', legacy.runs.length);
+  }
+  assert(hasDeparted(getMachine(legacy), 'AL16'), 'the Slate-Maker walked');
+
+  const after = createNewState({ seed: 9 });
+  seatMachine(after, legacy);
+  assert(!slateDoor.show!(after), 'the door is no longer drawable');
+  assert(
+    !slateDoor.req!(after),
+    'and a copy already owned from a previous cycle cannot be played — the door SHUT'
+  );
+
+  const shut = closedDoors(getMachine(legacy).departed.map(d => d.id));
+  assert(shut.length === 1, `the loss is enumerable for the dossier (${shut.length})`);
+  assert(
+    shut[0]!.card === slateDoor.n && shut[0]!.ally === memberName('AL16'),
+    `and it names both the card and the person (${shut[0]?.card} — ${shut[0]?.ally})`
+  );
 }
 
 if (failed) {

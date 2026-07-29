@@ -21,6 +21,7 @@ import { TURF_AP } from '../engine/state.js';
 import { heatOf, MAX_HEAT } from '../engine/heat.js';
 import { discardsLeft, MAX_DISCARDS } from '../engine/flow.js';
 import { rosterForDisplay, getMachine, tierOf, tierLabel, memberName } from '../engine/machine.js';
+import { doorCardId, closedDoors, MACHINE_DOOR_PLAYS } from '../data/machine-doors.js';
 import type { LegacyState } from '../engine/types.js';
 import { reducedMotion } from './motion.js';
 
@@ -279,8 +280,14 @@ export function renderLedger(campaign: Campaign, legacy?: LegacyState): void {
         .map(m => {
           const t = tierOf(m);
           const cycles = m.runs === 1 ? '1 cycle' : `${m.runs} cycles`;
+          // Naming the card is the whole trick: "County Chairwoman, cooling"
+          // is a bar. "County Chairwoman — The Chairwoman's List, cooling" is
+          // a card you are about to stop being able to draw.
+          const doorId = doorCardId(m.id);
+          const door = doorId ? MACHINE_DOOR_PLAYS.find(c => c.id === doorId) : undefined;
+          const doorBit = door ? `<span class="mach-door">${door.n}</span>` : '';
           return `<div class="mach-row mach-${t}">
-            <span class="mach-name">${memberName(m.id)}</span>
+            <span class="mach-name">${memberName(m.id)}${doorBit}</span>
             <span class="mach-tier">${tierLabel(t)}</span>
             <span class="mach-meta">${cycles}</span>
             <span class="mach-bar"><i style="width:${Math.max(3, Math.min(100, m.standing))}%"></i></span>
@@ -303,12 +310,21 @@ export function renderLedger(campaign: Campaign, legacy?: LegacyState): void {
               .map(d => memberName(d.id))
               .join(' · ')}</div>`
           : '');
+      // What you can no longer do. Named as cards, because that is the form
+      // the player understands a loss in.
+      const shut = closedDoors(gone.map(d => d.id));
+      const shutRow = shut.length
+        ? `<div class="ledger-wide mach-shutlist"><span class="k">Shut</span> ${shut
+            .map(x => `${x.card} — ${x.ally} is gone`)
+            .join(' · ')}</div>`
+        : '';
       machineBand = `
         <div class="ledger-band ledger-themachine">
           <div class="ledger-band-label">The Machine</div>
           <p class="mach-hint">The people who take your call. Built across cycles — and lost the same way.</p>
           ${rows || '<div class="ledger-wide">Nobody yet. Work with someone and they may stay.</div>'}
           ${goneRow}
+          ${shutRow}
         </div>`;
     }
   }
