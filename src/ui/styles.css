@@ -3234,3 +3234,91 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
     animation: none !important;
   }
 }
+
+/* --- A HUMAN opponent reads differently to the synthetic one, on purpose.
+       You are looking at a snapshot somebody published, and the band has to
+       say so — including how old it is and where the fog starts. */
+.riv-human { border-left-color: #d99a5b; }
+.riv-asof {
+  margin-top: 0.3rem;
+  font-size: 0.7rem;
+  line-height: 1.35;
+  color: var(--parchment-dim);
+}
+/* Stale is not an error — it is the normal state of slow async play, and the
+   player must read it as "they have not moved" rather than "something broke". */
+.riv-stale { color: #d99a5b; }
+.riv-facts {
+  margin-top: 0.45rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.2rem 0.7rem;
+}
+.riv-fact {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  color: var(--parchment);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 0.12rem;
+}
+.riv-fact .k {
+  color: var(--gold-dim);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+/* Naming the fog is the whole point of an asymmetric-information game: a
+   player who does not know where the limit is will assume the worst. */
+.riv-fog {
+  margin-top: 0.45rem;
+  font-size: 0.68rem;
+  font-style: italic;
+  color: #8f7f72;
+}
+.riv-fog .k {
+  font-style: normal;
+  color: var(--gold-dim);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-right: 0.35rem;
+}
+
+/* --- Head-to-head exchange. Deliberately plain: it is a text box and two
+       buttons, because the transport is two people passing a block of text
+       (docs/DEFERRED.md C5). It should not pretend to be more than it is. */
+.ledger-h2h { border-left: 2px solid #9fc0d8; }
+.h2h-hint {
+  margin: 0.2rem 0 0.5rem;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--parchment-dim);
+}
+.h2h-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.h2h-box {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 88px;
+  padding: 0.5rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.68rem;
+  line-height: 1.35;
+  color: var(--parchment);
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--gold-dim);
+  border-radius: 3px;
+  resize: vertical;
+}
+.h2h-box:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.h2h-note {
+  margin-top: 0.35rem;
+  min-height: 1em;
+  font-size: 0.72rem;
+  color: #9fc0d8;
+}

@@ -18,6 +18,7 @@ import {
 import {
   loadLegacy,
   saveLegacy,
+  playerId,
   applyLegacy,
   computeShare,
   recordRun,
@@ -58,6 +59,11 @@ import {
 } from './paint-play.js';
 import { renderLog, showJuice } from './paint-log.js';
 import { openOutsideWeather } from './outside-ui.js';
+import {
+  profileFromCampaign,
+  applyRivalProfile,
+  parseRivalProfile
+} from '../engine/rival-profile.js';
 import { renderTerminalOutcome, renderChronicle } from './terminal-ui.js';
 import { showGame, showSetup, showTerminal, showTitle } from './screens.js';
 
@@ -150,6 +156,58 @@ export function commitPlay(index: number, ground?: Ground, press?: boolean): voi
     maybeOfferPhaseDraft(campaign, false);
   }
   paint();
+}
+
+/**
+ * HEAD-TO-HEAD EXCHANGE — the smallest honest transport there is.
+ *
+ * There is no server, no matchmaking and no lobby (docs/DEFERRED.md C5), and
+ * building one is not the next most useful thing. What WAS missing is that the
+ * whole profile/match seam had no way to be reached from inside the game, so
+ * the asymmetric-information view was rendering for a state the app could not
+ * enter — untestable and unshippable.
+ *
+ * Two people passing a block of text is a real transport. It makes the seam
+ * usable today, and when a network layer arrives it replaces these two
+ * functions and nothing else.
+ */
+
+/** Your campaign as the opposition your opponent will face. Public facts only. */
+export function exportMyProfile(): string {
+  if (!campaign) return '';
+  // A stable per-career id, not a persona name: two people both running the
+  // Teacher must still be two different players.
+  const who = {
+    id: playerId(legacy),
+    name: legacy.name || campaign.state.persona || 'Your campaign'
+  };
+  saveLegacy(legacy);
+  const p = profileFromCampaign(campaign.state, who);
+  return JSON.stringify(p, null, 2);
+}
+
+/**
+ * Seat an opponent's published campaign.
+ *
+ * Everything arriving here goes through parseRivalProfile, which is the trust
+ * boundary: strength is discarded and re-derived, facts are clamped, and the
+ * profile is marked human whatever it claims about itself.
+ */
+export function importOpponent(json: string, asOfWeek = 0): { ok: boolean; who?: string; reason?: string } {
+  if (!campaign) return { ok: false, reason: 'No campaign in progress.' };
+  try {
+    const p = parseRivalProfile(json);
+    applyRivalProfile(campaign.state, p, asOfWeek || campaign.state.week);
+    campaign.state.log.push({
+      week: campaign.state.week,
+      kind: 'note',
+      text: `${p.name} is your opposition now — a real campaign, not the county machine.`
+    });
+    paint();
+    return { ok: true, who: p.name };
+  } catch (e) {
+    return { ok: false, reason: e instanceof Error ? e.message : 'Unreadable.' };
+  }
 }
 
 export function startRun(setup: SetupSelection, seed: number, lockIdentity = false): void {

@@ -9,6 +9,7 @@ import type {
   LegacyState,
   TraitId
 } from './types.js';
+import { createRng } from './rng.js';
 import { hasRep } from './reputation.js';
 import { generalWinProbability, primaryWinProbability } from './calendar.js';
 import { doorCardId, MACHINE_DOOR_PLAYS } from '../data/machine-doors.js';
@@ -57,7 +58,8 @@ export function loadLegacy(): LegacyState {
       machine: parsed.machine,
       // Same trap as `machine` above: omit it here and the rival settles
       // correctly, saves correctly, and evaporates on the next load.
-      rival: parsed.rival
+      rival: parsed.rival,
+      playerId: parsed.playerId
     };
   } catch {
     return emptyLegacy();
@@ -71,6 +73,30 @@ export function saveLegacy(legacy: LegacyState): void {
   } catch {
     /* storage unavailable */
   }
+}
+
+/**
+ * Stable id for this career, minted on first use and then fixed.
+ *
+ * Persona is not enough on its own: head-to-head needs two distinct players,
+ * and two people both running the Teacher would collide.
+ *
+ * MINTED FROM ITS OWN STREAM, not the campaign's. The first version of this
+ * drew from the shared seeded RNG, which meant exporting your campaign
+ * mid-run advanced the stream and changed every card resolution afterwards —
+ * a seeded replay would diverge purely because the player pressed a button.
+ * Identity is not gameplay and must never perturb it.
+ */
+export function playerId(legacy: LegacyState): string {
+  if (!legacy.playerId) {
+    const rng = createRng((Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0);
+    let out = 'P_';
+    for (let i = 0; i < 8; i++) {
+      out += 'abcdefghijkmnpqrstuvwxyz23456789'[Math.floor(rng.next() * 32)];
+    }
+    legacy.playerId = out;
+  }
+  return legacy.playerId;
 }
 
 export function setIdentity(legacy: LegacyState, id: FiledIdentity): void {

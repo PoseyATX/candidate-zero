@@ -345,6 +345,10 @@ export interface LegacyState {
   /** The named opposition, carried across runs — see engine/rival.ts.
    *  Optional so every save written before it existed still loads. */
   rival?: import('./rival.js').RivalState;
+  /** Stable id for THIS career, minted once. Head-to-head needs two distinct
+   *  players, and two people both running the Teacher would otherwise export
+   *  the same id and fail to pair. See engine/legacy.ts playerId(). */
+  playerId?: string;
 }
 
 export interface DeckState {

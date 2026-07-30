@@ -229,7 +229,7 @@ const NAME_FLAG_PREFIX = 'rivalProfileName:';
  * hold it anyway; the couple of scalars the weekly logic wants are mirrored
  * into flags for cheap access.
  */
-export function applyRivalProfile(state: GameState, p: RivalProfile): void {
+export function applyRivalProfile(state: GameState, p: RivalProfile, asOfWeek = 0): void {
   if (!isRivalProfile(p)) {
     throw new Error(`unreadable rival profile (want v${RIVAL_PROFILE_VERSION})`);
   }
@@ -240,6 +240,7 @@ export function applyRivalProfile(state: GameState, p: RivalProfile): void {
   state.sessionFlags[PROFILE_FLAG] = 1;
   state.sessionFlags[`${NAME_FLAG_PREFIX}${p.id}`] = 1;
   if (p.human) state.sessionFlags.rivalIsHuman = 1;
+  if (asOfWeek > 0) state.sessionFlags.rivalAsOfWeek = asOfWeek;
 
   // Their visible organisation becomes contested turf on your map. Ground ids
   // are shared content (data/setup.ts), so this transfers across clients.
@@ -253,6 +254,60 @@ export function applyRivalProfile(state: GameState, p: RivalProfile): void {
 export function rivalIsHuman(state: GameState): boolean {
   return !!state.sessionFlags?.rivalIsHuman;
 }
+
+/**
+ * Which of THEIR weeks the seated profile describes.
+ *
+ * Deliberately NOT part of RivalProfile: the profile is the opponent's public
+ * condition, and the week it was published is match metadata (engine/match.ts).
+ * Keeping it out of the schema means a profile stays meaningful on its own and
+ * the wire format did not need a version bump to carry it.
+ *
+ * 0 when unknown — the synthetic opponent has no publication week.
+ */
+export function rivalAsOfWeek(state: GameState): number {
+  const v = state.sessionFlags?.rivalAsOfWeek;
+  return typeof v === 'number' ? v : 0;
+}
+
+/**
+ * Everything you legitimately know about an opposing campaign, ready to render.
+ *
+ * This is the WHOLE of it — the same fields the wire carries, no more. Keeping
+ * the list here rather than in the UI means the display cannot drift into
+ * showing something the profile was never allowed to contain.
+ */
+export function publicFacts(p: RivalProfile): { k: string; v: string }[] {
+  const held = Object.values(p.ground).filter(n => n > 0);
+  const strongest = held.length ? Math.max(...held) : 0;
+  return [
+    { k: 'Name ID', v: String(p.nameID) },
+    { k: 'Momentum', v: String(p.momentum) },
+    { k: 'Endorsements', v: String(p.endorsePts) },
+    { k: 'Ballot', v: p.ballot ? 'On' : 'Not yet' },
+    {
+      k: 'Organised on',
+      v: held.length
+        ? `${held.length} ${held.length === 1 ? 'ground' : 'grounds'} · strongest ${strongest}`
+        : 'nothing visible'
+    }
+  ];
+}
+
+/**
+ * What an opposing campaign CANNOT see, named out loud.
+ *
+ * The point of an asymmetric-information game is that the player understands
+ * where the fog is. Listing the fog is more honest than leaving them to guess
+ * whether the opponent is reading their hand — and it is the same list the
+ * profile harness asserts never crosses the wire.
+ */
+export const HIDDEN_FROM_OPPONENT = [
+  'their hand',
+  'their deck',
+  'their bankroll',
+  'what they will play next'
+] as const;
 
 /**
  * The RNG stream for one opponent turn.

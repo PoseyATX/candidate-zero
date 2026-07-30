@@ -23,6 +23,12 @@ import { discardsLeft, MAX_DISCARDS } from '../engine/flow.js';
 import { rosterForDisplay, getMachine, tierOf, tierLabel, memberName } from '../engine/machine.js';
 import { doorCardId, closedDoors, MACHINE_DOOR_PLAYS } from '../data/machine-doors.js';
 import { getRival, rivalRecord, archetypeTitle, MAX_RIVAL_STRENGTH } from '../engine/rival.js';
+import {
+  rivalIsHuman,
+  rivalAsOfWeek,
+  publicFacts,
+  HIDDEN_FROM_OPPONENT
+} from '../engine/rival-profile.js';
 import type { LegacyState } from '../engine/types.js';
 import { reducedMotion } from './motion.js';
 
@@ -345,7 +351,42 @@ export function renderLedger(campaign: Campaign, legacy?: LegacyState): void {
   // this shows who is building against you, with the record between you. A
   // rival you cannot see accumulating is indistinguishable from no rival.
   let rivalBand = '';
-  if (legacy) {
+  // A HUMAN opponent is a different information problem to the synthetic one.
+  // You are looking at a snapshot they published, possibly weeks ago, and the
+  // player has to understand both what they can see and where the fog is — or
+  // they will assume the opponent is idle when they are simply ahead of you.
+  const seated = s.rivalProfile;
+  if (seated && rivalIsHuman(s)) {
+    const asOf = rivalAsOfWeek(s);
+    const stale = asOf > 0 && asOf < s.week;
+    const facts = publicFacts(seated)
+      .map(f => `<div class="riv-fact"><span class="k">${f.k}</span><span>${f.v}</span></div>`)
+      .join('');
+    const rec = seated.record;
+    const recLine = rec.cycles
+      ? `${rec.cycles} ${rec.cycles === 1 ? 'cycle' : 'cycles'} against you` +
+        (rec.beatYou ? ` · beat you ${rec.beatYou}` : '') +
+        (rec.youBeatThem ? ` · you beat them ${rec.youBeatThem}` : '')
+      : 'First time against you.';
+    rivalBand = `
+      <div class="ledger-band ledger-therival riv-human">
+        <div class="ledger-band-label">The Opposition · a real opponent</div>
+        <div class="riv-row">
+          <span class="riv-name">${seated.name}</span>
+          <span class="riv-title">${archetypeTitle(seated.archetype)}</span>
+        </div>
+        <div class="riv-record">${recLine}</div>
+        <div class="riv-asof${stale ? ' riv-stale' : ''}">${
+          asOf > 0
+            ? stale
+              ? `You are seeing them as they stood in their week ${asOf}. You are on week ${s.week} — they have not published since.`
+              : `Current as of their week ${asOf}.`
+            : 'No published week yet.'
+        }</div>
+        <div class="riv-facts">${facts}</div>
+        <div class="riv-fog"><span class="k">You cannot see</span> ${HIDDEN_FROM_OPPONENT.join(' · ')}</div>
+      </div>`;
+  } else if (legacy) {
     const r = getRival(legacy);
     const pct = Math.max(3, Math.min(100, Math.round((r.strength / MAX_RIVAL_STRENGTH) * 100)));
     const took = r.past?.length
@@ -384,6 +425,20 @@ export function renderLedger(campaign: Campaign, legacy?: LegacyState): void {
       </div>
       ${machineBand}
       ${rivalBand}
+      <div class="ledger-band ledger-h2h">
+        <div class="ledger-band-label">Head to head</div>
+        <p class="h2h-hint">Play a real person. Copy your campaign and send it to them; paste
+          theirs to make them your opposition. Only public facts travel — never your hand,
+          your deck or your money.</p>
+        <div class="h2h-actions">
+          <button type="button" class="btn" data-h2h="export">Copy my campaign</button>
+          <button type="button" class="btn" data-h2h="import">Paste an opponent</button>
+        </div>
+        <textarea id="h2h-box" class="h2h-box" rows="4" spellcheck="false"
+          aria-label="Head-to-head campaign exchange"
+          placeholder="Your campaign appears here to copy — or paste an opponent's here."></textarea>
+        <div id="h2h-note" class="h2h-note" aria-live="polite"></div>
+      </div>
     </div>
   `;
   applyStageChrome(s);

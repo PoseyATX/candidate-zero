@@ -168,6 +168,22 @@ function main() {
         await page.locator('#gp-cancel').click();
       }
 
+      // --- Dossier tab ---
+      // A whole tab that had never been audited: it carries the ledger, the
+      // Machine and Opposition bands, and now a textarea and two buttons for
+      // the head-to-head exchange. Form controls with no coverage is exactly
+      // how a missing label ships.
+      {
+        const tab = page.locator('[data-gototab="dossier"]');
+        if (await tab.count()) {
+          await safeClick(tab);
+          await page.waitForTimeout(200);
+          byState.dossier = await runAxe(page);
+          await safeClick(page.locator('[data-gototab="play"]'));
+          await page.waitForTimeout(150);
+        }
+      }
+
       // --- Full-screen play result (engine beat -> whole-screen dialog) ---
       // It is a role=dialog aria-modal takeover with generated content, so it
       // needs the same scrutiny as every other overlay. Nothing checked it when
