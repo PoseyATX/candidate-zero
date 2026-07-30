@@ -15,7 +15,7 @@ import {
 } from '../engine/legacy.js';
 import type { CampaignOutcome, LegacyState, TraitId } from '../engine/types.js';
 import { emblem } from './card-art.js';
-import { takeMachineOutcome } from '../engine/legacy.js';
+import { takeMachineOutcome, takeRivalOutcome } from '../engine/legacy.js';
 import { memberName } from '../engine/machine.js';
 
 function $(id: string): HTMLElement {
@@ -113,6 +113,20 @@ export function renderTerminalOutcome(ctx: TerminalRenderCtx): void {
       );
     }
     machineBlock = `<ul class="machine-changes">${rows.join('')}</ul>`;
+  }
+
+  // The rival's cycle, on the same screen as your own. Beating them is the
+  // payoff the whole opposition system is for, so it gets its own line rather
+  // than being inferred from the outcome word.
+  const ro = takeRivalOutcome();
+  if (ro) {
+    const rows: string[] = [];
+    for (const line of ro.lines) {
+      rows.push(`<li class="${ro.beaten ? 'riv-beaten' : 'riv-won'}">${esc(line)}</li>`);
+    }
+    if (rows.length) {
+      machineBlock += `<ul class="machine-changes">${rows.join('')}</ul>`;
+    }
   }
 
   $('terminal-head').innerHTML = `

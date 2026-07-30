@@ -338,6 +338,9 @@ export interface LegacyState {
   /** The people who take your call, across runs — see engine/machine.ts.
    *  Optional so every save written before it existed still loads. */
   machine?: import('./machine.js').MachineState;
+  /** The named opposition, carried across runs — see engine/rival.ts.
+   *  Optional so every save written before it existed still loads. */
+  rival?: import('./rival.js').RivalState;
 }
 
 export interface DeckState {

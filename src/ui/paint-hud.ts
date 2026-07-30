@@ -22,6 +22,7 @@ import { heatOf, MAX_HEAT } from '../engine/heat.js';
 import { discardsLeft, MAX_DISCARDS } from '../engine/flow.js';
 import { rosterForDisplay, getMachine, tierOf, tierLabel, memberName } from '../engine/machine.js';
 import { doorCardId, closedDoors, MACHINE_DOOR_PLAYS } from '../data/machine-doors.js';
+import { getRival, rivalRecord, archetypeTitle, MAX_RIVAL_STRENGTH } from '../engine/rival.js';
 import type { LegacyState } from '../engine/types.js';
 import { reducedMotion } from './motion.js';
 
@@ -340,6 +341,31 @@ export function renderLedger(campaign: Campaign, legacy?: LegacyState): void {
     }
   }
 
+  // The other side of the same ledger. The Machine band shows what you built;
+  // this shows who is building against you, with the record between you. A
+  // rival you cannot see accumulating is indistinguishable from no rival.
+  let rivalBand = '';
+  if (legacy) {
+    const r = getRival(legacy);
+    const pct = Math.max(3, Math.min(100, Math.round((r.strength / MAX_RIVAL_STRENGTH) * 100)));
+    const took = r.past?.length
+      ? `<div class="ledger-wide riv-past"><span class="k">Beaten</span> ${r.past
+          .map(p => p.name)
+          .join(' · ')}</div>`
+      : '';
+    rivalBand = `
+      <div class="ledger-band ledger-therival">
+        <div class="ledger-band-label">The Opposition</div>
+        <div class="riv-row">
+          <span class="riv-name">${r.name}</span>
+          <span class="riv-title">${archetypeTitle(r.archetype)}</span>
+        </div>
+        <div class="riv-record">${rivalRecord(r)}</div>
+        <span class="riv-bar" title="How much they bring to the next filing"><i style="width:${pct}%"></i></span>
+        ${took}
+      </div>`;
+  }
+
   $('ledger').innerHTML = `
     <div class="ledger-dossier">
       <div class="ledger-band ledger-identity">
@@ -357,6 +383,7 @@ export function renderLedger(campaign: Campaign, legacy?: LegacyState): void {
         ${s.over && s.outcome ? `<div class="ledger-wide"><span class="k">Outcome</span> ${s.outcome}</div>` : ''}
       </div>
       ${machineBand}
+      ${rivalBand}
     </div>
   `;
   applyStageChrome(s);

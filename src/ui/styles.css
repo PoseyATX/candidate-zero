@@ -2813,3 +2813,57 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   color: #f0c4b8;
   background: rgba(138, 47, 38, 0.24);
 }
+
+/* === The Opposition band (engine/rival.ts) ==============================
+   Deliberately the mirror of .ledger-themachine: same band shape, oxblood
+   channel instead of gold. What you built, then who is building against you. */
+.ledger-therival {
+  border-left: 2px solid var(--oxblood-bright);
+}
+.riv-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.riv-name {
+  font-family: Cinzel, serif;
+  font-size: 0.95rem;
+  color: #e8b4a8;
+}
+.riv-title {
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--parchment-dim);
+}
+.riv-record {
+  margin-top: 0.15rem;
+  font-size: 0.7rem;
+  color: var(--parchment-dim);
+}
+.riv-bar {
+  display: block;
+  height: 4px;
+  margin-top: 0.4rem;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.riv-bar i {
+  display: block;
+  height: 100%;
+  background: var(--oxblood-bright);
+}
+.riv-past { margin-top: 0.35rem; color: #8f7f72; font-size: 0.7rem; }
+
+/* Terminal screen: what the rival did this cycle. */
+.machine-changes .riv-beaten {
+  border-left-color: #b9d1a9;
+  color: #cfe0c2;
+}
+.machine-changes .riv-won {
+  border-left-color: var(--oxblood-bright);
+  color: #e8b4a8;
+  background: rgba(138, 47, 38, 0.14);
+}

@@ -20,6 +20,7 @@ import {
   memberName,
   type MachineOutcome
 } from './machine.js';
+import { applyRival, settleRival, type RivalOutcome } from './rival.js';
 
 const STORAGE_KEY = 'cz_legacy_v1';
 
@@ -53,7 +54,10 @@ export function loadLegacy(): LegacyState {
       // loadLegacy allow-lists fields, so anything not named here is silently
       // dropped on reload. The machine was invisible for exactly that reason:
       // it settled correctly, saved correctly, and evaporated on next load.
-      machine: parsed.machine
+      machine: parsed.machine,
+      // Same trap as `machine` above: omit it here and the rival settles
+      // correctly, saves correctly, and evaporates on the next load.
+      rival: parsed.rival
     };
   } catch {
     return emptyLegacy();
@@ -238,6 +242,10 @@ export function applyLegacy(state: GameState, legacy: LegacyState): void {
   // showing both what you kept and what is now aimed at you.
   applyPoachPenalty(state, legacy);
 
+  // The other half of the ledger: who is running against you, by name, with
+  // whatever they have accumulated across the career (engine/rival.ts).
+  applyRival(state, legacy);
+
   applyLegacyDebt(state, legacy);
 
   if (legacy.carry.waitingLoopId) {
@@ -363,6 +371,9 @@ export function recordRun(legacy: LegacyState, state: GameState, kind: CampaignO
   // Settle the machine AFTER the run is recorded, so runIndex is the number of
   // the cycle just finished — the departure line reads "since your third".
   lastMachineOutcome = settleMachine(legacy, state, kind, legacy.runs.length);
+  // Rival settles AFTER the machine, so a member poached this cycle is already
+  // in `departed` and counts toward the strength they gained from taking them.
+  lastRivalOutcome = settleRival(legacy, state, kind, legacy.runs.length);
 }
 
 /**
@@ -375,6 +386,15 @@ let lastMachineOutcome: MachineOutcome | null = null;
 export function takeMachineOutcome(): MachineOutcome | null {
   const o = lastMachineOutcome;
   lastMachineOutcome = null;
+  return o;
+}
+
+/** What the rival did at the end of the last run, for the terminal screen. */
+let lastRivalOutcome: RivalOutcome | null = null;
+
+export function takeRivalOutcome(): RivalOutcome | null {
+  const o = lastRivalOutcome;
+  lastRivalOutcome = null;
   return o;
 }
 
