@@ -50,10 +50,10 @@ player's candidate.
 | C1 | **Rival profile seam** — a versioned, public-information-only JSON description of an opposing campaign; single player runs through the same pathway so it is never a cold codepath. | DONE |
 | C2 | **Cross-client determinism** — opponent moves derived from (profile, week) alone, so two clients agree without exchanging RNG state. Harness proves it and proves it *fails* when broken. | DONE |
 | C3 | **Send side** — `profileFromCampaign` builds what crosses to the opponent. Leakage guarded by an allow-list test. | DONE |
-| C4 | **Match state** — pairing two careers, whose week is whose, what happens when one player stalls for a week. No design yet. | OPEN |
-| C5 | **Transport** — no network layer, no matchmaking, no lobby. Deliberately absent; the point of C1–C3 is that adding it does not touch opponent logic. | OPEN |
-| C6 | **Asymmetric information UI** — showing what you legitimately know about a human opponent, and *not* showing what you do not. | OPEN |
-| C7 | **Cheat resistance** — a client that edits its own profile before sending. Needs server-side derivation or signing. | OPEN |
+| C4 | **Match state** — `engine/match.ts`. Two careers pointed at each other; each side publishes a week, frozen once posted. The load-bearing rule: **you are never blocked** — you face the most recent week your opponent published at or before yours, so a slow opponent costs you nothing. No forfeit, no timer; `matchStanding` reports a stall so a caller can nudge, and that is all. | DONE |
+| C5 | **Transport** — still no network layer, matchmaking or lobby. A `MatchState` is plain JSON; moving it between two people is deliberately somebody else's problem. | OPEN |
+| C6 | **Asymmetric information UI** — showing what you legitimately know about a human opponent, and *not* showing what you do not. The engine already refuses to show a week they have not reached in your timeline; nothing renders any of it yet. | OPEN |
+| C7 | **Cheat resistance** — PARTIAL. `strength` was sent and trusted, so one edited number handed your opponent an unwinnable race. It is now discarded on receipt and re-derived from public facts, and everything off the wire is clamped to legal ranges via `normaliseRivalProfile`. Remaining hole, stated plainly: the underlying facts are still self-reported, so a determined cheat can inflate `nameID` instead, and per-ground presence is taken on trust. Closing that needs server-side derivation from an authoritative replay, or signing. | PARTIAL |
 
 ---
 

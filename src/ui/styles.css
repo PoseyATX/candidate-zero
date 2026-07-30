@@ -3026,8 +3026,11 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
        milestone border and the Continue ring, so a result reads as one thing. */
 .result-host.stamp-breakthrough { --rc: #f0d878; }
 .result-host.stamp-gain { --rc: #cfe0c2; }
-.result-host.stamp-setback { --rc: #e8c39a; }
-.result-host.stamp-disaster { --rc: #e8927f; }
+/* Both failures read RED — a bad result should be legible as bad before the
+   word is parsed. Setback is the lighter, recoverable red; disaster is hotter.
+   Measured on the overlay ground: 6.75:1 and 6.06:1, both clear AA. */
+.result-host.stamp-setback { --rc: #ef7a68; }
+.result-host.stamp-disaster { --rc: #ff5c47; }
 
 /* Reduced motion: the takeover stays (you must not miss the result), every
    animation goes. Values are already written final by the JS. */

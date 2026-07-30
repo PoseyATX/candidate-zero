@@ -80,6 +80,39 @@ export interface RivalProfile {
   human?: boolean;
 }
 
+/**
+ * Strength from public facts, and the ONLY way a human profile's strength is
+ * ever set.
+ *
+ * CHEAT RESISTANCE. `strength` used to be sent and trusted, so a client could
+ * edit one number in the JSON and hand its opponent a maximally hard race — or
+ * a trivial one. It is now derived on BOTH sides from facts an opposing
+ * campaign could actually observe, and the receive path recomputes it rather
+ * than believing what arrived. Editing `strength` on the wire now does nothing.
+ *
+ * Name recognition, momentum and endorsements are all readable off a newspaper;
+ * ballot access is worth a lump on its own.
+ *
+ * HONEST LIMIT: the underlying facts are still self-reported. A determined
+ * cheat can inflate nameID instead, and per-ground presence is likewise taken
+ * on trust. Closing that needs the server to derive the profile from an
+ * authoritative replay, or the sender to sign it — see docs/DEFERRED.md C7.
+ * This removes the one-field edit, which is the cheapest possible attack.
+ */
+export function deriveStrength(facts: {
+  nameID: number;
+  momentum: number;
+  endorsePts: number;
+  ballot: boolean;
+}): number {
+  const raw =
+    Math.max(0, facts.nameID) * 1.1 +
+    Math.max(0, facts.momentum) * 3 +
+    Math.max(0, facts.endorsePts) * 2.5 +
+    (facts.ballot ? 12 : 0);
+  return clamp(Math.round(raw), 0, 100);
+}
+
 /** Cheap structural check. Anything that fails is refused, not repaired. */
 export function isRivalProfile(x: unknown): x is RivalProfile {
   if (!x || typeof x !== 'object') return false;
@@ -161,20 +194,18 @@ export function profileFromCampaign(
     const held = Math.round(g.rapport || 0);
     if (held > 0) ground[g.id] = clamp(held, 0, 100);
   }
-  // Public standing on the same scale the synthetic rival uses: name
-  // recognition, momentum and endorsements are all things the other campaign
-  // can read off a newspaper. Ballot access is worth a lot on its own.
-  const derived =
-    (state.nameID || 0) * 1.1 +
-    (state.momentum || 0) * 3 +
-    (state.endorsePts || 0) * 2.5 +
-    (state.ballot ? 12 : 0);
+  const derived = deriveStrength({
+    nameID: state.nameID || 0,
+    momentum: state.momentum || 0,
+    endorsePts: state.endorsePts || 0,
+    ballot: !!state.ballot
+  });
   return {
     v: RIVAL_PROFILE_VERSION,
     id: who.id,
     name: who.name,
     archetype: who.archetype ?? 'insurgent',
-    strength: clamp(Math.round(derived), 0, 100),
+    strength: derived,
     ground,
     nameID: Math.round(state.nameID || 0),
     momentum: Math.round(state.momentum || 0),
@@ -252,5 +283,50 @@ export function parseRivalProfile(json: string): RivalProfile {
   if (!isRivalProfile(raw)) {
     throw new Error(`unreadable rival profile (want v${RIVAL_PROFILE_VERSION})`);
   }
-  return raw;
+  return normaliseRivalProfile(raw);
+}
+
+/**
+ * THE TRUST BOUNDARY. Everything that arrives from outside this client passes
+ * through here; everything built locally does not.
+ *
+ * A profile off the wire is a claim, not a fact. This recomputes what can be
+ * recomputed and clamps what cannot, so a hand-edited file cannot hand its
+ * opponent an unwinnable race:
+ *
+ *  - `strength` is DISCARDED and re-derived from the public facts.
+ *  - facts and per-ground presence are clamped to legal ranges.
+ *  - `human` is forced true: it arrived from somewhere, so a person sent it,
+ *    and it must not be able to masquerade as the synthetic opponent.
+ */
+export function normaliseRivalProfile(p: RivalProfile): RivalProfile {
+  const nameID = clamp(Math.round(p.nameID || 0), 0, 1000);
+  const momentum = clamp(Math.round(p.momentum || 0), 0, 100);
+  const endorsePts = clamp(Math.round(p.endorsePts || 0), 0, 100);
+  const ballot = !!p.ballot;
+  const ground: GroundPresence = {};
+  for (const [k, v] of Object.entries(p.ground ?? {})) {
+    if (typeof v !== 'number' || !Number.isFinite(v)) continue;
+    const held = clamp(Math.round(v), 0, 100);
+    if (held > 0) ground[k] = held;
+  }
+  const rec = p.record ?? { cycles: 0, beatYou: 0, youBeatThem: 0 };
+  return {
+    v: RIVAL_PROFILE_VERSION,
+    id: String(p.id).slice(0, 64),
+    name: String(p.name).slice(0, 64),
+    archetype: p.archetype === 'incumbent' || p.archetype === 'insurgent' ? p.archetype : 'machine',
+    strength: deriveStrength({ nameID, momentum, endorsePts, ballot }),
+    ground,
+    nameID,
+    momentum,
+    endorsePts,
+    ballot,
+    record: {
+      cycles: clamp(Math.round(rec.cycles || 0), 0, 9999),
+      beatYou: clamp(Math.round(rec.beatYou || 0), 0, 9999),
+      youBeatThem: clamp(Math.round(rec.youBeatThem || 0), 0, 9999)
+    },
+    human: true
+  };
 }
