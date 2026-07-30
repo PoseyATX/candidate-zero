@@ -6,3 +6,6 @@ dist/
 .env.*
 .vite/
 dist-engine
+
+# Scratch probes; promote anything worth keeping into scripts/
+.debug/
