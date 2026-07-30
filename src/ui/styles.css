@@ -2053,6 +2053,7 @@ body.dossier-open {
   --z-hud: 30;
   --z-toast: 70;      /* transient, below every dialog */
   --z-picker: 100;
+  --z-result: 102;   /* the play result: a dialog, above the picker */
   --z-splash: 104;
   --z-weather: 106;   /* weather queues over the act splash */
   --z-dossier: 110;
@@ -2064,102 +2065,8 @@ body.dossier-open {
    here it briefly covers the tail of the card list instead, which is where
    the thumb already is after a tap. One toast at a time (see paint-log.ts),
    so this never becomes a stack. */
-.toast-host {
-  position: fixed;
-  left: 50%;
-  /* Docked just above the bottom nav, NOT floating over the hand. The old
-     4.6rem offset put it squarely on the last cards and the End Week bar —
-     the result covered the thing the result was about. */
-  bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 0.4rem);
-  transform: translateX(-50%);
-  z-index: var(--z-toast);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.35rem;
-  width: min(420px, 92vw);
-  pointer-events: none;
-}
 
-/* Transparent, full-screen, sits just under the toast. It does not hide the
-   cards — it only makes the next click count as "read" rather than landing on
-   a card, which is what "click out of it before continuing" means. */
-.toast-catcher {
-  position: fixed;
-  inset: 0;
-  z-index: calc(var(--z-toast) - 1);
-  background: transparent;
-  cursor: pointer;
-}
-.toast {
-  width: 100%;
-  box-sizing: border-box;
-  background: linear-gradient(175deg, #efe3c6, #e0cfa9);
-  color: var(--ink);
-  border: 1px solid var(--gold);
-  /* The second ring plus its offset made every toast read as a heavy plaque. */
-  padding: 0.45rem 0.7rem;
-  border-radius: 3px;
-  text-align: center;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
-  animation: toast-in 0.3s ease-out both;
-  /* Tappable: the toast is the acknowledgement, so it has to accept the tap. */
-  pointer-events: auto;
-  cursor: pointer;
-}
-.toast:focus-visible {
-  outline: 2px solid var(--oxblood-bright);
-  outline-offset: 2px;
-}
-.toast-go {
-  margin-top: 0.3rem;
-  font-family: Cinzel, serif;
-  font-size: 0.64rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #7a5a2c;
-}
-/* While a result is waiting, the End Week bar must not sit under the toast. */
-body.toast-pending .endweek-wrap,
-body.toast-pending #btn-endweek {
-  opacity: 0.35;
-}
-.toast-stamp {
-  font-family: Cinzel, serif;
-  font-size: 0.78rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  margin-bottom: 0.15rem;
-  color: #4a3b24;
-}
-.toast-body {
-  font-size: 0.88rem;
-  line-height: 1.35;
-  color: #3a2e1c;
-}
-.toast-spark { outline-color: var(--gold); }
-.toast-hit { outline-color: var(--sage); }
-.toast-thump { outline-color: var(--gold-dim); }
-.toast-crash {
-  background: linear-gradient(175deg, #f0cfc8, #e0b0a6);
-  outline-color: var(--oxblood-bright);
-}
-.toast-whisper {
-  background: linear-gradient(175deg, #d4e0e8, #c0d0dc);
-  outline-color: #3d5a68;
-}
-.toast-out {
-  animation: toast-out 0.28s ease-in forwards;
-}
 
-@keyframes toast-in {
-  from { transform: translateY(-10px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-@keyframes toast-out {
-  from { opacity: 1; transform: translateY(0); }
-  to { opacity: 0; transform: translateY(-8px); }
-}
 
 /* Setup as nameplate fill — shared materials with title */
 .nameplate-panel {
@@ -2629,18 +2536,6 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
 
 /* The numbers a play actually moved. Alpha players reported "clicking blindly":
    the toast asserted GAIN and nothing visible changed. */
-.toast-deltas {
-  margin-top: 0.2rem;
-  font-family: Cinzel, serif;
-  /* The ledger delta is the answer to "did anything happen" — the whole reason
-     this row exists. It was #e8d48a (pale gold) on the parchment toast: a
-     measured 1.02:1, i.e. invisible. Every number this feature was built to
-     show had been rendering as blank space. 5.55:1 and bold. */
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  color: #6b4a12;
-}
 
 /* Cards read as a held hand, not a list: each row overlaps the one above it and
    casts a shadow upward onto it. .play-card is already position:relative, so
@@ -2677,33 +2572,10 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
 
 /* Toast entrance scaled by the engine's own intensity: a BREAKTHROUGH should
    land harder than a SETBACK, and --hit is exactly that number. */
-.toast {
-  --hit: 0.5;
-  animation: toast-hit calc(0.26s + (var(--hit) * 0.14s)) cubic-bezier(0.2, 1.5, 0.4, 1) both;
-}
-@keyframes toast-hit {
-  from {
-    opacity: 0;
-    transform: translateY(calc(8px + (var(--hit) * 10px))) scale(calc(0.97 - (var(--hit) * 0.03)));
-  }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
 /* A disaster shoves; a whisper does not. */
-.toast-crash { animation-name: toast-hit, toast-shake; animation-duration: 0.3s, 0.34s; }
-@keyframes toast-shake {
-  0%, 100% { margin-left: 0; }
-  25% { margin-left: calc(var(--hit) * -6px); }
-  75% { margin-left: calc(var(--hit) * 6px); }
-}
 
 /* The figures count up (motion.ts countUp) — this just keeps them from
    reflowing the row as the digits change width. */
-.toast-deltas .delta {
-  display: inline-block;
-  font-variant-numeric: tabular-nums;
-  min-width: 1.5em;
-}
-.toast-deltas .delta-sep { opacity: 0.6; }
 
 /* AP / turf / cut pips: show the spend, don't teleport past it. */
 .pip.pip-spent,
@@ -2751,8 +2623,6 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   }
 }
 
-/* Exit animation must outrank the .toast entrance rule above it. */
-.toast.toast-out { animation: toast-out 0.28s ease-in forwards; }
 
 /* The running total reacting when it moves. */
 .goal-progress-text.goal-moved { animation: goal-moved 0.7s ease-out both; }
@@ -2904,4 +2774,312 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   border-left-color: var(--oxblood-bright);
   color: #e8b4a8;
   background: rgba(138, 47, 38, 0.14);
+}
+
+/* ======================================================================
+   FULL-SCREEN RESULT — the beat the game turns on.
+
+   Every value here is driven by something the engine already computed:
+   --hit from fb.intensity, --wash from fb.intensity, the beat- and stamp-
+   classes from fb.beat / fb.stamp. Nothing is decorative-for-its-own-sake;
+   a harder roll genuinely lands harder.
+   ====================================================================== */
+.result-host {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-result);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: radial-gradient(ellipse 120% 90% at 50% 42%, #241a0e 0%, #150e06 62%, #0b0703 100%);
+  cursor: pointer;
+  animation: result-in 0.22s ease-out both;
+  overflow: hidden;
+}
+.result-host.hidden { display: none; }
+.result-host.result-out {
+  animation: result-out 0.2s ease-in both;
+  /* Stop intercepting the moment dismissal starts. During the fade the overlay
+     was still swallowing pointer events, so a player's next tap — on a card, on
+     End Week — vanished into a result they had already dismissed. */
+  pointer-events: none;
+}
+@keyframes result-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes result-out { from { opacity: 1; } to { opacity: 0; } }
+
+/* Beat-coloured wash. Opacity is fb.intensity — a near-miss glows faintly,
+   a disaster floods the screen. */
+.result-wash {
+  position: absolute;
+  inset: -20%;
+  opacity: var(--wash, 0.2);
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 44%, var(--rc, #c9a84c) 0%, transparent 46%);
+  animation: wash-pulse 0.5s ease-out both;
+}
+@keyframes wash-pulse {
+  0% { opacity: 0; transform: scale(0.82); }
+  55% { opacity: calc(var(--wash, 0.2) * 1.5); }
+  100% { opacity: var(--wash, 0.2); transform: scale(1); }
+}
+
+/* Deco rays — breakthroughs only, so they stay meaningful. Slow enough to read
+   as ceremony rather than noise. */
+.result-rays {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: 190vmax;
+  height: 190vmax;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0.13;
+  background: repeating-conic-gradient(
+    from 0deg at 50% 50%,
+    var(--rc, #c9a84c) 0deg 2.2deg,
+    transparent 2.2deg 17deg
+  );
+  /* Hollow out the middle: the rays are ceremony at the edges and noise behind
+     the words. Screenshots showed them washing straight through the copy. */
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 0 26%, #000 55%);
+  mask-image: radial-gradient(circle at 50% 50%, transparent 0 26%, #000 55%);
+  animation: rays-spin 34s linear infinite, rays-fade 0.6s ease-out both;
+}
+@keyframes rays-spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+@keyframes rays-fade { from { opacity: 0; } to { opacity: 0.13; } }
+
+.result-core {
+  position: relative;
+  z-index: 2;
+  width: min(560px, 100%);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+}
+/* Physical impact for thump/crash. Small amplitude, short — a jolt, not a
+   wobble, and never on the text the player has to read afterwards. */
+.result-shake { animation: result-jolt 0.34s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+@keyframes result-jolt {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  15% { transform: translate3d(calc(-7px * var(--hit, 1)), 2px, 0); }
+  35% { transform: translate3d(calc(6px * var(--hit, 1)), -2px, 0); }
+  55% { transform: translate3d(calc(-4px * var(--hit, 1)), 1px, 0); }
+  78% { transform: translate3d(calc(2px * var(--hit, 1)), 0, 0); }
+}
+
+/* THE STAMP. Slams in, overshoots by --hit, settles. */
+.result-stamp {
+  font-family: Cinzel, serif;
+  font-weight: 700;
+  /* Solve for the viewport from the word's length (--len, set in JS) so a long
+     stamp like BREAKTHROUGH cannot run off both edges. The 1.62 factor is the
+     approximate Cinzel advance width per character at this weight. */
+  font-size: min(3.4rem, max(1.55rem, calc(88vw / (var(--len, 8) * 1.62))));
+  line-height: 1.04;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--rc, #f0d878);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.55), 0 0 34px color-mix(in srgb, var(--rc, #c9a84c) 55%, transparent);
+  animation: stamp-slam 0.42s cubic-bezier(0.2, 1.5, 0.3, 1) both;
+}
+@keyframes stamp-slam {
+  0% { opacity: 0; transform: scale(calc(1 + 1.1 * var(--hit, 1))); letter-spacing: 0.34em; filter: blur(6px); }
+  60% { opacity: 1; filter: blur(0); }
+  100% { opacity: 1; transform: scale(1); letter-spacing: 0.06em; }
+}
+
+.result-rule {
+  display: block;
+  width: 62%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--rc, #c9a84c), transparent);
+  animation: rule-open 0.42s 0.14s ease-out both;
+}
+@keyframes rule-open { from { transform: scaleX(0); opacity: 0; } to { transform: scaleX(1); opacity: 1; } }
+
+.result-juice {
+  margin: 0;
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-size: 1.02rem;
+  line-height: 1.45;
+  color: #e8d9b5;
+  max-width: 34ch;
+  animation: rise 0.4s 0.18s ease-out both;
+}
+@keyframes rise { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: none; } }
+
+/* THE FIGURES. Big, staggered, counting. This is the payoff line. */
+.result-deltas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1.4rem;
+  margin-top: 0.3rem;
+}
+.result-delta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: pop 0.44s cubic-bezier(0.2, 1.6, 0.3, 1) both;
+  animation-delay: calc(0.26s + var(--i, 0) * 0.13s);
+}
+@keyframes pop {
+  0% { opacity: 0; transform: scale(0.5) translateY(10px); }
+  100% { opacity: 1; transform: none; }
+}
+.rd-num {
+  font-family: Cinzel, serif;
+  font-weight: 700;
+  /* Derived from the fitted stamp (see paint-log.ts) so the figure can never
+     out-shout the headline, whatever the stamp word's length. */
+  font-size: max(1.35rem, calc(var(--stamp-px, 2.2rem) * 0.66));
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: #f5e9cd;
+}
+.result-delta.up .rd-num { color: #cfe0c2; }
+.result-delta.down .rd-num { color: #e8b4a8; }
+.rd-label {
+  margin-top: 0.15rem;
+  font-family: Cinzel, serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #b08d3e;
+}
+
+/* Streak: pips light one after another, so a run reads as a run. */
+.result-streak {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  animation: rise 0.36s ease-out both;
+}
+.rs-pips { display: inline-flex; gap: 0.22rem; }
+.rs-pip {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.25;
+  animation: pip-light 0.3s ease-out both;
+  animation-delay: calc(var(--i, 0) * 0.09s);
+}
+@keyframes pip-light {
+  from { opacity: 0.2; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
+}
+.rs-label {
+  font-family: Cinzel, serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.rs-hot { color: #e8c39a; }
+.rs-cold { color: #9fb0c4; }
+
+.result-milestone {
+  margin-top: 0.2rem;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--rc, #c9a84c);
+  border-radius: 999px;
+  font-size: 0.82rem;
+  color: #f5e9cd;
+  animation: pop 0.44s 0.5s cubic-bezier(0.2, 1.6, 0.3, 1) both;
+}
+.result-milestone .rm-key {
+  margin-right: 0.45rem;
+  font-family: Cinzel, serif;
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #b08d3e;
+}
+.result-near {
+  font-size: 0.78rem;
+  color: #e8c39a;
+  animation: rise 0.4s 0.3s ease-out both;
+}
+
+.result-go {
+  margin-top: 0.9rem;
+  min-height: 44px;
+  padding: 0.6rem 2rem;
+  font-family: Cinzel, serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #f0e4c4;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--rc, #c9a84c);
+  border-radius: 999px;
+  cursor: pointer;
+  animation: rise 0.4s 0.44s ease-out both;
+}
+.result-go:hover { background: color-mix(in srgb, var(--rc, #c9a84c) 22%, transparent); }
+.result-go:focus-visible { outline: 2px solid #f0e4c4; outline-offset: 3px; }
+
+/* --- Per-stamp colour channel. One variable drives stamp, rule, wash, rays,
+       milestone border and the Continue ring, so a result reads as one thing. */
+.result-host.stamp-breakthrough { --rc: #f0d878; }
+.result-host.stamp-gain { --rc: #cfe0c2; }
+.result-host.stamp-setback { --rc: #e8c39a; }
+.result-host.stamp-disaster { --rc: #e8927f; }
+
+/* Reduced motion: the takeover stays (you must not miss the result), every
+   animation goes. Values are already written final by the JS. */
+@media (prefers-reduced-motion: reduce) {
+  .result-host,
+  .result-host * {
+    animation: none !important;
+  }
+  .result-rays { display: none; }
+  .result-wash { opacity: var(--wash, 0.2); }
+}
+
+/* --- Breakthrough escalation. Only the rarest good result gets these, so the
+       treatment itself is information: you know it was big before you read it. */
+.result-flare {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  width: 34vmax;
+  height: 34vmax;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 2px solid var(--rc, #f0d878);
+  pointer-events: none;
+  animation: flare-out 0.72s cubic-bezier(0.16, 0.9, 0.3, 1) both;
+}
+@keyframes flare-out {
+  0% { opacity: 0.85; transform: translate(-50%, -50%) scale(0.12); border-width: 6px; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.15); border-width: 1px; }
+}
+/* Art Deco lozenges thrown outward — the house shape, not generic confetti. */
+.result-burst {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.result-burst i {
+  position: absolute;
+  width: 7px;
+  height: 14px;
+  margin: -7px -3.5px;
+  background: var(--rc, #f0d878);
+  transform: rotate(var(--a)) translateY(0);
+  animation: burst-fly 0.9s cubic-bezier(0.18, 0.8, 0.28, 1) both;
+  animation-delay: calc(var(--d) * 0.05s);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+@keyframes burst-fly {
+  0% { opacity: 0; transform: rotate(var(--a)) translateY(0) scale(0.4); }
+  22% { opacity: 1; }
+  100% { opacity: 0; transform: rotate(var(--a)) translateY(-42vmin) scale(1); }
 }

@@ -217,28 +217,48 @@ async function main() {
       assert(played, 'a card resolved for the result-toast check');
       if (played) {
         await page.waitForTimeout(120);
-        assert((await page.locator('.toast').count()) > 0, 'playing a card raises a result toast');
-        const covered = await page.evaluate(() => {
-          const tb = document.querySelector('.toast')?.getBoundingClientRect();
-          if (!tb) return -1;
-          let n = 0;
-          for (const c of document.querySelectorAll('#playables .play-card')) {
-            const r = c.getBoundingClientRect();
-            if (!(r.right < tb.left || r.left > tb.right || r.bottom < tb.top || r.top > tb.bottom)) n++;
-          }
-          return n;
+        assert(
+          (await page.locator('#result-host:not(.hidden)').count()) > 0,
+          'playing a card raises the full-screen result'
+        );
+        // Full screen means full screen: it must actually cover the viewport,
+        // and it must carry the stamp and a Continue affordance.
+        const geo = await page.evaluate(() => {
+          const h = document.getElementById('result-host');
+          if (!h || h.classList.contains('hidden')) return null;
+          const r = h.getBoundingClientRect();
+          return {
+            w: Math.round(r.width),
+            h: Math.round(r.height),
+            vw: window.innerWidth,
+            vh: window.innerHeight,
+            stamp: (h.querySelector('.result-stamp')?.textContent ?? '').trim(),
+            hasGo: !!h.querySelector('.result-go')
+          };
         });
-        assert(covered === 0, `the result covers no hand card (covered ${covered})`);
+        assert(!!geo, 'the result host is live');
+        assert(
+          !!geo && geo.w >= geo.vw && geo.h >= geo.vh,
+          `the result fills the screen (${geo?.w}x${geo?.h} vs ${geo?.vw}x${geo?.vh})`
+        );
+        assert(
+          !!geo && /BREAKTHROUGH|GAIN|SETBACK|DISASTER/.test(geo.stamp),
+          `the stamp is the headline (${geo?.stamp})`
+        );
+        assert(!!geo && geo.hasGo, 'and it offers an explicit Continue');
         // Must NOT self-dismiss: it is an acknowledgement.
         await page.waitForTimeout(3400);
         assert(
-          (await page.locator('.toast').count()) > 0,
+          (await page.locator('#result-host:not(.hidden)').count()) > 0,
           'the result is still there after 3.4s — it waits for the player'
         );
         // One click anywhere clears it, and that click must not also open a card.
-        await page.locator('#playables .play-card').first().click({ force: true });
-        await page.waitForTimeout(250);
-        assert((await page.locator('.toast').count()) === 0, 'one click clears the result');
+        await page.locator('#result-host').click({ position: { x: 6, y: 6 } });
+        await page.waitForTimeout(300);
+        assert(
+          (await page.locator('#result-host:not(.hidden)').count()) === 0,
+          'one click clears the result'
+        );
         assert(
           !(await page.locator('#card-detail').isVisible().catch(() => false)),
           'and that click did not fall through and open a card'
@@ -296,10 +316,14 @@ async function main() {
      */
     let resultsAcknowledged = 0;
     const clearResult = async () => {
-      const catcher = page.locator('.toast-catcher');
-      if (await catcher.count()) {
-        await catcher.click({ position: { x: 5, y: 5 } }).catch(() => {});
-        await page.waitForTimeout(40);
+      const host = page.locator('#result-host:not(.hidden)');
+      if (await host.count()) {
+        await host.click({ position: { x: 6, y: 6 } }).catch(() => {});
+        // Wait for it to actually be gone, not just for the click to land — the
+        // exit animation takes 200ms and this used to race it.
+        await page
+          .waitForSelector('#result-host.hidden', { timeout: 2_000 })
+          .catch(() => {});
         resultsAcknowledged++;
         return true;
       }
