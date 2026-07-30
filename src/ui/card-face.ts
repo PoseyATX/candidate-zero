@@ -12,6 +12,7 @@ import type { GameState, Ground, PlayCard } from '../engine/types.js';
 import { pickDefaultGround, cardAttrMod } from '../engine/play.js';
 import { emblemFor, kindMark, KIND_META } from './card-art.js';
 import { isUpgraded, effectiveApCost } from '../engine/upgrades.js';
+import { SIGNATURE_BY_PERSONA } from '../data/signature-plays.js';
 
 export interface CardFaceOpts {
   camp?: boolean;
@@ -271,6 +272,12 @@ export function cardInner(
   const up = isUpgraded(state, card.id)
     ? '<span class="up-mark" title="Practised">\u2726</span>'
     : '';
+  // The one card in the deck that is exclusively YOURS. It was drawn every run
+  // and looked like every other card, so players reasonably concluded persona
+  // cards had never been built. A card nobody can identify is a card nobody has.
+  const sig = isSignatureCard(state, card)
+    ? '<span class="row-sig" title="Your signature play — no other persona has this card">Signature</span>'
+    : '';
   const risk = RISK_SHORT[card.risk] ?? card.risk.toLowerCase();
   const tag = card.tag ? `<span class="row-tag">${attrEscape(card.tag)}</span>` : '';
   const lock =
@@ -281,11 +288,18 @@ export function cardInner(
     ${costAnchorHtml(card, state)}
     <span class="row-body">
       <span class="name">${up}${attrEscape(v.name)}</span>
+      ${sig}
       ${lock || tag}
       ${opts.upgradeBanner ? `<span class="up-banner">${attrEscape(opts.upgradeBanner)}</span>` : ''}
     </span>
     <span class="row-risk risk-chip-${card.risk.toLowerCase()}">${attrEscape(risk)}</span>
   `;
+}
+
+/** Is this the signature play of the persona currently being run? */
+export function isSignatureCard(state: GameState, card: PlayCard): boolean {
+  const pid = state.personaId;
+  return !!pid && SIGNATURE_BY_PERSONA[pid] === card.id;
 }
 
 export function cardClasses(card: PlayCard, opts: CardFaceOpts = {}): string {

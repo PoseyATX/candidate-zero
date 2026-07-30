@@ -3322,3 +3322,137 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   font-size: 0.72rem;
   color: #9fc0d8;
 }
+
+/* --- The persona signature card. Exclusive to whoever you chose to be, and
+       previously indistinguishable from every other card in the hand — which
+       is why players concluded persona cards were never built. */
+.row-sig {
+  display: inline-block;
+  margin-top: 0.1rem;
+  padding: 0.04rem 0.34rem;
+  border: 1px solid var(--oxblood-bright);
+  border-radius: 999px;
+  font-family: Cinzel, serif;
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7a2f26;
+  background: rgba(138, 47, 38, 0.1);
+}
+
+/* --- Attribute detail: what the number actually buys, in the engine's terms. */
+/* Now a real tap target, so it needs a real size. Making these buttons for the
+   tap-to-explain behaviour turned six 20px-tall spans into six 20px-tall
+   CONTROLS, which a11y:layout caught immediately (WCAG 2.5.8 wants 24 minimum;
+   a thumb wants 44). */
+.attr-chip {
+  cursor: pointer;
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+  min-height: 44px;
+  padding: 0.1rem 0.5rem;
+}
+.attr-chip:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.attr-detail {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  border-left: 2px solid var(--gold-dim);
+  background: rgba(0, 0, 0, 0.22);
+  font-size: 0.74rem;
+  line-height: 1.42;
+  color: var(--parchment);
+}
+.ad-head {
+  font-family: Cinzel, serif;
+  font-size: 0.82rem;
+  color: var(--gold);
+  margin-bottom: 0.2rem;
+}
+.ad-what { color: var(--parchment-dim); margin-bottom: 0.3rem; }
+.ad-mech { color: var(--parchment); margin-top: 0.18rem; }
+.ad-mech .k {
+  color: var(--gold-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.66rem;
+  margin-right: 0.35rem;
+}
+
+/* --- Your deck, in full. Previously invisible: you saw five cards and guessed. */
+.ledger-deck { border-left: 2px solid var(--gold-dim); }
+.deck-hint {
+  margin: 0.2rem 0 0.5rem;
+  font-size: 0.72rem;
+  color: var(--parchment-dim);
+}
+.deck-list {
+  margin-top: 0.55rem;
+  max-height: 42vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.deck-row {
+  display: grid;
+  grid-template-columns: 2.4rem 1fr auto 1.8rem;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0.26rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.76rem;
+}
+.dl-ap {
+  font-family: Cinzel, serif;
+  font-weight: 700;
+  color: var(--gold);
+}
+.dl-ap i {
+  font-style: normal;
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  color: var(--gold-dim);
+  margin-left: 0.12rem;
+}
+.dl-name { color: var(--parchment); }
+.dl-sig {
+  margin-left: 0.35rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #e8b4a8;
+}
+.dl-meta {
+  font-size: 0.66rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--parchment-dim);
+}
+.dl-n {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--gold-dim);
+}
+
+/* --- Name field for the head-to-head export. */
+.h2h-name {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.72rem;
+  color: var(--parchment-dim);
+}
+.h2h-name input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 0.22rem;
+  min-height: 44px;
+  padding: 0.4rem 0.55rem;
+  font: inherit;
+  font-size: 0.86rem;
+  color: var(--parchment);
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--gold-dim);
+  border-radius: 3px;
+}
+.h2h-name input:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }

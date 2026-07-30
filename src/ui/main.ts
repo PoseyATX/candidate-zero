@@ -18,9 +18,11 @@ import {
   openRefile,
   paintTitleIdentity,
   exportMyProfile,
-  importOpponent
+  importOpponent,
+  setPlayerName
 } from './session.js';
 import { closeCardDetail } from './paint-play.js';
+import { attrDetailHtml } from './paint-hud.js';
 import { emptyDraft, renderNameplateDraft, type NameplateDraftState } from './nameplate-draft.js';
 import './styles.css';
 import './full-art.css';
@@ -81,12 +83,51 @@ function boot(): void {
   // paint — so it is delegated from the container rather than bound to buttons
   // that stop existing a moment later.
   document.getElementById('ledger')?.addEventListener('click', e => {
-    const btn = (e.target as HTMLElement | null)?.closest('[data-h2h]') as HTMLElement | null;
+    const el = e.target as HTMLElement | null;
+
+    // Attributes explain themselves on tap. The dossier showed "CHA 14" and
+    // nothing anywhere said what 14 bought you.
+    const chip = el?.closest('[data-attr]') as HTMLElement | null;
+    if (chip) {
+      const box = document.getElementById('attr-detail');
+      if (box) {
+        const key = chip.dataset.attr ?? '';
+        const val = Number(chip.dataset.attrV ?? '10');
+        const already = box.getAttribute('data-open') === key && !box.hidden;
+        if (already) {
+          box.hidden = true;
+          box.removeAttribute('data-open');
+        } else {
+          box.innerHTML = attrDetailHtml(key, val);
+          box.setAttribute('data-open', key);
+          box.hidden = false;
+        }
+      }
+      return;
+    }
+
+    // Show / hide the full deck.
+    const deckBtn = el?.closest('[data-deck]') as HTMLElement | null;
+    if (deckBtn) {
+      const list = document.getElementById('deck-list');
+      if (list) {
+        const open = !list.hidden;
+        list.hidden = open;
+        deckBtn.setAttribute('aria-expanded', String(!open));
+        deckBtn.textContent = open ? 'Show every card' : 'Hide deck';
+      }
+      return;
+    }
+
+    const btn = el?.closest('[data-h2h]') as HTMLElement | null;
     if (!btn) return;
     const box = document.getElementById('h2h-box') as HTMLTextAreaElement | null;
     const note = document.getElementById('h2h-note');
     if (!box || !note) return;
     if (btn.dataset.h2h === 'export') {
+      const nameEl = document.getElementById('h2h-name') as HTMLInputElement | null;
+      // Your opponent should face YOU, not "The Teacher".
+      setPlayerName(nameEl?.value ?? '');
       box.value = exportMyProfile();
       box.select();
       // Clipboard is a convenience, never the mechanism — the text is in the

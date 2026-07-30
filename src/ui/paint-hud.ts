@@ -31,6 +31,16 @@ import {
 } from '../engine/rival-profile.js';
 import type { LegacyState } from '../engine/types.js';
 import { reducedMotion } from './motion.js';
+import { isSignatureCard } from './card-face.js';
+
+/** Minimal escape for text going into attributes and markup here. */
+function escapeAttr(v: string): string {
+  return String(v)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
 
 function $(id: string): HTMLElement {
   const el = document.getElementById(id);
@@ -47,13 +57,56 @@ const ATTR_SHORT: Record<string, string> = {
   CHA: 'Charm'
 };
 
+/**
+ * What an attribute actually DOES, in the engine's own numbers.
+ *
+ * engine/play.ts: amod = (value - 10) / 40, averaged over the card's tagged
+ * attributes and added straight to the success probability. So every point
+ * above 10 is +2.5 percentage points on a single-attribute card, and every
+ * point below 10 is the same penalty. Ten is the neutral line.
+ *
+ * None of this was ever shown. A player could see "CHA 14" on their dossier
+ * and had no way to learn it meant +10pp on every Charm card they hold.
+ */
+const ATTR_WHAT: Record<string, string> = {
+  CLO: 'Field work and turnout — Block Walk, Petitions, GOTV, the ground game.',
+  CON: 'Conviction plays — message discipline, forums, standing your line.',
+  CRA: 'Craft and machinery — money, mail, oppo, procedural work.',
+  INK: 'The written word — filings, letters, briefs, the rulebook.',
+  DIP: 'Rooms and gatekeepers — chairs, endorsements, the favour economy.',
+  CHA: 'Retail politics — doors, phones, fish fries, a room won over.'
+};
+
+function attrEffect(v: number): string {
+  const pp = ((v - 10) / 40) * 100;
+  const sign = pp >= 0 ? '+' : '\u2212';
+  return `${sign}${Math.abs(pp).toFixed(1)} percentage points on cards tagged with it`;
+}
+
 function attrChipsHtml(attrs: Record<string, number>): string {
   return Object.entries(attrs)
     .map(([k, v]) => {
       const label = ATTR_SHORT[k] ?? k;
-      return `<span class="attr-chip" title="${label}"><span class="attr-k">${k}</span><span class="attr-v">${v}</span></span>`;
+      return (
+        `<button type="button" class="attr-chip" data-attr="${k}" data-attr-v="${v}" ` +
+        `aria-label="${label} ${v}. Tap for what it does." title="${label} — tap for detail">` +
+        `<span class="attr-k">${k}</span><span class="attr-v">${v}</span></button>`
+      );
     })
-    .join('');
+    .join('') +
+    `<div id="attr-detail" class="attr-detail" aria-live="polite" hidden></div>`;
+}
+
+/** Rendered into #attr-detail when a chip is tapped. Exported for wiring. */
+export function attrDetailHtml(key: string, value: number): string {
+  const label = ATTR_SHORT[key] ?? key;
+  return (
+    `<div class="ad-head">${label} <b>${value}</b></div>` +
+    `<div class="ad-what">${ATTR_WHAT[key] ?? ''}</div>` +
+    `<div class="ad-mech"><span class="k">Effect</span> ${attrEffect(value)}</div>` +
+    `<div class="ad-mech"><span class="k">How</span> (value \u2212 10) \u00f7 40, averaged across the ` +
+    `card's tagged attributes, added to its success chance. 10 is neutral; below 10 is a penalty.</div>`
+  );
 }
 
 /**
@@ -350,6 +403,42 @@ export function renderLedger(campaign: Campaign, legacy?: LegacyState): void {
   // The other side of the same ledger. The Machine band shows what you built;
   // this shows who is building against you, with the record between you. A
   // rival you cannot see accumulating is indistinguishable from no rival.
+  // --- Every card you own this run, grouped with counts. There was no way to
+  //     see your own deck at all: the hand shows five cards and the rest was
+  //     invisible, which makes deckbuilding decisions guesswork.
+  // The PHYSICAL deck, not the ownership list. `state.deck` holds unique ids,
+  // so counting it reported 14 for a deck of 27 actual cards and hid every
+  // duplicate — and duplicates are most of what deck composition IS.
+  const owned = [
+    ...campaign.deck.draw,
+    ...campaign.deck.hand,
+    ...campaign.deck.discard
+  ];
+  const counts = new Map<string, number>();
+  for (const id of owned) counts.set(id, (counts.get(id) ?? 0) + 1);
+  const deckCount = owned.length;
+  const deckRows = [...counts.entries()]
+    .map(([id, n]) => {
+      const c = campaign.catalog.get(id);
+      const name = c?.n ?? id;
+      const ap = c?.cost.a ?? 0;
+      const cash = c?.cost.$ ? ` · $${c.cost.$}` : '';
+      const sig = c && isSignatureCard(campaign.state, c) ? '<span class="dl-sig">signature</span>' : '';
+      const risk = c ? c.risk.toLowerCase() : '';
+      return {
+        ap,
+        html:
+          `<div class="deck-row">` +
+          `<span class="dl-ap">${ap}<i>AP</i></span>` +
+          `<span class="dl-name">${escapeAttr(name)}${sig}</span>` +
+          `<span class="dl-meta">${escapeAttr(risk)}${cash}</span>` +
+          `<span class="dl-n">${n > 1 ? `\u00d7${n}` : ''}</span>` +
+          `</div>`
+      };
+    })
+    .sort((a, b) => a.ap - b.ap);
+  const deckListHtml = deckRows.map(r => r.html).join('') || '<div class="ledger-wide">Nothing yet.</div>';
+
   let rivalBand = '';
   // A HUMAN opponent is a different information problem to the synthetic one.
   // You are looking at a snapshot they published, possibly weeks ago, and the
@@ -425,11 +514,22 @@ export function renderLedger(campaign: Campaign, legacy?: LegacyState): void {
       </div>
       ${machineBand}
       ${rivalBand}
+      <div class="ledger-band ledger-deck">
+        <div class="ledger-band-label">Your deck</div>
+        <p class="deck-hint">Every card in your deck this run — ${deckCount} cards, ${counts.size} distinct. Drawn, in hand and discarded alike.</p>
+        <button type="button" class="btn" data-deck="toggle" aria-expanded="false"
+          aria-controls="deck-list">Show every card</button>
+        <div id="deck-list" class="deck-list" hidden>${deckListHtml}</div>
+      </div>
       <div class="ledger-band ledger-h2h">
         <div class="ledger-band-label">Head to head</div>
         <p class="h2h-hint">Play a real person. Copy your campaign and send it to them; paste
           theirs to make them your opposition. Only public facts travel — never your hand,
           your deck or your money.</p>
+        <label class="h2h-name">Your name
+          <input id="h2h-name" type="text" maxlength="32" spellcheck="false"
+            placeholder="e.g. Sam Ruiz" value="${escapeAttr(legacy?.name ?? '')}" />
+        </label>
         <div class="h2h-actions">
           <button type="button" class="btn" data-h2h="export">Copy my campaign</button>
           <button type="button" class="btn" data-h2h="import">Paste an opponent</button>

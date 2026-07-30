@@ -18,7 +18,8 @@ import {
   buildPhaseDraft,
   autoResolvePhaseDraft,
   resolvePhaseDraft,
-  injectIntoDrawPile
+  injectIntoDrawPile,
+  injectNearTop
 } from './deck.js';
 import { executePlay, isPlayable, type PlayOpts } from './play.js';
 import { cycleCard, cycleBlockReason, resetDiscards, type CycleResult } from './flow.js';
@@ -174,8 +175,12 @@ export function createCampaign(overrides: CreateCampaignOptions = {}): Campaign 
   const deckState = createDeckState();
   // Deal this persona their one signature card — exclusive (no other persona's
   // deck ever contains it) and reachable (shuffled into the draw pile).
+  // Near the TOP, not the bottom. This is the one card that is exclusively
+  // yours — the mechanical expression of the persona you chose — so it belongs
+  // in the opening hand, not at position 26 of 27 where it surfaced around
+  // week 6 and read as if it did not exist.
   const sigId = SIGNATURE_BY_PERSONA[setup.personaId];
-  if (sigId) injectIntoDrawPile(deckState, state, [sigId]);
+  if (sigId) injectNearTop(deckState, state, [sigId]);
   // Persist seed on state for multi-cycle deterministic re-file.
   if (stateOverrides.seed !== undefined) {
     state.seed = Number(stateOverrides.seed) >>> 0 || 1;

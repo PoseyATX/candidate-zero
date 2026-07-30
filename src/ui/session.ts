@@ -172,6 +172,19 @@ export function commitPlay(index: number, ground?: Ground, press?: boolean): voi
  * functions and nothing else.
  */
 
+/**
+ * Set the name your opponent sees. Persisted, so it survives the run.
+ *
+ * Without this the export sent "The Teacher" — your opponent faced a persona
+ * rather than a person, which undercuts the whole point of head-to-head.
+ */
+export function setPlayerName(name: string): void {
+  const clean = name.trim().slice(0, 32);
+  if (clean) legacy.name = clean;
+  else delete legacy.name;
+  saveLegacy(legacy);
+}
+
 /** Your campaign as the opposition your opponent will face. Public facts only. */
 export function exportMyProfile(): string {
   if (!campaign) return '';

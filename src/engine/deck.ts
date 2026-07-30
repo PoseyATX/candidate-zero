@@ -200,6 +200,35 @@ export function injectIntoDrawPile(deck: DeckState, state: GameState, cardIds: s
   }
 }
 
+/**
+ * Inject near the TOP of the draw pile, so the card is felt early.
+ *
+ * `injectIntoDrawPile` pushes to the end, which is right for a mid-run reward
+ * but wrong for anything that is meant to be part of who you are on day one.
+ * The persona signature card was landing at position 26 of 27 — median week 6
+ * of an 8-week primary, by which point the ballot fight is largely decided. It
+ * was drawn every single run and still read as "never implemented", because it
+ * arrived after it could matter.
+ *
+ * Placed at a seeded random position in the first `window` cards rather than
+ * always first: it should feel like part of the opening hand, not like a
+ * scripted tutorial beat.
+ */
+export function injectNearTop(
+  deck: DeckState,
+  state: GameState,
+  cardIds: string[],
+  window = 5
+): void {
+  if (!state.deck) state.deck = [];
+  for (const id of cardIds) {
+    if (!state.deck.includes(id)) state.deck.push(id);
+    const span = Math.min(window, deck.draw.length);
+    const at = span > 0 ? Math.floor(random() * span) : 0;
+    deck.draw.splice(at, 0, id);
+  }
+}
+
 /** Commit a draft pick into owned + physical draw pile (when deck provided). */
 export function resolvePhaseDraft(
   state: GameState,

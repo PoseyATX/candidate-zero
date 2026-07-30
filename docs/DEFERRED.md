@@ -29,6 +29,15 @@ Status values: **OPEN** · **IN PROGRESS** · **DONE** · **KILLED** (owner's ca
 | A10 | **Play result covered the cards and auto-faded.** | this session | DONE |
 | A11 | **Dossier emblem plate pushed the description below the fold.** Flagged with "you asked for text" rather than fixed; fixed in the layout pass. | this session | DONE |
 
+## A-bis. Reported by the owner, 2026-07-30
+
+| # | Item | Status |
+|---|---|---|
+| D1 | **Persona signature cards "never drawn".** They were drawn every run — `injectIntoDrawPile` PUSHES, so the one card exclusive to your persona sat at position 26 of 27 and first surfaced at **median week 6** of an 8-week primary, unmarked and indistinguishable from every other card. Implemented, invisible, therefore non-existent. Now injected near the top (median week 1) and badged **Signature**. | DONE |
+| D2 | **No way to see your own deck.** You saw five cards in hand and guessed at the rest. Dossier now lists the physical deck with duplicate counts. | DONE |
+| D3 | **Attributes explained nothing.** The dossier showed "CHA 14" and nothing anywhere said what 14 bought. Tapping a chip now gives the engine's real arithmetic. | DONE |
+| D4 | **Export sent a persona, not a person.** Your opponent faced "The Teacher". There is now a name field, persisted. | DONE |
+
 ## B. Things I never surfaced at all but knew about
 
 | # | Item | Status |
