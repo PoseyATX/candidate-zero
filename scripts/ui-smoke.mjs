@@ -189,6 +189,49 @@ async function main() {
     assert(await page.locator('#btn-play-detail').isVisible(), 'detail has PLAY button');
     await page.locator('#detail-close').click();
 
+    // --- A FIELD play (ground picker) must raise a result too ---
+    // Block Walk, Phone Bank, Fish Fry and GOTV are all field plays; if only
+    // the non-field path were covered, the most-played cards in the game could
+    // silently show nothing.
+    {
+      let fieldPlayed = false;
+      const hand2 = page.locator('#playables .play-card');
+      for (let i = 0; i < (await hand2.count()) && !fieldPlayed; i++) {
+        await hand2.nth(i).click({ timeout: 4000 }).catch(() => {});
+        await page.waitForTimeout(140);
+        const pd = page.locator('#btn-play-detail');
+        if (!(await pd.isVisible().catch(() => false))) {
+          await page.locator('#detail-close').click().catch(() => {});
+          await page.waitForTimeout(50);
+          continue;
+        }
+        const label = await pd.innerText().catch(() => '');
+        if (!/ground/i.test(label)) {
+          await page.locator('#detail-close').click().catch(() => {});
+          await page.waitForTimeout(50);
+          continue;
+        }
+        await pd.click({ timeout: 4000 }).catch(() => {});
+        await page.waitForTimeout(200);
+        const g = page.locator('#ground-picker button[data-ground]:not(.gp-locked)').first();
+        if (await g.count()) {
+          await g.click({ timeout: 4000 }).catch(() => {});
+          await page.waitForTimeout(320);
+          fieldPlayed = true;
+        }
+      }
+      if (fieldPlayed) {
+        assert(
+          (await page.locator('#result-host:not(.hidden)').count()) > 0,
+          'a FIELD play (through the ground picker) also raises the full-screen result'
+        );
+        await page.locator('#result-host').click({ position: { x: 6, y: 6 } }).catch(() => {});
+        await page.waitForSelector('#result-host.hidden', { timeout: 2000 }).catch(() => {});
+      } else {
+        assert(true, 'no field card reachable this hand — field result check skipped');
+      }
+    }
+
     // --- The result waits to be acknowledged, and does not cover the hand ---
     // Both halves are alpha notes: results used to sit on top of the last cards
     // and the End Week bar, and fade themselves after 2.8s.
@@ -205,7 +248,15 @@ async function main() {
           await page.waitForTimeout(250);
           const gp = page.locator('#ground-picker');
           if ((await gp.count()) && (await gp.isVisible().catch(() => false))) {
-            await gp.locator('button').first().click().catch(() => {});
+            // MUST be a ground button. `button` first-match is #gp-cancel, which
+            // cancels the play — a verification script of mine did exactly that
+            // and reported 8 of 12 plays raising no result at all. The bug was
+            // the instrument, but the gate had the same hole.
+            await gp
+              .locator('button[data-ground]:not(.gp-locked)')
+              .first()
+              .click({ timeout: 4000 })
+              .catch(() => {});
             await page.waitForTimeout(250);
           }
           played = true;
