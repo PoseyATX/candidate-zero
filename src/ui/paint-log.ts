@@ -243,10 +243,48 @@ function armResultDismiss(host: HTMLElement): void {
       dismiss();
     }
   }
-  host.addEventListener('pointerdown', dismiss);
+  host.addEventListener('pointerdown', e => {
+    // preventDefault stops the focus/selection side effects of a raw press.
+    e.preventDefault();
+    swallowNextClick();
+    dismiss();
+  });
   window.addEventListener('keydown', onKey, true);
   // Focus the affordance so a keyboard or switch user lands on it directly.
   go?.focus({ preventScroll: true });
+}
+
+/**
+ * Eat the click that follows the dismissing press.
+ *
+ * THE BUG THIS FIXES: dismissal runs on `pointerdown`, which feels instant —
+ * but the browser still delivers `pointerup` and then `click`, and by then the
+ * overlay has gone (`pointer-events: none` during the exit fade). So the click
+ * landed on whatever was underneath, and tapping Continue opened a card behind
+ * the result. Touch makes it worse: it can emit a ghost click up to ~300ms
+ * later, after the overlay is fully removed.
+ *
+ * Capture phase on window, so it fires before anything else can react, and it
+ * removes itself on the first click or after 700ms — long enough for the ghost,
+ * short enough that a deliberate second tap still works.
+ */
+function swallowNextClick(): void {
+  const eat = (e: Event): void => {
+    e.stopPropagation();
+    e.preventDefault();
+    cleanup();
+  };
+  const cleanup = (): void => {
+    window.clearTimeout(timer);
+    window.removeEventListener('click', eat, true);
+    window.removeEventListener('pointerup', stopOnly, true);
+  };
+  // pointerup only needs stopping, not cancelling — cancelling it can suppress
+  // the click we actually want to eat on some engines.
+  const stopOnly = (e: Event): void => e.stopPropagation();
+  const timer = window.setTimeout(cleanup, 700);
+  window.addEventListener('click', eat, true);
+  window.addEventListener('pointerup', stopOnly, true);
 }
 
 export function renderLog(campaign: Campaign): void {

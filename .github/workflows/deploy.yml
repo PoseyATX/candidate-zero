@@ -1,9 +1,28 @@
 name: Deploy to GitHub Pages
 
+# TWO SITES, ONE PAGES DEPLOYMENT.
+#
+#   /candidate-zero/           <- main. What players see. Only ever built from main.
+#   /candidate-zero/preview/   <- PREVIEW_BRANCH. Work in progress, visible
+#                                 without merging anything into main.
+#
+# Why this exists: finished, gated work sat on a branch for a long stretch while
+# main went stale, so the owner was playing a build that had none of it and
+# reasonably concluded nothing had been fixed. A branch you cannot see is
+# indistinguishable from work that was never done. Pushing to EITHER branch now
+# rebuilds BOTH targets, so the preview URL is always current and main is never
+# accidentally shipped from a feature branch.
+#
+# GitHub Pages allows one deployment per repository, so both builds are
+# assembled into a single artifact rather than deployed separately.
+
 on:
   push:
-    branches: [ main ]
+    branches: [ main, claude/promo-card-art-fix-qdurxc ]
   workflow_dispatch:
+
+env:
+  PREVIEW_BRANCH: claude/promo-card-art-fix-qdurxc
 
 permissions:
   contents: read
@@ -18,8 +37,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      # ---- LIVE: always built from main, whichever branch triggered the run ----
+      - name: Checkout main
         uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -28,16 +50,54 @@ jobs:
           node-version: '22'
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: Install dependencies (main)
         run: npm ci
 
-      - name: Build
+      - name: Build main
         run: npm run build
+
+      - name: Stage main at the site root
+        run: |
+          mkdir -p "$RUNNER_TEMP/site"
+          cp -r dist/. "$RUNNER_TEMP/site/"
+
+      # ---- PREVIEW: the working branch, served from /preview/ ----
+      - name: Check whether the preview branch exists
+        id: preview
+        run: |
+          if git ls-remote --exit-code --heads origin "$PREVIEW_BRANCH" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No preview branch ($PREVIEW_BRANCH) — publishing main only."
+          fi
+
+      - name: Checkout preview branch
+        if: steps.preview.outputs.exists == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.PREVIEW_BRANCH }}
+          clean: true
+
+      - name: Install dependencies (preview)
+        if: steps.preview.outputs.exists == 'true'
+        run: npm ci
+
+      # --base MUST match the subpath or every asset URL 404s.
+      - name: Build preview
+        if: steps.preview.outputs.exists == 'true'
+        run: npx vite build --base=/candidate-zero/preview/
+
+      - name: Stage preview at /preview/
+        if: steps.preview.outputs.exists == 'true'
+        run: |
+          mkdir -p "$RUNNER_TEMP/site/preview"
+          cp -r dist/. "$RUNNER_TEMP/site/preview/"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist
+          path: ${{ runner.temp }}/site
 
   deploy:
     environment:

@@ -3083,3 +3083,151 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   22% { opacity: 1; }
   100% { opacity: 0; transform: rotate(var(--a)) translateY(-42vmin) scale(1); }
 }
+
+/* ======================================================================
+   CEREMONY OVERLAYS — one visual language for every full-screen moment.
+
+   The play result got the full-screen treatment first and it worked, so the
+   act hand-off and the outside-weather event now speak the same way: dark
+   radial ground, coloured wash, a slammed-in Cinzel headline, a rule that
+   opens, body copy that rises, and one Continue.
+
+   They keep their own ids, markup and behaviour — only the language is
+   shared. Each surface brings its own --rc (colour channel), so an act
+   hand-off still reads as its act and a world event still reads as weather.
+   ====================================================================== */
+.act-splash,
+.outside-weather {
+  background: radial-gradient(ellipse 120% 90% at 50% 42%, #241a0e 0%, #150e06 62%, #0b0703 100%);
+  animation: result-in 0.22s ease-out both;
+  overflow: hidden;
+}
+/* Colour channel per surface — the wash and the headline take it from here. */
+.act-splash-primary { --rc: #e8927f; }
+.act-splash-general { --rc: #9fc0d8; }
+.act-splash-session { --rc: #f0d878; }
+.outside-weather { --rc: #a9c4d1; }
+
+/* The panel stops being a plaque and becomes the core column, like the
+   result's. The old bordered box read as a form; this reads as a moment. */
+.act-splash-panel,
+.outside-weather-panel {
+  position: relative;
+  z-index: 2;
+  width: min(560px, 100%);
+  max-width: min(560px, 100%);
+  background: none;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  padding: 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+}
+/* The wash, without needing a new element in either surface's markup. */
+.act-splash::before,
+.outside-weather::before {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+  opacity: 0.2;
+  background: radial-gradient(circle at 50% 44%, var(--rc, #c9a84c) 0%, transparent 46%);
+  animation: wash-pulse 0.5s ease-out both;
+}
+
+/* Eyebrow — "Act I", "Outside · a world event". */
+.act-splash-num,
+.outside-weather-tag {
+  margin: 0;
+  font-family: Cinzel, serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--rc, #b08d3e);
+  animation: rise 0.36s ease-out both;
+}
+
+/* Headline — the result's stamp treatment, sized for a sentence rather than
+   a single word, so a long act title still fits a phone. */
+.act-splash-title,
+.outside-weather-title {
+  margin: 0;
+  font-family: Cinzel, serif;
+  font-weight: 700;
+  font-size: clamp(1.5rem, 7.5vw, 2.4rem);
+  line-height: 1.08;
+  letter-spacing: 0.03em;
+  color: var(--rc, #f0d878);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.55),
+    0 0 34px color-mix(in srgb, var(--rc, #c9a84c) 45%, transparent);
+  animation: stamp-slam 0.42s cubic-bezier(0.2, 1.5, 0.3, 1) both;
+}
+/* The rule, drawn rather than added to markup. */
+.act-splash-title::after,
+.outside-weather-title::after {
+  content: '';
+  display: block;
+  width: 62%;
+  height: 2px;
+  margin: 0.55rem auto 0;
+  background: linear-gradient(90deg, transparent, var(--rc, #c9a84c), transparent);
+  animation: rule-open 0.42s 0.14s ease-out both;
+}
+
+.act-splash-body,
+.outside-weather-body {
+  margin: 0;
+  text-align: center;
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-size: 1.02rem;
+  line-height: 1.45;
+  color: #e8d9b5;
+  max-width: 34ch;
+  animation: rise 0.4s 0.18s ease-out both;
+}
+.act-splash-hint,
+.outside-weather-hint {
+  margin: 0;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #b08d3e;
+  max-width: 34ch;
+  animation: rise 0.4s 0.3s ease-out both;
+}
+
+/* One Continue, identical everywhere. */
+#act-splash-ok,
+#outside-weather-ok {
+  margin-top: 0.9rem;
+  min-height: 44px;
+  padding: 0.6rem 2rem;
+  font-family: Cinzel, serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #f0e4c4;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--rc, #c9a84c);
+  border-radius: 999px;
+  animation: rise 0.4s 0.44s ease-out both;
+}
+#act-splash-ok:hover,
+#outside-weather-ok:hover {
+  background: color-mix(in srgb, var(--rc, #c9a84c) 22%, transparent);
+  color: #fff6e2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .act-splash,
+  .act-splash *,
+  .act-splash::before,
+  .outside-weather,
+  .outside-weather *,
+  .outside-weather::before {
+    animation: none !important;
+  }
+}

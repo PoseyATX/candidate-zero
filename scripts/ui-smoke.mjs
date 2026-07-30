@@ -70,7 +70,16 @@ async function main() {
     if (!(await waitForServer(BASE))) throw new Error(`preview server never became ready at ${BASE}`);
 
     browser = await chromium.launch();
-    const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    // hasTouch, because this is a phone-first game and touch is not a synonym
+    // for mouse. The result's click-through bug (tapping Continue opened the
+    // card behind it) reproduced ONLY under touch — a desktop click never
+    // triggered it, so the gate was green while the bug was live in players'
+    // hands.
+    const page = await browser.newPage({
+      viewport: { width: 390, height: 844 },
+      hasTouch: true,
+      isMobile: true
+    });
     const consoleErrors = [];
     page.on('pageerror', (e) => consoleErrors.push(`pageerror: ${e.message}`));
     page.on('console', (m) => {
@@ -303,12 +312,28 @@ async function main() {
           (await page.locator('#result-host:not(.hidden)').count()) > 0,
           'the result is still there after 3.4s — it waits for the player'
         );
-        // One click anywhere clears it, and that click must not also open a card.
-        await page.locator('#result-host').click({ position: { x: 6, y: 6 } });
-        await page.waitForTimeout(300);
+        // CLICK-THROUGH. Dismissal runs on pointerdown, so the following click
+        // used to land on whatever was underneath — tapping Continue opened a
+        // card behind the result. This must click DIRECTLY OVER A CARD and over
+        // the Continue button; the old check tapped the empty (6,6) corner and
+        // passed while the bug was live.
+        const goBox = await page.locator('#result-go').boundingBox().catch(() => null);
+        if (goBox) {
+          // TAP the Continue button, the way a player does. Dismissal runs on
+          // pointerdown, so the browser still delivers the click afterwards —
+          // it used to land on the card underneath and open its dossier.
+          await page.touchscreen.tap(goBox.x + goBox.width / 2, goBox.y + goBox.height / 2);
+        } else {
+          await page.locator('#result-host').click({ position: { x: 6, y: 6 } });
+        }
+        await page.waitForTimeout(450);
         assert(
           (await page.locator('#result-host:not(.hidden)').count()) === 0,
           'one click clears the result'
+        );
+        assert(
+          !(await page.locator('#card-detail:not(.hidden)').isVisible().catch(() => false)),
+          'tapping Continue does NOT click through to the card underneath'
         );
         assert(
           !(await page.locator('#card-detail').isVisible().catch(() => false)),
