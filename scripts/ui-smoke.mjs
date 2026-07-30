@@ -188,6 +188,134 @@ async function main() {
     assert(await page.locator('#detail-desc').innerText().then(t => t.length > 10), 'detail shows description text');
     assert(await page.locator('#btn-play-detail').isVisible(), 'detail has PLAY button');
     await page.locator('#detail-close').click();
+
+    // --- A FIELD play (ground picker) must raise a result too ---
+    // Block Walk, Phone Bank, Fish Fry and GOTV are all field plays; if only
+    // the non-field path were covered, the most-played cards in the game could
+    // silently show nothing.
+    {
+      let fieldPlayed = false;
+      const hand2 = page.locator('#playables .play-card');
+      for (let i = 0; i < (await hand2.count()) && !fieldPlayed; i++) {
+        await hand2.nth(i).click({ timeout: 4000 }).catch(() => {});
+        await page.waitForTimeout(140);
+        const pd = page.locator('#btn-play-detail');
+        if (!(await pd.isVisible().catch(() => false))) {
+          await page.locator('#detail-close').click().catch(() => {});
+          await page.waitForTimeout(50);
+          continue;
+        }
+        const label = await pd.innerText().catch(() => '');
+        if (!/ground/i.test(label)) {
+          await page.locator('#detail-close').click().catch(() => {});
+          await page.waitForTimeout(50);
+          continue;
+        }
+        await pd.click({ timeout: 4000 }).catch(() => {});
+        await page.waitForTimeout(200);
+        const g = page.locator('#ground-picker button[data-ground]:not(.gp-locked)').first();
+        if (await g.count()) {
+          await g.click({ timeout: 4000 }).catch(() => {});
+          await page.waitForTimeout(320);
+          fieldPlayed = true;
+        }
+      }
+      if (fieldPlayed) {
+        assert(
+          (await page.locator('#result-host:not(.hidden)').count()) > 0,
+          'a FIELD play (through the ground picker) also raises the full-screen result'
+        );
+        await page.locator('#result-host').click({ position: { x: 6, y: 6 } }).catch(() => {});
+        await page.waitForSelector('#result-host.hidden', { timeout: 2000 }).catch(() => {});
+      } else {
+        assert(true, 'no field card reachable this hand — field result check skipped');
+      }
+    }
+
+    // --- The result waits to be acknowledged, and does not cover the hand ---
+    // Both halves are alpha notes: results used to sit on top of the last cards
+    // and the End Week bar, and fade themselves after 2.8s.
+    {
+      await page.waitForTimeout(60);
+      const hand = page.locator('#playables .play-card');
+      let played = false;
+      for (let i = 0; i < (await hand.count()) && !played; i++) {
+        await hand.nth(i).click();
+        await page.waitForTimeout(150);
+        const pd = page.locator('#btn-play-detail');
+        if (await pd.isVisible().catch(() => false)) {
+          await pd.click();
+          await page.waitForTimeout(250);
+          const gp = page.locator('#ground-picker');
+          if ((await gp.count()) && (await gp.isVisible().catch(() => false))) {
+            // MUST be a ground button. `button` first-match is #gp-cancel, which
+            // cancels the play — a verification script of mine did exactly that
+            // and reported 8 of 12 plays raising no result at all. The bug was
+            // the instrument, but the gate had the same hole.
+            await gp
+              .locator('button[data-ground]:not(.gp-locked)')
+              .first()
+              .click({ timeout: 4000 })
+              .catch(() => {});
+            await page.waitForTimeout(250);
+          }
+          played = true;
+        } else {
+          await page.locator('#detail-close').click().catch(() => {});
+          await page.waitForTimeout(60);
+        }
+      }
+      assert(played, 'a card resolved for the result-toast check');
+      if (played) {
+        await page.waitForTimeout(120);
+        assert(
+          (await page.locator('#result-host:not(.hidden)').count()) > 0,
+          'playing a card raises the full-screen result'
+        );
+        // Full screen means full screen: it must actually cover the viewport,
+        // and it must carry the stamp and a Continue affordance.
+        const geo = await page.evaluate(() => {
+          const h = document.getElementById('result-host');
+          if (!h || h.classList.contains('hidden')) return null;
+          const r = h.getBoundingClientRect();
+          return {
+            w: Math.round(r.width),
+            h: Math.round(r.height),
+            vw: window.innerWidth,
+            vh: window.innerHeight,
+            stamp: (h.querySelector('.result-stamp')?.textContent ?? '').trim(),
+            hasGo: !!h.querySelector('.result-go')
+          };
+        });
+        assert(!!geo, 'the result host is live');
+        assert(
+          !!geo && geo.w >= geo.vw && geo.h >= geo.vh,
+          `the result fills the screen (${geo?.w}x${geo?.h} vs ${geo?.vw}x${geo?.vh})`
+        );
+        assert(
+          !!geo && /BREAKTHROUGH|GAIN|SETBACK|DISASTER/.test(geo.stamp),
+          `the stamp is the headline (${geo?.stamp})`
+        );
+        assert(!!geo && geo.hasGo, 'and it offers an explicit Continue');
+        // Must NOT self-dismiss: it is an acknowledgement.
+        await page.waitForTimeout(3400);
+        assert(
+          (await page.locator('#result-host:not(.hidden)').count()) > 0,
+          'the result is still there after 3.4s — it waits for the player'
+        );
+        // One click anywhere clears it, and that click must not also open a card.
+        await page.locator('#result-host').click({ position: { x: 6, y: 6 } });
+        await page.waitForTimeout(300);
+        assert(
+          (await page.locator('#result-host:not(.hidden)').count()) === 0,
+          'one click clears the result'
+        );
+        assert(
+          !(await page.locator('#card-detail').isVisible().catch(() => false)),
+          'and that click did not fall through and open a card'
+        );
+      }
+    }
     await page.waitForTimeout(40);
     assert(
       (await page.locator('.mbottom-nav').isVisible()) &&
@@ -229,7 +357,31 @@ async function main() {
       const d = page.locator('#card-detail:not(.hidden)');
       return (await d.count()) > 0 && (await d.isVisible().catch(() => false));
     };
+    /**
+     * A play result now WAITS for the player instead of fading itself — it is
+     * an acknowledgement, not a notification (alpha note: results were covering
+     * the cards and auto-vanishing before you read them). A transparent catcher
+     * makes the next click count as "read", so the driver has to click out of
+     * it exactly as a player does. Without this every play after the first one
+     * times out on the catcher.
+     */
+    let resultsAcknowledged = 0;
+    const clearResult = async () => {
+      const host = page.locator('#result-host:not(.hidden)');
+      if (await host.count()) {
+        await host.click({ position: { x: 6, y: 6 } }).catch(() => {});
+        // Wait for it to actually be gone, not just for the click to land — the
+        // exit animation takes 200ms and this used to race it.
+        await page
+          .waitForSelector('#result-host.hidden', { timeout: 2_000 })
+          .catch(() => {});
+        resultsAcknowledged++;
+        return true;
+      }
+      return false;
+    };
     const closeOverlays = async () => {
+      await clearResult();
       if (await detailOpen()) {
         await page.locator('#detail-close').click().catch(() => {});
         await page.waitForTimeout(30);
@@ -240,6 +392,7 @@ async function main() {
       }
     };
     for (let iter = 0; iter < 500; iter++) {
+      await clearResult();
       if (await page.locator('#terminal').isVisible()) {
         reachedTerminal = true;
         break;

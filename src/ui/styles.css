@@ -40,7 +40,12 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  gap: 1rem;
+  /* WCAG 1.4.10 (Reflow): at 320px the masthead + both buttons exceeded the
+     viewport and pushed .top-actions to right:326, so EVERY screen scrolled
+     horizontally. Wrapping here and on .top-actions costs a line on the
+     narrowest phones and buys the whole app's reflow conformance. */
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
   border-top: 3px double var(--gold);
   border-bottom: 3px double var(--gold);
   padding: 0.6rem 0.75rem;
@@ -64,8 +69,16 @@ h1 {
   color: var(--parchment);
 }
 
+.top > div {
+  min-width: 0; /* let the masthead shrink instead of forcing overflow */
+}
+
 .top-actions {
   display: flex;
+  /* THIS is the line that actually clears the 320px overflow — verified by
+     removing it and watching a11y:layout go red on four screens. Letting the
+     button pair stack is what frees the width; .top wrapping alone did not. */
+  flex-wrap: wrap;
   gap: 0.6rem;
   align-items: center;
 }
@@ -78,7 +91,8 @@ h1 {
 .seed-label input {
   width: 7rem;
   margin-left: 0.35rem;
-  padding: 0.3rem 0.4rem;
+  min-height: 44px; /* text fields are tap targets too */
+  padding: 0.3rem 0.5rem;
   border: 1px solid var(--gold-dim);
   background: var(--walnut-2);
   color: var(--parchment);
@@ -94,6 +108,13 @@ h1 {
   border: 1px solid var(--gold-dim);
   background: transparent;
   color: var(--gold);
+  /* Every secondary button in the app inherits this. They measured 27-42px
+     tall; a thumb wants 44 (WCAG 2.5.5). display:inline-flex so min-height
+     actually centres the label instead of just padding the box. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
   padding: 0.5rem 0.95rem;
   transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
@@ -118,7 +139,7 @@ h1 {
   display: none;
   position: sticky;
   top: 0;
-  z-index: 30;
+  z-index: var(--z-hud);
   align-items: center;
   gap: 0.8rem;
   flex-wrap: wrap;
@@ -162,7 +183,7 @@ h1 {
 
 .chip {
   font-family: Cinzel, serif;
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   border: 1px solid var(--gold-dim);
@@ -226,7 +247,7 @@ h1 {
 
 .ledger-band-label {
   font-family: Cinzel, serif;
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   /* a11y: --gold-dim was 3.07:1 on walnut-2 (< AA 4.5); --gold is 5.46:1 */
@@ -274,7 +295,7 @@ h1 {
 }
 .attr-k {
   font-family: Cinzel, serif;
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   letter-spacing: 0.08em;
   color: var(--gold);
   text-transform: uppercase;
@@ -347,7 +368,13 @@ h1 {
   }
   .ledger-identity {
     position: sticky;
-    top: 2.6rem; /* under sticky HUD */
+    /* MUST be 0. This was 2.6rem back when the PAGE scrolled under a sticky
+       HUD; the scroll container is now .mtab-panel, which starts below the HUD
+       already. A non-zero offset here buys nothing and costs twice: it opens a
+       42px blank gap at the top of the dossier at rest, and it shoves the band
+       down over the Force band below, permanently hiding that band's label and
+       its whole first row (Contacts / Name ID). */
+    top: 0;
     z-index: 25;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
   }
@@ -390,7 +417,7 @@ h1 {
   white-space: nowrap;
 }
 .hud-who-issue {
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   letter-spacing: 0.03em;
   color: var(--gold-dim, #a88b4a);
   max-width: 7.5rem;
@@ -401,7 +428,7 @@ h1 {
   font-family: Inter, system-ui, sans-serif;
 }
 .hud-sub {
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--gold-dim);
@@ -440,7 +467,7 @@ h1 {
 .goal-row:first-child { margin-top: 0; }
 .goal-label {
   font-family: Cinzel, serif;
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -481,7 +508,7 @@ body.dossier-open {
 .card-detail {
   position: fixed;
   inset: 0;
-  z-index: 110;
+  z-index: var(--z-dossier);
   display: flex;
   align-items: stretch;
   justify-content: center;
@@ -527,7 +554,13 @@ body.dossier-open {
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(201, 162, 77, 0.45);
   border-radius: 999px;
-  padding: 0.4rem 0.85rem;
+  /* Dismissing a modal must not need a precise tap: was 73x27. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.4rem 0.95rem;
   cursor: pointer;
 }
 .dossier-close:hover,
@@ -605,6 +638,21 @@ body.dossier-open {
   object-fit: cover;
   object-position: center;
   display: block;
+}
+
+/* Phone: the emblem plate is decoration and the description is the reason the
+   panel exists. At 16rem/5:4 it ate ~230px before a single word of text, which
+   put the payoff line below the fold once descriptions got longer. Half-height
+   keeps the flourish and lifts the first two sentences onto the first screen.
+   (Full-bleed promo art is exempt below — there the art IS the card.) */
+@media (max-width: 800px) {
+  .dossier-art {
+    margin: 0.15rem 0 0.6rem;
+  }
+  .dossier-art-frame:not(.dossier-art-full) {
+    width: min(58%, 9.5rem);
+    aspect-ratio: 3 / 2;
+  }
 }
 
 .dossier-art-frame.risk-safe { box-shadow: inset 0 0 0 3px rgba(46, 107, 48, 0.45), 0 8px 24px rgba(0, 0, 0, 0.4); }
@@ -1194,7 +1242,7 @@ body.dossier-open {
   text-align: center;
   font-family: Cinzel, serif;
   font-weight: 700;
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   line-height: 1.1;
   letter-spacing: 0.04em;
   color: var(--oxblood);
@@ -1216,7 +1264,7 @@ body.dossier-open {
   top: 50%;
   transform: translate(-50%, -50%) rotate(-12deg);
   font-family: Cinzel, serif;
-  font-size: 0.6rem;
+  font-size: 0.69rem;
   font-weight: 700;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -1343,7 +1391,7 @@ body.dossier-open {
 .act-splash {
   position: fixed;
   inset: 0;
-  z-index: 80;
+  z-index: var(--z-splash);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1403,7 +1451,7 @@ body.dossier-open {
 .outside-weather {
   position: fixed;
   inset: 0;
-  z-index: 85; /* above act splash if both queue (weather first in flow) */
+  z-index: var(--z-weather); /* above act splash if both queue (weather first in flow) */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1473,7 +1521,7 @@ body.dossier-open {
   color: var(--gold);
 }
 .alpha-tag.stage-tag {
-  font-size: 0.55rem;
+  font-size: 0.65rem;
   vertical-align: middle;
 }
 .alpha-tag.stage-tag-primary {
@@ -1539,7 +1587,7 @@ body.dossier-open {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-family: Cinzel, serif;
-  font-size: 0.6rem;
+  font-size: 0.69rem;
 }
 .play-card .risk-tag::before {
   content: '';
@@ -1557,7 +1605,7 @@ body.dossier-open {
 }
 
 .play-card .attrs {
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   letter-spacing: 0.14em;
   color: var(--oxblood);
   text-transform: uppercase;
@@ -1655,6 +1703,11 @@ body.dossier-open {
   opacity: 0.9;
   letter-spacing: inherit;
   text-transform: none;
+  /* Was 92x12 — under even the 24px minimum of WCAG 2.5.8. Padding gives it a
+     real hit area without moving the text. */
+  display: inline-block;
+  min-height: 24px;
+  padding: 0.35rem 0.2rem;
 }
 
 .foot .kofi:hover,
@@ -1672,7 +1725,7 @@ body.dossier-open {
 .ground-picker {
   position: fixed;
   inset: 0;
-  z-index: 60;
+  z-index: var(--z-picker);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1732,7 +1785,7 @@ body.dossier-open {
   color: var(--parchment);
 }
 .gp-tag {
-  font-size: 0.55rem;
+  font-size: 0.65rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--gold);
@@ -1752,7 +1805,7 @@ body.dossier-open {
 }
 .gp-odds-best { color: var(--gold); }
 .gp-pen {
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   font-weight: 500;
   color: #d98a6a;
   letter-spacing: 0.02em;
@@ -1760,7 +1813,7 @@ body.dossier-open {
 .gp-meters { display: flex; flex-direction: column; gap: 0.28rem; }
 .gp-meter { display: grid; grid-template-columns: 1.7rem 1fr 1.6rem; align-items: center; gap: 0.35rem; }
 .gp-mlabel {
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--parchment-dim);
@@ -1874,7 +1927,7 @@ body.dossier-open {
 .title-id-label {
   display: block;
   font-family: Cinzel, serif;
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--gold);
@@ -1910,7 +1963,7 @@ body.dossier-open {
   display: inline-block;
   vertical-align: 0.35em;
   font-family: Cinzel, serif;
-  font-size: 0.5rem;
+  font-size: 0.64rem;
   font-weight: 600;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -1989,68 +2042,31 @@ body.dossier-open {
    (assigned in main.ts renderDraft) — no separate rule needed here. */
 
 /* Fixed toast stack — Phase 6; never reflows card grids */
-.toast-host {
-  position: fixed;
-  left: 50%;
-  top: 12%;
-  transform: translateX(-50%);
-  z-index: 80;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.45rem;
-  width: min(420px, 92vw);
-  pointer-events: none;
-}
-.toast {
-  width: 100%;
-  background: linear-gradient(175deg, #efe3c6, #e0cfa9);
-  color: var(--ink);
-  border: 1px solid var(--gold);
-  outline: 2px solid var(--gold-dim);
-  outline-offset: 2px;
-  padding: 0.7rem 1rem;
-  text-align: center;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
-  animation: toast-in 0.35s ease-out both;
-  pointer-events: none;
-}
-.toast-stamp {
-  font-family: Cinzel, serif;
-  font-size: 0.78rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  margin-bottom: 0.15rem;
-  color: #4a3b24;
-}
-.toast-body {
-  font-size: 0.88rem;
-  line-height: 1.35;
-  color: #3a2e1c;
-}
-.toast-spark { outline-color: var(--gold); }
-.toast-hit { outline-color: var(--sage); }
-.toast-thump { outline-color: var(--gold-dim); }
-.toast-crash {
-  background: linear-gradient(175deg, #f0cfc8, #e0b0a6);
-  outline-color: var(--oxblood-bright);
-}
-.toast-whisper {
-  background: linear-gradient(175deg, #d4e0e8, #c0d0dc);
-  outline-color: #3d5a68;
-}
-.toast-out {
-  animation: toast-out 0.28s ease-in forwards;
+/* ============================================================
+   OVERLAY LAYERS — one scale, declared once.
+   These were scattered literals and had drifted into a tie:
+   .act-splash and .toast-host were BOTH z-index 80, so which
+   one covered the other came down to DOM order. A transient
+   notice must never outrank a dialog the player has to answer.
+   ============================================================ */
+:root {
+  --z-hud: 30;
+  --z-toast: 70;      /* transient, below every dialog */
+  --z-picker: 100;
+  --z-result: 102;   /* the play result: a dialog, above the picker */
+  --z-splash: 104;
+  --z-weather: 106;   /* weather queues over the act splash */
+  --z-dossier: 110;
 }
 
-@keyframes toast-in {
-  from { transform: translateY(-10px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-@keyframes toast-out {
-  from { opacity: 1; transform: translateY(0); }
-  to { opacity: 0; transform: translateY(-8px); }
-}
+/* Anchored above the End Week footer, not at top:12%.
+   At the top it sat directly on the act strip, the goal strip and the phase
+   draft heading — the three things a player reads to know what to do. Down
+   here it briefly covers the tail of the card list instead, which is where
+   the thumb already is after a tap. One toast at a time (see paint-log.ts),
+   so this never becomes a stack. */
+
+
 
 /* Setup as nameplate fill — shared materials with title */
 .nameplate-panel {
@@ -2208,10 +2224,13 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
      muted-but-legible inactive; active state is --gold + underline. */
   color: var(--parchment-dim);
   font-family: 'Inter', sans-serif;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  /* The most-tapped control in the game was 34px tall. 44px is the platform
+     minimum for a thumb (WCAG 2.5.5); this is the one place it matters most. */
+  min-height: 44px;
   padding: 0.7rem 0;
   cursor: pointer;
 }
@@ -2225,7 +2244,7 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   display: flex;
   align-items: flex-end;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 100;
+  z-index: var(--z-picker);
 }
 #ground-picker .gp-panel {
   width: 100%;
@@ -2282,7 +2301,7 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
      the a11y gate caught it across all 7 unlocked grounds. This is the same
      light sage already used by .chip-field. */
   color: #b9d1a9;
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   font-style: italic;
   margin-top: 0.1rem;
 }
@@ -2291,26 +2310,24 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
    card means nothing at a glance. */
 .up-mark { color: var(--gold); margin-right: 0.2rem; }
 .draft-upgrade { outline-color: var(--gold) !important; }
-/* Rides the top of the art, not the bottom of the card: the card face is a
-   flex column ending in .cost-seal, and a bottom-anchored banner sat straight
-   on top of the price. The art plate is the only region with slack. */
+/* Was an absolute overlay across the top of the portrait art. In a 64px row
+   that lands straight on the card's name, so it is an inline chip now — it sits
+   in the row body under the title, where it reads as a label on the offer. */
 .up-banner {
-  position: absolute;
-  left: 0; right: 0; top: 0;
-  z-index: 3;
+  display: inline-block;
+  align-self: flex-start;
+  margin-top: 0.12rem;
   background: rgba(20, 16, 12, 0.88);
   color: #e8d48a;
   font-family: Cinzel, serif;
-  font-size: 0.52rem;
+  font-size: 0.64rem;
   line-height: 1.2;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   text-align: center;
-  padding: 0.16rem 0.1rem;
-  border-bottom: 1px solid var(--gold-dim);
-  border-radius: inherit;
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
+  padding: 0.1rem 0.3rem;
+  border: 1px solid var(--gold-dim);
+  border-radius: 2px;
   pointer-events: none;
 }
 
@@ -2334,7 +2351,7 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
 .heat-pip.on { background: var(--gold); border-color: var(--gold); }
 .chip-heat-label,
 .chip-cuts-label {
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   letter-spacing: 0.03em;
   margin-left: 0.12rem;
 }
@@ -2431,14 +2448,14 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
 }
 .play-card .cost-unit {
   font-family: Cinzel, serif;
-  font-size: 0.56rem;
+  font-size: 0.66rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #6d5836;
   margin-top: 0.1rem;
 }
 .play-card .cost-extra {
-  font-size: 0.56rem;
+  font-size: 0.66rem;
   color: #7a5a2c;
   margin-top: 0.18rem;
   white-space: nowrap;
@@ -2476,7 +2493,7 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
 .play-card .row-risk {
   flex: 0 0 auto;
   font-family: Cinzel, serif;
-  font-size: 0.56rem;
+  font-size: 0.66rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 0.12rem 0.3rem;
@@ -2519,13 +2536,6 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
 
 /* The numbers a play actually moved. Alpha players reported "clicking blindly":
    the toast asserted GAIN and nothing visible changed. */
-.toast-deltas {
-  margin-top: 0.2rem;
-  font-family: Cinzel, serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.03em;
-  color: #e8d48a;
-}
 
 /* Cards read as a held hand, not a list: each row overlaps the one above it and
    casts a shadow upward onto it. .play-card is already position:relative, so
@@ -2552,4 +2562,524 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   box-shadow:
     inset 0 0 22px rgba(122, 90, 44, 0.18),
     0 2px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================================
+   MOTION — spends PlayFeedback.beat / .intensity, which the
+   engine has always computed and the UI never read.
+   See src/ui/motion.ts for the two rules this obeys.
+   ============================================================ */
+
+/* Toast entrance scaled by the engine's own intensity: a BREAKTHROUGH should
+   land harder than a SETBACK, and --hit is exactly that number. */
+/* A disaster shoves; a whisper does not. */
+
+/* The figures count up (motion.ts countUp) — this just keeps them from
+   reflowing the row as the digits change width. */
+
+/* AP / turf / cut pips: show the spend, don't teleport past it. */
+.pip.pip-spent,
+.cut-pip.pip-spent {
+  animation: pip-spend 0.42s ease-out both;
+}
+@keyframes pip-spend {
+  0% { background: var(--gold); border-color: var(--gold); transform: scale(1.35); }
+  60% { transform: scale(0.9); }
+  100% { background: transparent; transform: scale(1); }
+}
+
+/* Heat is the system that measures as EV-neutral, so what it has to offer is
+   the feeling of a streak building. Give the newly-lit pip the beat. */
+.heat-pip.heat-pip-lit { animation: heat-light 0.5s ease-out both; }
+@keyframes heat-light {
+  0% { transform: scale(0.4); box-shadow: 0 0 0 0 var(--gold); }
+  50% { transform: scale(1.5); box-shadow: 0 0 6px 2px var(--gold); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 transparent; }
+}
+/* Losing the streak: the chip is kept for one paint purely so there is
+   something on screen to break. */
+.chip-heat.chip-wiped { animation: heat-wipe 0.45s ease-in both; }
+@keyframes heat-wipe {
+  0% { opacity: 1; border-color: var(--gold); transform: translateX(0); }
+  30% { transform: translateX(-3px); border-color: var(--oxblood-bright); }
+  60% { transform: translateX(3px); }
+  100% { opacity: 0; transform: translateX(0) scale(0.94); }
+}
+
+/* ============================================================
+   REDUCED MOTION — required, and the a11y gate cannot catch it:
+   axe does not test motion preferences. Everything above is
+   decoration over a UI that is already correct without it, so
+   this can safely be a blanket stop.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
+/* The running total reacting when it moves. */
+.goal-progress-text.goal-moved { animation: goal-moved 0.7s ease-out both; }
+@keyframes goal-moved {
+  0% { color: var(--gold); transform: translateX(-2px); }
+  35% { color: var(--gold); }
+  100% { transform: translateX(0); }
+}
+
+/* ============================================================
+   THE MACHINE — the persistent roster (engine/machine.ts).
+   Reads as a list of people, not a stat block: the hook is that
+   these are names you can lose, so names get the weight.
+   ============================================================ */
+.ledger-themachine .mach-hint {
+  margin: 0 0 0.45rem;
+  font-size: 0.68rem;
+  font-style: italic;
+  color: var(--parchment-dim);
+}
+.mach-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  grid-template-areas: 'name tier meta' 'bar bar bar';
+  align-items: center;
+  gap: 0.15rem 0.4rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid rgba(154, 130, 79, 0.18);
+}
+.mach-row:last-of-type { border-bottom: 0; }
+.mach-name { grid-area: name; font-family: Cinzel, serif; font-size: 0.78rem; color: var(--parchment); }
+.mach-tier {
+  grid-area: tier;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.05rem 0.3rem;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+}
+.mach-meta { grid-area: meta; font-size: 0.7rem; color: var(--parchment-dim); }
+.mach-bar {
+  grid-area: bar;
+  display: block;
+  height: 3px;
+  background: rgba(154, 130, 79, 0.25);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.mach-bar i { display: block; height: 100%; background: var(--gold); }
+
+.mach-with .mach-tier { color: #b9d1a9; }
+.mach-with .mach-bar i { background: #b9d1a9; }
+.mach-owes .mach-tier { color: var(--gold); }
+/* Cooling is a warning, and it should read as one. */
+.mach-cooling .mach-tier { color: #d99a5b; }
+.mach-cooling .mach-bar i { background: #d99a5b; }
+
+.mach-gonelist { margin-top: 0.4rem; color: #a2685e; font-size: 0.68rem; }
+/* The card this relationship unlocks, named on the roster row. */
+.mach-door {
+  display: block;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+}
+/* A door you are about to lose has to read louder than one you hold. */
+.mach-door-risk { color: #d99a5b; }
+.mach-shutlist { margin-top: 0.25rem; color: #8f7f72; font-size: 0.68rem; }
+.mach-shutlist .k { color: #a2685e; }
+
+/* Poached reads hotter than merely gone — these people are on the board. */
+.mach-rivallist { margin-top: 0.25rem; color: #e8b4a8; font-size: 0.68rem; }
+.mach-rivallist .k { color: var(--oxblood-bright); }
+
+/* Terminal screen: who stayed, who walked. */
+.machine-changes { list-style: none; margin: 0.6rem 0 0; padding: 0; }
+.machine-changes li {
+  padding: 0.3rem 0.5rem;
+  margin-bottom: 0.25rem;
+  border-left: 2px solid var(--gold-dim);
+  font-size: 0.82rem;
+}
+.machine-changes .mach-joined { border-left-color: #b9d1a9; color: #cfe0c2; }
+.machine-changes .mach-cooled { border-left-color: #d99a5b; color: #e8c39a; }
+.machine-changes .mach-walked {
+  border-left-color: var(--oxblood-bright);
+  color: #e8b4a8;
+  background: rgba(138, 47, 38, 0.14);
+}
+/* The sharpest line on the screen: not a loss, an opponent. */
+.machine-changes .mach-poached {
+  border-left-color: var(--oxblood-bright);
+  border-left-width: 3px;
+  color: #f0c4b8;
+  background: rgba(138, 47, 38, 0.24);
+}
+
+/* === The Opposition band (engine/rival.ts) ==============================
+   Deliberately the mirror of .ledger-themachine: same band shape, oxblood
+   channel instead of gold. What you built, then who is building against you. */
+.ledger-therival {
+  border-left: 2px solid var(--oxblood-bright);
+}
+.riv-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.riv-name {
+  font-family: Cinzel, serif;
+  font-size: 0.95rem;
+  color: #e8b4a8;
+}
+.riv-title {
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--parchment-dim);
+}
+.riv-record {
+  margin-top: 0.15rem;
+  font-size: 0.7rem;
+  color: var(--parchment-dim);
+}
+.riv-bar {
+  display: block;
+  height: 4px;
+  margin-top: 0.4rem;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.riv-bar i {
+  display: block;
+  height: 100%;
+  background: var(--oxblood-bright);
+}
+.riv-past { margin-top: 0.35rem; color: #8f7f72; font-size: 0.7rem; }
+
+/* Terminal screen: what the rival did this cycle. */
+.machine-changes .riv-beaten {
+  border-left-color: #b9d1a9;
+  color: #cfe0c2;
+}
+.machine-changes .riv-won {
+  border-left-color: var(--oxblood-bright);
+  color: #e8b4a8;
+  background: rgba(138, 47, 38, 0.14);
+}
+
+/* ======================================================================
+   FULL-SCREEN RESULT — the beat the game turns on.
+
+   Every value here is driven by something the engine already computed:
+   --hit from fb.intensity, --wash from fb.intensity, the beat- and stamp-
+   classes from fb.beat / fb.stamp. Nothing is decorative-for-its-own-sake;
+   a harder roll genuinely lands harder.
+   ====================================================================== */
+.result-host {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-result);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: radial-gradient(ellipse 120% 90% at 50% 42%, #241a0e 0%, #150e06 62%, #0b0703 100%);
+  cursor: pointer;
+  animation: result-in 0.22s ease-out both;
+  overflow: hidden;
+}
+.result-host.hidden { display: none; }
+.result-host.result-out {
+  animation: result-out 0.2s ease-in both;
+  /* Stop intercepting the moment dismissal starts. During the fade the overlay
+     was still swallowing pointer events, so a player's next tap — on a card, on
+     End Week — vanished into a result they had already dismissed. */
+  pointer-events: none;
+}
+@keyframes result-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes result-out { from { opacity: 1; } to { opacity: 0; } }
+
+/* Beat-coloured wash. Opacity is fb.intensity — a near-miss glows faintly,
+   a disaster floods the screen. */
+.result-wash {
+  position: absolute;
+  inset: -20%;
+  opacity: var(--wash, 0.2);
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 44%, var(--rc, #c9a84c) 0%, transparent 46%);
+  animation: wash-pulse 0.5s ease-out both;
+}
+@keyframes wash-pulse {
+  0% { opacity: 0; transform: scale(0.82); }
+  55% { opacity: calc(var(--wash, 0.2) * 1.5); }
+  100% { opacity: var(--wash, 0.2); transform: scale(1); }
+}
+
+/* Deco rays — breakthroughs only, so they stay meaningful. Slow enough to read
+   as ceremony rather than noise. */
+.result-rays {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: 190vmax;
+  height: 190vmax;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0.13;
+  background: repeating-conic-gradient(
+    from 0deg at 50% 50%,
+    var(--rc, #c9a84c) 0deg 2.2deg,
+    transparent 2.2deg 17deg
+  );
+  /* Hollow out the middle: the rays are ceremony at the edges and noise behind
+     the words. Screenshots showed them washing straight through the copy. */
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 0 26%, #000 55%);
+  mask-image: radial-gradient(circle at 50% 50%, transparent 0 26%, #000 55%);
+  animation: rays-spin 34s linear infinite, rays-fade 0.6s ease-out both;
+}
+@keyframes rays-spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+@keyframes rays-fade { from { opacity: 0; } to { opacity: 0.13; } }
+
+.result-core {
+  position: relative;
+  z-index: 2;
+  width: min(560px, 100%);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+}
+/* Physical impact for thump/crash. Small amplitude, short — a jolt, not a
+   wobble, and never on the text the player has to read afterwards. */
+.result-shake { animation: result-jolt 0.34s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+@keyframes result-jolt {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  15% { transform: translate3d(calc(-7px * var(--hit, 1)), 2px, 0); }
+  35% { transform: translate3d(calc(6px * var(--hit, 1)), -2px, 0); }
+  55% { transform: translate3d(calc(-4px * var(--hit, 1)), 1px, 0); }
+  78% { transform: translate3d(calc(2px * var(--hit, 1)), 0, 0); }
+}
+
+/* THE STAMP. Slams in, overshoots by --hit, settles. */
+.result-stamp {
+  font-family: Cinzel, serif;
+  font-weight: 700;
+  /* Solve for the viewport from the word's length (--len, set in JS) so a long
+     stamp like BREAKTHROUGH cannot run off both edges. The 1.62 factor is the
+     approximate Cinzel advance width per character at this weight. */
+  font-size: min(3.4rem, max(1.55rem, calc(88vw / (var(--len, 8) * 1.62))));
+  line-height: 1.04;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--rc, #f0d878);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.55), 0 0 34px color-mix(in srgb, var(--rc, #c9a84c) 55%, transparent);
+  animation: stamp-slam 0.42s cubic-bezier(0.2, 1.5, 0.3, 1) both;
+}
+@keyframes stamp-slam {
+  0% { opacity: 0; transform: scale(calc(1 + 1.1 * var(--hit, 1))); letter-spacing: 0.34em; filter: blur(6px); }
+  60% { opacity: 1; filter: blur(0); }
+  100% { opacity: 1; transform: scale(1); letter-spacing: 0.06em; }
+}
+
+.result-rule {
+  display: block;
+  width: 62%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--rc, #c9a84c), transparent);
+  animation: rule-open 0.42s 0.14s ease-out both;
+}
+@keyframes rule-open { from { transform: scaleX(0); opacity: 0; } to { transform: scaleX(1); opacity: 1; } }
+
+.result-juice {
+  margin: 0;
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-size: 1.02rem;
+  line-height: 1.45;
+  color: #e8d9b5;
+  max-width: 34ch;
+  animation: rise 0.4s 0.18s ease-out both;
+}
+@keyframes rise { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: none; } }
+
+/* THE FIGURES. Big, staggered, counting. This is the payoff line. */
+.result-deltas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1.4rem;
+  margin-top: 0.3rem;
+}
+.result-delta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: pop 0.44s cubic-bezier(0.2, 1.6, 0.3, 1) both;
+  animation-delay: calc(0.26s + var(--i, 0) * 0.13s);
+}
+@keyframes pop {
+  0% { opacity: 0; transform: scale(0.5) translateY(10px); }
+  100% { opacity: 1; transform: none; }
+}
+.rd-num {
+  font-family: Cinzel, serif;
+  font-weight: 700;
+  /* Derived from the fitted stamp (see paint-log.ts) so the figure can never
+     out-shout the headline, whatever the stamp word's length. */
+  font-size: max(1.35rem, calc(var(--stamp-px, 2.2rem) * 0.66));
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: #f5e9cd;
+}
+.result-delta.up .rd-num { color: #cfe0c2; }
+.result-delta.down .rd-num { color: #e8b4a8; }
+.rd-label {
+  margin-top: 0.15rem;
+  font-family: Cinzel, serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #b08d3e;
+}
+
+/* Streak: pips light one after another, so a run reads as a run. */
+.result-streak {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  animation: rise 0.36s ease-out both;
+}
+.rs-pips { display: inline-flex; gap: 0.22rem; }
+.rs-pip {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.25;
+  animation: pip-light 0.3s ease-out both;
+  animation-delay: calc(var(--i, 0) * 0.09s);
+}
+@keyframes pip-light {
+  from { opacity: 0.2; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
+}
+.rs-label {
+  font-family: Cinzel, serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.rs-hot { color: #e8c39a; }
+.rs-cold { color: #9fb0c4; }
+
+.result-milestone {
+  margin-top: 0.2rem;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--rc, #c9a84c);
+  border-radius: 999px;
+  font-size: 0.82rem;
+  color: #f5e9cd;
+  animation: pop 0.44s 0.5s cubic-bezier(0.2, 1.6, 0.3, 1) both;
+}
+.result-milestone .rm-key {
+  margin-right: 0.45rem;
+  font-family: Cinzel, serif;
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #b08d3e;
+}
+.result-near {
+  font-size: 0.78rem;
+  color: #e8c39a;
+  animation: rise 0.4s 0.3s ease-out both;
+}
+
+.result-go {
+  margin-top: 0.9rem;
+  min-height: 44px;
+  padding: 0.6rem 2rem;
+  font-family: Cinzel, serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #f0e4c4;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--rc, #c9a84c);
+  border-radius: 999px;
+  cursor: pointer;
+  animation: rise 0.4s 0.44s ease-out both;
+}
+.result-go:hover { background: color-mix(in srgb, var(--rc, #c9a84c) 22%, transparent); }
+.result-go:focus-visible { outline: 2px solid #f0e4c4; outline-offset: 3px; }
+
+/* --- Per-stamp colour channel. One variable drives stamp, rule, wash, rays,
+       milestone border and the Continue ring, so a result reads as one thing. */
+.result-host.stamp-breakthrough { --rc: #f0d878; }
+.result-host.stamp-gain { --rc: #cfe0c2; }
+.result-host.stamp-setback { --rc: #e8c39a; }
+.result-host.stamp-disaster { --rc: #e8927f; }
+
+/* Reduced motion: the takeover stays (you must not miss the result), every
+   animation goes. Values are already written final by the JS. */
+@media (prefers-reduced-motion: reduce) {
+  .result-host,
+  .result-host * {
+    animation: none !important;
+  }
+  .result-rays { display: none; }
+  .result-wash { opacity: var(--wash, 0.2); }
+}
+
+/* --- Breakthrough escalation. Only the rarest good result gets these, so the
+       treatment itself is information: you know it was big before you read it. */
+.result-flare {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  width: 34vmax;
+  height: 34vmax;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 2px solid var(--rc, #f0d878);
+  pointer-events: none;
+  animation: flare-out 0.72s cubic-bezier(0.16, 0.9, 0.3, 1) both;
+}
+@keyframes flare-out {
+  0% { opacity: 0.85; transform: translate(-50%, -50%) scale(0.12); border-width: 6px; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.15); border-width: 1px; }
+}
+/* Art Deco lozenges thrown outward — the house shape, not generic confetti. */
+.result-burst {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.result-burst i {
+  position: absolute;
+  width: 7px;
+  height: 14px;
+  margin: -7px -3.5px;
+  background: var(--rc, #f0d878);
+  transform: rotate(var(--a)) translateY(0);
+  animation: burst-fly 0.9s cubic-bezier(0.18, 0.8, 0.28, 1) both;
+  animation-delay: calc(var(--d) * 0.05s);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+@keyframes burst-fly {
+  0% { opacity: 0; transform: rotate(var(--a)) translateY(0) scale(0.4); }
+  22% { opacity: 1; }
+  100% { opacity: 0; transform: rotate(var(--a)) translateY(-42vmin) scale(1); }
 }

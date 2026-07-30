@@ -22,6 +22,9 @@ import {
 } from './deck.js';
 import { executePlay, isPlayable, type PlayOpts } from './play.js';
 import { cycleCard, cycleBlockReason, resetDiscards, type CycleResult } from './flow.js';
+import { maybeOpenAsk, settleUnansweredAsk } from './ask.js';
+import { seatedIds as machineSeatedIds } from './machine.js';
+import { MACHINE_ASK_PLAYS, askCardId } from '../data/machine-asks.js';
 import { createNewState, getPhase } from './state.js';
 import {
   PRIMARY_WEEKS,
@@ -145,6 +148,8 @@ export function buildCatalog(plays: PlayCard[] = ALL_PLAYS): Map<string, PlayCar
   for (const p of SIGNATURE_PLAYS) map.set(p.id, p);
   // Path-unlock reward cards (gated; injected on unlock — see engine/paths.ts).
   for (const p of PATH_REWARDS) map.set(p.id, p);
+  // One ask card per machine member (gated by show: askerId — see engine/ask.ts).
+  for (const p of MACHINE_ASK_PLAYS) map.set(p.id, p);
   return map;
 }
 
@@ -543,6 +548,13 @@ export function startWeek(campaign: Campaign): string[] {
   markWeekStart(campaign.state);
   // Cuts refresh with the week — the limit is what makes cycling a decision.
   resetDiscards(campaign.state);
+  // Someone with you may call in a favour. Only people actually seated can ask;
+  // a stranger has no claim. The card lands in hand below.
+  const asker = maybeOpenAsk(campaign.state, machineSeatedIds(campaign.state));
+  if (asker) {
+    const askId = askCardId(asker);
+    if (!campaign.deck.hand.includes(askId)) campaign.deck.hand.push(askId);
+  }
 
   // Session / waiting: no campaign deck growth (different kits)
   if (campaign.state.stage === 'session') {
@@ -640,6 +652,12 @@ export function cycleReason(campaign: Campaign, handIndex: number): string {
 }
 
 export function endWeekInPlace(campaign: Campaign): StageTransition {
+  // Letting the week close on an open favour IS the refusal — there is no
+  // dismiss button, so the clock running out has to be a real answer.
+  const refused = settleUnansweredAsk(campaign.state);
+  if (refused) {
+    campaign.state.log.push({ week: campaign.state.week, kind: 'note', text: refused });
+  }
   discardHand(campaign.deck);
   const transition = advanceCampaignWeek(campaign.state);
   // Catches week-gated reputation thresholds (e.g. R02) even on a week

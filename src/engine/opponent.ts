@@ -20,7 +20,8 @@
  * indistinguishable from no opponent at all.
  */
 
-import { random } from './rng.js';
+import { createRng, random } from './rng.js';
+import { opponentSeed } from './rival-profile.js';
 import type { GameState, Ground } from './types.js';
 
 export type OpponentArchetype = 'machine' | 'insurgent' | 'incumbent';
@@ -35,6 +36,20 @@ const ARCHETYPE_LABEL: Record<OpponentArchetype, string> = {
   insurgent: 'the insurgent',
   incumbent: 'the incumbent'
 };
+
+/**
+ * Who this week's move came from.
+ *
+ * These lines used to say "the county machine", every run, forever — which is
+ * weather, not an opponent. engine/rival.ts writes the persistent rival's name
+ * into `state.rivals` at run start, so the same decision table now reads as a
+ * person with a record against you. Falls back to the archetype when there is
+ * no career yet (a one-off harness state, or the very first contact).
+ */
+function opponentName(state: GameState, a: OpponentArchetype): string {
+  const named = state.rivals?.[0]?.n;
+  return named && named !== 'Rival 1' ? named : ARCHETYPE_LABEL[a];
+}
 
 /**
  * Archetype from the district you filed in. A safe seat is held by a machine;
@@ -66,6 +81,22 @@ export function setArchetype(state: GameState, a: OpponentArchetype): void {
  * week. The opposition treats a ground at SATURATED as won and moves on.
  */
 export const RIVAL_RAP_CAP = 100;
+
+/**
+ * Rival strength (engine/rival.ts) above which they can afford negative mail
+ * every second week instead of every third. The sharpest thing accumulated
+ * strength buys them — each hit piece is -0.055 primary odds.
+ *
+ * It lives HERE rather than in rival.ts because it governs opponent behaviour,
+ * and rival.ts already imports from this module; the other direction would
+ * close an import cycle.
+ *
+ * A threshold rather than a curve because a cadence must be a whole number of
+ * weeks. applyRival announces it in the log and the dossier bar shows the
+ * approach, so it reads as a deadline the player let arrive rather than as the
+ * difficulty silently changing. Roughly three cycles of losing gets them here.
+ */
+export const WELL_FUNDED_AT = 55;
 const SATURATED = 85;
 
 /**
@@ -117,7 +148,12 @@ export function chooseAction(state: GameState, a: OpponentArchetype): OpponentAc
 
   // Anyone goes negative once you are clearly the story. Alternates with turf
   // work rather than repeating — a campaign that only ever mails is a caricature.
-  if (playerIsAhead(state) && state.week % 3 === 0) return 'negative';
+  // A well-funded rival can afford the mail more often: every third week at
+  // baseline, every second once they are strong. hitPieces is the sharpest
+  // lever in the game (-0.055 primary odds each), so this is where accumulated
+  // strength is actually felt.
+  const cadence = rivalStrength(state) >= WELL_FUNDED_AT ? 2 : 3;
+  if (playerIsAhead(state) && state.week % cadence === 0) return 'negative';
 
   // A clear strongest turf is a target — the insurgent contests sooner.
   const contestBar = a === 'insurgent' ? 5 : 8;
@@ -132,14 +168,47 @@ export function chooseAction(state: GameState, a: OpponentArchetype): OpponentAc
   return 'ground_game';
 }
 
+/**
+ * How much campaign the persistent rival brings (engine/rival.ts writes it at
+ * run start). 0 when there is no career yet — a first-time player faces the
+ * baseline opponent exactly as before, so nothing about the first run changes.
+ */
+function rivalStrength(state: GameState): number {
+  const v = state.sessionFlags?.['rivalStrength'];
+  return typeof v === 'number' ? Math.max(0, Math.min(100, v)) : 0;
+}
+
+/**
+ * The roll for this week's magnitude.
+ *
+ * When a profile is seated (engine/rival-profile.ts) the stream is derived from
+ * the PROFILE and the WEEK — information both players in an async match already
+ * hold — so two clients compute the same opponent move without exchanging RNG
+ * state. That is the difference between head-to-head play and two people
+ * watching different games.
+ *
+ * With no profile seated (a one-off harness state, a first run before any
+ * career exists) it falls back to the global stream, which is what every
+ * existing measurement was taken against.
+ */
+function rollFor(state: GameState): () => number {
+  const p = state.rivalProfile;
+  if (!p) return random;
+  const rng = createRng(opponentSeed(p, state.week));
+  return () => rng.next();
+}
+
 /** Magnitude band per action. RNG lives here — in how much, never in whether. */
-function amountFor(action: OpponentAction, state: GameState): number {
+function amountFor(action: OpponentAction, state: GameState, roll: () => number): number {
   const late = state.stage === 'general' ? 1.25 : 1;
+  // A rival who has beaten you twice does not merely start ahead — they run a
+  // better campaign every week. Up to +60% at full strength.
+  const strong = 1 + rivalStrength(state) * 0.006;
   const base =
-    action === 'contest' ? 10 + random() * 22
-    : action === 'consolidate' ? 8 + random() * 18
-    : 5 + random() * 20;
-  return Math.round(base * late);
+    action === 'contest' ? 10 + roll() * 22
+    : action === 'consolidate' ? 8 + roll() * 18
+    : 5 + roll() * 20;
+  return Math.round(base * late * strong);
 }
 
 /**
@@ -151,9 +220,14 @@ export function opponentTurn(state: GameState): OpponentAction {
   if (!grounds.length) return 'ground_game';
 
   const a = getArchetype(state);
-  const who = ARCHETYPE_LABEL[a];
+  const who = opponentName(state, a);
   const action = chooseAction(state, a);
-  const amt = amountFor(action, state);
+  // ONE stream per turn, used for every random decision in it. The desync
+  // harness caught this: the magnitude was on the profile stream but the
+  // ground_game target below was still drawing from the global one, so two
+  // clients agreed on how hard the opponent worked and disagreed about WHERE.
+  const roll = rollFor(state);
+  const amt = amountFor(action, state, roll);
 
   const log = (text: string) =>
     state.log.push({ week: state.week, kind: 'note', text });
@@ -186,7 +260,7 @@ export function opponentTurn(state: GameState): OpponentAction {
       break;
     }
     default: {
-      const target = grounds[Math.floor(random() * grounds.length)]!;
+      const target = grounds[Math.floor(roll() * grounds.length)]!;
       const now = bankRival(target, amt);
       log(
         `Opposition organizers worked ${target.n} — +${amt} (they hold ${now} there now). ` +

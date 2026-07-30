@@ -214,7 +214,10 @@
           <button type="button" class="mnav-btn" data-gototab="log">Log</button>
         </nav>
       </section>
-      <div id="toast-host" class="toast-host" aria-live="assertive" aria-atomic="false"></div>
+      <!-- Full-screen play/week result. The moment a card resolves is the
+           dopamine beat of the whole game; it gets the whole screen. -->
+      <div id="result-host" class="result-host hidden" role="dialog" aria-modal="true"
+        aria-labelledby="result-stamp" aria-describedby="result-juice"></div>
       <section id="terminal" class="game hidden">
         <div id="terminal-head" class="panel"></div>
         <div id="terminal-choices" class="card-grid"></div>

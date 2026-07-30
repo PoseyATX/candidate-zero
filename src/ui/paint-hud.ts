@@ -20,6 +20,11 @@ import {
 import { TURF_AP } from '../engine/state.js';
 import { heatOf, MAX_HEAT } from '../engine/heat.js';
 import { discardsLeft, MAX_DISCARDS } from '../engine/flow.js';
+import { rosterForDisplay, getMachine, tierOf, tierLabel, memberName } from '../engine/machine.js';
+import { doorCardId, closedDoors, MACHINE_DOOR_PLAYS } from '../data/machine-doors.js';
+import { getRival, rivalRecord, archetypeTitle, MAX_RIVAL_STRENGTH } from '../engine/rival.js';
+import type { LegacyState } from '../engine/types.js';
+import { reducedMotion } from './motion.js';
 
 function $(id: string): HTMLElement {
   const el = document.getElementById(id);
@@ -48,6 +53,14 @@ function attrChipsHtml(attrs: Record<string, number>): string {
 /**
  * Compact persistent HUD — mobile deckbuilder convention.
  */
+/**
+ * Last painted values, so the HUD can animate the *change* rather than the
+ * state. renderHud rebuilds its innerHTML every paint, which throws away any
+ * running animation — so the diff has to be computed here and baked into the
+ * new markup as a one-shot class.
+ */
+let prevHud: { ap: number; fieldAp: number; heat: number; cuts: number } | null = null;
+
 export function renderHud(campaign: Campaign): void {
   const s = campaign.state;
   const snap = snapshot(s);
@@ -59,11 +72,16 @@ export function renderHud(campaign: Campaign): void {
   // report that the AP counter does not count down. Every point a play spends
   // must now be visible leaving somewhere.
   const turfMax = Math.max(snap.fieldAp, TURF_AP);
+  // A pip between the old count and the new one is a pip that just drained;
+  // flag it so CSS can play the spend once. Without this the counter simply
+  // teleports and the spend is invisible — the same complaint as the numbers.
+  const spent = (i: number, now: number, before: number | undefined): string =>
+    before !== undefined && !reducedMotion() && i >= now && i < before ? ' pip-spent' : '';
   const pips = Array.from({ length: s.apMax }, (_, i) =>
-    `<i class="pip ${i < snap.ap ? 'on' : ''}"></i>`
+    `<i class="pip ${i < snap.ap ? 'on' : ''}${spent(i, snap.ap, prevHud?.ap)}"></i>`
   ).join('');
   const turfPips = Array.from({ length: turfMax }, (_, i) =>
-    `<i class="pip pip-turf ${i < snap.fieldAp ? 'on' : ''}"></i>`
+    `<i class="pip pip-turf ${i < snap.fieldAp ? 'on' : ''}${spent(i, snap.fieldAp, prevHud?.fieldAp)}"></i>`
   ).join('');
   const fieldChip = turfMax
     ? `<span class="pips pips-turf" title="Turf action points — field plays spend these first, then your campaign AP">${turfPips}</span>`
@@ -90,10 +108,17 @@ export function renderHud(campaign: Campaign): void {
   // keep a streak alive never enters their head — it is only a decision if you
   // can see it accumulating. Hidden at zero so it never reads as an empty duty.
   const heat = heatOf(s);
-  const heatChip = heat
-    ? `<span class="chip chip-heat" title="Banked streak — spend it on one play for better odds and a wider disaster band. A failed play wipes it.">` +
+  // Losing a streak is the moment heat matters most, but the chip is hidden at
+  // zero — so there would be nothing on screen to react. Keep it for the one
+  // paint after a wipe, empty and marked, then let it disappear.
+  const justWiped = !!prevHud && heat === 0 && prevHud.heat > 0 && !reducedMotion();
+  const heatChip = (heat || justWiped)
+    ? `<span class="chip chip-heat${justWiped ? ' chip-wiped' : ''}" title="Banked streak — spend it on one play for better odds and a wider disaster band. A failed play wipes it.">` +
       Array.from({ length: MAX_HEAT }, (_, i) =>
-        `<i class="heat-pip ${i < heat ? 'on' : ''}"></i>`
+        // A streak building is the one moment heat is meant to feel like
+        // something, so the newly-lit pip gets the beat rather than the meter.
+        `<i class="heat-pip ${i < heat ? 'on' : ''}` +
+        `${prevHud && !reducedMotion() && i >= (prevHud.heat ?? 0) && i < heat ? ' heat-pip-lit' : ''}"></i>`
       ).join('') +
       `<span class="chip-heat-label">heat</span></span>`
     : '';
@@ -104,7 +129,8 @@ export function renderHud(campaign: Campaign): void {
     ? ''
     : `<span class="chip chip-cuts" title="Hand cuts left this week — pitch a card you cannot use and draw a replacement. They do not carry over.">` +
       Array.from({ length: MAX_DISCARDS }, (_, i) =>
-        `<i class="cut-pip ${i < cuts ? 'on' : ''}"></i>`
+        `<i class="cut-pip ${i < cuts ? 'on' : ''}` +
+        `${spent(i, cuts, prevHud?.cuts)}"></i>`
       ).join('') +
       `<span class="chip-cuts-label">cuts</span></span>`;
   const act = ACT_SHELLS[actFromStage(s.stage)];
@@ -135,12 +161,19 @@ export function renderHud(campaign: Campaign): void {
     </span>
     <span class="hud-item">${ballotHud}</span>
   `;
+
+  prevHud = { ap: snap.ap, fieldAp: snap.fieldAp, heat, cuts };
+}
+
+/** New run — forget the previous HUD so week 1 does not animate from nothing. */
+export function resetHudMotion(): void {
+  prevHud = null;
 }
 
 /**
  * Dossier ledger — Phase 6 hierarchy (docs/UI-IA.md).
  */
-export function renderLedger(campaign: Campaign): void {
+export function renderLedger(campaign: Campaign, legacy?: LegacyState): void {
   const s = campaign.state;
   const snap = snapshot(s);
   const allyBits = s.allies
@@ -152,7 +185,7 @@ export function renderLedger(campaign: Campaign): void {
               .map(id => s.groundsArr.find(x => x.id === id)?.n ?? id)
               .join(', ')}`
           : '';
-      return `${a.id}${g}`;
+      return `${memberName(a.id)}${g}`;
     })
     .join(' · ');
   const assetBits = s.assets.filter(a => /^A\d+/.test(a)).join(' · ');
@@ -236,6 +269,103 @@ export function renderLedger(campaign: Campaign): void {
       </div>
     </div>`;
 
+  // The persistent roster — the thing a player is actually building. Shown
+  // in-run rather than only on a menu, because a relationship you cannot see is
+  // one you will not protect.
+  let machineBand = '';
+  if (legacy) {
+    const roster = rosterForDisplay(legacy);
+    const gone = getMachine(legacy).departed;
+    if (roster.length || gone.length) {
+      const rows = roster
+        .map(m => {
+          const t = tierOf(m);
+          const cycles = m.runs === 1 ? '1 cycle' : `${m.runs} cycles`;
+          // Naming the card is the whole trick: "County Chairwoman, cooling"
+          // is a bar. "County Chairwoman — The Chairwoman's List, cooling" is
+          // a card you are about to stop being able to draw.
+          const doorId = doorCardId(m.id);
+          const door = doorId ? MACHINE_DOOR_PLAYS.find(c => c.id === doorId) : undefined;
+          // A cooling member who holds a door is the sharpest warning the
+          // dossier can give: the bar going down is abstract, "this card is
+          // one bad cycle from gone" is not.
+          const atRisk = door && (t === 'cooling' || t === 'owes');
+          const doorBit = door
+            ? `<span class="mach-door${atRisk ? ' mach-door-risk' : ''}">${door.n}${
+                t === 'cooling' ? ' — one cycle from gone' : ''
+              }</span>`
+            : '';
+          return `<div class="mach-row mach-${t}">
+            <span class="mach-name">${memberName(m.id)}${doorBit}</span>
+            <span class="mach-tier">${tierLabel(t)}</span>
+            <span class="mach-meta">${cycles}</span>
+            <span class="mach-bar"><i style="width:${Math.max(3, Math.min(100, m.standing))}%"></i></span>
+          </div>`;
+        })
+        .join('');
+      // Two lists, not one. Someone who drifted away is a loss; someone the
+      // other campaign picked up is a standing threat, and the dossier should
+      // not flatten the difference.
+      const left = gone.filter(d => !d.toRival);
+      const taken = gone.filter(d => d.toRival);
+      const goneRow =
+        (left.length
+          ? `<div class="ledger-wide mach-gonelist"><span class="k">Gone</span> ${left
+              .map(d => memberName(d.id))
+              .join(' · ')}</div>`
+          : '') +
+        (taken.length
+          ? `<div class="ledger-wide mach-rivallist"><span class="k">With him</span> ${taken
+              .map(d => memberName(d.id))
+              .join(' · ')}</div>`
+          : '');
+      // What you can no longer do. Named as cards, because that is the form
+      // the player understands a loss in.
+      const shut = closedDoors(gone.map(d => d.id));
+      const shutRow = shut.length
+        // Cards only. The Gone / With him rows directly above already name the
+        // people, and most doors are named for their holder — "The Old Bull
+        // Makes a Call — The Old Bull is gone" says it twice.
+        ? `<div class="ledger-wide mach-shutlist"><span class="k">Shut</span> ${shut
+            .map(x => x.card)
+            .join(' · ')}</div>`
+        : '';
+      machineBand = `
+        <div class="ledger-band ledger-themachine">
+          <div class="ledger-band-label">The Machine</div>
+          <p class="mach-hint">The people who take your call. Built across cycles — and lost the same way.</p>
+          ${rows || '<div class="ledger-wide">Nobody yet. Work with someone and they may stay.</div>'}
+          ${goneRow}
+          ${shutRow}
+        </div>`;
+    }
+  }
+
+  // The other side of the same ledger. The Machine band shows what you built;
+  // this shows who is building against you, with the record between you. A
+  // rival you cannot see accumulating is indistinguishable from no rival.
+  let rivalBand = '';
+  if (legacy) {
+    const r = getRival(legacy);
+    const pct = Math.max(3, Math.min(100, Math.round((r.strength / MAX_RIVAL_STRENGTH) * 100)));
+    const took = r.past?.length
+      ? `<div class="ledger-wide riv-past"><span class="k">Beaten</span> ${r.past
+          .map(p => p.name)
+          .join(' · ')}</div>`
+      : '';
+    rivalBand = `
+      <div class="ledger-band ledger-therival">
+        <div class="ledger-band-label">The Opposition</div>
+        <div class="riv-row">
+          <span class="riv-name">${r.name}</span>
+          <span class="riv-title">${archetypeTitle(r.archetype)}</span>
+        </div>
+        <div class="riv-record">${rivalRecord(r)}</div>
+        <span class="riv-bar" title="How much they bring to the next filing"><i style="width:${pct}%"></i></span>
+        ${took}
+      </div>`;
+  }
+
   $('ledger').innerHTML = `
     <div class="ledger-dossier">
       <div class="ledger-band ledger-identity">
@@ -246,12 +376,14 @@ export function renderLedger(campaign: Campaign): void {
       ${forceBand}
       ${vitalsBand}
       <div class="ledger-band ledger-machine">
-        <div class="ledger-band-label">Machine</div>
-        <div class="ledger-wide"><span class="k">Allies</span> ${allyBits || '—'}</div>
+        <div class="ledger-band-label">This cycle</div>
+        <div class="ledger-wide"><span class="k">Working with</span> ${allyBits || '—'}</div>
         <div class="ledger-wide"><span class="k">Assets</span> ${assetBits || '—'}</div>
         <div class="ledger-wide"><span class="k">Obligations</span> ${oblBits || '—'}</div>
         ${s.over && s.outcome ? `<div class="ledger-wide"><span class="k">Outcome</span> ${s.outcome}</div>` : ''}
       </div>
+      ${machineBand}
+      ${rivalBand}
     </div>
   `;
   applyStageChrome(s);

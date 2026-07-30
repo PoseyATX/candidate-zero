@@ -15,6 +15,8 @@ import {
 } from '../engine/legacy.js';
 import type { CampaignOutcome, LegacyState, TraitId } from '../engine/types.js';
 import { emblem } from './card-art.js';
+import { takeMachineOutcome, takeRivalOutcome } from '../engine/legacy.js';
+import { memberName } from '../engine/machine.js';
 
 function $(id: string): HTMLElement {
   const el = document.getElementById(id);
@@ -81,12 +83,59 @@ export function renderTerminalOutcome(ctx: TerminalRenderCtx): void {
         ? 'Bug: general win should enter Session in-engine. Report if you see this screen without Session.'
         : 'Two years until the next filing. Choose how you spend them.';
 
+  // Who stayed and who walked. This is the beat the whole meta-layer exists
+  // for: a number nobody feels does not make a player careful next cycle, but
+  // "the County Chairwoman is gone" does. Losses are listed last and loudest.
+  const mo = takeMachineOutcome();
+  let machineBlock = '';
+  if (mo && (mo.joined.length || mo.walked.length || mo.cooled.length)) {
+    const rows: string[] = [];
+    if (mo.joined.length) {
+      rows.push(
+        `<li class="mach-joined"><b>${mo.joined.map(id => esc(memberName(id))).join(', ')}</b> take your call now.</li>`
+      );
+    }
+    if (mo.cooled.length) {
+      rows.push(
+        `<li class="mach-cooled">${mo.cooled.map(id => esc(memberName(id))).join(', ')} — cooling. One more cycle like this and they are gone.</li>`
+      );
+    }
+    for (const id of mo.walked) {
+      // "Gone" is a number falling. "Gone to him" is a face. The poached line
+      // is deliberately the last and sharpest thing on the screen.
+      if (mo.poached.includes(id)) continue;
+      rows.push(`<li class="mach-walked"><b>${esc(memberName(id))}</b> is gone. That door does not reopen.</li>`);
+    }
+    for (const id of mo.poached) {
+      rows.push(
+        `<li class="mach-poached"><b>${esc(memberName(id))}</b> is working for the other side now. ` +
+          `They know your ground as well as you do.</li>`
+      );
+    }
+    machineBlock = `<ul class="machine-changes">${rows.join('')}</ul>`;
+  }
+
+  // The rival's cycle, on the same screen as your own. Beating them is the
+  // payoff the whole opposition system is for, so it gets its own line rather
+  // than being inferred from the outcome word.
+  const ro = takeRivalOutcome();
+  if (ro) {
+    const rows: string[] = [];
+    for (const line of ro.lines) {
+      rows.push(`<li class="${ro.beaten ? 'riv-beaten' : 'riv-won'}">${esc(line)}</li>`);
+    }
+    if (rows.length) {
+      machineBlock += `<ul class="machine-changes">${rows.join('')}</ul>`;
+    }
+  }
+
   $('terminal-head').innerHTML = `
     <h2>${titles[kind]}</h2>
     <p class="epithet">${esc(epithet)}</p>
     ${billLine}
     ${debtNote}
     ${growth ? `<p class="growth">${esc(growth)}</p>` : ''}
+    ${machineBlock}
     <p class="hint">${esc(nextHint)}</p>
   `;
 

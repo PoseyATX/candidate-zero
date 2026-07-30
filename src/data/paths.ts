@@ -179,7 +179,14 @@ export const PATH_REWARDS: PlayCard[] = [
     cost: { a: 2 },
     ph: [1],
     tag: 'the intern army',
-    d: 'A hundred students, one afternoon, clipboards everywhere. Signatures at scale — the labor door, staffed by the young.',
+    d:
+      'A hundred students, one afternoon, clipboards everywhere. ' + 'Unlocked by finishing a path — it enters your deck mid-run and stays. ' +
+      
+      'Signatures at scale: a breakthrough is 70–100 in a single day, better than any ordinary ' +
+      'petition drive, and it can clear the whole threshold at once. ' +
+      'Ink and Close, and volunteers raise the odds. ' +
+      'Primary only. A disaster is an intern forging names to hit quota, and the chair strikes sheets ' +
+      'you already had.',
     odds: (s) => clamp(0.66 + s.volPool * 0.02, 0.05, 0.95),
     run: (s, o) => {
       if (o.tier === 0) {
@@ -203,7 +210,13 @@ export const PATH_REWARDS: PlayCard[] = [
     cost: { a: 2 },
     ph: [1, 2, 3],
     tag: 'pre-sorted checks',
-    d: "Someone else's rolodex, dialing for you. The money arrives bundled, with strings you can mostly ignore.",
+    d:
+      "Someone else's rolodex, dialing for you. " + 'Unlocked by finishing a path — it enters your deck mid-run and stays. ' +
+      
+      'The largest reliable money card in the game — a breakthrough is $1,400–$2,100 in one packet, ' +
+      'with no standing hit and no obligation, which is what separates it from the PAC check. ' +
+      'Craft and Diplomacy, and owning any asset helps. ' +
+      'Legal in every phase. A tainted check on a disaster raises your exposure.',
     odds: (s) => clamp(0.64 + (s.assets.length ? 0.05 : 0), 0.05, 0.95),
     run: (s, o) => {
       if (o.tier === 0) { const m = 1400 + Math.floor(random() * 700); s.money += m; return `The bundler delivers. +$${m.toLocaleString()} in one packet.`; }
@@ -221,7 +234,13 @@ export const PATH_REWARDS: PlayCard[] = [
     cost: { a: 2, vp: 1 },
     ph: [2, 3],
     tag: 'the machine turns',
-    d: 'Every captain a small turnout operation. When they move together, the count moves with them.',
+    d:
+      'Every captain a small turnout operation. ' + 'Unlocked by finishing a path — it enters your deck mid-run and stays. ' +
+      
+      '3 endorsement points AND turnout banked across every ground at once on a breakthrough — ' +
+      'the only card that pays the endorsement and turnout economies together. ' +
+      'Diplomacy and Close, and your existing endorsement points raise the odds. ' +
+      'Costs a volunteer; general and turnout stages only.',
     odds: (s) => clamp(0.66 + s.endorsePts * 0.01, 0.05, 0.95),
     run: (s, o) => {
       if (o.tier === 0) { s.endorsePts += 3; s.groundsArr.forEach(g => (g.gotv += 0.08)); return 'The captains march in lockstep. +3 endorsement points and turnout banked across every ground.'; }
@@ -233,7 +252,13 @@ export const PATH_REWARDS: PlayCard[] = [
   reward({
     id: 'RW_ANCHOR', pathId: 'P_PRESS', n: 'The Anchor Takes Your Call',
     attrs: ['CHA', 'CRA'], risk: 'STD', cost: { a: 2 }, ph: [2, 3], tag: 'the evening desk',
-    d: 'A friendly anchor and a standing invitation. When you have something to say, the county hears it that night.',
+    d:
+      'A friendly anchor and a standing invitation. ' + 'Unlocked by finishing a path — it enters your deck mid-run and stays. ' +
+      
+      'Name ID and momentum with none of the blowback Earned Media carries — no hit pieces, no ' +
+      'reporter going looking, and no momentum spent to pitch it. ' +
+      'Charm and Craft, and a sharp message helps. ' +
+      'The worst case is being bumped for a better story.',
     odds: (s) => clamp(0.66 + (s.messageSharp ? 0.08 : 0), 0.05, 0.95),
     run: (s, o) => {
       if (o.tier === 0) { s.nameID += 7; s.momentum += 2; return 'Lead story, your framing. +7 name ID, +2 momentum.'; }
@@ -245,7 +270,13 @@ export const PATH_REWARDS: PlayCard[] = [
   reward({
     id: 'RW_TURF', pathId: 'P_FIELD', n: 'Stand Up a Turf Operation',
     attrs: ['CLO', 'DIP'], risk: 'SAFE', cost: { a: 2, vp: 1 }, ph: [1, 2, 3], tag: 'boots with a plan',
-    d: 'Captains, turfs, cut lists. The volunteers you recruited become a machine that runs without you.',
+    d:
+      'Captains, turfs, cut lists. ' + 'Unlocked by finishing a path — it enters your deck mid-run and stays. ' +
+      
+      'SAFE, legal in every phase, and it returns a volunteer as well as contacts — in the general ' +
+      'it also banks turnout across three grounds for the same action. ' +
+      'Close and Diplomacy, and volunteers raise the odds further. ' +
+      'A card that pays for itself and keeps paying.',
     odds: (s) => clamp(0.72 + s.volPool * 0.02, 0.05, 0.95),
     run: (s, o) => {
       if (o.tier <= 1) { const c = 30 + Math.floor(random() * 16); s.contacts += c; s.volPool += 1; if (s.stage === 'general') s.groundsArr.slice(0, 3).forEach(g => (g.gotv += 0.06)); return `The operation hums. +${c} contacts, a volunteer${s.stage === 'general' ? ', turnout banked' : ''}.`; }
@@ -255,7 +286,12 @@ export const PATH_REWARDS: PlayCard[] = [
   reward({
     id: 'RW_REGULAR', pathId: 'P_RETAIL', n: 'Become a Fixture',
     attrs: ['CHA'], risk: 'SAFE', cost: { a: 2 }, ph: [1, 2, 3], tag: 'one of us',
-    d: 'You are not campaigning anymore; you are just around, the way the weather is around. People vote for the weather they know.',
+    d:
+      'You are not campaigning anymore; you are just around, the way the weather is around. ' + 'Unlocked by finishing a path — it enters your deck mid-run and stays. ' +
+      
+      'SAFE contacts, name ID and momentum at high odds in every phase, with no failure worth the name. ' +
+      'Charm is the attribute. ' +
+      'Nothing about it is dramatic; it simply never has a bad week, which over a long run is its own kind of power.',
     odds: () => 0.85,
     run: (s, o) => {
       if (o.tier <= 1) { const c = 22 + Math.floor(random() * 12); s.contacts += c; s.nameID += 3; s.momentum += 1; return `Familiarity does the work. +${c} contacts, +3 name ID, momentum.`; }
@@ -265,7 +301,13 @@ export const PATH_REWARDS: PlayCard[] = [
   reward({
     id: 'RW_KINGMAKER', pathId: 'P_LADDER', n: "Cash the Kingmaker's Chit",
     attrs: ['DIP'], risk: 'STD', cost: { a: 2 }, ph: [2, 3], tag: 'your turn',
-    d: 'The people who decide have decided it is your turn. One call, and the slate rearranges itself around you.',
+    d:
+      'The people who decide have decided it is your turn. ' + 'Unlocked by finishing a path — it enters your deck mid-run and stays. ' +
+      
+      'The biggest endorsement swing outside the statewide names — 4 endorsement points, a favour ' +
+      'and momentum on a breakthrough, for one ordinary action. ' +
+      'Diplomacy, and your existing endorsement points raise the odds: the kingmakers back people ' +
+      'who already look backed. General and turnout stages only.',
     odds: (s) => clamp(0.64 + s.endorsePts * 0.01, 0.05, 0.95),
     run: (s, o) => {
       if (o.tier === 0) { s.endorsePts += 4; s.favors += 1; s.momentum += 1; return 'The slate falls in behind you. +4 endorsement points, +1 favor, momentum.'; }

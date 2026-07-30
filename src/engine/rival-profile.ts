@@ -1,0 +1,256 @@
+/**
+ * CANDIDATE ZERO — Rival profiles: the seam head-to-head play runs through.
+ *
+ * WHAT THIS IS FOR. The intended shape of multiplayer here is slow,
+ * asynchronous, head-to-head: two humans each run their own campaign, and each
+ * one's opposition IS the other's candidate. That only works if the opponent
+ * the engine reasons about can come from SOMEWHERE ELSE — a file, a server, a
+ * message — instead of being derived locally from the district.
+ *
+ * So this module defines one thing: a `RivalProfile`, a plain JSON description
+ * of an opposing campaign, plus the three functions that move between it and
+ * the engine.
+ *
+ *     profileFromRival(legacy)        synthetic opponent -> profile
+ *     profileFromCampaign(state, …)   YOUR run -> the profile your opponent faces
+ *     applyRivalProfile(state, p)     a profile -> this run's opposition
+ *
+ * engine/opponent.ts then reasons about whatever profile is seated, and neither
+ * knows nor cares whether a person or the archetype table produced it. That is
+ * the whole trick, and it is why the single-player rival was built on the same
+ * pathway rather than beside it.
+ *
+ * THREE RULES THIS FILE EXISTS TO ENFORCE:
+ *
+ * 1. PUBLIC INFORMATION ONLY. A profile carries what an opposing campaign could
+ *    actually observe — name recognition, momentum, endorsements, ballot status,
+ *    visible organisation on each ground. Never a hand, a deck, a bankroll, or
+ *    a seed. If it would be cheating to know it, it is not in here.
+ *
+ * 2. DETERMINISM ACROSS CLIENTS. Async play desyncs the moment two clients
+ *    compute different opponent moves from the same information. `opponentSeed`
+ *    derives a stream from (profile, week) alone, so both sides get the same
+ *    answer without either having to send RNG state.
+ *
+ * 3. VERSIONED. Profiles cross a wire and outlive the build that wrote them.
+ *    Anything unreadable is rejected, never guessed at.
+ *
+ * HONEST SCOPE: this is the seam and its tests, not a network stack. There is
+ * no transport, no matchmaking, and no lobby here. What it buys is that adding
+ * those does not require touching the opponent's decision logic.
+ */
+
+// Type-only imports on purpose. This module sits UNDER both opponent.ts and
+// rival.ts in the dependency order: opponent.ts needs opponentSeed and rival.ts
+// needs the profile builders, so any runtime import back into either would
+// close a cycle. Types are erased, so these are free.
+import type { OpponentArchetype } from './opponent.js';
+import type { RivalState } from './rival.js';
+import type { GameState } from './types.js';
+
+/** Bump on any change to the shape below. Old profiles are rejected, not guessed. */
+export const RIVAL_PROFILE_VERSION = 1;
+
+/** Visible organisation on one ground, keyed by ground id. */
+export type GroundPresence = Record<string, number>;
+
+export interface RivalProfile {
+  /** Schema version — see RIVAL_PROFILE_VERSION. */
+  v: number;
+  id: string;
+  name: string;
+  archetype: OpponentArchetype;
+  /** 0–100. How much campaign they bring. */
+  strength: number;
+  /** What they visibly hold, per ground id. Absent ground = no presence. */
+  ground: GroundPresence;
+  /** Public campaign facts. An opposing campaign can see all of these. */
+  nameID: number;
+  momentum: number;
+  endorsePts: number;
+  ballot: boolean;
+  /** Head-to-head record from the perspective of whoever receives this. */
+  record: { cycles: number; beatYou: number; youBeatThem: number };
+  /**
+   * True when a human is behind it. Mechanically inert on purpose — the
+   * opponent logic must not behave differently against a person, or the
+   * single-player game stops being a rehearsal for the multiplayer one.
+   * It is here so the UI can say "Wade Coker (you know him)" honestly.
+   */
+  human?: boolean;
+}
+
+/** Cheap structural check. Anything that fails is refused, not repaired. */
+export function isRivalProfile(x: unknown): x is RivalProfile {
+  if (!x || typeof x !== 'object') return false;
+  const p = x as Partial<RivalProfile>;
+  return (
+    p.v === RIVAL_PROFILE_VERSION &&
+    typeof p.id === 'string' &&
+    typeof p.name === 'string' &&
+    typeof p.strength === 'number' &&
+    typeof p.nameID === 'number' &&
+    typeof p.ballot === 'boolean' &&
+    !!p.ground &&
+    typeof p.ground === 'object' &&
+    !!p.record &&
+    typeof p.record === 'object'
+  );
+}
+
+function clamp(v: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, v));
+}
+
+/**
+ * The synthetic opponent, as a profile.
+ *
+ * Single player goes through this deliberately. If the local rival took a
+ * private shortcut into the engine, the multiplayer path would be a separate,
+ * untested codepath the day it was switched on — and the single-player game
+ * would stop being a rehearsal for it.
+ *
+ * `strengthToRap` converts the 0–100 dial into per-ground presence so the
+ * synthetic opponent describes itself in exactly the same terms a human one
+ * does: visible organisation on named grounds.
+ */
+export function profileFromRival(
+  r: RivalState,
+  state: GameState,
+  strengthToRap: number
+): RivalProfile {
+  const per = Math.round(r.strength * strengthToRap);
+  const ground: GroundPresence = {};
+  if (per > 0) {
+    for (const g of state.groundsArr) ground[g.id] = clamp(per, 0, 100);
+  }
+  return {
+    v: RIVAL_PROFILE_VERSION,
+    id: r.id,
+    name: r.name,
+    archetype: r.archetype,
+    strength: clamp(Math.round(r.strength), 0, 100),
+    ground,
+    nameID: 0,
+    momentum: 0,
+    endorsePts: 0,
+    ballot: false,
+    record: { cycles: r.cycles, beatYou: r.beatYou, youBeatThem: r.youBeatThem },
+    human: false
+  };
+}
+
+/**
+ * YOUR campaign, described as the opposition your opponent will face.
+ *
+ * This is the send side of head-to-head: at the end of your week (or your run)
+ * this is what crosses to the other player. Note what is NOT read — deck, hand,
+ * money, seed, sessionFlags — because none of it is observable from outside.
+ *
+ * `strength` is derived from public standing rather than copied, so a human
+ * opponent and a synthetic one are measured on the same 0–100 dial and the
+ * opponent logic needs no special case.
+ */
+export function profileFromCampaign(
+  state: GameState,
+  who: { id: string; name: string; archetype?: OpponentArchetype },
+  record: RivalProfile['record'] = { cycles: 0, beatYou: 0, youBeatThem: 0 }
+): RivalProfile {
+  const ground: GroundPresence = {};
+  for (const g of state.groundsArr) {
+    const held = Math.round(g.rapport || 0);
+    if (held > 0) ground[g.id] = clamp(held, 0, 100);
+  }
+  // Public standing on the same scale the synthetic rival uses: name
+  // recognition, momentum and endorsements are all things the other campaign
+  // can read off a newspaper. Ballot access is worth a lot on its own.
+  const derived =
+    (state.nameID || 0) * 1.1 +
+    (state.momentum || 0) * 3 +
+    (state.endorsePts || 0) * 2.5 +
+    (state.ballot ? 12 : 0);
+  return {
+    v: RIVAL_PROFILE_VERSION,
+    id: who.id,
+    name: who.name,
+    archetype: who.archetype ?? 'insurgent',
+    strength: clamp(Math.round(derived), 0, 100),
+    ground,
+    nameID: Math.round(state.nameID || 0),
+    momentum: Math.round(state.momentum || 0),
+    endorsePts: Math.round(state.endorsePts || 0),
+    ballot: !!state.ballot,
+    record,
+    human: true
+  };
+}
+
+/** Flag keys the seated profile lives under, so it survives save/load. */
+export const PROFILE_FLAG = 'rivalProfile';
+const NAME_FLAG_PREFIX = 'rivalProfileName:';
+
+/**
+ * Seat a profile as this run's opposition.
+ *
+ * The profile itself lives on `state.rivalProfile` — it is campaign state, it
+ * is JSON, and it has to survive save/load intact for a paused async match to
+ * resume. `sessionFlags` is `Record<string, boolean | number>` and could not
+ * hold it anyway; the couple of scalars the weekly logic wants are mirrored
+ * into flags for cheap access.
+ */
+export function applyRivalProfile(state: GameState, p: RivalProfile): void {
+  if (!isRivalProfile(p)) {
+    throw new Error(`unreadable rival profile (want v${RIVAL_PROFILE_VERSION})`);
+  }
+  state.rivals = [{ id: p.id, n: p.name }];
+  state.rivalProfile = p;
+  state.sessionFlags = state.sessionFlags || {};
+  state.sessionFlags.rivalStrength = p.strength;
+  state.sessionFlags[PROFILE_FLAG] = 1;
+  state.sessionFlags[`${NAME_FLAG_PREFIX}${p.id}`] = 1;
+  if (p.human) state.sessionFlags.rivalIsHuman = 1;
+
+  // Their visible organisation becomes contested turf on your map. Ground ids
+  // are shared content (data/setup.ts), so this transfers across clients.
+  for (const g of state.groundsArr) {
+    const held = p.ground[g.id];
+    if (held) g.rivalRap = clamp(Math.max(g.rivalRap ?? 0, held), 0, 100);
+  }
+}
+
+/** Is the seated opposition a human being? UI only — never a mechanic. */
+export function rivalIsHuman(state: GameState): boolean {
+  return !!state.sessionFlags?.rivalIsHuman;
+}
+
+/**
+ * The RNG stream for one opponent turn.
+ *
+ * Async head-to-head desyncs the instant two clients disagree about what the
+ * opponent did, so the stream must be derivable from information both sides
+ * already hold — the profile and the week — and from nothing else. In
+ * particular it must NOT come from the local campaign seed, which the other
+ * player does not have and should not be sent.
+ *
+ * FNV-1a over a canonical string: stable across engines, and cheap.
+ */
+export function opponentSeed(p: RivalProfile, week: number): number {
+  const canon =
+    `${p.v}|${p.id}|${p.strength}|${p.nameID}|${p.momentum}|${p.endorsePts}|` +
+    `${p.ballot ? 1 : 0}|${Object.keys(p.ground).sort().map(k => `${k}:${p.ground[k]}`).join(',')}|w${week}`;
+  let h = 0x811c9dc5;
+  for (let i = 0; i < canon.length; i++) {
+    h ^= canon.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h >>> 0 || 1;
+}
+
+/** Round-trip through JSON, the way a transport would. Rejects junk. */
+export function parseRivalProfile(json: string): RivalProfile {
+  const raw: unknown = JSON.parse(json);
+  if (!isRivalProfile(raw)) {
+    throw new Error(`unreadable rival profile (want v${RIVAL_PROFILE_VERSION})`);
+  }
+  return raw;
+}

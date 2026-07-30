@@ -168,6 +168,39 @@ function main() {
         await page.locator('#gp-cancel').click();
       }
 
+      // --- Full-screen play result (engine beat -> whole-screen dialog) ---
+      // It is a role=dialog aria-modal takeover with generated content, so it
+      // needs the same scrutiny as every other overlay. Nothing checked it when
+      // it was first built, which is exactly how the old toast shipped with its
+      // ledger figures at 1.02:1 contrast.
+      {
+        const hand = await page.$$('#playables .play-card:not(.locked)');
+        for (const c of hand) {
+          await safeClick(c);
+          await page.waitForTimeout(70);
+          const pd = page.locator('#btn-play-detail');
+          if (await pd.isVisible().catch(() => false)) {
+            await safeClick(pd);
+            await page.waitForTimeout(140);
+            const gp = page.locator('#ground-picker');
+            if (await gp.isVisible().catch(() => false)) {
+              await safeClick(gp.locator('button').first());
+              await page.waitForTimeout(160);
+            }
+          } else {
+            await safeClick(page.locator('#detail-close'));
+            await page.waitForTimeout(30);
+          }
+          if (await page.locator('#result-host:not(.hidden)').count()) break;
+        }
+        if (await page.locator('#result-host:not(.hidden)').count()) {
+          await page.waitForTimeout(700); // let the count-up settle
+          byState['play-result'] = await runAxe(page);
+          await safeClick(page.locator('#result-go'));
+          await page.waitForSelector('#result-host.hidden', { timeout: 2_000 }).catch(() => {});
+        }
+      }
+
       // --- Terminal (inspect→PLAY; never spam 0-AP shop) ---
       for (let iter = 0; iter < 500; iter++) {
         if (await page.locator('#terminal').isVisible()) break;

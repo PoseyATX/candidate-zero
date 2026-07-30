@@ -147,6 +147,10 @@ export interface GameState {
   obls: string[];
   reps: string[];
   rivals: { id: string; n: string }[];
+  /** The opposition seated for this run, as a transportable profile.
+   *  In head-to-head this arrives from the other player; in single player it is
+   *  built from the persistent rival. See engine/rival-profile.ts. */
+  rivalProfile?: import('./rival-profile.js').RivalProfile;
   tier: number;
   persona: string | null;
   personaId: string | null;
@@ -335,6 +339,12 @@ export interface LegacyState {
   name?: string;
   /** Persistent identity from the 3-step card nameplate. */
   identity?: FiledIdentity;
+  /** The people who take your call, across runs — see engine/machine.ts.
+   *  Optional so every save written before it existed still loads. */
+  machine?: import('./machine.js').MachineState;
+  /** The named opposition, carried across runs — see engine/rival.ts.
+   *  Optional so every save written before it existed still loads. */
+  rival?: import('./rival.js').RivalState;
 }
 
 export interface DeckState {

@@ -78,7 +78,13 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   mk({
     id: 'SIG01', persona: 'PA_CLO', n: 'Fill the Square', attrs: ['CLO'], risk: 'VOL',
     cost: { a: 4, vp: 3 }, ph: [2, 3], tag: 'signature — The Powerhouse',
-    d: 'You do not ask for the room. You fill it, and the turnout operation fills the rest.',
+    d:
+      'You do not ask for the room. You fill it, and the turnout operation fills the rest. ' +
+      "Your persona's signature — nobody else's deck contains it, and it is shuffled in " +
+      'from week one. ' +
+      'The most expensive signature in the game — 4 AP and three volunteers — and the widest: ' +
+      'a breakthrough is 60+ contacts, name ID, momentum AND turnout banked on every ground at once. ' +
+      'Close is the attribute. VOLATILE; a washout leaks momentum for the whole outlay.',
     odds: O(0.58),
     run: (s, o) => {
       if (o.tier === 0) { const c = 60 + Math.floor(random() * 30); s.contacts += c; s.nameID += 5; s.momentum += 2; s.groundsArr.forEach(g => (g.gotv += 0.06)); return `The square overflows. +${c} contacts, +5 name ID, momentum, and turnout banked everywhere.`; }
@@ -90,7 +96,13 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   mk({
     id: 'SIG02', persona: 'PA_CON', n: 'The Unbending Line', attrs: ['CON'], risk: 'STD',
     cost: { a: 3 }, ph: [2, 3], tag: 'signature — The True Believer',
-    d: 'The message arrives pre-sharpened and never wavers. You say the same true thing until it is the only thing.',
+    d:
+      'The message arrives pre-sharpened and never wavers. ' +
+      "Your persona's signature — nobody else's deck contains it, and it is shuffled in " +
+      'from week one. ' +
+      'It SHARPENS YOUR MESSAGE — a permanent bonus across half your deck — and does so even on a ' +
+      'weak result, which almost nothing else manages. A good one adds momentum and name ID on top. ' +
+      'Conviction is the attribute. The safest way any persona buys a sharp message.',
     odds: O(0.62),
     run: (s, o) => {
       if (o.tier <= 1) { s.messageSharp = true; s.momentum += 2; s.nameID += 2; return 'The line holds and travels. Message sharp, +2 momentum, +2 name ID.'; }
@@ -101,7 +113,14 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   mk({
     id: 'SIG03', persona: 'PA_CRA', n: 'Call In a Marker', attrs: ['CRA'], risk: 'STD',
     cost: { a: 3, fav: 1 }, ph: [1, 2, 3], tag: 'signature — The Operator',
-    d: 'Someone owes you, and today is the day. The angle was always there.',
+    d:
+      'Someone owes you, and today is the day. ' +
+      "Your persona's signature — nobody else's deck contains it, and it is shuffled in " +
+      'from week one. ' +
+      'Spends a favour to bank 3 endorsement points and knock the rival back on their own ground — ' +
+      'one of the few cards that builds you and hurts them in the same action. ' +
+      'Craft is the attribute. On a disaster the debt is disputed, nothing moves, ' +
+      'and now they know you asked.',
     odds: O(0.68),
     run: (s, o) => {
       if (o.tier <= 1) { s.endorsePts += 3; hitRival(s, 6); return "A marker called: +3 endorsement points and the rival's best ground softens."; }
@@ -112,7 +131,13 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   mk({
     id: 'SIG04', persona: 'PA_INK', n: 'The Airtight Filing', attrs: ['INK'], risk: 'SAFE',
     cost: { a: 3 }, ph: [1], tag: 'signature — The Parliamentarian',
-    d: 'Every box checked, every deadline beaten. The clerk finds nothing because there is nothing to find.',
+    d:
+      'Every box checked, every deadline beaten. ' +
+      "Your persona's signature — nobody else's deck contains it, and it is shuffled in " +
+      'from week one. ' +
+      'A SAFE, high-odds 40 signatures straight at the ballot threshold — and if that clears it, ' +
+      'you are on the ballot on the spot, no fee and no gamble. ' +
+      'Ink is the attribute. Primary only, and the single most reliable ballot card in the game.',
     odds: O(0.8),
     run: (s, o) => {
       if (o.tier <= 1) { s.signatures += 40; if (s.signatures >= s.sigNeed && !s.ballot) { s.ballot = true; return 'Filing airtight — the threshold clears itself. On the ballot.'; } s.nameID += 1; return `The paperwork does the walking. +40 toward the ballot (${s.signatures}/${s.sigNeed}).`; }
@@ -122,7 +147,13 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   mk({
     id: 'SIG05', persona: 'PA_DIP', n: 'Broker the Grand Bargain', attrs: ['DIP'], risk: 'STD',
     cost: { a: 3 }, ph: [2, 3], tag: 'signature — The Coalition-Builder',
-    d: 'You seat the rancher next to the union man and both leave thinking they won.',
+    d:
+      'You seat the rancher next to the union man and both leave thinking they won. ' +
+      "Your persona's signature — nobody else's deck contains it, and it is shuffled in " +
+      'from week one. ' +
+      '3 endorsement points and a favour in one action — endorsement points gate the County Judge ' +
+      'and the statewide names, and favours are what Calendars wants in Session. ' +
+      'Diplomacy is the attribute. Nothing is lost on a miss beyond a bruised ego.',
     odds: O(0.66),
     run: (s, o) => {
       if (o.tier <= 1) { s.endorsePts += 3; s.favors += 1; return 'A bargain everyone can sell at home. +3 endorsement points, +1 favor.'; }
@@ -133,7 +164,13 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   mk({
     id: 'SIG06', persona: 'PA_CHA', n: 'Remember Every Name', attrs: ['CHA'], risk: 'VOL',
     cost: { a: 3, vp: 1 }, ph: [1, 2, 3], tag: 'signature — The Natural',
-    d: 'The kid, the dog, the surgery last spring. You remember, and they never forget that you did.',
+    d:
+      'The kid, the dog, the surgery last spring. You remember, and they never forget that you did. ' +
+      "Your persona's signature — nobody else's deck contains it, and it is shuffled in " +
+      'from week one. ' +
+      'A large contact haul with name ID and momentum, for a volunteer and 3 AP. ' +
+      'Charm is the attribute. VOLATILE — blank on the mayor\'s wife and the whole action is wasted, ' +
+      'so it wants a week you can afford to lose.',
     odds: O(0.6),
     run: (s, o) => {
       if (o.tier === 0) { const c = 40 + Math.floor(random() * 20); s.contacts += c; s.nameID += 4; s.momentum += 1; return `Every name lands. +${c} contacts, +4 name ID, momentum.`; }
@@ -147,7 +184,13 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   mk({
     id: 'SIG07', persona: 'PA_CLO_CON', n: 'March on the Capitol Steps', attrs: ['CLO', 'CON'], risk: 'VOL',
     cost: { a: 4, vp: 2 }, ph: [2, 3], tag: 'signature — The Movement Champion',
-    d: 'Conviction with muscle behind it — a crowd that showed up angry and organized.',
+    d:
+      'Conviction with muscle behind it — a crowd that showed up angry and organized. ' +
+      "Your persona's signature — nobody else's deck contains it, and it is shuffled in " +
+      'from week one. ' +
+      'Expensive at 4 AP and two volunteers, and it pays in everything at once: momentum, name ID, ' +
+      'contacts, and a permanently SHARP MESSAGE. ' +
+      'Close and Conviction. VOLATILE, and priced like the swing it is.',
     odds: O(0.57),
     run: (s, o) => {
       if (o.tier === 0) { s.momentum += 3; s.nameID += 4; s.contacts += 25; s.messageSharp = true; return 'The steps fill and the cameras come. +3 momentum, +4 name ID, +25 contacts, message sharp.'; }
@@ -159,7 +202,13 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   mk({
     id: 'SIG08', persona: 'PA_CLO_CRA', n: 'The Elbow', attrs: ['CLO', 'CRA'], risk: 'VOL',
     cost: { a: 3 }, ph: [2, 3], tag: 'signature — The Bare-Knuckle Populist',
-    d: 'Loud out front, and an elbow the establishment never sees coming.',
+    d:
+      'Loud out front, and an elbow the establishment never sees coming. ' +
+      "Your persona's signature — nobody else's deck contains it, and it is shuffled in " +
+      'from week one. ' +
+      'The hardest direct hit on the opposition available to any persona — a clean landing buckles ' +
+      'the rival\'s best ground — plus momentum and name ID for yourself. ' +
+      'Close and Craft. VOLATILE. It attacks rather than builds, so play it when you are behind.',
     odds: O(0.58),
     run: (s, o) => {
       if (o.tier === 0) { hitRival(s, 12); s.momentum += 2; s.nameID += 2; return "The elbow lands clean. The rival's ground buckles, +2 momentum, +2 name ID."; }
@@ -171,7 +220,13 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   mk({
     id: 'SIG09', persona: 'PA_CLO_INK', n: 'Outwork the Field', attrs: ['CLO', 'INK'], risk: 'SAFE',
     cost: { a: 4 }, ph: [1, 2, 3], tag: 'signature — The Workhorse',
-    d: 'Grind plus the rulebook. You are still knocking when the others go home.',
+    d:
+      'Grind plus the rulebook. You are still knocking when the others go home. ' +
+      "Your persona's signature — nobody else's deck contains it, and it is shuffled in " +
+      'from week one. ' +
+      'SAFE, 4 AP, and it does three jobs at once: contacts, a volunteer, name ID — and, before you ' +
+      'are on the ballot, 20 signatures toward it as well. ' +
+      'Close and Ink. The steadiest signature in the game; it never has a bad week.',
     odds: O(0.82),
     run: (s, o) => {
       if (o.tier <= 1) { const c = 34 + Math.floor(random() * 14); s.contacts += c; s.volPool += 1; s.nameID += 2; if (s.stage !== 'general' && !s.ballot) s.signatures += 20; return `Nobody outworks you. +${c} contacts, a volunteer, +2 name ID${s.stage !== 'general' && !s.ballot ? ', +20 toward the ballot' : ''}.`; }
@@ -181,7 +236,13 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   mk({
     id: 'SIG10', persona: 'PA_CLO_DIP', n: 'The Family Name Opens the Gate', attrs: ['CLO', 'DIP'], risk: 'STD',
     cost: { a: 3 }, ph: [1, 2], tag: 'signature — The Rural Patriarch',
-    d: 'Your name means something here. The chairs already wave you through.',
+    d:
+      'Your name means something here. The chairs already wave you through. ' +
+      "Your persona's signature — nobody else's deck contains it, and it is shuffled in " +
+      'from week one. ' +
+      '3 endorsement points, contacts, and rapport banked on TWO grounds at once — rapport being ' +
+      'what turnout later converts into actual votes. ' +
+      'Close and Diplomacy. Primary and general only.',
     odds: O(0.66),
     run: (s, o) => {
       if (o.tier <= 1) { s.endorsePts += 3; s.contacts += 14; s.groundsArr.slice(0, 2).forEach(g => (g.rapport = (g.rapport || 0) + 4)); return 'The gate opens on the name. +3 endorsement points, +14 contacts, two grounds warm.'; }
@@ -192,7 +253,13 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   mk({
     id: 'SIG11', persona: 'PA_CLO_CHA', n: 'The Homecoming', attrs: ['CLO', 'CHA'], risk: 'STD',
     cost: { a: 3 }, ph: [1, 2], tag: 'signature — The Local Legend',
-    d: 'Star quarterback, then feed-store owner, now this. The county has rooted for you for decades.',
+    d:
+      'Star quarterback, then feed-store owner, now this. ' +
+      "Your persona's signature — nobody else's deck contains it, and it is shuffled in " +
+      'from week one. ' +
+      'A solid contact haul with a large name-ID jump and momentum — the profile signature for ' +
+      'someone the county already likes but has not thought of as a candidate. ' +
+      'Close and Charm. Primary and general only.',
     odds: O(0.68),
     run: (s, o) => {
       if (o.tier <= 1) { const c = 26 + Math.floor(random() * 12); s.contacts += c; s.nameID += 4; s.momentum += 1; return `The whole town turns out. +${c} contacts, +4 name ID, momentum.`; }
@@ -203,7 +270,13 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   mk({
     id: 'SIG12', persona: 'PA_CON_CRA', n: 'Burn It Down to Build It Up', attrs: ['CON', 'CRA'], risk: 'VOL',
     cost: { a: 3 }, ph: [2, 3], tag: 'signature — The Insurgent',
-    d: 'A disciplined message and a knife for the primary. You are exactly as angry as you choose to be.',
+    d:
+      'A disciplined message and a knife for the primary. ' +
+      "Your persona's signature — nobody else's deck contains it, and it is shuffled in " +
+      'from week one. ' +
+      'Burns the rival\'s ground, banks 3 momentum, and leaves your message permanently SHARP — ' +
+      'attack and self-improvement in the same action. ' +
+      'Conviction and Craft. VOLATILE, which is the whole personality of the card.',
     odds: O(0.56),
     run: (s, o) => {
       if (o.tier === 0) { hitRival(s, 8); s.momentum += 3; s.messageSharp = true; return 'The insurgency catches fire. Rival ground burns, +3 momentum, message sharp.'; }
@@ -215,7 +288,13 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   mk({
     id: 'SIG13', persona: 'PA_CON_INK', n: 'File the Whistleblower Complaint', attrs: ['CON', 'INK'], risk: 'VOL',
     cost: { a: 3 }, ph: [2, 3], tag: 'signature — The Reform Crusader',
-    d: 'A cause and the rulebook to advance it. You file, and the file has teeth.',
+    d:
+      'A cause and the rulebook to advance it. You file, and the file has teeth. ' +
+      "Your persona's signature — nobody else's deck contains it, and it is shuffled in " +
+      'from week one. ' +
+      'Caves the rival\'s ground harder than almost anything, adds name ID, and sharpens your ' +
+      'message permanently. ' +
+      'Conviction and Ink. VOLATILE — the complaint either leads the news or it does not stick.',
     odds: O(0.58),
     run: (s, o) => {
       if (o.tier === 0) { hitRival(s, 10); s.nameID += 4; s.messageSharp = true; return 'The complaint sticks and leads the news. Rival ground caves, +4 name ID, message sharp.'; }
@@ -227,7 +306,13 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   mk({
     id: 'SIG14', persona: 'PA_CON_DIP', n: 'Cross the Aisle', attrs: ['CON', 'DIP'], risk: 'STD',
     cost: { a: 3 }, ph: [2, 3], tag: 'signature — The Statesman',
-    d: 'Steady, principled, trusted across the aisle — the kind they call "serious."',
+    d:
+      'Steady, principled, trusted across the aisle — the kind they call "serious." ' +
+      "Your persona's signature — nobody else's deck contains it, and it is shuffled in " +
+      'from week one. ' +
+      'Endorsement points, momentum and name ID together at STD risk with no attack and no ' +
+      'blowback: the least dramatic signature and one of the most dependable. ' +
+      'Conviction and Diplomacy.',
     odds: O(0.65),
     run: (s, o) => {
       if (o.tier <= 1) { s.endorsePts += 2; s.momentum += 1; s.nameID += 2; return 'A serious figure, seriously received. +2 endorsement points, +1 momentum, +2 name ID.'; }
@@ -238,7 +323,13 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   mk({
     id: 'SIG15', persona: 'preacher', n: 'Revival Weekend', attrs: ['CON', 'CHA'], risk: 'STD',
     cost: { a: 4, vp: 1 }, ph: [2, 3], tag: 'signature — The Preacher',
-    d: 'A pulpit is a precinct and Sundays are turnout. You move people, and you mean it.',
+    d:
+      'A pulpit is a precinct and Sundays are turnout. ' +
+      "Your persona's signature — nobody else's deck contains it, and it is shuffled in " +
+      'from week one. ' +
+      'Four actions and a volunteer for a large contact haul, TWO volunteers back, and 2 momentum — ' +
+      'one of the few cards that returns more bodies than it costs. ' +
+      'Conviction and Charm.',
     odds: O(0.64),
     run: (s, o) => {
       if (o.tier <= 1) { const c = 30 + Math.floor(random() * 16); s.contacts += c; s.volPool += 2; s.momentum += 2; return `The tent fills three nights running. +${c} contacts, +2 volunteers, +2 momentum.`; }
@@ -249,7 +340,13 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   mk({
     id: 'SIG16', persona: 'PA_CRA_INK', n: 'Work the System', attrs: ['CRA', 'INK'], risk: 'STD',
     cost: { a: 3 }, ph: [1, 2, 3], tag: 'signature — The Fixer',
-    d: 'You know the rules AND how to bend them. Dangerous in a committee, deadly near a deadline.',
+    d:
+      'You know the rules AND how to bend them. ' +
+      "Your persona's signature — nobody else's deck contains it, and it is shuffled in " +
+      'from week one. ' +
+      'A favour, 2 endorsement points, and a knock on the rival, all at once — the most different ' +
+      'currencies any single signature touches. ' +
+      'Craft and Ink. Legal in every phase, which few signatures are.',
     odds: O(0.67),
     run: (s, o) => {
       if (o.tier <= 1) { s.favors += 1; s.endorsePts += 2; hitRival(s, 4); return 'The machinery turns your way. +1 favor, +2 endorsement points, and the rival slips.'; }
@@ -260,7 +357,13 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   mk({
     id: 'SIG17', persona: 'PA_CRA_DIP', n: 'The Grand Trade', attrs: ['CRA', 'DIP'], risk: 'STD',
     cost: { a: 3 }, ph: [2, 3], tag: 'signature — The Wheeler-Dealer',
-    d: 'Two of everything and a price on each. You can trade your way out of almost anything.',
+    d:
+      'Two of everything and a price on each. ' +
+      "Your persona's signature — nobody else's deck contains it, and it is shuffled in " +
+      'from week one. ' +
+      'TWO favours and 2 endorsement points in one action — favours are the scarcest currency in the ' +
+      'game and the only thing Calendars respects in Session. ' +
+      'Craft and Diplomacy. Bank them now; spend them at the narrow gate later.',
     odds: O(0.66),
     run: (s, o) => {
       if (o.tier <= 1) { s.favors += 2; s.endorsePts += 2; return 'Everything for something. +2 favors, +2 endorsement points.'; }
@@ -271,7 +374,13 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   mk({
     id: 'SIG18', persona: 'PA_CRA_CHA', n: 'Steal the Cycle', attrs: ['CRA', 'CHA'], risk: 'VOL',
     cost: { a: 3, $: 400 }, ph: [2, 3], tag: 'signature — The Showman',
-    d: 'Timing and charm: you know the line AND the moment to land it. Made for the cameras.',
+    d:
+      'Timing and charm: you know the line AND the moment to land it. ' +
+      "Your persona's signature — nobody else's deck contains it, and it is " +
+      'shuffled in from week one. ' +
+      'Pure profile — a large name-ID jump and 3 momentum, and nothing else. ' +
+      'Craft and Charm. VOLATILE: you either own the news for a week or you do not, ' +
+      'and momentum is exactly what Earned Media spends afterward.',
     odds: O(0.59),
     run: (s, o) => {
       if (o.tier === 0) { s.nameID += 6; s.momentum += 3; return 'You own the news for a week. +6 name ID, +3 momentum.'; }
@@ -283,7 +392,13 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   mk({
     id: 'SIG19', persona: 'PA_INK_DIP', n: "The Speaker's Ear", attrs: ['INK', 'DIP'], risk: 'STD',
     cost: { a: 3 }, ph: [2, 3], tag: 'signature — The Committee Chair-in-Waiting',
-    d: 'Process mastery and the relationships to use it. Leadership is watching this profile.',
+    d:
+      'Process mastery and the relationships to use it. ' +
+      "Your persona's signature — nobody else's deck contains it, and it is " +
+      'shuffled in from week one. ' +
+      '3 endorsement points and a favour for a single action at ordinary risk — the most efficient ' +
+      'endorsement rate any signature offers. ' +
+      'Ink and Diplomacy. Leadership is watching this profile, and in Session that matters.',
     odds: O(0.66),
     run: (s, o) => {
       if (o.tier <= 1) { s.endorsePts += 3; s.favors += 1; return 'Leadership takes the meeting. +3 endorsement points, +1 favor.'; }
@@ -294,7 +409,13 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   mk({
     id: 'SIG20', persona: 'PA_INK_CHA', n: "Explain It Like It's Simple", attrs: ['INK', 'CHA'], risk: 'SAFE',
     cost: { a: 4 }, ph: [1, 2, 3], tag: 'signature — The Homegrown Wonk',
-    d: 'You explain the water-district budget so plainly people thank you for it.',
+    d:
+      'You explain the water-district budget so plainly people thank you for it. ' +
+      "Your persona's signature — nobody else's deck contains it, and it is " +
+      'shuffled in from week one. ' +
+      'SAFE, and it does three things at once: contacts, name ID, and a permanently SHARP MESSAGE. ' +
+      'Ink and Charm. The lowest-variance route to a sharp message in the game, and the floor is ' +
+      'still a useful hour.',
     odds: O(0.8),
     run: (s, o) => {
       if (o.tier <= 1) { const c = 24 + Math.floor(random() * 12); s.contacts += c; s.nameID += 3; s.messageSharp = true; return `Clarity is charisma here. +${c} contacts, +3 name ID, message sharp.`; }
@@ -316,7 +437,12 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   mk({
     id: 'SIG22', persona: 'teacher', n: 'Parent-Teacher Circuit', attrs: ['CHA', 'DIP'], risk: 'SAFE',
     cost: { a: 3 }, ph: [1, 2, 3], tag: 'signature — The Teacher',
-    d: 'Twenty years of cafeteria nights. You work the rooms that already know your name.',
+    d:
+      'Twenty years of cafeteria nights. You work the rooms that already know your name. ' +
+      "Your persona's signature — nobody else's deck contains it, and it is " +
+      'shuffled in from week one. ' +
+      'SAFE contacts, name ID and a volunteer, with no bad outcome to speak of. ' +
+      'Charm and Diplomacy. Unglamorous and completely dependable — the Teacher\'s whole thesis.',
     odds: O(0.78),
     run: (s, o) => {
       if (o.tier <= 1) {
@@ -333,7 +459,13 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   mk({
     id: 'SIG23', persona: 'veteran', n: 'Halls of Honor', attrs: ['CON', 'CLO'], risk: 'STD',
     cost: { a: 3 }, ph: [1, 2, 3], tag: 'signature — The Veteran',
-    d: 'The VFW and Legion still stand when the cameras leave. Bio is armor; the halls are turnout.',
+    d:
+      'The VFW and Legion still stand when the cameras leave. ' +
+      "Your persona's signature — nobody else's deck contains it, and it is " +
+      'shuffled in from week one. ' +
+      'An endorsement point, TWO volunteers, name ID and contacts together — one of the few cards ' +
+      'that pays in bodies as well as numbers. ' +
+      'Conviction and Close. Bio is armor; the halls are turnout.',
     odds: O(0.66),
     run: (s, o) => {
       if (o.tier <= 1) {
@@ -356,7 +488,14 @@ export const SIGNATURE_PLAYS: PlayCard[] = [
   mk({
     id: 'SIG24', persona: 'smallbiz', n: 'Call In the Store Credit', attrs: ['CRA', 'DIP'], risk: 'STD',
     cost: { a: 3 }, ph: [1, 2], tag: 'signature — The Feed-Store Owner',
-    d: 'Everyone still owes you a favor or a bag of feed. You cash favors before cash.',
+    d:
+      'Everyone still owes you a favour or a bag of feed. ' +
+      "Your persona's signature — nobody else's deck contains it, and it is " +
+      'shuffled in from week one. ' +
+      'The only signature that pays real MONEY — $600 — plus a favour, contacts and an endorsement ' +
+      'point in one action. ' +
+      'Craft and Diplomacy. Cash early is the filing fee, which is eight Saturdays of petitions you ' +
+      'never have to work.',
     odds: O(0.68),
     run: (s, o) => {
       if (o.tier <= 1) {

@@ -32,7 +32,11 @@ export const WAVE5_PLAYS: PlayCard[] = [
   {
     id: 'PL80', n: 'Grocery-Store Handshakes', cost: { a: 1 }, risk: 'SAFE', ph: [1, 2, 3],
     tag: 'the parking lot', attrs: ['CHA'], rarity: 'common', residency: 'main', control: 'player',
-    d: 'An hour at the exit doors. Cheap, endless, and it actually works.',
+    d:
+      'An hour at the exit doors. Cheap, endless, and it actually works. ' +
+      'One AP for around 15–20 contacts and a point of name ID, at odds that rarely disappoint. ' +
+      'Charm is the attribute. The card you play with the odd action nobody planned for — ' +
+      'no ground to pick, no downside worth the name.',
     odds: () => 0.8,
     run: (s, o) => {
       if (o.tier <= 1) { const c = 14 + Math.floor(random() * 8); s.contacts += c; s.nameID += 1; return `Carts and small talk. +${c} contacts, +1 name ID.`; }
@@ -42,7 +46,11 @@ export const WAVE5_PLAYS: PlayCard[] = [
   {
     id: 'PL81', n: 'Church Bulletin Ad', cost: { a: 1, $: 80 }, risk: 'SAFE', ph: [1, 2, 3],
     tag: 'the back page', attrs: ['DIP'], rarity: 'common', residency: 'main', control: 'player',
-    d: 'A quarter page next to the potluck schedule. The congregation notices who shows up in print.',
+    d:
+      'A quarter page next to the potluck schedule. The congregation notices who shows up in print. ' +
+      'One AP and $80 buys name ID and — unusually for a card this cheap — an ENDORSEMENT POINT, ' +
+      'which is the currency the County Judge and the big statewide names count before they will talk. ' +
+      'Diplomacy is the attribute. Safe, small, and it stacks.',
     odds: () => 0.82,
     run: (s, o) => {
       if (o.tier <= 1) { s.nameID += 3; s.endorsePts += 1; return 'Quiet approval from the pews. +3 name ID, +1 endorsement point.'; }
@@ -52,7 +60,11 @@ export const WAVE5_PLAYS: PlayCard[] = [
   {
     id: 'PL82', n: 'Little-League Sponsorship', cost: { a: 1, $: 120 }, risk: 'SAFE', ph: [1, 2],
     tag: 'name on the jersey', attrs: ['CLO'], rarity: 'common', residency: 'main', control: 'player',
-    d: 'Your name on forty small backs, every Saturday, all season. Turnout starts young — through the parents.',
+    d:
+      'Your name on forty small backs, every Saturday, all season. Turnout starts young — through the parents. ' +
+      'One AP and $120 for a solid lump of name ID and usually a team-mom volunteer. ' +
+      'Close is the attribute and the odds are kind. ' +
+      'Primary and general only; by the turnout stage the season is over.',
     odds: () => 0.8,
     run: (s, o) => {
       if (o.tier <= 1) { s.nameID += 4; s.volPool += 1; return 'The bleachers learn your name. +4 name ID and a team-mom volunteer.'; }
@@ -62,7 +74,12 @@ export const WAVE5_PLAYS: PlayCard[] = [
   {
     id: 'PL83', n: 'Letter to the Editor', cost: { a: 1 }, risk: 'STD', ph: [1, 2],
     tag: 'the op-ed page', attrs: ['INK'], rarity: 'common', residency: 'main', control: 'player',
-    d: 'Three hundred words, tightly argued. The people who vote in primaries read the paper.',
+    d:
+      'Three hundred words, tightly argued. The people who vote in primaries read the paper. ' +
+      'One AP, and a breakthrough does something no other cheap card does: it SHARPENS YOUR MESSAGE ' +
+      'permanently, which widens the odds on half your deck for the rest of the run. ' +
+      'Ink is the attribute, and a message already sharp makes the letter land more easily. ' +
+      'A disaster is a typo that circulates and costs you name ID — small, but real.',
     odds: (s) => clamp(0.6 + (s.messageSharp ? 0.1 : 0), 0, 0.9),
     run: (s, o) => {
       if (o.tier === 0) { s.nameID += 5; s.messageSharp = true; return 'A letter that gets clipped and mailed around. +5 name ID, message sharp.'; }
@@ -74,7 +91,11 @@ export const WAVE5_PLAYS: PlayCard[] = [
   {
     id: 'PL84', n: 'Coffee-Shop Sit-Down', cost: { a: 1 }, risk: 'SAFE', ph: [1, 2, 3],
     tag: 'the corner booth', attrs: ['CHA'], rarity: 'common', residency: 'main', control: 'player',
-    d: 'One table, four regulars, refills on the house. Retail politics at its most literal.',
+    d:
+      'One table, four regulars, refills on the house. Retail politics at its most literal. ' +
+      'One AP for contacts plus a point of momentum — the cheapest momentum in the deck, ' +
+      'and momentum is what Earned Media spends. ' +
+      'Charm is the attribute and it is SAFE: the bad result is still five contacts.',
     odds: () => 0.82,
     run: (s, o) => {
       if (o.tier <= 1) { const c = 10 + Math.floor(random() * 6); s.contacts += c; s.momentum += 1; return `Real conversation, real converts. +${c} contacts, momentum.`; }
@@ -86,7 +107,12 @@ export const WAVE5_PLAYS: PlayCard[] = [
   {
     id: 'PL85', n: 'Union Hall Endorsement', cost: { a: 2, fav: 1 }, risk: 'STD', ph: [2, 3],
     tag: 'the locals sign on', attrs: ['DIP'], rarity: 'uncommon', residency: 'main', control: 'player',
-    d: 'The business agent likes you enough to put it in writing. Stewards walk turf you never could.',
+    d:
+      'The business agent likes you enough to put it in writing. Stewards walk turf you never could. ' +
+      'Costs a favour as well as the action, and pays 3 endorsement points and two volunteers — ' +
+      'one of the best endorsement rates available. ' +
+      'Diplomacy is the attribute and volunteers raise the odds. ' +
+      'The worst case is a soft nod worth one point; you never come away empty.',
     odds: (s) => clamp(0.6 + s.volPool * 0.02, 0, 0.9),
     run: (s, o) => {
       if (o.tier <= 1) { s.endorsePts += 3; s.volPool += 2; return 'The locals endorse. +3 endorsement points and two stewards on the doors.'; }
@@ -97,7 +123,12 @@ export const WAVE5_PLAYS: PlayCard[] = [
   {
     id: 'PL86', n: 'Targeted Digital Buy', cost: { a: 2, $: 700 }, risk: 'STD', ph: [2, 3],
     tag: 'the feed', attrs: ['CRA'], rarity: 'uncommon', residency: 'main', control: 'player',
-    d: 'Lookalike audiences, dayparted, A/B tested. The consultant swears by the dashboard.',
+    d:
+      'Lookalike audiences, dayparted, A/B tested. The consultant swears by the dashboard. ' +
+      'Name ID and contacts for $700 and two actions — the way a cash-rich campaign converts ' +
+      'money into reach without a single Saturday. ' +
+      'Craft is the attribute and owning any campaign asset helps. ' +
+      'The floor is bad: a disaster funds the wrong district entirely and you get nothing.',
     odds: (s) => clamp(0.6 + (s.assets.length ? 0.06 : 0), 0, 0.92),
     run: (s, o) => {
       if (o.tier === 0) { s.nameID += 6; s.contacts += 20; return 'The creative pops. +6 name ID, +20 contacts.'; }
@@ -109,7 +140,11 @@ export const WAVE5_PLAYS: PlayCard[] = [
   {
     id: 'PL87', n: 'Charter the Senior Vans', cost: { a: 2, vp: 2 }, risk: 'STD', ph: [3],
     tag: 'the surest voters', attrs: ['CLO'], rarity: 'uncommon', residency: 'main', control: 'player',
-    d: 'The seniors vote at ninety percent and love a ride. Turnout you can schedule.',
+    d:
+      'The seniors vote at ninety percent and love a ride. Turnout you can schedule. ' +
+      'Spends two volunteers to bank turnout across THREE grounds at once plus contacts — ' +
+      'the widest turnout card that does not need the whole machine behind it. ' +
+      'Close is the attribute. Turnout stage only, and even a half-full van banks something.',
     odds: () => 0.72,
     run: (s, o) => {
       if (o.tier <= 1) { bankGotv(s, 0.1, 3); s.contacts += 12; return 'The vans run all day. +12 contacts and turnout banked across three grounds.'; }
@@ -119,7 +154,12 @@ export const WAVE5_PLAYS: PlayCard[] = [
   {
     id: 'PL88', n: 'Opposition Tracker', cost: { a: 1, $: 400 }, risk: 'VOL', ph: [2, 3],
     tag: 'the guy with the camera', attrs: ['CRA'], rarity: 'uncommon', residency: 'main', control: 'player',
-    d: 'A kid with a camcorder at every rival event, waiting for the gaffe. Sometimes it comes.',
+    d:
+      'A kid with a camcorder at every rival event, waiting for the gaffe. Sometimes it comes. ' +
+      'One of the few cards that attacks the OPPOSITION rather than building you: a hit knocks ' +
+      'the rival back on their own ground, hard on a breakthrough. ' +
+      'Craft is the attribute and Operator standing helps. ' +
+      'VOLATILE — get caught trespassing and the story is you, with a hit piece to show for it.',
     odds: (s) => clamp(0.5 + s.faces.O * 0.003, 0, 0.9),
     run: (s, o) => {
       if (o.tier === 0) { hitRival(s, 10); s.nameID += 2; return 'The tracker catches a real one. The rival ground buckles, +2 name ID.'; }
@@ -131,7 +171,12 @@ export const WAVE5_PLAYS: PlayCard[] = [
   {
     id: 'PL89', n: 'Megachurch Sunday', cost: { a: 2 }, risk: 'VOL', ph: [1, 2, 3],
     tag: 'the big room', attrs: ['CHA'], rarity: 'uncommon', residency: 'main', control: 'player',
-    d: 'Three thousand seats and a pastor who might, or might not, wave you up front.',
+    d:
+      'Three thousand seats and a pastor who might, or might not, wave you up front. ' +
+      'The largest single contact haul in the common deck when he calls you up — plus momentum — ' +
+      'and even a miss is a handshake in the lobby. ' +
+      'Charm is the attribute and endorsement points raise the odds, so it rewards a campaign that ' +
+      'has already been blessed elsewhere. A disaster is pointed neutrality, and it leaks momentum.',
     odds: (s) => clamp(0.5 + s.endorsePts * 0.01, 0, 0.9),
     run: (s, o) => {
       if (o.tier === 0) { const c = 40 + Math.floor(random() * 20); s.contacts += c; s.momentum += 2; return `The pastor calls you up. +${c} contacts, +2 momentum.`; }
@@ -145,7 +190,13 @@ export const WAVE5_PLAYS: PlayCard[] = [
   {
     id: 'PL90', n: 'Statewide Figure Endorses', cost: { a: 3, fav: 1 }, risk: 'VOL', ph: [2, 3],
     tag: 'the big name', attrs: ['DIP'], rarity: 'rare', residency: 'main', control: 'player',
-    d: 'A name people know from television deigns to say yours. The bump is real; so is the debt.',
+    d:
+      'A name people know from television deigns to say yours. The bump is real; so is the debt. ' +
+      'Three actions and a favour for as much as 5 endorsement points, name ID and momentum together — ' +
+      'the biggest endorsement swing in the game. ' +
+      'Diplomacy is the attribute and your existing endorsement points raise the odds: ' +
+      'big names go to campaigns that already look like winners. ' +
+      'Backfire and their baggage becomes your baggage.',
     odds: (s) => clamp(0.52 + s.endorsePts * 0.015, 0, 0.9),
     run: (s, o) => {
       if (o.tier === 0) { s.endorsePts += 5; s.nameID += 6; s.momentum += 2; return 'The big name goes all in. +5 endorsement points, +6 name ID, +2 momentum.'; }
@@ -157,7 +208,13 @@ export const WAVE5_PLAYS: PlayCard[] = [
   {
     id: 'PL91', n: 'The Viral Moment', cost: { a: 3 }, risk: 'VOL', ph: [2, 3],
     tag: 'lightning in a bottle', attrs: ['CHA'], rarity: 'rare', residency: 'main', control: 'player',
-    d: 'You say the exact right thing at the exact right second and the internet decides to care.',
+    d:
+      'You say the exact right thing at the exact right second and the internet decides to care. ' +
+      'The single largest name-ID swing available — a breakthrough is +12 name ID, +4 momentum and ' +
+      'a pile of contacts, and for a week you simply are the race. ' +
+      'Charm is the attribute; a sharp message and banked momentum both widen it considerably. ' +
+      'VOLATILE and expensive at 3 AP. It goes viral either way; a disaster goes viral for the ' +
+      'wrong reason, and that clip outlives the news cycle.',
     odds: (s) => clamp(0.45 + (s.messageSharp ? 0.12 : 0) + s.momentum * 0.01, 0, 0.9),
     run: (s, o) => {
       if (o.tier === 0) { s.nameID += 12; s.momentum += 4; s.contacts += 25; return 'It explodes. +12 name ID, +4 momentum, +25 contacts. For a week you are the race.'; }
@@ -169,7 +226,13 @@ export const WAVE5_PLAYS: PlayCard[] = [
   {
     id: 'PL92', n: 'Machine Turnout Blitz', cost: { a: 4, vp: 3 }, risk: 'VOL', ph: [3],
     tag: 'the whole apparatus', attrs: ['CLO'], rarity: 'rare', residency: 'main', control: 'player',
-    d: 'Every captain, every van, every list, one weekend. When the machine moves as one, the count moves with it.',
+    d:
+      'Every captain, every van, every list, one weekend. When the machine moves as one, the count ' +
+      'moves with it. The heaviest turnout card in the game — a breakthrough banks conversion across ' +
+      'SIX grounds at once — and priced like it: 4 AP and three volunteers. ' +
+      'Close is the attribute; volunteers and endorsement points both raise the odds, so it pays ' +
+      'off a whole campaign of groundwork rather than a single week. ' +
+      'Turnout stage only. Save the actions for it.',
     odds: (s) => clamp(0.55 + s.endorsePts * 0.01 + s.volPool * 0.02, 0, 0.92),
     run: (s, o) => {
       if (o.tier === 0) { bankGotv(s, 0.14, 6); s.contacts += 30; return 'The apparatus turns as one. Heavy turnout banked everywhere, +30 contacts.'; }
