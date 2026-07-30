@@ -36,6 +36,7 @@
 import { random } from './rng.js';
 import { memberName, poachedIds } from './machine.js';
 import { archetypeForDistrict, WELL_FUNDED_AT, type OpponentArchetype } from './opponent.js';
+import { applyRivalProfile, profileFromRival } from './rival-profile.js';
 import type { CampaignOutcome, GameState, LegacyState } from './types.js';
 
 /** Strength is a 0–100 dial, like member standing, for the same legibility. */
@@ -168,22 +169,22 @@ function playerWon(kind: CampaignOutcome): boolean {
  */
 export const STRENGTH_FLAG = 'rivalStrength';
 
+/**
+ * Seat the persistent rival for this run.
+ *
+ * Deliberately routed through engine/rival-profile.ts rather than writing to
+ * state directly: the profile pathway is the one head-to-head play will use, so
+ * single player exercises it every single run. If this took a shortcut,
+ * multiplayer would be a cold, untested codepath on the day it was switched on.
+ *
+ * (applyRivalProfile also sets state.rivals, the strength flag, and per-ground
+ * presence — that is exactly the work a human opponent's profile would do.)
+ */
 export function applyRival(state: GameState, legacy: LegacyState): RivalState {
   const r = getRival(legacy, state);
-  state.rivals = [{ id: r.id, n: r.name }];
-  // opponent.ts reads this to scale how hard they campaign. Measured: a head
-  // start in banked rapport alone moved the seat rate by ~1 SE, because both
-  // rivalRap and its odds penalty saturate — so strength has to change what
-  // they DO each week, not just where they start.
-  state.sessionFlags = state.sessionFlags || {};
-  state.sessionFlags[STRENGTH_FLAG] = r.strength;
-
+  applyRivalProfile(state, profileFromRival(r, state, STRENGTH_TO_RAP));
+  // Only used in the log line below; the mechanical effect is the profile's.
   const per = Math.round(r.strength * STRENGTH_TO_RAP);
-  if (per > 0) {
-    for (const g of state.groundsArr) {
-      g.rivalRap = Math.min(100, (g.rivalRap ?? 0) + per);
-    }
-  }
 
   const taken = poachedIds(legacy);
   const history =

@@ -147,6 +147,10 @@ export interface GameState {
   obls: string[];
   reps: string[];
   rivals: { id: string; n: string }[];
+  /** The opposition seated for this run, as a transportable profile.
+   *  In head-to-head this arrives from the other player; in single player it is
+   *  built from the persistent rival. See engine/rival-profile.ts. */
+  rivalProfile?: import('./rival-profile.js').RivalProfile;
   tier: number;
   persona: string | null;
   personaId: string | null;

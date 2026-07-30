@@ -188,6 +188,63 @@ async function main() {
     assert(await page.locator('#detail-desc').innerText().then(t => t.length > 10), 'detail shows description text');
     assert(await page.locator('#btn-play-detail').isVisible(), 'detail has PLAY button');
     await page.locator('#detail-close').click();
+
+    // --- The result waits to be acknowledged, and does not cover the hand ---
+    // Both halves are alpha notes: results used to sit on top of the last cards
+    // and the End Week bar, and fade themselves after 2.8s.
+    {
+      await page.waitForTimeout(60);
+      const hand = page.locator('#playables .play-card');
+      let played = false;
+      for (let i = 0; i < (await hand.count()) && !played; i++) {
+        await hand.nth(i).click();
+        await page.waitForTimeout(150);
+        const pd = page.locator('#btn-play-detail');
+        if (await pd.isVisible().catch(() => false)) {
+          await pd.click();
+          await page.waitForTimeout(250);
+          const gp = page.locator('#ground-picker');
+          if ((await gp.count()) && (await gp.isVisible().catch(() => false))) {
+            await gp.locator('button').first().click().catch(() => {});
+            await page.waitForTimeout(250);
+          }
+          played = true;
+        } else {
+          await page.locator('#detail-close').click().catch(() => {});
+          await page.waitForTimeout(60);
+        }
+      }
+      assert(played, 'a card resolved for the result-toast check');
+      if (played) {
+        await page.waitForTimeout(120);
+        assert((await page.locator('.toast').count()) > 0, 'playing a card raises a result toast');
+        const covered = await page.evaluate(() => {
+          const tb = document.querySelector('.toast')?.getBoundingClientRect();
+          if (!tb) return -1;
+          let n = 0;
+          for (const c of document.querySelectorAll('#playables .play-card')) {
+            const r = c.getBoundingClientRect();
+            if (!(r.right < tb.left || r.left > tb.right || r.bottom < tb.top || r.top > tb.bottom)) n++;
+          }
+          return n;
+        });
+        assert(covered === 0, `the result covers no hand card (covered ${covered})`);
+        // Must NOT self-dismiss: it is an acknowledgement.
+        await page.waitForTimeout(3400);
+        assert(
+          (await page.locator('.toast').count()) > 0,
+          'the result is still there after 3.4s — it waits for the player'
+        );
+        // One click anywhere clears it, and that click must not also open a card.
+        await page.locator('#playables .play-card').first().click({ force: true });
+        await page.waitForTimeout(250);
+        assert((await page.locator('.toast').count()) === 0, 'one click clears the result');
+        assert(
+          !(await page.locator('#card-detail').isVisible().catch(() => false)),
+          'and that click did not fall through and open a card'
+        );
+      }
+    }
     await page.waitForTimeout(40);
     assert(
       (await page.locator('.mbottom-nav').isVisible()) &&
@@ -229,7 +286,27 @@ async function main() {
       const d = page.locator('#card-detail:not(.hidden)');
       return (await d.count()) > 0 && (await d.isVisible().catch(() => false));
     };
+    /**
+     * A play result now WAITS for the player instead of fading itself — it is
+     * an acknowledgement, not a notification (alpha note: results were covering
+     * the cards and auto-vanishing before you read them). A transparent catcher
+     * makes the next click count as "read", so the driver has to click out of
+     * it exactly as a player does. Without this every play after the first one
+     * times out on the catcher.
+     */
+    let resultsAcknowledged = 0;
+    const clearResult = async () => {
+      const catcher = page.locator('.toast-catcher');
+      if (await catcher.count()) {
+        await catcher.click({ position: { x: 5, y: 5 } }).catch(() => {});
+        await page.waitForTimeout(40);
+        resultsAcknowledged++;
+        return true;
+      }
+      return false;
+    };
     const closeOverlays = async () => {
+      await clearResult();
       if (await detailOpen()) {
         await page.locator('#detail-close').click().catch(() => {});
         await page.waitForTimeout(30);
@@ -240,6 +317,7 @@ async function main() {
       }
     };
     for (let iter = 0; iter < 500; iter++) {
+      await clearResult();
       if (await page.locator('#terminal').isVisible()) {
         reachedTerminal = true;
         break;

@@ -81,7 +81,8 @@ export function showJuice(fb: PlayFeedback): void {
     : '';
   t.innerHTML =
     `<div class="toast-stamp">${fb.stamp}${streak}</div>` +
-    `<div class="toast-body">${escapeHtml(fb.juice)}</div>${deltaHtml}`;
+    `<div class="toast-body">${escapeHtml(fb.juice)}</div>${deltaHtml}` +
+    `<div class="toast-go">Tap to continue</div>`;
 
   // Intensity is the engine's own read of how hard this moment should land.
   // Drive the entrance with it rather than treating every result the same.
@@ -97,10 +98,86 @@ export function showJuice(fb: PlayFeedback): void {
       countUp(el, to, { prefix: el.dataset.prefix ?? '', suffix: el.dataset.suffix ?? '' });
     });
   }
-  window.setTimeout(() => {
+  // The result is an ACKNOWLEDGEMENT, not a notification. It used to fade
+  // itself after 2.8s from a position directly over the last hand cards and
+  // the End Week bar, with pointer-events:none — so it covered the thing you
+  // were reading and you could not even tap it away. Now it waits for you.
+  armDismiss(t);
+}
+
+/**
+ * Hold the result until the player clicks out of it.
+ *
+ * The click-catcher is transparent and full-screen: it does not hide the cards
+ * (the toast is docked clear of the grid), it only makes the next click count
+ * as "I have read this" instead of landing on a card. One tap anywhere
+ * continues, which is the cheapest possible acknowledgement.
+ */
+function armDismiss(t: HTMLElement): void {
+  const host = document.getElementById('toast-host');
+  if (!host) return;
+  const catcher = document.createElement('div');
+  catcher.className = 'toast-catcher';
+  document.body.appendChild(catcher);
+  document.body.classList.add('toast-pending');
+
+  let done = false;
+  const dismiss = (): void => {
+    if (done) return;
+    done = true;
+    document.body.classList.remove('toast-pending');
+    release();
+    catcher.remove();
+    window.removeEventListener('keydown', onKey, true);
     t.classList.add('toast-out');
-    window.setTimeout(() => t.remove(), 280);
-  }, 2800);
+    window.setTimeout(() => t.remove(), 200);
+  };
+  function onKey(e: KeyboardEvent): void {
+    if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      dismiss();
+    }
+  }
+  // Nothing may sit UNDER the toast: reserve exactly its height at the foot of
+  // the scrolling play panel while it is up, so the last hand card and the End
+  // Week bar move clear instead of being covered by their own result.
+  const panel = document.getElementById('tab-play');
+  const prevPad = panel?.style.paddingBottom ?? '';
+  const reserve = (): void => {
+    if (!panel) return;
+    const toastBox = t.getBoundingClientRect();
+    const panelBox = panel.getBoundingClientRect();
+    // Padding alone only extends the scroll range — it does not move what is
+    // already sitting under the toast. Scroll the panel by the overlap too, so
+    // the covered card actually rises into view.
+    const overlap = Math.max(0, panelBox.bottom - toastBox.top + 12);
+    panel.style.paddingBottom = `${Math.ceil(toastBox.height) + 16}px`;
+    if (overlap > 0) panel.scrollTop += overlap;
+  };
+  // Two frames: the first lets the toast lay out so its height is real, the
+  // second measures after the padding has taken effect.
+  requestAnimationFrame(() => requestAnimationFrame(reserve));
+  const release = (): void => {
+    if (panel) panel.style.paddingBottom = prevPad;
+  };
+
+  catcher.addEventListener('pointerdown', dismiss);
+  t.addEventListener('pointerdown', dismiss);
+  window.addEventListener('keydown', onKey, true);
+  // Keyboard users must be able to reach it without hunting; it is the only
+  // thing on screen that wants an answer.
+  t.tabIndex = -1;
+  t.focus({ preventScroll: true });
+}
+
+/** True while a result is waiting to be acknowledged. */
+export function resultPending(): boolean {
+  return document.body.classList.contains('toast-pending');
+}
+
+/** Dismiss any pending result immediately (stage changes, new week). */
+export function clearPendingResult(): void {
+  document.querySelector('.toast-catcher')?.dispatchEvent(new Event('pointerdown'));
 }
 
 export function renderLog(campaign: Campaign): void {

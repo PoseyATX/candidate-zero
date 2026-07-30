@@ -2067,7 +2067,10 @@ body.dossier-open {
 .toast-host {
   position: fixed;
   left: 50%;
-  bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 4.6rem);
+  /* Docked just above the bottom nav, NOT floating over the hand. The old
+     4.6rem offset put it squarely on the last cards and the End Week bar —
+     the result covered the thing the result was about. */
+  bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 0.4rem);
   transform: translateX(-50%);
   z-index: var(--z-toast);
   display: flex;
@@ -2076,6 +2079,17 @@ body.dossier-open {
   gap: 0.35rem;
   width: min(420px, 92vw);
   pointer-events: none;
+}
+
+/* Transparent, full-screen, sits just under the toast. It does not hide the
+   cards — it only makes the next click count as "read" rather than landing on
+   a card, which is what "click out of it before continuing" means. */
+.toast-catcher {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-toast) - 1);
+  background: transparent;
+  cursor: pointer;
 }
 .toast {
   width: 100%;
@@ -2089,7 +2103,26 @@ body.dossier-open {
   text-align: center;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
   animation: toast-in 0.3s ease-out both;
-  pointer-events: none;
+  /* Tappable: the toast is the acknowledgement, so it has to accept the tap. */
+  pointer-events: auto;
+  cursor: pointer;
+}
+.toast:focus-visible {
+  outline: 2px solid var(--oxblood-bright);
+  outline-offset: 2px;
+}
+.toast-go {
+  margin-top: 0.3rem;
+  font-family: Cinzel, serif;
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7a5a2c;
+}
+/* While a result is waiting, the End Week bar must not sit under the toast. */
+body.toast-pending .endweek-wrap,
+body.toast-pending #btn-endweek {
+  opacity: 0.35;
 }
 .toast-stamp {
   font-family: Cinzel, serif;
@@ -2599,9 +2632,14 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
 .toast-deltas {
   margin-top: 0.2rem;
   font-family: Cinzel, serif;
-  font-size: 0.72rem;
+  /* The ledger delta is the answer to "did anything happen" — the whole reason
+     this row exists. It was #e8d48a (pale gold) on the parchment toast: a
+     measured 1.02:1, i.e. invisible. Every number this feature was built to
+     show had been rendering as blank space. 5.55:1 and bold. */
+  font-size: 0.8rem;
+  font-weight: 700;
   letter-spacing: 0.03em;
-  color: #e8d48a;
+  color: #6b4a12;
 }
 
 /* Cards read as a held hand, not a list: each row overlaps the one above it and
