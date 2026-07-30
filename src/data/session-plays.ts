@@ -3,7 +3,8 @@
  * (prototype-single-file.html ~940–1003 core path + casework/errand/whip).
  *
  * All show-gated on stage==='session'. Pipeline plays (SS02–SS07) are one
- * per week (sessionFlags.pipelineUsed), matching archive pace.
+ * per week by default; a second costs 3 AP still in hand (engine/session.ts
+ * pipelineMotionAvailable), so forcing the bill means a week spent on nothing else.
  */
 
 import type { PlayCard } from '../engine/types.js';
@@ -13,7 +14,12 @@ import {
   CALENDAR_OPENS_WEEK,
   refusePacClaim,
   sessionPipelineBlocked,
-  setBillStage
+  setBillStage,
+  pipelineMotionAvailable,
+  notePipelineMotion,
+  addBillHeat,
+  coolBill,
+  STAGE_OPENS
 } from '../engine/session.js';
 
 function clamp(v: number, lo: number, hi: number): number {
@@ -62,12 +68,11 @@ export const SS02_SeekReferral: PlayCard = {
     s.stage === 'session' &&
     !!s.bill &&
     s.bill.pipelineStage === 1 &&
-    s.week >= 2 &&
-    !s.sessionFlags?.pipelineUsed,
+    s.week >= STAGE_OPENS[1]! &&
+    pipelineMotionAvailable(s),
   odds: s => billOdds(s, 0.45),
   run: (s, o) => {
-    s.sessionFlags = s.sessionFlags || {};
-    s.sessionFlags.pipelineUsed = true;
+    notePipelineMotion(s);
     let pac = '';
     if (s.sessionFlags.pac_lender_claim || s.obls.includes('OB1')) {
       if (!s.sessionFlags.pac_claim_refused) {
@@ -86,7 +91,7 @@ export const SS02_SeekReferral: PlayCard = {
     if (o.tier === 2) {
       return 'Sitting on the desk. The Speaker\'s office says "soon." Soon is a place bills die.' + pac;
     }
-    if (s.bill) s.bill.heat += 1;
+    addBillHeat(s, 1);
     return 'Referred to a hostile committee. Someone up there is not smiling.' + pac;
   }
 };
@@ -135,12 +140,11 @@ export const SS03_CourtChair: PlayCard = {
     s.stage === 'session' &&
     !!s.bill &&
     s.bill.pipelineStage === 2 &&
-    s.week >= 4 &&
-    !s.sessionFlags?.pipelineUsed,
+    s.week >= STAGE_OPENS[2]! &&
+    pipelineMotionAvailable(s),
   odds: s => billOdds(s, 0.45) + (s.faces.O > 10 ? 0.08 : 0),
   run: (s, o) => {
-    s.sessionFlags = s.sessionFlags || {};
-    s.sessionFlags.pipelineUsed = true;
+    notePipelineMotion(s);
     if (o.tier <= 1) {
       setBillStage(s, 3);
       if (s.committee) s.committee.standing = Math.min(100, s.committee.standing + 8);
@@ -173,12 +177,11 @@ export const SS04_Testimony: PlayCard = {
     s.stage === 'session' &&
     !!s.bill &&
     s.bill.pipelineStage === 3 &&
-    s.week >= 6 &&
-    !s.sessionFlags?.pipelineUsed,
+    s.week >= STAGE_OPENS[3]! &&
+    pipelineMotionAvailable(s),
   odds: s => billOdds(s, 0.45) + (s.messageSharp ? 0.08 : 0),
   run: (s, o) => {
-    s.sessionFlags = s.sessionFlags || {};
-    s.sessionFlags.pipelineUsed = true;
+    notePipelineMotion(s);
     if (o.tier === 0) {
       setBillStage(s, 4);
       s.capital += 1;
@@ -192,7 +195,7 @@ export const SS04_Testimony: PlayCard = {
       return 'Voted out on party lines. Forward is forward.';
     }
     if (o.tier === 2) return 'Left pending. "Pending" is committee for "quietly bleeding."';
-    if (s.bill) s.bill.heat += 2;
+    addBillHeat(s, 2);
     return 'A hostile witness lands. The bill is pending and hemorrhaging.';
   }
 };
@@ -216,19 +219,18 @@ export const SS05_CalendarSlot: PlayCard = {
     s.stage === 'session' &&
     !!s.bill &&
     s.bill.pipelineStage === 4 &&
-    s.week >= CALENDAR_OPENS_WEEK &&
-    !s.sessionFlags?.pipelineUsed &&
+    s.week >= STAGE_OPENS[4]! &&
+    pipelineMotionAvailable(s) &&
     !sessionPipelineBlocked(s, 'SS05'),
   odds: s => billOdds(s, 0.3) + (s.favor > 65 ? 0.15 : 0),
   run: (s, o) => {
-    s.sessionFlags = s.sessionFlags || {};
-    s.sessionFlags.pipelineUsed = true;
+    notePipelineMotion(s);
     if (o.tier <= 1) {
       setBillStage(s, 5);
       return 'A slot. Late in the day, late in the session — but a slot.';
     }
     if (o.tier === 2) {
-      if (s.bill) s.bill.heat += 1;
+      addBillHeat(s, 1);
       return 'Below the line again. The clock eats another week, and the line gets longer.';
     }
     s.favor -= 5;
@@ -256,13 +258,12 @@ export const SS06_FloorFight: PlayCard = {
     s.stage === 'session' &&
     !!s.bill &&
     s.bill.pipelineStage === 5 &&
-    s.week >= 11 &&
-    !s.sessionFlags?.pipelineUsed &&
+    s.week >= STAGE_OPENS[5]! &&
+    pipelineMotionAvailable(s) &&
     !sessionPipelineBlocked(s, 'SS06'),
   odds: s => billOdds(s, 0.5) + s.capital * 0.02,
   run: (s, o) => {
-    s.sessionFlags = s.sessionFlags || {};
-    s.sessionFlags.pipelineUsed = true;
+    notePipelineMotion(s);
     if (o.tier === 0) {
       setBillStage(s, 6);
       s.capital += 2;
@@ -273,16 +274,16 @@ export const SS06_FloorFight: PlayCard = {
     if (o.tier === 1) {
       setBillStage(s, 6);
       if (s.bill) {
-        s.bill.heat += 1;
+        addBillHeat(s, 1);
         s.bill.tally = { aye: 78, nay: 62, present: 0, need: 76 };
       }
       return 'Passed — wearing two hostile amendments like buckshot. Alive, though.';
     }
     if (o.tier === 2) {
-      if (s.bill) s.bill.heat += 1;
+      addBillHeat(s, 1);
       return 'Postponed on a motion. The clock grins.';
     }
-    if (s.bill) s.bill.heat += 2;
+    addBillHeat(s, 2);
     s.capital = Math.max(0, s.capital - 1);
     return 'POINT OF ORDER — sustained. Back to committee on a technicality. The author of the point does not look at you.';
   }
@@ -307,21 +308,20 @@ export const SS07_WorkSenate: PlayCard = {
     s.stage === 'session' &&
     !!s.bill &&
     s.bill.pipelineStage === 6 &&
-    s.week >= 13 &&
-    !s.sessionFlags?.pipelineUsed,
+    s.week >= STAGE_OPENS[6]! &&
+    pipelineMotionAvailable(s),
   odds: s => billOdds(s, 0.4),
   run: (s, o) => {
-    s.sessionFlags = s.sessionFlags || {};
-    s.sessionFlags.pipelineUsed = true;
+    notePipelineMotion(s);
     if (o.tier <= 1) {
       setBillStage(s, 7);
       return 'A senator adopts it. Through the upper chamber, scarred but breathing.';
     }
     if (o.tier === 2) {
-      if (s.bill) s.bill.heat += 1;
+      addBillHeat(s, 1);
       return 'TAGGED. Forty-eight hours lost, and the session has no forty-eight hours to spare.';
     }
-    if (s.bill) s.bill.heat += 2;
+    addBillHeat(s, 2);
     return 'It dies in Senate committee at 11:58 on a procedural motion. Revive it — if the clock allows.';
   }
 };
@@ -474,7 +474,7 @@ export const SS13_PlayWrit: PlayCard = {
     s.sessionFlags.writ = false;
     if (s.bill && s.bill.pipelineStage >= 1 && s.bill.pipelineStage < 8) {
       setBillStage(s, Math.min(8, s.bill.pipelineStage + 1));
-      s.bill.heat = Math.max(0, s.bill.heat - 1);
+      coolBill(s, 1);
       return "The Writ spends itself: a motion nobody saw coming, and your bill jumps a stage. The Old Bull, watching from the gallery, tips two fingers.";
     }
     s.capital += 3;

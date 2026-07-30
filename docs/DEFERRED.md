@@ -18,9 +18,9 @@ Status values: **OPEN** · **IN PROGRESS** · **DONE** · **KILLED** (owner's ca
 | # | Item | Where | Status |
 |---|---|---|---|
 | A1 | **Pressing is EV-neutral.** Two independent measurements agree heat/press buys drama, not advantage. I listed three options and took none. | `PLAYTEST-2026-07.md` §6 | OPEN |
-| A2 | **Session's named prize never fires.** `session_law` appeared 0 times in 6000 runs; ~7% after the stall fix. Act III is named for a payoff that essentially does not happen. Flagged **four times** without action. | §7, §18 | OPEN |
+| A2 | **Session's named prize never fires.** `session_law` appeared 0 times in 6000 runs; ~7% after the stall fix. Act III is named for a payoff that essentially does not happen. Flagged **four times** without action. Now **23.8% → 53.2% of sessions**; see the note below, including the diagnosis I got wrong first. | §7, §18 | DONE |
 | A3 | **Session standing decay is invisible.** A pure odds-maximiser never plays casework and gets primaried 100% of the time. The card-level signal actively fights the real one. I put it in the tutorial and called it done. | §8 | OPEN |
-| A4 | **Heat persists across stage transitions.** Nobody decided this; it fell out of `bankHeat` being the only writer. | §9 | OPEN |
+| A4 | **Heat persists across stage transitions.** Nobody decided this; it fell out of `bankHeat` being the only writer. Closed by the A2 work — it turned out to be A2's actual cause, not a separate cosmetic issue. | §9 | DONE |
 | A5 | **You can cut a card you just practised.** No guard, no warning. "Left alone deliberately." | §10 | OPEN |
 | A6 | **Nine forced full-screen dismissals per run** (≈3 act splashes + 6 weather dialogs). I fixed the z-index layering and left the frequency. | §21 | OPEN |
 | A7 | **Press visibility on locked cards was never actually run.** I verified it by *reading the condition* and wrote "honest gap" instead of constructing the case. | §"Verified but untested" | OPEN |
@@ -65,6 +65,53 @@ player's candidate.
 | C7 | **Cheat resistance** — PARTIAL. `strength` was sent and trusted, so one edited number handed your opponent an unwinnable race. It is now discarded on receipt and re-derived from public facts, and everything off the wire is clamped to legal ranges via `normaliseRivalProfile`. Remaining hole, stated plainly: the underlying facts are still self-reported, so a determined cheat can inflate `nameID` instead, and per-ground presence is taken on trust. Closing that needs server-side derivation from an authoritative replay, or signing. | PARTIAL |
 
 ---
+
+## A2 — and the wrong diagnosis I shipped first
+
+Worth writing down because the failure mode is the one that keeps recurring here:
+**I measured on a path the player never takes, and believed the number.**
+
+My first diagnosis was that the pipeline's week gates (2/4/6/9/11/13) sat later than bills
+actually arrived, so a bill that had done everything right waited at doors that did not
+exist yet. I realigned the gates, exempted rules-imposed waits from stall heat at every
+stage rather than at Calendars only, and measured **21.5% → 44.1%**. That probe called
+`enterSession()` on a fresh state.
+
+On the real `runFullCampaign` path the same change measured **22.5% → 24.1%**, with an SE
+on the difference of 3.0pp. Noise. The gate work was worth doing on fairness grounds — the
+game should not charge you heat for obeying its own calendar — and it is still in. But it
+did not fix A2, and for a while I believed it had.
+
+**The actual cause.** Bill heat was a one-way ratchet: thirteen writers, one reducer (a
+conditional gift card, −1, once). Three separate sources each added +1 per week across a
+14-week session, and `billOdds` charges 5 points of odds per point of heat against a 0.9
+ceiling, while the Governor's veto roll charges 2 more. Median final bill heat on the real
+path was **18** — −90 points of advance odds and a veto roll pinned to its 0.55 cap by
+mid-session, no matter how well the bill was played. The pipeline was not difficult. It was
+arithmetically closed.
+
+**The fix.** One writer (`addBillHeat`) and one reducer (`coolBill`), a `MAX_BILL_HEAT` cap,
+and — the load-bearing part — a bill that clears a stage sheds heat. "This thing is stalled"
+is the complaint heat models, and it should not survive the bill moving.
+
+Decomposed, so nobody credits the wrong lever (n=800 runs / 252 sessions, SE ≈3pp):
+
+| | law rate | median final heat |
+|---|---|---|
+| neither | 23.8% | 18 |
+| cap only | 27.0% | 12 |
+| cap + cool 1 | **49.6%** | 6 |
+| cap + cool 2 | 55.6% | 3 |
+| cap + cool 3 | 58.7% | 1 |
+
+The cap alone is barely a standard error. `COOL_ON_ADVANCE = 1` is the chosen value because
+it is the last one where **heat still hurts** — a median of 6 is −30 points of odds — while
+leaving a well-driven bill near a coin flip. At 3 the headline number is best and the
+mechanic is dead; passing a law should be an achievement, not a formality.
+
+Guarded three ways in `harness:session`: the cap, the cool-on-advance (and that retreating
+does *not* cool, so it is not an exploit), and a live band asserting the law rate stays
+between 25% and 75% of sessions. A number nobody asserts drifts back.
 
 ## Notes on the two DONE items from this round
 

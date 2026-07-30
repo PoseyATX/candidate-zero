@@ -109,6 +109,64 @@ export function billStageLabel(bill: Bill | null | undefined): string {
   return BILL_STAGE_LABELS[Math.min(8, Math.max(0, bill.pipelineStage))] ?? 'Unknown';
 }
 
+/**
+ * Bill heat had thirteen writers and one reducer — a conditional gift card that
+ * shaves a single point. Nothing else in the game ever cooled a bill, while
+ * three separate weekly sources each added +1 across a 14-week session, and
+ * `billOdds` charges 5 points per point of heat against a 0.9 ceiling.
+ *
+ * Measured on the real full-campaign path (n=800): median final bill heat 18.
+ * That is −90 points of advance odds and a veto roll pinned to its 0.55 cap, by
+ * mid-session, regardless of how well the bill was played. The pipeline was not
+ * hard; it was closed. That — not the week gates — is why `session_law` sat at
+ * ~22% no matter what strategy drove it.
+ *
+ * So: one writer, and a ceiling. Measured separately, though, the ceiling is NOT
+ * what fixed this — cap alone moved law 23.8% → 27.0% (n=252 sessions, SE ≈3pp,
+ * so barely more than noise). COOL_ON_ADVANCE below is the lever that did the
+ * work. The cap earns its place as a guardrail on the pathological tail, not as
+ * the fix; do not credit it with more than that.
+ */
+export const MAX_BILL_HEAT = 12;
+
+/**
+ * A bill that MOVES is not a bill that is stuck. "This thing is stalled" is the
+ * complaint heat models, and it evaporates the week the bill clears a stage —
+ * so advancing sheds heat instead of carrying the whole session's grievance
+ * forward forever. This is also DEFERRED A4 ("heat persists across stage
+ * transitions; nobody decided this, it fell out of one writer"): nobody decided
+ * it, and now somebody has.
+ *
+ * Tuned by sweep, on the full-campaign path (n=800 runs / 252 sessions each):
+ *
+ *   cool=0  law 27.0%  median heat 12   (pipeline still effectively closed)
+ *   cool=1  law 49.6%  median heat  6   ← chosen
+ *   cool=2  law 55.6%  median heat  3
+ *   cool=3  law 58.7%  median heat  1   (heat stops being a mechanic at all)
+ *
+ * 1 is the value where heat still HURTS — a median of 6 is −30 points of advance
+ * odds and +12 on the veto roll — while leaving a well-played bill somewhere near
+ * a coin flip. At 3 the number looks best and the system is dead; passing a law
+ * should be an achievement, not a formality.
+ */
+export const COOL_ON_ADVANCE = 1;
+
+/** The only way heat goes up. Clamped, so no caller can reopen the ratchet. */
+export function addBillHeat(state: GameState, n: number): number {
+  if (!state.bill) return 0;
+  const before = state.bill.heat ?? 0;
+  state.bill.heat = clamp(before + n, 0, MAX_BILL_HEAT);
+  return state.bill.heat - before;
+}
+
+/** The only way heat comes down. Never below zero. */
+export function coolBill(state: GameState, n: number): number {
+  if (!state.bill) return 0;
+  const before = state.bill.heat ?? 0;
+  state.bill.heat = clamp(before - n, 0, MAX_BILL_HEAT);
+  return before - state.bill.heat;
+}
+
 /** Archive billOdds(base) — capital, favor, heat. Never touches resolve bands. */
 export function billOdds(state: GameState, base: number): number {
   const heat = state.bill?.heat ?? 0;
@@ -151,6 +209,8 @@ export function setBillStage(state: GameState, stage: number): void {
   }
   if (stage !== prev && stage >= 0) {
     state.bill.weeksAtStage = 0;
+    // Forward progress cools the bill; going backwards does not reward you.
+    if (stage > prev) coolBill(state, COOL_ON_ADVANCE);
   }
   syncBillStatus(state.bill);
 }
@@ -287,7 +347,7 @@ export function refusePacClaim(state: GameState): string {
   state.sessionFlags = state.sessionFlags || {};
   state.exposure += 2;
   state.hitPieces += 1;
-  if (state.bill) state.bill.heat += 2;
+  addBillHeat(state, 2);
   state.sessionFlags.pac_claim_refused = true;
   // Claim still held — referral odds suffer via heat
   return (
@@ -400,15 +460,69 @@ export function resolveSineDie(state: GameState): StageTransition {
  * it. Exported so the gate lives in one place: the card's `show` reads it too,
  * and stall heat below must know about it.
  */
-export const CALENDAR_OPENS_WEEK = 9;
+/**
+ * When Calendars convenes.
+ *
+ * MEASURED, not guessed. Bills arrive at stage 4 ("voted out, waiting on
+ * Calendars") at median week 7, and this gate stood at 9 — so a bill that had
+ * done everything right sat two weeks in front of a door that did not exist
+ * yet, then faced the narrowest odds in the pipeline with the clock already
+ * spent. Across 161 runs that reached stage 4, **531 weeks** were lost to this
+ * gate alone; the Speaker freeze, which the design notes called a co-equal
+ * lock, cost 9. It was never the freeze.
+ *
+ * Moving it to 7 aligns the door with when bills actually get there. It buys
+ * back structural waste rather than making the roll kinder: SS05's odds are
+ * untouched, so the narrowest door is still the narrowest door — you simply
+ * get to knock on it.
+ */
+export const CALENDAR_OPENS_WEEK = 7;
 
-/** Stage 4 is "reported out, waiting on Calendars" — the one gated wait. */
+/** Stage 4 is "reported out, waiting on Calendars". */
 const CALENDAR_WAIT_STAGE = 4;
 
 /**
- * True when the bill physically cannot move this week: it is sitting at the
- * Calendars stage and Calendars has not convened yet.
+ * THE SESSION CALENDAR, in one place: the stage the bill is sitting at, and the
+ * earliest week the motion out of it can be attempted.
+ *
+ * It was scattered across six card `show` gates as 2 / 4 / 6 / 9 / 11 / 13, and
+ * the back half was the whole problem. Measured funnel before this (186
+ * sessions): 33% of bills died sitting at stage 6 waiting for week 13, and of
+ * the 62 that did reach the Governor, 35.5% were VETOED with a median bill heat
+ * of 10 — worth +20 points on a veto roll that starts at 22%. The heat was
+ * accrued almost entirely while waiting for gates the player could not
+ * influence.
+ *
+ * Two weeks per stage, ending at 11, leaves three weeks to clear the Senate and
+ * the desk. The odds on every motion are untouched; this is the schedule, not
+ * the difficulty.
  */
+export const STAGE_OPENS: Record<number, number> = {
+  1: 2,   // Filed        -> Seek Referral   (SS02)
+  2: 4,   // Referred     -> Court the Chair (SS03)
+  3: 6,   // In committee -> Testimony       (SS04)
+  4: 7,   // Voted out    -> Calendars       (SS05)
+  5: 9,   // On calendar  -> Floor Fight     (SS06)
+  6: 11   // Passed House -> Work the Senate (SS07)
+};
+
+/**
+ * True when the bill physically cannot move: it is sitting at a stage whose
+ * door has not opened yet.
+ *
+ * Generalised from a Calendars-only check. The original exempted stall heat for
+ * the stage-4 wait and nothing else, so a bill cleared Calendars and then sat
+ * at stages 5 and 6 accruing the exact penalty the exemption existed to
+ * prevent. Punishing a stall the player chose is the mechanic working;
+ * punishing one the calendar imposed is not — at ANY stage.
+ */
+export function billBlockedByRules(state: GameState): boolean {
+  const stage = state.bill?.pipelineStage ?? -1;
+  const opens = STAGE_OPENS[stage];
+  return !!state.bill && opens !== undefined && state.week < opens;
+}
+
+/** Back-compat alias — the stage-4 case of billBlockedByRules. */
 export function billBlockedByCalendar(state: GameState): boolean {
   return (
     !!state.bill &&
@@ -433,14 +547,18 @@ export function applyBillStallHeat(state: GameState): string {
   if (!state.bill || state.bill.pipelineStage < 1 || state.bill.pipelineStage >= 8) {
     return '';
   }
-  if (billBlockedByCalendar(state)) {
-    // The clock still runs — the stall counter does not reset — but no heat.
-    return '';
-  }
+  // The clock runs whether or not heat is charged: the counter is "how long has
+  // this sat", and a rules-imposed wait is still time passing. Incrementing
+  // BEFORE the exemption keeps that true — the first version returned early and
+  // silently froze the counter, which harness:session caught.
   const weeks = (state.bill.weeksAtStage ?? 0) + 1;
   state.bill.weeksAtStage = weeks;
+  if (billBlockedByRules(state)) {
+    // No heat: the player could not have moved it, whatever they did.
+    return '';
+  }
   if (weeks < 2) return '';
-  state.bill.heat += 1;
+  addBillHeat(state, 1);
   return `STALL HEAT — bill sits at stage ${state.bill.pipelineStage} for ${weeks} weeks. Heat +1 (now ${state.bill.heat}). Move it or bleed.`;
 }
 
@@ -488,7 +606,7 @@ export function tickSessionPressure(state: GameState): string[] {
   if (state.favor < 38 && stage >= 4) {
     const fz = Number(state.sessionFlags.speakerFreeze || 0) + 1;
     state.sessionFlags.speakerFreeze = fz;
-    if (state.bill) state.bill.heat += 1;
+    addBillHeat(state, 1);
     lines.push(
       `FIFTH FLOOR FREEZE — favor ${Math.round(state.favor)}. Calendar motions tighten; bill heat +1. Run an errand or trade before the crush.`
     );
@@ -502,7 +620,7 @@ export function tickSessionPressure(state: GameState): string[] {
     const roll = random();
     if (roll < 0.2) {
       state.favor = clamp(state.favor - 3, 0, 100);
-      if (state.bill && state.bill.pipelineStage >= 1) state.bill.heat += 1;
+      if (state.bill && state.bill.pipelineStage >= 1) addBillHeat(state, 1);
       lines.push(
         'LOBBY STACK — association dinners and "helpful" amendments. Favor −3' +
           (state.bill && state.bill.pipelineStage >= 1 ? '; bill heat +1.' : '.')
@@ -546,6 +664,7 @@ export function tickSessionPressure(state: GameState): string[] {
 export function onSessionWeekAdvance(state: GameState): void {
   state.sessionFlags = state.sessionFlags || {};
   state.sessionFlags.pipelineUsed = false;
+  state.sessionFlags.pipelineMotions = 0;
 
   // Pressure ticks (district drain, stall, challenger, events)
   const lines = tickSessionPressure(state);
@@ -574,6 +693,50 @@ export function onSessionWeekAdvance(state: GameState): void {
 }
 
 /** Leadership freeze blocks calendar/floor pipeline until favor recovers or errand. */
+/**
+ * AP price of forcing a SECOND pipeline motion in one week.
+ *
+ * MEASURED. Opening Calendars two weeks earlier cut wasted stage-4 weeks from
+ * 531 to 61 and barely moved the clear rate (62% -> 59%) — so the wait was
+ * never the binding constraint. One motion per week is. A session is 14 weeks
+ * and the bill needs SEVEN successful motions, while the same weeks are being
+ * spent on casework (or the seat goes) and errands (or Calendars freezes you
+ * out). The bill loses that argument almost every time.
+ *
+ * This does not relax the rule so much as put a price on it: a second motion
+ * needs 3 AP still in hand, which means a week where you did nothing else. It
+ * is a trade the player makes, not a difficulty dial I turned down — the odds
+ * on every pipeline card are untouched.
+ */
+export const SECOND_MOTION_AP = 3;
+
+/** Pipeline motions already spent this week. */
+export function pipelineMotions(state: GameState): number {
+  const v = state.sessionFlags?.pipelineMotions;
+  if (typeof v === 'number') return v;
+  // Back-compat with saves written while this was a boolean.
+  return state.sessionFlags?.pipelineUsed ? 1 : 0;
+}
+
+/**
+ * Can the bill move this week? First motion is free; a second costs a week
+ * you spent on nothing else. Never a third.
+ */
+export function pipelineMotionAvailable(state: GameState): boolean {
+  const used = pipelineMotions(state);
+  if (used === 0) return true;
+  if (used === 1) return (state.ap ?? 0) >= SECOND_MOTION_AP;
+  return false;
+}
+
+/** Record a motion. Called by every pipeline card's run(). */
+export function notePipelineMotion(state: GameState): void {
+  state.sessionFlags = state.sessionFlags || {};
+  state.sessionFlags.pipelineMotions = pipelineMotions(state) + 1;
+  // Kept in step so anything still reading the old flag stays correct.
+  state.sessionFlags.pipelineUsed = true;
+}
+
 export function sessionPipelineBlocked(state: GameState, cardId: string): boolean {
   if (state.stage !== 'session') return false;
   const freeze = Number(state.sessionFlags?.speakerFreeze || 0);
