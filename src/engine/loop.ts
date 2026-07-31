@@ -108,10 +108,35 @@ export interface LedgerSnapshot {
   oblsCount: number;
 }
 
+/**
+ * What a chooser picks: a hand index, optionally with the press-your-luck wager.
+ *
+ * A bare number stays legal, so every existing strategy is unchanged.
+ *
+ * The object form exists because `runWeek` called `playFromHand` with no opts,
+ * which meant **no automated path could press at all** — press was reachable
+ * only from the UI. Every measurement anyone (me) made of "press policy vs
+ * never pressing" was therefore comparing two identical runs, which is exactly
+ * how DEFERRED A1 came to say "pressing buys drama, not advantage" on the
+ * strength of two agreeing measurements of nothing. Same lesson as C1: if the
+ * single-player path does not run through the seam, the seam is a cold
+ * codepath and its claims are unfalsifiable.
+ */
+export type PlayChoice = number | { index: number; press?: boolean };
+
 export type Chooser = (
   playable: { index: number; card: PlayCard }[],
   state: GameState
-) => number | null;
+) => PlayChoice | null;
+
+/** One reading of a chooser's answer, shared by every play loop in the repo. */
+export function normalizeChoice(
+  choice: PlayChoice | null | undefined
+): { index: number; press: boolean } | null {
+  if (choice === null || choice === undefined) return null;
+  if (typeof choice === 'number') return { index: choice, press: false };
+  return { index: choice.index, press: !!choice.press };
+}
 
 export function snapshot(state: GameState): LedgerSnapshot {
   return {
@@ -701,10 +726,11 @@ export function runWeek(campaign: Campaign, choose: Chooser): WeekReport {
     }
     const playable = listPlayableHand(campaign);
     if (playable.length === 0) break;
-    const handIndex = choose(playable, campaign.state);
-    if (handIndex === null || handIndex === undefined) break;
+    const choice = normalizeChoice(choose(playable, campaign.state));
+    if (!choice) break;
+    const { index: handIndex, press } = choice;
     const wasBallot = campaign.state.ballot;
-    const outcome = playFromHand(campaign, handIndex);
+    const outcome = playFromHand(campaign, handIndex, undefined, { press });
     plays.push(outcome);
     if (!wasBallot && campaign.state.ballot) {
       maybeOfferPhaseDraft(campaign, true);

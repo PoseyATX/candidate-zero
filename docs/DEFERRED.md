@@ -17,7 +17,7 @@ Status values: **OPEN** · **IN PROGRESS** · **DONE** · **KILLED** (owner's ca
 
 | # | Item | Where | Status |
 |---|---|---|---|
-| A1 | **Pressing is EV-neutral.** Two independent measurements agree heat/press buys drama, not advantage. I listed three options and took none. | `PLAYTEST-2026-07.md` §6 | OPEN |
+| A1 | **Pressing is EV-neutral.** Two independent measurements agree heat/press buys drama, not advantage. I listed three options and took none. **The two measurements were of nothing** — no automated path could press. Correctly measured, pressing is worth +2.6pp. See the note below. | `PLAYTEST-2026-07.md` §6 | DONE |
 | A2 | **Session's named prize never fires.** `session_law` appeared 0 times in 6000 runs; ~7% after the stall fix. Act III is named for a payoff that essentially does not happen. Flagged **four times** without action. Now **23.8% → 53.2% of sessions**; see the note below, including the diagnosis I got wrong first. | §7, §18 | DONE |
 | A3 | **Session standing decay is invisible.** A pure odds-maximiser never plays casework and gets primaried 100% of the time. The card-level signal actively fights the real one. I put it in the tutorial and called it done. Confirmed at 186/186, root-caused to one card, and fixed — see the note below. | §8 | DONE |
 | A4 | **Heat persists across stage transitions.** Nobody decided this; it fell out of `bankHeat` being the only writer. Closed by the A2 work — it turned out to be A2's actual cause, not a separate cosmetic issue. | §9 | DONE |
@@ -113,6 +113,51 @@ mechanic is dead; passing a law should be an achievement, not a formality.
 Guarded three ways in `harness:session`: the cap, the cool-on-advance (and that retreating
 does *not* cool, so it is not an exploit), and a live band asserting the law rate stays
 between 25% and 75% of sessions. A number nobody asserts drifts back.
+
+## A1 — two independent measurements of nothing
+
+"Two independent measurements agree heat/press buys drama, not advantage." They did agree.
+They were both measuring a mechanic that could not fire.
+
+`runWeek` called `playFromHand(campaign, handIndex)` with **no opts**, and `PlayOpts.press` is
+the only way to press. So no harness, no strategy, and no CLI auto-run could press — press was
+reachable from the UI and nowhere else. Every "press policy vs never pressing" comparison ever
+run in this repo compared two identical runs, which is why they agreed so nicely. It is the
+same lesson C1 wrote down for the multiplayer seam: *if the single-player path does not run
+through the seam, the seam is a cold codepath and every claim about it is unfalsifiable.*
+
+**The fix to the mechanism.** `Chooser` may now return `{ index, press }` as well as a bare
+number, and all three play loops in the repo (`runWeek`, the grounds harness, the CLI) read it
+through one shared `normalizeChoice`. Bare numbers stay legal, so no existing strategy changed.
+
+**What it actually measures now** (hybrid strategy, n=5000 per arm, win = won_general or any
+session outcome):
+
+| policy | win rate | Δ vs never | verdict at 2 SE (1.9pp) |
+|---|---|---|---|
+| never press | 33.6% | — | — |
+| press at 1+ | 35.0% | +1.4pp | noise |
+| press at 2+ | 35.2% | +1.7pp | noise |
+| press at 3+ | 34.9% | +1.4pp | noise |
+| **press at 4 only** | **36.2%** | **+2.6pp** | **real** |
+| SAFE only, 1+ | 35.7% | +2.2pp | real |
+
+So pressing is *not* EV-neutral, and the best policy is **hold to full heat and cash in** —
+precisely what the superlinear `PRESS_ODDS` curve was written to produce. The design was
+working the whole time; the instrument was disconnected.
+
+**The option I tested and rejected.** The obvious "make it matter more" lever is a bigger
+payout. Raising full-heat odds 0.24 → 0.34 (and widening the band to match) left the edge at
+~+3pp — inside noise of the current curve. Opportunity is not the constraint either: heat sits
+at the cap on **25%** of all decision points. The ceiling is structural — one play's odds only
+propagates so far into a win rate — so the curve stays where it is rather than being inflated
+for a number that does not move. That is a decision, not a deferral.
+
+**Guarded** in `harness:heat` two ways: a deterministic check that a pressing chooser actually
+logs presses through `runWeek` while a non-pressing one logs none (this is the bug that hid for
+the whole project), and a small-n EV probe asserting that holding to full heat is not a *trap*.
+The EV assertion is deliberately weak — at gate-sized n it can only catch an inversion, and the
+honest effect size lives in the table above.
 
 ## A3 — the game printed a signal that pointed at a trap
 

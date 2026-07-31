@@ -30,6 +30,8 @@ import {
 } from '../engine/heat.js';
 import { createRng, setDefaultSeed, useRng } from '../engine/rng.js';
 import { PL10_PressRelease } from '../data/plays.js';
+import { createCampaign, runFullCampaign } from '../engine/loop.js';
+import { STRATEGIES } from '../engine/strategies.js';
 import type { GameState, PlayCard } from '../engine/types.js';
 
 let failed = 0;
@@ -266,6 +268,79 @@ const LONGSHOT: PlayCard = {
   assert(
     !/guarantee|sure thing|can't lose|cannot lose/i.test(`${std} ${safe}`),
     'press copy never promises a soft roll'
+  );
+}
+
+// --- THE WAGER MUST BE REACHABLE FROM A PLAY LOOP (DEFERRED A1) ---
+//
+// `runWeek` called `playFromHand` with no opts, so NO automated path could
+// press. Press existed only for the UI. Every measurement behind A1's "pressing
+// buys drama, not advantage" was therefore comparing two identical runs, and
+// two independent measurements of nothing agreed with each other.
+//
+// This is the cheap deterministic guard against that returning: same seed, one
+// chooser that presses and one that does not, and the pressing run must
+// actually log presses.
+{
+  function pressedLines(press: boolean): number {
+    useRng(createRng(4242));
+    setDefaultSeed(4242);
+    const c = createCampaign({ seed: 4242 });
+    runFullCampaign(c, (playable, state) => {
+      const pick = STRATEGIES.hybrid!(playable, state);
+      if (pick === null || pick === undefined) return pick;
+      const idx = typeof pick === 'number' ? pick : pick.index;
+      return { index: idx, press: press && heatOf(state) >= 1 };
+    });
+    return c.state.log.filter(l => /Pressed \d/.test(l.text)).length;
+  }
+  const withPress = pressedLines(true);
+  const without = pressedLines(false);
+  assert(withPress > 0, `a pressing chooser actually presses through runWeek (${withPress} presses)`);
+  assert(without === 0, `and a non-pressing chooser never does (${without})`);
+}
+
+// --- AND IT MUST BE WORTH SOMETHING (DEFERRED A1) ---
+//
+// Measured at n=5000 per arm on the hybrid strategy: never press 33.6% wins,
+// hold-to-4-and-cash 36.2% (+2.6pp, outside 2 SE). Every press policy tested
+// came out positive, and "press only at 4" was the best of them — which is
+// exactly what the superlinear PRESS_ODDS curve was designed to produce.
+//
+// Raising the payout 40% (0.24 -> 0.34 at full heat) did NOT increase that
+// edge; it stayed ~+3pp. The ceiling is structural, not a tuning knob, so the
+// curve was left where it is rather than inflated for a number that does not
+// move.
+//
+// n here is small enough to run in a gate, so the assertion is deliberately
+// weak: it catches "pressing became a trap", not a one-point drift.
+{
+  function winRate(policy: (h: number) => boolean, trials: number): number {
+    let won = 0;
+    for (let i = 0; i < trials; i++) {
+      const seed = 20_000 + i * 31;
+      useRng(createRng(seed));
+      setDefaultSeed(seed);
+      const c = createCampaign({ seed });
+      runFullCampaign(c, (playable, state) => {
+        const pick = STRATEGIES.hybrid!(playable, state);
+        if (pick === null || pick === undefined) return pick;
+        const idx = typeof pick === 'number' ? pick : pick.index;
+        return { index: idx, press: policy(heatOf(state)) };
+      });
+      const o = c.state.outcome ?? '';
+      if (o === 'won_general' || o.startsWith('session_')) won++;
+    }
+    return (100 * won) / trials;
+  }
+  const N = 400;
+  const never = winRate(() => false, N);
+  const holdToMax = winRate(h => h >= MAX_HEAT, N);
+  console.log(`  press EV probe (n=${N}/arm): never ${never.toFixed(1)}% · hold-to-${MAX_HEAT} ${holdToMax.toFixed(1)}%`);
+  assert(
+    holdToMax >= never - 5,
+    `holding to full heat and cashing in is not a trap — never ${never.toFixed(1)}% vs ` +
+      `hold ${holdToMax.toFixed(1)}% (measured +2.6pp at n=5000; this gate only catches a real inversion)`
   );
 }
 
