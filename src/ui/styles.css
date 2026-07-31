@@ -2532,12 +2532,28 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   display: block;
   width: 100%;
 }
+/* `position: static` is the load-bearing line here, not the sizing.
+   The base art rules absolutely position both the plate (`.art-plate`,
+   `inset: 0`) and the raster inside it, because the old portrait card was a
+   fixed 2:3 box they could fill. The text-first row rewrite dropped that fixed
+   box, and a sponsor card has NO text to give the row height — so with the
+   plate and the image both out of flow, the button collapsed. Measured: 366 x
+   **7px**. The art loaded fine (naturalWidth > 0) and was being painted into a
+   zero-height container, which is why it looked like the card simply never
+   arrived.
+   `check:card-art` stayed green throughout, because it verifies the file
+   exists and is under 500KB — it never asked whether a human could see it. */
 .play-card.full-art .card-art-full .art-plate,
 .play-card.full-art .card-art-full img,
 .play-card.full-art .card-art-full svg {
+  position: static;
+  inset: auto;
   display: block;
   width: 100%;
   height: auto;
+  max-width: 100%;
+  max-height: none;
+  object-fit: contain;
 }
 
 /* Hover lift is wrong for a list; keep it a flat, honest press. */

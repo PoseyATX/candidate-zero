@@ -602,6 +602,66 @@ async function main() {
     }
     await page.locator('#btn-tut-back').click();
 
+    // 3b. THE SPONSOR CARD MUST BE VISIBLE TO A HUMAN.
+    //
+    // PR01 is paid sponsor art. It shipped invisible: the base art rules
+    // absolutely position the plate and raster (they used to fill a fixed 2:3
+    // portrait box), the text-first row rewrite removed that box, and a
+    // full-bleed card has no text of its own to give the row height. Both the
+    // plate and the image were out of flow, so the button collapsed to
+    // **366 x 7px**. The image loaded correctly the whole time and was painted
+    // into a zero-height container.
+    //
+    // `check:card-art` was green throughout, because it asks whether the file
+    // exists and is under 500KB — never whether anyone could see it. This
+    // asserts the rendered box, which is the only thing the sponsor is buying.
+    {
+      await page.goto(`${BASE}?promo=PR01`, { waitUntil: 'networkidle' });
+      await page.evaluate(() => localStorage.clear());
+      await page.goto(`${BASE}?promo=PR01`, { waitUntil: 'networkidle' });
+      await page.locator('#btn-title-start').click();
+      await pickId('persona', 'teacher');
+      await pickId('issue', 'taxes');
+      await pickId('district', 'open');
+      await pickId('region', 'east');
+      await page.locator('#seed-input').fill('4242');
+      await page.locator('#btn-start').click();
+      await page.waitForSelector('#game:not(.hidden)', { timeout: 10_000 });
+      if ((await page.locator('#act-splash').count()) && (await page.locator('#act-splash').isVisible())) {
+        await page.locator('#act-splash-ok').click();
+        await page.waitForTimeout(60);
+      }
+
+      const promo = page.locator('#playables .play-card.kind-promo');
+      assert((await promo.count()) > 0, '?promo=PR01 forces the sponsor card into hand');
+      if (await promo.count()) {
+        const shape = await promo.first().evaluate((el) => {
+          const r = el.getBoundingClientRect();
+          const img = el.querySelector('img');
+          return {
+            w: Math.round(r.width),
+            h: Math.round(r.height),
+            imgLoaded: img ? img.naturalWidth > 0 : false,
+            imgH: img ? Math.round(img.getBoundingClientRect().height) : 0
+          };
+        });
+        assert(
+          shape.imgLoaded,
+          `sponsor art actually loads (naturalWidth > 0) — ${JSON.stringify(shape)}`
+        );
+        // The old broken render was 7px tall. Anything in that neighbourhood is
+        // the collapse coming back, whatever the CSS looks like.
+        assert(
+          shape.h >= 200,
+          `the sponsor card occupies real space — got ${shape.h}px tall (was 7px when it shipped broken)`
+        );
+        assert(
+          shape.imgH >= 200,
+          `and the art itself is drawn at size, not into a collapsed box (${shape.imgH}px)`
+        );
+      }
+    }
+
     // 4. Zero console/page errors across the whole run.
     if (consoleErrors.length) {
       for (const e of consoleErrors.slice(0, 10)) console.log('   ', e);

@@ -41,6 +41,16 @@ export function maybeInjectPromoCards(
   deck?: DeckState,
   forceId?: string | null
 ): string | null {
+  // A promo lands in the CAMPAIGN hand. Session and waiting draw from their own
+  // always-available card sets (SS* / WA*), so a roll won during those weeks
+  // injects a card the player can never reach — and `promoAlready` then marks it
+  // seen, burning the one chance this run gets.
+  //
+  // A full run is roughly 8 primary + 6 general + 14 session weeks, so a little
+  // over half of every promo card's lifetime odds were being spent in rooms
+  // where it could not be played.
+  if (state.stage === 'session' || state.stage === 'waiting') return null;
+
   const forced = forceId ? forceId.toLowerCase() : null;
   for (const card of INJECTABLE_PROMOS) {
     if (promoAlready(state, card.id)) continue;

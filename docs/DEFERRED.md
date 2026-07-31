@@ -114,6 +114,52 @@ Guarded three ways in `harness:session`: the cap, the cool-on-advance (and that 
 does *not* cool, so it is not an exploit), and a live band asserting the law rate stays
 between 25% and 75% of sessions. A number nobody asserts drifts back.
 
+## The sponsor card was invisible, and the gate that "covered" it was green
+
+Reported by the owner: *the promo card is not showing up.* It was two separate faults,
+and the branch this work sits on is literally named `promo-card-art-fix`.
+
+**Fault 1 — it rendered at 366 × 7px.** The base art rules absolutely position both the
+plate (`.art-plate { position: absolute; inset: 0 }`) and the raster inside it, because the
+old card was a fixed 2:3 portrait box for them to fill. The text-first row rewrite removed
+that fixed box, and a full-bleed sponsor card has **no text of its own** to give the row
+height. With plate and image both out of flow, the button collapsed to seven pixels. The
+`.play-card.full-art` override set `height: auto` but never reset `position`, so it changed
+nothing.
+
+The cruel detail: the image loaded perfectly the whole time (`naturalWidth > 0`) and was
+being painted into a zero-height container. Nothing errored. Nothing 404'd. It just was not
+there. The dossier surface was fine throughout, because `.dossier-art-full` carries its own
+`position: relative` and `aspect-ratio: 2/3` — so the card looked correct everywhere except
+the one place you play it from.
+
+**Fault 2 — over half its odds were spent in rooms it could not appear in.** The rarity roll
+fired on every `startWeek`, including all 14 session weeks and the waiting season. Those
+stages draw from their own always-available card sets (`SS*` / `WA*`), so a promo won there
+was injected somewhere unreachable and then marked seen for the rest of the run. A full run
+is ~8 primary + 6 general + 14 session weeks, so most of the card's lifetime chance was
+being burned where it was invisible by construction. The roll now skips those stages.
+
+**And the gate that was supposedly covering this.** `check:card-art` was green for the
+entire life of the bug. It verifies the art file exists and is ≤500KB. It never asked
+whether a human could see it — the same "my instrument measures nothing and passes" shape as
+the duplicate-label selector, the `gp-cancel` click, and the non-touch tap before it.
+
+Now covered properly:
+- `smoke:ui` forces `?promo=PR01`, then asserts the art loads **and** that the rendered box is
+  ≥200px tall. Verified by reverting the CSS fix: the card returns to exactly 7px, which the
+  assertion fails on.
+- `harness:promo` is new — the promo system had **zero** engine tests. It checks that each
+  registered promo can be forced in, lands at most once per run, stays out of normal pools via
+  `show:false` while remaining visible and playable once held, never burns its roll during
+  session or waiting, and fires at its advertised rate (measured 0.100% against a stated
+  0.100%, SE 0.022pp).
+
+Left alone deliberately: `promoRate` itself. Even fully fixed, 0.1% per campaign week over
+~14 campaign weeks means PR01 appears in roughly **1.4% of runs** — that is the advertised
+"extreme rarity", and how often a sponsor's card should surface is the owner's call, not
+mine. The lever is one number in `src/data/promo-plays.ts`.
+
 ## A1 — two independent measurements of nothing
 
 "Two independent measurements agree heat/press buys drama, not advantage." They did agree.
