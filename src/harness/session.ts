@@ -26,7 +26,8 @@ import {
   SESSION_WEEKS,
   SESSION_FILING_DEADLINE
 } from '../engine/session.js';
-import { SS05_CalendarSlot, SS08_Casework, SS09_SpeakerErrand } from '../data/session-plays.js';
+import { SS05_CalendarSlot, SS08_Casework, SS09_SpeakerErrand, SS12_StudyRules } from '../data/session-plays.js';
+import { selectGoalKey, formatGoalStrip, buildGoalStripInput } from '../ui/goal-strip.js';
 import { createNewState } from '../engine/state.js';
 import { setDefaultSeed, createRng, useRng } from '../engine/rng.js';
 import { sessionPipelineStrategy, laborBallotStrategy, STRATEGIES } from '../engine/strategies.js';
@@ -279,6 +280,80 @@ console.log('=== CANDIDATE ZERO — Phase 4 Session Harness ===\n');
   assert(t2.includes('STALL HEAT'), 'second week stall');
   assert(s.bill!.heat === 1, 'heat +1');
   console.log('PASSED: applyBillStallHeat');
+}
+
+{
+  // --- THE SEAT MUST BE VISIBLE WHILE IT IS STILL SAVEABLE (DEFERRED A3) ---
+  //
+  // `districtStanding` was plumbed all the way into the goal strip's input and
+  // then consulted by exactly no rule — the same computed-but-never-consulted
+  // shape as `state.rivals`. Meanwhile a player who simply followed the odds
+  // number printed on the card faces lost the seat in 186 of 186 measured
+  // sessions. The advisor talked about the pipeline the whole way down.
+  const base = {
+    ...buildGoalStripInput(createNewState({ seed: 1 }), {
+      shopAvailable: false,
+      campPetitionVisible: false,
+      campFeeVisible: false
+    }),
+    stage: 'session' as const,
+    ap: 3,
+    fieldAp: 0,
+    billPipelineStage: 2,
+    billStatus: 'in_committee',
+    districtStanding: 70,
+    challengerHeat: 0
+  };
+
+  assert(selectGoalKey(base) !== 'session_seat', 'a healthy seat does not cry wolf');
+  assert(
+    selectGoalKey({ ...base, districtStanding: 50 }) === 'session_seat',
+    'soft standing is surfaced, not left in the log'
+  );
+  assert(
+    selectGoalKey({ ...base, challengerHeat: 1 }) === 'session_seat',
+    'a named challenger is surfaced the week it appears'
+  );
+  // It must outrank the bill copy: losing the seat ends the run, a stalled bill
+  // does not.
+  assert(
+    selectGoalKey({ ...base, districtStanding: 50, billPipelineStage: 6 }) === 'session_seat',
+    'the seat outranks the calendar'
+  );
+  // But not the "you cannot act" copy — a warning you cannot answer is noise.
+  assert(
+    selectGoalKey({ ...base, districtStanding: 50, ap: 0, fieldAp: 0 }) === 'session_ap0',
+    'with no AP left the strip still says end the week'
+  );
+  // And the copy has to actually name the number and the answer.
+  const row = formatGoalStrip({ ...base, districtStanding: 44, challengerHeat: 2 });
+  assert(row.progress.includes('44'), `seat copy names the standing (got "${row.progress}")`);
+  assert(row.progress.includes('2'), 'seat copy names the challenger heat');
+  assert(/casework/i.test(row.next), 'seat copy names the answer');
+  console.log('PASSED: a bleeding seat is visible in the goal strip while it can still be saved');
+}
+
+{
+  // --- THE ODDS ON A CARD FACE MUST NOT LIE (DEFERRED A3) ---
+  //
+  // SS12 was SAFE, the highest odds in the catalog, repeatable without limit,
+  // strictly positive, and its text said "no downside at all". Following the
+  // printed signal meant playing it 27 turns out of 28 and losing the seat every
+  // time. Diminishing the REWARD alone did not fix it — the bot kept spamming,
+  // because the number on the face still said 0.9. The odds have to fall too.
+  setDefaultSeed(88);
+  const s = createNewState({ seed: 88 });
+  enterSession(s);
+  const first = SS12_StudyRules.odds!(s);
+  s.sessionFlags.studyRulesReads = 3;
+  const fourth = SS12_StudyRules.odds!(s);
+  assert(first > 0.85, `the first read is still a strong play (${first})`);
+  assert(
+    fourth < first - 0.3,
+    `a book you have read three times is a worse bet (${first} -> ${fourth})`
+  );
+  assert(fourth >= 0.3, 'but it never becomes a dead card');
+  console.log('PASSED: SS12 odds decay with reads — the printed signal tells the truth');
 }
 
 {

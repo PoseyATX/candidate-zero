@@ -266,7 +266,20 @@ export function renderLedger(campaign: Campaign, legacy?: LegacyState): void {
         <div class="ledger-grid">
           <div class="ledger-cell"><span class="k">Capital</span> ${s.capital}</div>
           <div class="ledger-cell"><span class="k">Favor</span> ${Math.round(s.favor)}</div>
-          <div class="ledger-cell"><span class="k">District</span> ${Math.round(s.districtStanding)}</div>
+          <div class="ledger-cell${s.districtStanding < 58 ? ' ledger-warn' : ''}"><span class="k">District</span> ${Math.round(
+            s.districtStanding
+          )}${s.districtStanding < 58 ? ' ▼' : ''}</div>
+          ${
+            // The final verdict charges 3.5 points of reelection per point of
+            // challenger heat, and until now the only place it appeared was a
+            // weekly log line that scrolls away. A fail state you cannot see
+            // coming is not difficulty.
+            Number(s.sessionFlags?.challengerHeat || 0) > 0
+              ? `<div class="ledger-wide ledger-warn"><span class="k">Challenger</span> heat ${Number(
+                  s.sessionFlags?.challengerHeat || 0
+                )} — a funded younger name is circling. Casework cools it.</div>`
+              : ''
+          }
           <div class="ledger-wide"><span class="k">Committee</span> ${s.committee?.n ?? '—'}</div>
           <div class="ledger-wide bill-status"><span class="k">Bill</span> ${
             s.bill

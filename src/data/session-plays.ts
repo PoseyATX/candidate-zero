@@ -439,16 +439,41 @@ export const SS12_StudyRules: PlayCard = {
   attrs: ['INK'],
   d:
     "Most members never read them. The ones who do own the ones who don't. " +
-    'Safe, reliable, and quietly one of the best cards in the session: Parliamentarian standing ' +
-    'plus political capital every single time, with no downside at all. ' +
+    'Safe and reliable — the first read is the best two action points in the session. ' +
+    'But the manual is finite: each further read teaches less than the last, and the fourth ' +
+    'is an evening in a Capitol office while your district notices you are not in it. ' +
     'Ink is the attribute. ' +
     'The capital is what you will spend on the floor; the Parliamentarian face is what survives the run.',
   show: s => s.stage === 'session',
-  odds: () => 0.9,
+  // The ODDS have to fall too, not just the payoff. A3 is "the card-level
+  // signal actively fights the real one", and the signal a player reads off the
+  // face is this number. Dropping the reward while leaving 0.9 printed on the
+  // card would have kept the lie and merely made it more expensive — the first
+  // version of this fix did exactly that, and an odds-following player kept
+  // spamming it 27 turns out of 28. "Will I find something new in a book I have
+  // already read three times" is honestly a worse bet, so the card now says so.
+  odds: s => Math.max(0.35, 0.9 - Number(s.sessionFlags?.studyRulesReads || 0) * 0.18),
   run: s => {
-    s.faces.P += 4;
-    s.capital += 1;
-    return 'An evening with the rulebook. Somewhere in there is the parliamentary trick that will one day save your bill.';
+    s.sessionFlags = s.sessionFlags || {};
+    const read = Number(s.sessionFlags.studyRulesReads || 0);
+    s.sessionFlags.studyRulesReads = read + 1;
+    // Covenant 6 — power is never clean. This card was SAFE, the highest odds
+    // in the session catalog (0.9), repeatable without limit and strictly
+    // positive, and its own text bragged "no downside at all". A player who
+    // simply followed the odds number on the card faces played it 27 of 28
+    // session turns and lost the seat in 186 of 186 measured sessions. The
+    // signal the game printed pointed at a trap.
+    const p = Math.max(1, 4 - read);
+    s.faces.P += p;
+    const cap = read < 2 ? 1 : 0;
+    s.capital += cap;
+    if (read === 0) {
+      return 'An evening with the rulebook. Somewhere in there is the parliamentary trick that will one day save your bill.';
+    }
+    if (read < 3) {
+      return `You go back to the manual. Less new in it this time (Parliamentarian +${p}${cap ? ', capital +1' : ''}).`;
+    }
+    return `You have read this book. Parliamentarian +${p}, and an evening your district did not see you.`;
   }
 };
 

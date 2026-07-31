@@ -30,6 +30,7 @@ export interface GoalStripInput {
   billHeat: number;
   speakerFreeze: number;
   districtStanding: number;
+  challengerHeat: number;
   waitingPathId: string | null;
   bankContacts: number;
   bankName: number;
@@ -50,6 +51,7 @@ export type GoalCopyKey =
   | 'primary_on_ballot_ap0'
   | 'general'
   | 'general_ap0'
+  | 'session_seat'
   | 'session_unfiled'
   | 'session_pipeline'
   | 'session_calendar'
@@ -104,6 +106,11 @@ export const GOAL_COPY: Record<GoalCopyKey, GoalCopyRow> = {
     primary: 'Win November — bank GOTV',
     progress: 'GOTV {totalGotv} · W{stageWeek}/6',
     next: 'Shop if open · or End Week'
+  },
+  session_seat: {
+    primary: 'Your seat is bleeding',
+    progress: 'District {districtStanding} · challenger heat {challengerHeat} · W{week}/{weeksTotal}',
+    next: 'Casework — a bill is worth nothing from outside the building'
   },
   session_unfiled: {
     primary: 'File your signature bill',
@@ -188,6 +195,7 @@ export function buildGoalStripInput(
     billHeat: state.bill?.heat ?? 0,
     speakerFreeze: Number(state.sessionFlags?.speakerFreeze || 0),
     districtStanding: state.districtStanding,
+    challengerHeat: Number(state.sessionFlags?.challengerHeat || 0),
     waitingPathId: state.waitingPathId ?? null,
     bankContacts: Number(bank.waitBankContacts || 0),
     bankName: Number(bank.waitBankName || 0),
@@ -216,6 +224,13 @@ export function selectGoalKey(input: GoalStripInput): GoalCopyKey {
   if (input.stage === 'waiting') return 'waiting';
   if (input.stage === 'session') {
     if (apExhausted(input)) return 'session_ap0';
+    // The seat outranks the bill. districtStanding was plumbed into this input
+    // and consulted by NO rule — the strip talked about the pipeline while a
+    // measured 100% of players who followed the card-level odds signal lost
+    // their seat (see DEFERRED A3). The thresholds match the engine's own: the
+    // challenger starts fundraising under 52, so warning at 58 leaves weeks to
+    // answer rather than announcing a loss that is already sealed.
+    if (input.districtStanding < 58 || input.challengerHeat >= 1) return 'session_seat';
     const stage = input.billPipelineStage;
     const needsFloor = stage !== null && stage >= 5;
     if (input.speakerFreeze > 0 && needsFloor) return 'session_freeze';
@@ -260,6 +275,8 @@ export function formatGoalStrip(input: GoalStripInput): {
     billHeat: input.billHeat,
     billLabel: billLabel(input),
     speakerFreeze: input.speakerFreeze,
+    districtStanding: Math.round(input.districtStanding),
+    challengerHeat: input.challengerHeat,
     path: input.waitingPathId ?? 'orbit',
     bankContacts: input.bankContacts,
     bankName: input.bankName,

@@ -19,7 +19,7 @@ Status values: **OPEN** · **IN PROGRESS** · **DONE** · **KILLED** (owner's ca
 |---|---|---|---|
 | A1 | **Pressing is EV-neutral.** Two independent measurements agree heat/press buys drama, not advantage. I listed three options and took none. | `PLAYTEST-2026-07.md` §6 | OPEN |
 | A2 | **Session's named prize never fires.** `session_law` appeared 0 times in 6000 runs; ~7% after the stall fix. Act III is named for a payoff that essentially does not happen. Flagged **four times** without action. Now **23.8% → 53.2% of sessions**; see the note below, including the diagnosis I got wrong first. | §7, §18 | DONE |
-| A3 | **Session standing decay is invisible.** A pure odds-maximiser never plays casework and gets primaried 100% of the time. The card-level signal actively fights the real one. I put it in the tutorial and called it done. | §8 | OPEN |
+| A3 | **Session standing decay is invisible.** A pure odds-maximiser never plays casework and gets primaried 100% of the time. The card-level signal actively fights the real one. I put it in the tutorial and called it done. Confirmed at 186/186, root-caused to one card, and fixed — see the note below. | §8 | DONE |
 | A4 | **Heat persists across stage transitions.** Nobody decided this; it fell out of `bankHeat` being the only writer. Closed by the A2 work — it turned out to be A2's actual cause, not a separate cosmetic issue. | §9 | DONE |
 | A5 | **You can cut a card you just practised.** No guard, no warning. "Left alone deliberately." | §10 | OPEN |
 | A6 | **Nine forced full-screen dismissals per run** (≈3 act splashes + 6 weather dialogs). I fixed the z-index layering and left the frequency. | §21 | OPEN |
@@ -46,6 +46,7 @@ Status values: **OPEN** · **IN PROGRESS** · **DONE** · **KILLED** (owner's ca
 | B2 | **`state.rivals` was dead** — populated at setup, read by nothing, for the whole project. `BALANCE-NOTES.md:441` recorded it and I walked past it repeatedly. | DONE |
 | B3 | **WCAG 1.4.10 reflow failed at 320px** on every screen. axe was clean, so I never looked. | DONE |
 | B4 | **Bottom nav was a 34px tap target** — the most-tapped control in the game. | DONE |
+| B6 | **The session catalog rewards spamming one card.** Found while fixing A3, stated rather than quietly fixed. Once SS12 stopped being the top-odds pick, an odds-following player simply moved to the next clean repeatable card (SS27 Ribbon-Cutting Circuit: SAFE, 0.85, +6 standing, and its own text advertises that it "never diminishes") and pinned district standing at 100 for 1430 of 1540 session turns. Unlike SS12 this is not strictly a trap — it trades the entire bill for the seat, and that bot passed a law 0% of the time — so it is a legitimate turtle rather than a lie. But "play the same card every turn" should probably not be the shape of any Act III, and the diminishing-returns pattern now in SS12 is the obvious answer if we want one. | OPEN |
 | B5 | **Unmerged work.** Commits have been piling up on `claude/promo-card-art-fix-qdurxc` while `main` sits at `33d23f7`, because I kept saying "I will not merge without your say-so" instead of asking once and acting. | OPEN |
 
 ## C. Multiplayer — the actual roadmap
@@ -112,6 +113,55 @@ mechanic is dead; passing a law should be an achievement, not a formality.
 Guarded three ways in `harness:session`: the cap, the cool-on-advance (and that retreating
 does *not* cool, so it is not an exploit), and a live band asserting the law rate stays
 between 25% and 75% of sessions. A number nobody asserts drifts back.
+
+## A3 — the game printed a signal that pointed at a trap
+
+The note said "a pure odds-maximiser never plays casework and gets primaried 100% of the
+time." That turned out to be exactly true — **186 primaried out of 186 sessions**, median
+final district standing 34 against a healthy 61 — but for a sharper reason than "the signal
+is vague."
+
+**An instrument correction first.** My first probe returned `{card}` from the chooser, where
+the engine expects an **index**. So it played nothing at all, and its casework counter read
+`undefined` for every strategy. It still printed 100%, which is the dangerous part: a broken
+instrument that agrees with your hypothesis. The corrected probe adds a `never acts` control
+(reaches 0 sessions, because a player who does nothing never wins the general) so "the bot
+did nothing" can no longer masquerade as a finding.
+
+**The root cause was one card.** `SS12 Study the Rules` was SAFE, carried the highest odds in
+the session catalog (0.90), was repeatable without limit, was strictly positive, and its own
+description bragged that it was *"quietly one of the best cards in the session… with no
+downside at all."* A player following the number printed on the card faces played it **27 of
+28 session turns** and lost the seat every time. That is a Covenant 6 breach — power is never
+clean — with the game itself advertising the trap.
+
+**Diminishing the reward alone did not work, and the measurement said so.** After the payoff
+decayed, the bot's behaviour did not change at all: it picks on `odds`, and the face still
+said 0.90. The signal was still lying, just about a worse card. The odds had to fall too —
+"will I find something new in a book I have read three times" is honestly a worse bet.
+With both in place SS12 dropped from 1485 picks to 55 (one per session).
+
+**And the visibility half.** `districtStanding` was plumbed all the way into the goal strip's
+input and consulted by **no rule** — the same computed-but-never-consulted shape as
+`state.rivals` (B2) and the count-up comparison before it. The strip discussed the pipeline
+while the seat bled out. `challengerHeat` — worth 3.5 points of reelection each in the final
+verdict — appeared nowhere in the UI at all, only in a weekly log line that scrolls away.
+Both are now surfaced: a `session_seat` goal key that outranks the bill copy (losing the seat
+ends the run; a stalled bill does not) but *not* the no-AP copy, and a warned District cell
+plus a challenger row in the HUD ledger.
+
+Tuned by measurement, not taste: the seat key fires on **15.9%** of session decision points —
+present when it matters, and still leaving 80% of the strip to the pipeline, so it does not
+become wallpaper. The 58-point threshold matches the engine's own (the challenger starts
+fundraising under 52), which leaves weeks to answer rather than announcing a loss already
+sealed. The warn red is `#ef7a68`, **measured 6.22:1** on the ledger walnut — B1 shipped a
+1.02:1 delta that was invisible for the life of the feature, so this one got a contrast check
+rather than an eyeball.
+
+Guarded in `harness:session`: the strip must select `session_seat` on soft standing and on
+challenger heat, must not cry wolf on a healthy seat, must lose to the no-AP copy, must name
+the actual number and name casework as the answer — and SS12's odds must decay with reads
+while never becoming a dead card.
 
 ## Notes on the two DONE items from this round
 

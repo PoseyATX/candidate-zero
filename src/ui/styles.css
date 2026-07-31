@@ -255,6 +255,19 @@ h1 {
   margin-bottom: 0.4rem;
 }
 
+/* A ledger figure that is actively going the wrong way. Same red as a SETBACK
+   stamp, so "this is bad" reads the same everywhere in the game. Measured
+   6.22:1 on --walnut-2 (AA needs 4.5) — the toast deltas once shipped at
+   1.02:1 and were invisible for the life of the feature, so this number gets
+   checked, not eyeballed. */
+.ledger-warn {
+  color: #ef7a68;
+}
+.ledger-warn .k {
+  color: #ef7a68;
+  opacity: 0.85;
+}
+
 /* Identity — first-class character chrome */
 .ledger-identity {
   background:
