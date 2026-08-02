@@ -173,6 +173,9 @@ export interface GameState {
   issueId?: string | null;
   district: DistrictInfo | null;
   eventsFired: Record<string, boolean>;
+  /** memberId -> disposition, copied onto the run at applyLegacy so the floor
+   *  count can read the room without threading LegacyState through it. */
+  chamberRoster?: Record<string, number>;
   /** Statutes from earlier runs that are still on the books, copied onto the run
    *  at applyLegacy so the session can raise reauthorization fights over them
    *  without threading LegacyState through the stage machinery. */
@@ -424,6 +427,9 @@ export interface LegacyState {
   /** The named opposition, carried across runs — see engine/rival.ts.
    *  Optional so every save written before it existed still loads. */
   rival?: import('./rival.js').RivalState;
+  /** How every named member feels about you — see engine/chamber.ts.
+   *  Optional so every save written before it existed still loads. */
+  chamber?: Record<string, import('./chamber.js').MemberStanding>;
   /** Statutes you have passed, across every run — see engine/laws.ts.
    *  Optional so every save written before it existed still loads. */
   laws?: import('./laws.js').EnactedLaw[];

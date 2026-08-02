@@ -22,6 +22,7 @@ import {
   STAGE_OPENS
 } from '../engine/session.js';
 import { provisionSwing, coalitionBonus } from '../engine/docket.js';
+import { chamberSwing } from '../engine/chamber.js';
 import { POLICY_PLAYS } from './policy-plays.js';
 
 function clamp(v: number, lo: number, hi: number): number {
@@ -266,7 +267,9 @@ export const SS06_FloorFight: PlayCard = {
   // Language you attached is members you bought. Each net member is worth ~0.4pp
   // on the floor — a well-amended bill genuinely walks in with a coalition, and
   // a bill nobody is owed by walks in alone.
-  odds: s => billOdds(s, 0.5) + s.capital * 0.02 + coalitionBonus(s),
+  // Language you attached PLUS the people who already owe you. A member with a
+  // record has friends in the room before the bill is filed.
+  odds: s => billOdds(s, 0.5) + s.capital * 0.02 + coalitionBonus(s) + chamberSwing(s) * 0.006,
   run: (s, o) => {
     notePipelineMotion(s);
     if (o.tier === 0) {

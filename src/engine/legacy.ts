@@ -39,6 +39,9 @@ import {
   type EnactedLaw
 } from './laws.js';
 import { lawWasDefended } from './docket.js';
+import { settleChamber, carryChamber, chamberLine } from './chamber.js';
+import { takeStripped } from '../data/policy-plays.js';
+import type { MemberDef } from '../data/members.js';
 
 const STORAGE_KEY = 'cz_legacy_v1';
 
@@ -235,6 +238,9 @@ export function applyLegacy(state: GameState, legacy: LegacyState): void {
   // their bills do not. Capped in laws.ts so a long career is hard to beat, not
   // impossible.
   state.carriedLaws = standingLaws(legacy).map(l => ({ ...l }));
+  carryChamber(state, legacy);
+  const room = chamberLine(legacy);
+  if (room) state.log.push({ week: state.week, kind: 'note', text: room });
   // The opposition picks its fight before you do. If you have a statute that
   // beat enough people to fund a campaign, your rival is already running on it.
   const target = mostExposedLaw(legacy);
@@ -459,6 +465,9 @@ export function recordRun(legacy: LegacyState, state: GameState, kind: CampaignO
   // a law set an outcome string and the next campaign began in a world where
   // nothing you had ever done existed.
   if (kind === 'session_law') recordLaw(legacy, state, legacy.runs.length);
+  // Who you delivered for, and who you pulled the rug from under. Both by name,
+  // both remembered — a coalition you cannot betray is not a coalition.
+  lastChamber = settleChamber(legacy, state, takeStripped());
   // And the other direction: a statute you did not defend this session can be
   // struck. A win you cannot lose is a high score, not a win — the people your
   // language beat are still in the building, and they can count.
@@ -504,6 +513,14 @@ function settleRepeals(legacy: LegacyState, state: GameState, runIndex: number):
 }
 
 let lastRepeal: EnactedLaw[] = [];
+let lastChamber: { warmed: MemberDef[]; burned: MemberDef[] } = { warmed: [], burned: [] };
+
+/** Who warmed to you and who went cold in the run just ended. */
+export function takeChamberChanges(): { warmed: MemberDef[]; burned: MemberDef[] } {
+  const c = lastChamber;
+  lastChamber = { warmed: [], burned: [] };
+  return c;
+}
 
 /** Statutes struck during the run that just ended, for the terminal screen. */
 export function takeRepeals(): EnactedLaw[] {

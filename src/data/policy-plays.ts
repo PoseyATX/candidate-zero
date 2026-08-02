@@ -33,6 +33,24 @@ import {
   missedOpenings
 } from '../engine/docket.js';
 import { issueProfile } from './issue-profiles.js';
+import { recruitsFor, recruitLine } from '../engine/chamber.js';
+import type { Provision } from '../engine/types.js';
+
+/**
+ * Language pulled back out this session, so sine die knows who to chill.
+ *
+ * Module-level because the stripped provision is spliced out of the bill and
+ * would otherwise be unrecoverable — and the whole point of named members is
+ * that betrayal has to be rememberable. Cleared by clearStripped() at session
+ * entry so it never leaks between runs.
+ */
+const strippedThisSession: Provision[] = [];
+export function takeStripped(): Provision[] {
+  return strippedThisSession.splice(0, strippedThisSession.length);
+}
+export function clearStripped(): void {
+  strippedThisSession.length = 0;
+}
 
 /** The opening this card would act on: the one closing soonest you can afford. */
 function urgentOpening(s: Parameters<NonNullable<PlayCard['show']>>[0]) {
@@ -86,9 +104,11 @@ export const PO01_HangItOn: PlayCard = {
     // motion — amended bills physically could not move, and the law rate fell
     // from 40.3% to 8.7%. Controversy is charged where it belongs: at the desk.
     // See provisionHeat() in engine/docket.ts and the veto roll in session.ts.
+    const who = recruitLine(recruitsFor(p, s.issueId ?? null));
     return (
       `AMENDED — "${p.n}" goes into the bill. ${p.d} ` +
       `+${p.ayes} ayes, −${p.nays} nays, heat +${p.heat}. ` +
+      `${who ? `${who} ` : ''}` +
       `${p.angers ? `${p.angers} will remember this one.` : 'Nobody objected out loud, which is not the same as nobody objecting.'}`
     );
   }
@@ -219,8 +239,17 @@ export const PO04_StripLanguage: PlayCard = {
       const g = s.groundsArr.find(x => x.id === gone.rewards);
       if (g) g.rapport = Math.max(0, (g.rapport || 0) - 3);
     }
+    const lost = recruitsFor(gone, s.issueId ?? null);
+    const lostLine = lost.length
+      ? `${lost.slice(0, 3).map(m => m.name).join(', ')} will hear about it from their county first. `
+      : '';
+    // Remember what was pulled, so sine die can chill the people it burned.
+    s.sessionFlags = s.sessionFlags || {};
+    s.sessionFlags.strippedCount = Number(s.sessionFlags.strippedCount || 0) + 1;
+    strippedThisSession.push(gone);
     return (
       `STRIPPED — "${gone.n}" comes out. You give back ${gone.ayes} ayes and ${gone.heat} points of heat. ` +
+      lostLine +
       `${gone.angers ? `${gone.angers} stops working the halls against you.` : 'The room relaxes a degree.'} ` +
       `The people who wanted it will read about it.`
     );

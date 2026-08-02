@@ -16,6 +16,7 @@ import { random } from './rng.js';
 import { hasRep } from './reputation.js';
 import { retireDebtOnWin } from './debt.js';
 import { statuteBookLine } from './laws.js';
+import { clearStripped } from '../data/policy-plays.js';
 import { tickOutsideDeck } from './outside.js';
 import {
   seedIssueOpening,
@@ -247,6 +248,7 @@ export function enterSession(state: GameState): { text: string } {
   // not — but a member who ran on water is never left with an empty docket and
   // no way to put language in their own bill.
   state.docket = [];
+  clearStripped();
 
   // Preserve PAC claim across the reset of incidental flags
   const pacClaim = !!(state.sessionFlags?.pac_lender_claim || state.obls.includes('OB1'));

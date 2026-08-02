@@ -36,6 +36,8 @@ import {
   takeBlockedReason,
   provisionSwing
 } from '../engine/docket.js';
+import { chamberSwing, ALLY_LINE, HOSTILE_LINE } from '../engine/chamber.js';
+import { MEMBER_BY_ID } from '../data/members.js';
 import { reducedMotion } from './motion.js';
 import { isSignatureCard } from './card-face.js';
 
@@ -152,6 +154,39 @@ function docketHtml(s: GameState): string {
     })
     .join('');
   return `<div class="ledger-wide"><span class="k">Docket</span>${rows}</div>`;
+}
+
+/**
+ * Who in the room owes you, and who will not take the call.
+ *
+ * The floor used to be a number. "+16 ayes" cannot be thanked, cannot be
+ * betrayed, and cannot remember — so it was not a legislature, it was a meter.
+ * These are the names, with what they are owed for.
+ */
+function chamberHtml(s: GameState): string {
+  const roster = s.chamberRoster ?? {};
+  const ids = Object.keys(roster);
+  if (!ids.length) return '';
+  const rows = ids
+    .map(id => ({ m: MEMBER_BY_ID[id], d: roster[id]! }))
+    .filter(x => !!x.m)
+    .sort((a, b) => b.d - a.d)
+    .map(
+      x =>
+        `<div class="dock-row${x.d <= HOSTILE_LINE ? ' ledger-warn' : ''}">` +
+        `<div class="dock-n">${escapeAttr(x.m!.name)} <span class="mem-county">${escapeAttr(x.m!.county)}</span></div>` +
+        `<div class="dock-meta">${
+          x.d >= ALLY_LINE
+            ? 'takes your call'
+            : x.d <= HOSTILE_LINE
+              ? 'will not take your call'
+              : 'knows who you are'
+        } · wants ${escapeAttr(x.m!.wants)}</div></div>`
+    )
+    .join('');
+  if (!rows) return '';
+  const swing = chamberSwing(s);
+  return `<div class="ledger-wide"><span class="k">The Room</span> net ${swing >= 0 ? '+' : ''}${swing} on a count${rows}</div>`;
 }
 
 /** The language actually in your bill, and what it bought. */
@@ -358,6 +393,7 @@ export function renderLedger(campaign: Campaign, legacy?: LegacyState): void {
               : '—'
           }</div>
           ${provisionsHtml(s)}
+          ${chamberHtml(s)}
           ${docketHtml(s)}
           ${
             s.sessionFlags?.pac_lender_claim || s.obls.includes('OB1')

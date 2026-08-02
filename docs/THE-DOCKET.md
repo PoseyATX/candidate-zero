@@ -151,12 +151,48 @@ history records what was struck as well as what stands.
 That is the loop that turns a scoreboard into a career: winning creates your own future
 opposition, and nothing is ever settled, only currently decided.
 
+## The Chamber — the floor is people (`engine/chamber.ts`, `data/members.ts`)
+
+A provision bought "+16 ayes." Sixteen of *what*? The number was the entire representation:
+no names, no counties, nobody who wanted the thing — and therefore nobody who could remember
+afterwards that you delivered it or took it back. **A coalition you cannot name is a coalition
+you cannot betray**, and a legislature where nobody can be betrayed is a meter with a flag on
+it.
+
+Eighteen members you will actually come to know — not a full chamber, the ones whose names a
+freshman learns in the first session because they can move something. Wendell Cobb of
+Nacogdoches, eleven years on the same subcommittee, will help and will expect to be asked
+properly, in person, before the hearing and not during it. Delia Arredondo of Hidalgo ran a
+clinic before she ran for anything and knows her county's ambulance mileage from memory.
+Marvette Seals of Dallas is a freshman, terrified, hiding it badly, and the only member who
+has read the pretrial numbers because nobody told her not to bother.
+
+Each carries a **county** (mapped to a ground), a **want** (the issue that reaches them), a
+**price**, and — the part that matters — a **memory that persists across runs**.
+
+- Language recruits the members whose county it serves or whose issue it is, heaviest first,
+  and the log names them: *"WITH YOU — Wendell Cobb of Nacogdoches, Sudie McCauley of
+  Hutchinson, and 2 more."*
+- Delivering warms them by `DELIVER_WARMTH`. Do it twice and they take your call at ten at
+  night.
+- **Stripping language burns them by `BURN_CHILL`, which is deliberately larger.** A betrayal
+  outweighs a favour, because that is how it works. Do it twice and they will not take the
+  call at all — and they count *against* you on the floor.
+- A dean is worth their weight and a frightened freshman is worth one vote.
+
+**The aggregate arithmetic is deliberately unchanged** — `provisionSwing` still returns the
+same ayes-minus-nays, and the balance measured above holds exactly (law 53.2%, amendment EV
+identical). Names are a layer on top, not a replacement, so a system this large could land
+without re-tuning everything underneath it. What the room adds is a *career* bonus on the
+floor count: a member with a record has friends before the bill is filed.
+
 ## What is next
 
 Still a foundation. Named openly:
 
-- Coalitions are still a number (`ayes`/`nays`) rather than named members with their own
-  wants. Fenstemaker's power was knowing every member's box — that is the next real depth.
+- Members do not yet have their own asks — the price field (`favor` / `capital` / `casework`)
+  is authored and not yet spent against. That is the next depth: Cobb wanting to be asked
+  properly, in person, as an actual card.
 - Only the screw worm names an opening. Every outside event should.
 ## Repeal has a face (`engine/rival.ts`)
 
