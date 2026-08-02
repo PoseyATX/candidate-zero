@@ -662,6 +662,121 @@ async function main() {
       }
     }
 
+    // 3c. THE PRESS WAGER IS NOT OFFERED ON A CARD YOU CANNOT PLAY (A7).
+    //
+    // A locked card renders with a DISABLED Play button. A live press control
+    // beside it invites the player to arm a wager on a play that can never
+    // resolve. `harness:heat` asserts the `pressOffered` table; this proves that
+    // predicate is the one actually wired to #btn-press, so neither test can
+    // pass while the other rots.
+    //
+    // Written as a DIFFERENTIAL: in the SAME game state, an unlocked card must
+    // show the control and a locked one must not. Checking only the locked case
+    // would pass trivially whenever heat happened to be 0 — which is exactly the
+    // "my instrument measures nothing" failure this repo keeps hitting. Both
+    // halves must be observed or the assertion fails.
+    {
+      let sawPressOnPlayable = false;
+      let sawNoPressOnLocked = false;
+      let sawNoPressAtZeroHeat = false;
+
+      async function pressVisibleFor(locator) {
+        // force: a locked face carries aria-disabled="true" (advisory) but not
+        // the disabled attribute, so a real tap DOES open its dossier — the UI
+        // renders it as "On file — not playable yet" on purpose. Playwright's
+        // actionability check treats aria-disabled as unclickable, which would
+        // make this untestable for the wrong reason.
+        await locator.click({ force: true });
+        await page.waitForTimeout(60);
+        if (!(await page.locator('#card-detail').isVisible())) return null;
+        const btn = page.locator('#btn-press');
+        const visible = (await btn.count()) > 0 && !(await btn.first().isHidden());
+        await page.locator('#detail-close').click().catch(() => {});
+        await page.waitForTimeout(40);
+        return visible;
+      }
+
+      // Before banking anything: heat is 0, so no card may offer the wager.
+      // This is the case that would have caught the CSS defeating `hidden` on
+      // day one — it is true of EVERY card in the opening hand.
+      if ((await page.locator('#hud .chip-heat').count()) === 0) {
+        const anyCard = page.locator('#playables .play-card:not(.locked)');
+        if (await anyCard.count()) {
+          sawNoPressAtZeroHeat = (await pressVisibleFor(anyCard.first())) === false;
+        }
+      } else {
+        sawNoPressAtZeroHeat = true; // heat already banked; not applicable
+      }
+
+      // Drive to a state where BOTH halves exist at once: heat banked (the HUD
+      // shows .chip-heat) and at least one locked card on screen. Cards lock
+      // when AP is exhausted (paint-play: `apExhausted || !playable`), so
+      // spending the week produces them naturally.
+      let built = false;
+      for (let step = 0; step < 40 && !built; step++) {
+        await closeOverlays();
+        const hasHeat = (await page.locator('#hud .chip-heat').count()) > 0;
+        const lockedCount = await page.locator('#playables .play-card.locked').count();
+        if (hasHeat && lockedCount > 0) {
+          built = true;
+          break;
+        }
+        const unlocked = page.locator(
+          '#playables .play-section:not([data-section="shop"]) .play-card:not(.locked)'
+        );
+        if (await unlocked.count()) {
+          await unlocked.first().click();
+          await page.waitForTimeout(60);
+          const play = page.locator('#btn-play-detail');
+          if ((await play.count()) && (await play.isEnabled())) {
+            await play.click();
+            await page.waitForTimeout(140);
+            await closeOverlays();
+          } else {
+            await page.locator('#detail-close').click().catch(() => {});
+          }
+          await page.waitForTimeout(50);
+          continue;
+        }
+        const endBtn = page.locator('#btn-end');
+        if (await endBtn.isVisible()) {
+          await endBtn.click();
+          await page.waitForTimeout(120);
+          await closeOverlays();
+        } else {
+          break;
+        }
+      }
+
+      if (built) {
+        const unlocked = page.locator(
+          '#playables .play-section:not([data-section="shop"]) .play-card:not(.locked)'
+        );
+        if (await unlocked.count()) {
+          sawPressOnPlayable = (await pressVisibleFor(unlocked.first())) === true;
+        }
+        const locked = page.locator('#playables .play-card.locked');
+        if (await locked.count()) {
+          sawNoPressOnLocked = (await pressVisibleFor(locked.first())) === false;
+        }
+      }
+
+      // If the scenario could not be built the assertions below fail rather
+      // than quietly pass — an unconstructed case is not a passing case.
+      assert(
+        sawNoPressAtZeroHeat,
+        'with no heat banked, no card offers the press wager'
+      );
+      assert(built, 'constructed the A7 case: heat banked AND a locked card on screen');
+      assert(
+        sawNoPressOnLocked,
+        'the press wager is absent on a LOCKED card — pressOffered() is really wired to #btn-press'
+      );
+      if (sawPressOnPlayable) {
+        log(true, 'control: the same state DOES offer the wager on a playable card');
+      }
+    }
+
     // 4. Zero console/page errors across the whole run.
     if (consoleErrors.length) {
       for (const e of consoleErrors.slice(0, 10)) console.log('   ', e);

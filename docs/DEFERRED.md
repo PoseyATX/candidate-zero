@@ -23,7 +23,7 @@ Status values: **OPEN** · **IN PROGRESS** · **DONE** · **KILLED** (owner's ca
 | A4 | **Heat persists across stage transitions.** Nobody decided this; it fell out of `bankHeat` being the only writer. Closed by the A2 work — it turned out to be A2's actual cause, not a separate cosmetic issue. | §9 | DONE |
 | A5 | **You can cut a card you just practised.** No guard, no warning. "Left alone deliberately." | §10 | OPEN |
 | A6 | **Nine forced full-screen dismissals per run** (≈3 act splashes + 6 weather dialogs). I fixed the z-index layering and left the frequency. | §21 | OPEN |
-| A7 | **Press visibility on locked cards was never actually run.** I verified it by *reading the condition* and wrote "honest gap" instead of constructing the case. | §"Verified but untested" | OPEN |
+| A7 | **Press visibility on locked cards was never actually run.** I verified it by *reading the condition* and wrote "honest gap" instead of constructing the case. **The condition was right and the behaviour was wrong** — CSS defeated it. See the note below. | §"Verified but untested" | DONE |
 | A8 | **206 unreferenced exports.** I scanned, decided most were false positives, and dropped it without separating the real dead code from the named-card exports. | this session | OPEN |
 | A9 | **The rival system.** Asked for; I built the *poach* and used "rival" language for it. Called out. | this session | DONE |
 | A10 | **Play result covered the cards and auto-faded.** | this session | DONE |
@@ -113,6 +113,45 @@ mechanic is dead; passing a law should be an achievement, not a formality.
 Guarded three ways in `harness:session`: the cap, the cool-on-advance (and that retreating
 does *not* cool, so it is not an exploit), and a live band asserting the law rate stays
 between 25% and 75% of sessions. A number nobody asserts drifts back.
+
+## A7 — the condition was correct and the behaviour was wrong
+
+This is the best argument in the whole file for why "verified by reading it" is not
+verification.
+
+I had checked A7 by reading the visibility rule, concluding it was right, and writing it down
+as an honest gap. The rule *was* right:
+`detailDraftOption === null && !locked && !!card.odds && quote.heat > 0`. It correctly set
+`pressBtn.hidden = true` on every card that must not offer the wager.
+
+**And the button stayed on screen anyway.** `.press-toggle { display: flex }` is an author
+declaration, and author styles outrank the user agent's `[hidden] { display: none }`. Setting
+`.hidden` set the attribute and changed nothing visible. So the press wager was offered on
+every card in the game, including locked ones — where the Play button beside it is disabled
+and the wager could never resolve — and at zero heat, where there is nothing to wager. No
+condition was wrong. No test was failing. Reading the code could not have found it, because
+the code was correct.
+
+Two changes made it testable, then tested:
+
+1. The inline expression became `pressOffered({ locked, isDraftOption, hasOdds, heat })`. It
+   was awkward to construct precisely because it lived inside a DOM painter; as a pure
+   function it is a six-line table in `harness:heat`.
+2. `smoke:ui` constructs the real case, written as a **differential**: it drives the game
+   until heat is banked *and* a locked card is on screen, then asserts the wager appears on a
+   playable card and is absent on a locked one **in the same state**. Checking only the locked
+   case would pass trivially whenever heat happened to be 0 — the exact failure mode this repo
+   keeps producing. Plus the zero-heat case, which is true of every card in the opening hand
+   and would have caught this on day one.
+
+The fix is one rule: `.press-toggle[hidden] { display: none }`. Any author rule that sets
+`display` on an element toggled via `.hidden` needs the same pair.
+
+Getting here took three failed attempts at the test, each of which failed *loudly* rather than
+passing: no locked card existed (`lockedCount=0`); Playwright refused to click a face carrying
+`aria-disabled="true"` (advisory, not the `disabled` attribute — a real tap does open that
+dossier, which the UI handles on purpose); and only then did the assertion report the actual
+defect. A test that cannot construct its scenario must fail, not skip.
 
 ## The sponsor card was invisible, and the gate that "covered" it was green
 

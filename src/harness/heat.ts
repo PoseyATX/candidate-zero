@@ -32,6 +32,7 @@ import { createRng, setDefaultSeed, useRng } from '../engine/rng.js';
 import { PL10_PressRelease } from '../data/plays.js';
 import { createCampaign, runFullCampaign } from '../engine/loop.js';
 import { STRATEGIES } from '../engine/strategies.js';
+import { pressOffered } from '../ui/paint-play.js';
 import type { GameState, PlayCard } from '../engine/types.js';
 
 let failed = 0;
@@ -268,6 +269,32 @@ const LONGSHOT: PlayCard = {
   assert(
     !/guarantee|sure thing|can't lose|cannot lose/i.test(`${std} ${safe}`),
     'press copy never promises a soft roll'
+  );
+}
+
+// --- THE WAGER IS NOT OFFERED ON A CARD YOU CANNOT PLAY (DEFERRED A7) ---
+//
+// I previously "verified" this by reading the condition and then wrote it down
+// as an honest gap rather than constructing the case. The reason it was awkward
+// to construct is that the rule was an inline expression inside a DOM painter;
+// it is now `pressOffered`, so it is just a table.
+//
+// The locked clause matters because a locked card renders with a DISABLED Play
+// button. A live press control beside it invites the player to arm a wager on a
+// play that can never resolve.
+{
+  const base = { locked: false, isDraftOption: false, hasOdds: true, heat: 2 };
+  assert(pressOffered(base), 'a playable, odds-bearing card with heat offers the wager');
+  assert(!pressOffered({ ...base, locked: true }), 'a LOCKED card never offers the wager');
+  assert(
+    !pressOffered({ ...base, locked: true, heat: MAX_HEAT }),
+    'not even at full heat — the lock outranks the stake'
+  );
+  assert(!pressOffered({ ...base, heat: 0 }), 'no heat banked, nothing to wager');
+  assert(!pressOffered({ ...base, hasOdds: false }), 'a card with no odds of its own is not a wager');
+  assert(
+    !pressOffered({ ...base, isDraftOption: true }),
+    'a draft option is a choice about the deck, not a play to press'
   );
 }
 

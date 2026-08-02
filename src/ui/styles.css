@@ -2369,6 +2369,17 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   margin-left: 0.12rem;
 }
 
+/* An author `display` declaration outranks the user agent's `[hidden] {
+   display: none }`, so `pressBtn.hidden = true` set the attribute and changed
+   nothing on screen. The press wager was therefore offered on cards it must
+   never be offered on — locked plays above all, where the Play button beside it
+   is disabled and the wager could never resolve. The visibility condition in
+   paint-play.ts was correct the whole time and had been "verified by reading
+   it" (DEFERRED A7); only constructing the case in smoke:ui found this.
+   Every author rule that sets `display` on a toggled element needs this pair. */
+.press-toggle[hidden] {
+  display: none;
+}
 .press-toggle {
   display: flex;
   align-items: center;
