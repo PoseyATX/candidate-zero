@@ -4,6 +4,12 @@
 
 High-complexity, single-player (PvE) roguelike deckbuilder set inside the machinery of the Texas Legislature.
 
+> **This is a living project, not a project being finished.** The bar for "done" is
+> **playable** — an alpha on `main` that people at the Capitol can pick up and engage with
+> today. Everything past that bar is expansion, and expansion is the work. Contributors and
+> agents: read the top of [`AGENTS.md`](AGENTS.md) before starting. Build the next thing;
+> do not tidy the last one.
+
 Modular TypeScript baseline: pure engine is the rules authority. Ship path
 is **TS engine → Unity presentation → iOS / App Store** (not a second rules
 engine in C#).
@@ -24,8 +30,12 @@ engine in C#).
 - Primary **8** + General **6**; ballot labor/money paths; setup binds
 - Ground picker, asset shop, structured obligations, debt as optionality
 - Vite UI + CLI + full harness suite + CI
-- **Next:** Phase 4 Session ([#8](https://github.com/PoseyATX/candidate-zero/issues/8))
-- **Then:** balance matrix → mobile polish → honest v0.1 → Unity/iOS ship
+- Phase **4 Session** built: bill pipeline, casework/challenger teeth, sine die verdict
+- **The Docket** ([`THE-DOCKET.md`](docs/THE-DOCKET.md)): the world opens policy windows,
+  your bill holds real language, and all 18 issues are mechanical rather than labels
+- **Building next** (not a completion ladder — a direction): laws that persist into later
+  runs and can be repealed; coalitions as named members with their own wants rather than a
+  number; an opening on every outside event; and the ~90 cards that still only move a number
 
 ## Architecture
 

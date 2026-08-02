@@ -9,6 +9,16 @@ explicitly killing it. "Flagged" is not a resolution. Where a decision genuinely
 taste rather than my judgement, I build the version I think is right, measure it, and put
 the lever where he can move it — I do not stop and wait.
 
+> **This file is a backlog, not a burndown.** Added 2026-08-02, because I turned it into one.
+>
+> Emptying this list is not the goal and never was. It is a record of debts worth paying,
+> and paying them is maintenance — not progress. A session that closes five items here and
+> adds no new play to the game is a session that accomplished nothing a player can meet.
+>
+> The project is a living exploration; the only completion that counts is **playable**. See
+> the top of `AGENTS.md`. When there is a choice between closing an item on this list and
+> building something new, **build the new thing.**
+
 Status values: **OPEN** · **IN PROGRESS** · **DONE** · **KILLED** (owner's call).
 
 ---
