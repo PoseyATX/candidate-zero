@@ -225,11 +225,53 @@ Session relationship work writes to the run's roster and folds back into the car
 die via `mergeRoomBack` — taking the larger magnitude rather than summing, so a career does
 not compound itself every cycle just for existing.
 
+## Every event leaves a door, and the grievance travels
+
+Twenty-one outside events existed and exactly **one** named a policy opening. The other
+twenty changed two numbers and vanished. A world that acts on you and leaves nothing to act
+on is weather, not a place.
+
+All 21 now name a door, and `harness:docket` fails the build if any event doesn't — or if it
+names a door that doesn't exist. Eight new openings were authored to cover them: drainage
+authority after the flood, cooling centres and a load-shed exemption registry, severance
+revenue for the county roads the trucks broke, who decides what is on the library shelf,
+fairgrounds capital, ninety-day notice when the plant goes, the mid-decade map, and
+disclosure on whoever paid for the whisper.
+
+**The grievance travels.** Most events fire during the primary and the general, when no
+chamber is sitting — so the door opens when you get there. You ran the whole autumn on the
+plant closing; now you are in Austin and the plant closing is your bill. The log says so:
+*"YOU RAN ON THIS — Notice and retraining when the plant goes."* This reads `eventsFired`,
+which for the life of the project was written once per event to stop it repeating and read by
+nothing at all.
+
+### The double charge this exposed
+
+Filling the docket broke the amendment balance immediately: a member who amended fell from
+39.4% law to **14.1%**. Four measurements to find why, and the first three were wrong:
+
+1. Not the veto — amended runs were vetoed *less* (11% vs 23%). The margin shield works.
+2. Not a missing one-subject rule. `MAX_PROVISIONS = 3` is real and correct (a Christmas tree
+   should die), but adding it moved the number **not at all**.
+3. Not the coalition constant. I swept `COALITION_PER_MEMBER` from 0.009 to 0.024 chasing it;
+   that bought 12pp and never closed the gap.
+
+The actual cause: **taking an opening SPENT capital, and capital is also worth 2.8pp per
+point in `billOdds` on every pipeline motion.** Amendments were charged twice — the capital,
+and the odds that capital buys. Bills died in committee (mean final stage 4.4 vs 4.9) rather
+than at the desk. The fiction was wrong too: capital is what *moves* a bill; the language
+itself is written by staff.
+
+`weight` is now a **requirement, not a spend** — you need standing to hang something on a
+bill and be taken seriously; you do not burn the standing to do it. Result: **43.7% clean vs
+33.8% amended**, with the cost now paid where it belongs (vetoed 32% vs 23%) instead of
+hidden in the pipeline. And with that fixed, 0.009 and 0.016 measure *identically* — the tell
+that the constant was never the lever. It is back at its original value with a comment saying
+not to tune it to fix something else.
+
 ## What is next
 
 Still a foundation. Named openly:
-
-- Only the screw worm names an opening. Every outside event should.
 - The far horizon — 181 procedurally generated members across both chambers, plus statewide
   executives and commissioners who win and lose their offices as you progress — is recorded
   in [`STARMAP.md`](./STARMAP.md). The eighteen hand-authored members are a proof of the

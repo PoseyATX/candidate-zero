@@ -33,13 +33,14 @@ import {
   provisionFor,
   billIsShell,
   tickDocket,
+  seedCampaignOpenings,
   MAX_LIVE_OPENINGS
 } from '../engine/docket.js';
 import { ISSUE_PROFILES, OPENING_SEEDS } from '../data/issue-profiles.js';
 import { ISSUES } from '../data/setup.js';
 import { POLICY_PLAYS } from '../data/policy-plays.js';
 import { SESSION_PLAYS } from '../data/session-plays.js';
-import { EV_SCREWWORM } from '../data/outside-events.js';
+import { EV_SCREWWORM, OUTSIDE_EVENTS } from '../data/outside-events.js';
 import { resolveOutsideEvent } from '../engine/outside.js';
 import { executePlay } from '../engine/play.js';
 import { createCampaign, runFullCampaign } from '../engine/loop.js';
@@ -188,7 +189,20 @@ function session(issue = 'water', seed = 7): GameState {
   const capBefore = s.capital;
   const r = takeOpening(s, o.id, { id: 'PV_T', ...prov });
   assert(r.ok, `the amendment lands (${r.reason ?? 'ok'})`);
-  assert(s.capital === capBefore - o.weight, 'it costs capital');
+  // `weight` is a REQUIREMENT, not a spend. Deducting it double-charged every
+  // amendment, because capital is also worth 2.8pp per point in billOdds on
+  // every pipeline motion — so hanging language cost the capital AND the odds
+  // that capital buys. Amended bills died in committee (mean stage 4.4 vs 4.9)
+  // rather than at the desk. Capital is what MOVES a bill; the language is
+  // written by staff. You need standing to be taken seriously, not to spend it.
+  assert(s.capital === capBefore, 'standing is required to hang language, not consumed by it');
+  s.capital = 0;
+  assert(
+    /Needs \d+ capital/.test(takeBlockedReason(s, liveOpenings(s)[0]?.id ?? 'none')) ||
+      liveOpenings(s).length === 0,
+    'but a member with no standing still cannot hang anything'
+  );
+  s.capital = capBefore;
   assert(!billIsShell(s), 'the bill now contains language');
   assert(provisionSwing(s) === prov.ayes - prov.nays, 'and brings a net bloc of members');
   assert(prov.nays > 0, 'every provision in the game costs somebody — power is never clean');
@@ -347,6 +361,51 @@ function session(issue = 'water', seed = 7): GameState {
     Object.keys(OPENING_SEEDS).length === ids.length,
     'and the lookup table sees all of them'
   );
+}
+
+// --- EVERY OUTSIDE EVENT LEAVES A DOOR ---
+//
+// "Everywhere that a card could be played, there should be an opportunity to
+// play it." Twenty-one outside events existed and exactly ONE named a policy
+// opening; the other twenty changed two numbers and vanished. A world that acts
+// on you and leaves nothing to act on is weather, not a place.
+{
+  const missing = OUTSIDE_EVENTS.filter(e => !e.opens?.length);
+  assert(
+    missing.length === 0,
+    `every outside event names a policy opening (missing: ${missing.map(m => m.id).join(', ') || 'none'})`
+  );
+  const dangling: string[] = [];
+  for (const e of OUTSIDE_EVENTS) {
+    for (const id of e.opens ?? []) if (!OPENING_SEEDS[id]) dangling.push(`${e.id}->${id}`);
+  }
+  assert(dangling.length === 0, `and every named door actually exists (${dangling.join(', ') || 'none'})`);
+}
+
+// --- WHAT YOU RAN ON ARRIVES WITH YOU ---
+//
+// Most events fire during the primary and general, when no chamber is sitting.
+// The grievance has to travel, or the world is inert for two-thirds of the game.
+{
+  const s = session('water');
+  s.docket = [];
+  s.eventsFired = { EV_PLANT_LAYOFF: true, EV_HEAT_DOME: true };
+  const opened = seedCampaignOpenings(s);
+  assert(opened.length === 2, `campaign crises become session hearings (${opened.length})`);
+  assert(
+    opened.some(o => o.id === 'OP_LAYOFF_NOTICE'),
+    'the plant closing you campaigned through is a bill you can file'
+  );
+  assert(
+    opened.every(o => OUTSIDE_EVENTS.some(e => e.id === o.source)),
+    'and the docket records which crisis each door came from'
+  );
+
+  // Nothing fired, nothing arrives.
+  const quiet = session('water', 33);
+  quiet.docket = [];
+  quiet.eventsFired = {};
+  assert(seedCampaignOpenings(quiet).length === 0, 'a quiet campaign brings no grievances');
 }
 
 // --- AMENDING MUST NOT BE A TRAP ---

@@ -32,6 +32,7 @@
 
 import type { GameState, PolicyOpening, Provision } from './types.js';
 import { OPENING_SEEDS, issueProfile } from '../data/issue-profiles.js';
+import { OUTSIDE_EVENTS } from '../data/outside-events.js';
 
 /** How long a typical window stays open, in weeks, unless the opening says otherwise. */
 export const DEFAULT_WINDOW = 4;
@@ -108,6 +109,22 @@ export function openPolicy(
   return opening;
 }
 
+/**
+ * How much language one bill can carry.
+ *
+ * Texas has a one-subject rule, and every experienced member knows the other
+ * half of it: a bill that tries to carry everything anybody asked for becomes a
+ * Christmas tree, and Christmas trees die. Before this cap existed there was no
+ * limit at all — and the moment campaign grievances started arriving on the
+ * docket too, a greedy member could hang five provisions on one bill and reach
+ * the Governor carrying ~15 points of controversy. Measured: the law rate for a
+ * member who amended at every opportunity fell from 39.4% to 14.1%.
+ *
+ * That is not difficulty, it is a missing rule. The chamber does not let you do
+ * it, so the game should not either.
+ */
+export const MAX_PROVISIONS = 3;
+
 /** Why an opening cannot be taken right now, '' when it can. */
 export function takeBlockedReason(state: GameState, id: string): string {
   const o = findOpening(state, id);
@@ -119,6 +136,9 @@ export function takeBlockedReason(state: GameState, id: string): string {
   // Once it is out of committee the language is set; you amend on the floor or
   // not at all, and this game does not pretend floor amendments are free.
   if (state.bill.pipelineStage > 4) return 'Too late — the language is set';
+  if ((state.bill.provisions?.length ?? 0) >= MAX_PROVISIONS) {
+    return 'The bill will not carry more — strip something first';
+  }
   if ((state.capital || 0) < o.weight) return `Needs ${o.weight} capital`;
   return '';
 }
@@ -143,7 +163,19 @@ export function takeOpening(
   const reason = takeBlockedReason(state, id);
   if (reason) return { ok: false, reason };
   const o = findOpening(state, id)!;
-  state.capital = Math.max(0, (state.capital || 0) - o.weight);
+  // NOTE: `weight` is a REQUIREMENT, not a spend.
+  //
+  // It used to be deducted, and that double-charged every amendment: capital is
+  // also worth 2.8pp per point in billOdds on every pipeline motion, so hanging
+  // language both cost the capital and cost the odds that capital buys. Once
+  // campaign grievances started filling the docket — so a member always had
+  // something to amend — a sensible amender's law rate fell to 29.6% against a
+  // clean bill's 43.7%, dying in committee at mean stage 4.4 rather than being
+  // vetoed (21%, no worse than clean).
+  //
+  // The fiction was wrong too. Capital is what MOVES a bill; the language itself
+  // is written by staff. You need standing to hang something on a bill and be
+  // taken seriously — you do not burn the standing to do it.
   o.takenWeek = state.week;
   const p: Provision = { ...provision, fromOpening: o.id };
   const bill = state.bill!;
@@ -166,9 +198,15 @@ export function provisionSwing(state: GameState): number {
 /**
  * What the coalition you bought is worth on a vote.
  *
- * Applied wherever MEMBERS decide — the floor and the Senate — and deliberately
- * NOT in committee, where the chair decides and a headcount is worth nothing.
- * Tuned by sweep; see harness:docket and the note in data/policy-plays.ts.
+ * Folded into `billOdds`, so it counts wherever the bill has to move — committee
+ * members are members, and a chair reads a headcount too.
+ *
+ * Left at its original value on purpose. When amended bills started dying in the
+ * pipeline I swept this constant up to 0.024 chasing the symptom; it bought 12pp
+ * and never closed the gap. The actual cause was that taking an opening SPENT
+ * capital, which is also worth 2.8pp per point in billOdds — a double charge.
+ * With that fixed, 0.009 and 0.016 measure identically (35.2% both), which is
+ * the tell that this was never the lever. Do not tune it to fix something else.
  */
 export const COALITION_PER_MEMBER = 0.009;
 
@@ -269,6 +307,32 @@ export function seedIssueOpening(state: GameState): PolicyOpening | null {
   const profile = issueProfile(state.issueId);
   if (!profile || !profile.openings.length) return null;
   return openFromSeed(state, profile.openings[0]!.id, 'session');
+}
+
+/**
+ * The crises you campaigned through become the bills you file.
+ *
+ * Most outside events fire during the primary and the general, when no chamber
+ * is sitting — so a door opened then has nowhere to go. That is not a reason for
+ * the world to be inert during two-thirds of the game; it is the reason the
+ * grievance has to travel. You ran the whole autumn on the plant closing, and
+ * now you are in Austin and the plant closing is your bill.
+ *
+ * Reads `eventsFired`, which for the entire life of this project was written
+ * once per event to stop it repeating and read by nothing at all.
+ */
+export function seedCampaignOpenings(state: GameState): PolicyOpening[] {
+  const fired = state.eventsFired ?? {};
+  const out: PolicyOpening[] = [];
+  for (const ev of OUTSIDE_EVENTS) {
+    if (!ev.opens?.length) continue;
+    if (!fired[ev.id]) continue;
+    for (const seedId of ev.opens) {
+      const o = openFromSeed(state, seedId, ev.id);
+      if (o) out.push(o);
+    }
+  }
+  return out;
 }
 
 /**

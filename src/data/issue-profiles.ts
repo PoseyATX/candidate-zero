@@ -80,6 +80,22 @@ export const ISSUE_PROFILES: Record<string, IssueProfile> = {
     hard: 'Everybody agrees about water until you say whose.',
     openings: [
       {
+        id: 'OP_WATER_FLOOD',
+        n: 'Drainage district authority after the flood',
+        d: 'Thirty inches in four days and the creek took the low road through town, the way everyone knew it would and nobody had authority to prevent.',
+        constituency: ['GR08', 'GR07'],
+        opposition: 'the developers who platted the low ground',
+        weight: 2,
+        window: 4,
+        provision: {
+          n: 'Drainage district with condemnation authority',
+          d: 'Lets the county buy out the worst lots instead of rebuilding them a fourth time.',
+          ayes: 15, nays: 10, heat: 3,
+          rewards: 'GR08',
+          angers: 'the developers who platted the low ground'
+        }
+      },
+      {
         id: 'OP_WATER_DROUGHT',
         n: 'Emergency groundwater district authority',
         d: 'Third year of the drought and the district well is pulling sand. The 1930s answer was to carve the Highland Lakes out of the hills; the modern one is a rule nobody wants to sign.',
@@ -126,6 +142,22 @@ export const ISSUE_PROFILES: Record<string, IssueProfile> = {
     hard: 'Everyone remembers the freeze. Nobody agrees who pays to prevent the next one.',
     openings: [
       {
+        id: 'OP_GRID_COOLING',
+        n: 'Cooling centers and a load-shed exemption',
+        d: 'A hundred and nine for ten days. The people who die in a heat dome die alone, indoors, with the power off for eleven hours.',
+        constituency: ['GR08', 'GR01'],
+        opposition: 'the load-shed protocol nobody wants to own',
+        weight: 2,
+        window: 3,
+        provision: {
+          n: 'Medically-necessary load-shed exemption registry',
+          d: 'A list the utility must not cut. Small, cheap, and somebody has to keep it accurate.',
+          ayes: 13, nays: 6, heat: 2,
+          rewards: 'GR08',
+          angers: 'the load-shed protocol nobody wants to own'
+        }
+      },
+      {
         id: 'OP_GRID_WEATHERIZE',
         n: 'Weatherization mandate with actual teeth',
         d: 'The last freeze is a campaign memorial in every barn with a generator in it. The word "voluntary" is doing enormous work in current law.',
@@ -171,6 +203,21 @@ export const ISSUE_PROFILES: Record<string, IssueProfile> = {
     opposition: 'the crop insurance underwriters',
     hard: 'One hailstorm from foreclosure, every year, and the arithmetic never improves.',
     openings: [
+      {
+        id: 'OP_AG_FAIRGROUNDS',
+        n: 'Fairgrounds and youth livestock capital',
+        d: 'The county fair is the only week all year the whole county is in one place. The barn roof is from 1974 and the show ring floods.',
+        constituency: ['GR02', 'GR06'],
+        opposition: 'the comptroller, who calls it a local expense',
+        weight: 1,
+        provision: {
+          n: 'Matching grant for county fairground capital',
+          d: 'Small money, enormous locally. The kind of line item that keeps a member in office for twenty years.',
+          ayes: 18, nays: 4, heat: 1,
+          rewards: 'GR02',
+          angers: 'the comptroller, who calls it a local expense'
+        }
+      },
       {
         id: 'OP_AG_SCREWWORM',
         n: 'Livestock quarantine and indemnity authority',
@@ -230,6 +277,22 @@ export const ISSUE_PROFILES: Record<string, IssueProfile> = {
     hard: 'The formula is understood by nine people and four of them are lobbyists.',
     openings: [
       {
+        id: 'OP_SCHOOL_LIBRARY',
+        n: 'Who decides what is on the shelf',
+        d: 'Four hours of public comment, the same eleven people, and a librarian on a $41,000 salary being called things in a school cafeteria.',
+        constituency: ['GR04', 'GR01'],
+        opposition: 'whichever side of the room you did not stand with',
+        weight: 3,
+        window: 3,
+        provision: {
+          n: 'Local review standard with a named process',
+          d: 'Does not decide the fight. Decides who has to show up and sign their name to decide it.',
+          ayes: 12, nays: 12, heat: 5,
+          rewards: 'GR04',
+          angers: 'whichever side of the room you did not stand with'
+        }
+      },
+      {
         id: 'OP_SCHOOL_FACILITIES',
         n: 'Facilities allotment for small districts',
         d: 'The high school roof is older than the principal. Friday nights are the last civic institution in three counties and the bleachers are condemned.',
@@ -286,6 +349,21 @@ export const ISSUE_PROFILES: Record<string, IssueProfile> = {
     opposition: 'the appraisal district and every entity it funds',
     hard: 'Everyone wants relief. Nobody wants the service cut that pays for it.',
     openings: [
+      {
+        id: 'OP_TAX_SEVERANCE',
+        n: 'Severance revenue for the county roads it broke',
+        d: 'The Permian checkbooks opened and so did the caliche. Ninety thousand pounds a load on a road built for a school bus.',
+        constituency: ['GR02', 'GR05'],
+        opposition: 'the operators, who will note they already pay severance',
+        weight: 2,
+        provision: {
+          n: 'County road reimbursement from severance receipts',
+          d: 'Sends a slice back to the counties actually carrying the trucks. Everyone agrees until the formula.',
+          ayes: 15, nays: 11, heat: 3,
+          rewards: 'GR02',
+          angers: 'the operators, who will note they already pay severance'
+        }
+      },
       {
         id: 'OP_TAX_APPRAISAL',
         n: 'Appraisal cap for homesteads over 65',
@@ -457,6 +535,22 @@ export const ISSUE_PROFILES: Record<string, IssueProfile> = {
     hard: 'Four storefronts at the plant gate at 400% APR, and the math preys on shift workers by design.',
     openings: [
       {
+        id: 'OP_LAYOFF_NOTICE',
+        n: 'Notice and retraining when the plant goes',
+        d: 'Four hundred jobs gone by Friday, announced Thursday. The men at the gate found out from the local news van.',
+        constituency: ['GR05', 'GR08'],
+        opposition: 'the parent company, headquartered elsewhere',
+        weight: 2,
+        window: 4,
+        provision: {
+          n: 'Ninety-day notice and a retraining draw',
+          d: 'Will not save the plant. Buys four hundred families a quarter to find the next thing.',
+          ayes: 16, nays: 9, heat: 3,
+          rewards: 'GR05',
+          angers: 'the parent company, headquartered elsewhere'
+        }
+      },
+      {
         id: 'OP_PAYDAY_ROLLOVER',
         n: 'Rollover limit at the plant gate',
         d: 'The loan is not the trap. The eighth renewal of the same loan is the trap, and it is the entire business model.',
@@ -484,6 +578,21 @@ export const ISSUE_PROFILES: Record<string, IssueProfile> = {
     opposition: "the commissioners' court and forty years of family business",
     hard: 'Naming it takes nerve, and the courthouse remembers names.',
     openings: [
+      {
+        id: 'OP_CORR_DISCLOSE',
+        n: 'Who paid for the whisper',
+        d: 'Something ugly and unattributed makes the rounds at the coffee shops. Nobody signed it. Somebody paid for it.',
+        constituency: ['GR01', 'GR03'],
+        opposition: 'every consultant in Austin, quietly and effectively',
+        weight: 2,
+        provision: {
+          n: 'Disclosure on independent political advertising',
+          d: 'A name on the mailer. That is the whole bill, and it is the hardest one in this book to pass.',
+          ayes: 11, nays: 13, heat: 4,
+          rewards: 'GR01',
+          angers: 'every consultant in Austin, quietly and effectively'
+        }
+      },
       {
         id: 'OP_CORR_BID',
         n: 'Competitive bidding threshold for county contracts',
@@ -570,6 +679,22 @@ export const ISSUE_PROFILES: Record<string, IssueProfile> = {
     opposition: 'the county clerks association, who are tired',
     hard: 'The clerk is honest, exhausted, and yelled at from both directions.',
     openings: [
+      {
+        id: 'OP_ELEC_MAPS',
+        n: 'The mid-decade map',
+        d: 'A rumor with a room number. Somewhere a consultant has already drawn it, and half the members in this chamber are in the wrong district in that draft.',
+        constituency: ['GR01'],
+        opposition: 'everyone whose seat improves under the new lines',
+        weight: 3,
+        window: 3,
+        provision: {
+          n: 'Public-notice requirement before map adoption',
+          d: 'Cannot stop it. Makes them do it in daylight, which historically changes what they draw.',
+          ayes: 10, nays: 14, heat: 5,
+          rewards: 'GR01',
+          angers: 'everyone whose seat improves under the new lines'
+        }
+      },
       {
         id: 'OP_ELEC_CLERK',
         n: 'Clerk staffing and equipment grant',

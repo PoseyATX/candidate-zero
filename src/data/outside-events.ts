@@ -80,6 +80,7 @@ export const EV_SCREWWORM: OutsideEvent = {
 
 export const EV_REDISTRICT_RUMOR: OutsideEvent = {
   id: 'EV_REDISTRICT',
+  opens: ['OP_ELEC_MAPS'],
   n: 'Mid-Decade Map Rumor',
   d: 'Lines on a napkin in Austin. Your district might not exist as drawn.',
   residency: 'outside',
@@ -101,6 +102,7 @@ export const EV_REDISTRICT_RUMOR: OutsideEvent = {
 
 export const EV_ETHICS_COMPLAINT: OutsideEvent = {
   id: 'EV_ETHICS',
+  opens: ['OP_CORR_BID'],
   n: 'Ethics Complaint Filed',
   d: 'Someone with a PAC and a grudge files on you. Process is the punishment.',
   residency: 'outside',
@@ -123,6 +125,7 @@ export const EV_ETHICS_COMPLAINT: OutsideEvent = {
 
 export const EV_DROUGHT: OutsideEvent = {
   id: 'EV_DROUGHT',
+  opens: ['OP_WATER_DROUGHT'],
   n: 'Exceptional Drought',
   d: 'The aquifers drop. Water talk eats every town hall.',
   residency: 'outside',
@@ -147,6 +150,7 @@ export const EV_DROUGHT: OutsideEvent = {
 
 export const EV_ENERGY_BOOM: OutsideEvent = {
   id: 'EV_ENERGY_BOOM',
+  opens: ['OP_TAX_SEVERANCE'],
   n: 'Permian Checkbooks Open',
   d: 'Oil money wants friends. Strings optional until they are not.',
   residency: 'outside',
@@ -169,6 +173,7 @@ export const EV_ENERGY_BOOM: OutsideEvent = {
 
 export const EV_RIVAL_DUMP: OutsideEvent = {
   id: 'EV_RIVAL_DUMP',
+  opens: ['OP_CORR_DISCLOSE'],
   n: 'Rival Oppo Dump',
   d: 'Their folder becomes Friday\'s mailer. Not your play — their weather.',
   residency: 'outside',
@@ -191,6 +196,7 @@ export const EV_RIVAL_DUMP: OutsideEvent = {
 
 export const EV_FLOOD_WEEK: OutsideEvent = {
   id: 'EV_FLOOD',
+  opens: ['OP_WATER_FLOOD'],
   n: 'Gulf Flood Week',
   d: 'Water in the yards. Doors close. Politics waits on sandbags.',
   residency: 'outside',
@@ -213,6 +219,7 @@ export const EV_FLOOD_WEEK: OutsideEvent = {
 
 export const EV_SCHOOL_BOARD_WAR: OutsideEvent = {
   id: 'EV_SCHOOL_WAR',
+  opens: ['OP_SCHOOL_LIBRARY'],
   n: 'School Board Blood Sport',
   d: 'A curriculum fight goes county-wide. Every candidate gets asked.',
   residency: 'outside',
@@ -235,6 +242,7 @@ export const EV_SCHOOL_BOARD_WAR: OutsideEvent = {
 
 export const EV_SPECIAL_SESSION: OutsideEvent = {
   id: 'EV_SPECIAL_SESSION',
+  opens: ['OP_ELEC_MAPS'],
   n: 'Special Session Called',
   d: 'The Governor wants another bite. The calendar never sleeps.',
   residency: 'outside',
@@ -258,6 +266,7 @@ export const EV_SPECIAL_SESSION: OutsideEvent = {
 
 export const EV_PRIMARY_CHALLENGER_AD: OutsideEvent = {
   id: 'EV_CHALLENGER_AD',
+  opens: ['OP_CORR_DISCLOSE'],
   n: 'Primary Challenger Airs',
   d: 'A younger, angrier ad buy. The seat was never a gift.',
   residency: 'outside',
@@ -285,6 +294,7 @@ export const EV_PRIMARY_CHALLENGER_AD: OutsideEvent = {
 /** Grid freeze memory — "the lights went out and nobody owned it." */
 export const EV_GRID_FREEZE: OutsideEvent = {
   id: 'EV_GRID_FREEZE',
+  opens: ['OP_GRID_WEATHERIZE'],
   n: 'Grid Freeze Hangover',
   d: 'Pipes still burst in the stories people tell. The ERCOT slide deck is a campaign issue whether you like it.',
   residency: 'outside',
@@ -321,6 +331,7 @@ export const EV_GRID_FREEZE: OutsideEvent = {
 /** Property tax sermon season. */
 export const EV_PROPERTY_TAX: OutsideEvent = {
   id: 'EV_PROPERTY_TAX',
+  opens: ['OP_TAX_APPRAISAL'],
   n: 'Property Tax Revival',
   d: 'Every candidate will "fix the appraisal district." The math is harder than the slogan.',
   residency: 'outside',
@@ -348,6 +359,7 @@ export const EV_PROPERTY_TAX: OutsideEvent = {
 /** Book / library culture fight. */
 export const EV_LIBRARY_FIGHT: OutsideEvent = {
   id: 'EV_LIBRARY_FIGHT',
+  opens: ['OP_SCHOOL_LIBRARY'],
   n: 'Library Shelf Fight',
   d: 'A list of titles becomes a county identity test. Cameras love a microphone in the stacks.',
   residency: 'outside',
@@ -372,6 +384,7 @@ export const EV_LIBRARY_FIGHT: OutsideEvent = {
 /** Border bus / busing politics as weather (not a player verb). */
 export const EV_BORDER_BUSES: OutsideEvent = {
   id: 'EV_BORDER_BUSES',
+  opens: ['OP_BORDER_REIMB'],
   n: 'Buses on the Cable News',
   d: 'Four hundred miles away and on every screen in the district. Heat guaranteed; light optional.',
   residency: 'outside',
@@ -408,6 +421,7 @@ export const EV_BORDER_BUSES: OutsideEvent = {
 /** County fair / carnival week — lighter texture. */
 export const EV_COUNTY_FAIR: OutsideEvent = {
   id: 'EV_COUNTY_FAIR',
+  opens: ['OP_AG_FAIRGROUNDS'],
   n: 'County Fair Week',
   d: 'Corn dogs, livestock, and every candidate in a booth. Presence is free; absence is noted.',
   residency: 'outside',
@@ -434,6 +448,7 @@ export const EV_COUNTY_FAIR: OutsideEvent = {
 /** Hospital / rural care closure scare. */
 export const EV_RURAL_HOSPITAL: OutsideEvent = {
   id: 'EV_RURAL_HOSPITAL',
+  opens: ['OP_HOSP_OB'],
   n: 'Rural Hospital Scare',
   d: 'A closure rumor, a travel distance, a Facebook post with a thousand shares.',
   residency: 'outside',
@@ -473,6 +488,7 @@ export const EV_RURAL_HOSPITAL: OutsideEvent = {
 /** Heat dome — a real Texas summer that keeps people (and canvassers) inside. */
 export const EV_HEAT_DOME: OutsideEvent = {
   id: 'EV_HEAT_DOME', n: 'Heat Dome', kind: 'liability',
+  opens: ['OP_GRID_COOLING'],
   d: 'A hundred and nine for ten days straight. Nobody answers the door; nobody wants a flyer.',
   residency: 'outside', control: 'world', stages: ['primary', 'general'], w: 3,
   apply: s => {
@@ -485,6 +501,7 @@ export const EV_HEAT_DOME: OutsideEvent = {
 /** Plant layoff — sudden economic anxiety reshapes the race's mood. */
 export const EV_PLANT_LAYOFF: OutsideEvent = {
   id: 'EV_PLANT_LAYOFF', n: 'The Plant Lays Off', kind: 'liability',
+  opens: ['OP_LAYOFF_NOTICE'],
   d: 'Four hundred jobs, gone by Friday. The district wants to know whose side you are on.',
   residency: 'outside', control: 'world', stages: ['primary', 'general'], once: true, w: 2,
   apply: s => {
@@ -498,6 +515,7 @@ export const EV_PLANT_LAYOFF: OutsideEvent = {
 /** Whisper campaign against you — a smear you did not start. */
 export const EV_WHISPER_SMEAR: OutsideEvent = {
   id: 'EV_WHISPER_SMEAR', n: 'A Whisper Starts', kind: 'blackmail',
+  opens: ['OP_CORR_DISCLOSE'],
   d: 'Something ugly and unattributed makes the rounds at the coffee shops. You never said it. It does not matter.',
   residency: 'outside', control: 'world', stages: ['primary', 'general'], once: true, w: 2,
   show: s => s.faces.O >= 2 || s.hitPieces > 0,
@@ -510,6 +528,7 @@ export const EV_WHISPER_SMEAR: OutsideEvent = {
 /** Spontaneous club endorsement — the rare kind wind. */
 export const EV_CLUB_RALLIES: OutsideEvent = {
   id: 'EV_CLUB_RALLIES', n: 'A Club Rallies to You', kind: 'ally',
+  opens: ['OP_VET_COURT'],
   d: 'Word of your kitchen-table work reaches the right room, and the room decides it likes you.',
   residency: 'outside', control: 'world', stages: ['primary', 'general'], once: true, w: 2,
   show: s => s.endorsePts >= 2 || s.contacts >= 200,
@@ -522,6 +541,7 @@ export const EV_CLUB_RALLIES: OutsideEvent = {
 /** Early-vote surge — turnout weather in the general's home stretch. */
 export const EV_EARLY_VOTE_SURGE: OutsideEvent = {
   id: 'EV_EARLY_VOTE_SURGE', n: 'Early Vote Surges', kind: 'location',
+  opens: ['OP_ELEC_CLERK'],
   d: 'The lines wrap the courthouse on day one. Whoever banked turnout is about to find out if it was enough.',
   residency: 'outside', control: 'world', stages: ['general'], once: true, w: 3,
   apply: s => {

@@ -26,6 +26,8 @@ import {
   provisionSwing,
   deliveryStanding,
   seedLawOpenings,
+  seedCampaignOpenings,
+  coalitionBonus,
   lawWasDefended
 } from './docket.js';
 import type { Bill, BillStatus, CampaignOutcome, Committee, GameState } from './types.js';
@@ -183,9 +185,21 @@ export function coolBill(state: GameState, n: number): number {
 export function billOdds(state: GameState, base: number): number {
   const heat = state.bill?.heat ?? 0;
   const freeze = Number(state.sessionFlags?.speakerFreeze || 0);
+  // The coalition belongs in the general health of a bill, not only at the floor
+  // vote — committee members are members, and a chair reads a headcount too.
+  //
+  // Measured why: taking an opening spends 2–3 capital, and capital is worth
+  // 2.8pp per point on EVERY pipeline motion here. So amending was charged
+  // twice — once in capital, once in the odds that capital buys — and once
+  // campaign grievances started filling the docket, a member who amended went
+  // from 39.4% law to 14.1%. They were not being vetoed (11%, LOWER than a clean
+  // bill's 23% — the margin shield works); their bills were dying in committee
+  // at a mean final stage of 4.4 against 4.9. Language that buys you sixteen
+  // members should not make the bill harder to move.
   return clamp(
     base +
       state.capital * 0.028 +
+      coalitionBonus(state) +
       (state.favor - 50) * 0.005 -
       heat * 0.05 -
       freeze * 0.04,
@@ -321,6 +335,14 @@ export function enterSession(state: GameState): { text: string } {
   if (book) state.log.push({ week: state.week, kind: 'note', text: book });
   for (const o of seedLawOpenings(state)) {
     state.log.push({ week: state.week, kind: 'note', text: openingAnnounce(o) });
+  }
+  // What the world did to you on the campaign trail arrives with you.
+  for (const o of seedCampaignOpenings(state)) {
+    state.log.push({
+      week: state.week,
+      kind: 'note',
+      text: `YOU RAN ON THIS — ${openingAnnounce(o).replace('ON THE DOCKET — ', '')}`
+    });
   }
   return { text };
 }

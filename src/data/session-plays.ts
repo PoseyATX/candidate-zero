@@ -270,7 +270,8 @@ export const SS06_FloorFight: PlayCard = {
   // a bill nobody is owed by walks in alone.
   // Language you attached PLUS the people who already owe you. A member with a
   // record has friends in the room before the bill is filed.
-  odds: s => billOdds(s, 0.5) + s.capital * 0.02 + coalitionBonus(s) + chamberSwing(s) * 0.006,
+  // billOdds already carries coalitionBonus; adding it again here double-counted it.
+  odds: s => billOdds(s, 0.5) + s.capital * 0.02 + chamberSwing(s) * 0.006,
   run: (s, o) => {
     notePipelineMotion(s);
     if (o.tier === 0) {
@@ -325,7 +326,7 @@ export const SS07_WorkSenate: PlayCard = {
     pipelineMotionAvailable(s),
   // The House coalition travels. A bill that left the floor 92-48 arrives in the
   // Senate with a number attached to it, and thirty-one senators can all read.
-  odds: s => billOdds(s, 0.4) + coalitionBonus(s),
+  odds: s => billOdds(s, 0.4),
   run: (s, o) => {
     notePipelineMotion(s);
     if (o.tier <= 1) {
