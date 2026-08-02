@@ -7,6 +7,7 @@
 
 import { emblem } from './card-art.js';
 import { wireTabs } from './tabs.js';
+import { renderVersion } from './version.js';
 import { showTitle, showTutorial, backFromTutorial } from './screens.js';
 import {
   startRun,
@@ -58,6 +59,7 @@ function openFirstFiling(): void {
 }
 
 function boot(): void {
+  renderVersion();
   wireTabs();
   $('title-emblem').innerHTML = emblem('star');
   $('btn-title-start').addEventListener('click', () => {

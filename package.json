@@ -1,7 +1,7 @@
 {
   "name": "candidate-zero",
-  "version": "0.1.0",
-  "description": "CANDIDATE ZERO — Texas Legislature roguelike deckbuilder. Pure TS engine → Unity → iOS. Package 0.1.0 (baseline evidence; Phase 8 continues).",
+  "version": "0.1.1",
+  "description": "CANDIDATE ZERO \u2014 Texas Legislature roguelike deckbuilder. Pure TS engine \u2192 Unity \u2192 iOS. v0.1 label earned at Phase 7 (docs/V0.1-EVIDENCE.md); patch increments with shipped, harness-evidenced systems. v0.2 is earned at Phase 8, not claimed.",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -37,11 +37,12 @@
     "harness:waiting": "npx tsx src/harness/waiting.ts",
     "harness:signatures": "npx tsx src/harness/signatures.ts",
     "harness:observe": "npx tsx src/harness/observe.ts",
-    "harness": "npm run harness:resolve && npm run harness:smoke && npm run harness:ballot && npm run harness:strategies && npm run harness:ac1 && npm run harness:ac1-parity && npm run harness:audit && npm run harness:calendar && npm run harness:setup && npm run harness:yields && npm run harness:full && npm run harness:dopamine && npm run harness:grounds && npm run harness:dead-refs && npm run harness:shop && npm run harness:obligations && npm run harness:debt && npm run harness:session && npm run harness:starmap && npm run harness:matrix && npm run harness:outside && npm run harness:chronicle && npm run harness:waiting && npm run harness:api && npm run harness:paths && npm run harness:content && npm run harness:signatures && npm run harness:observe && npm run harness:card-art && npm run harness:promo && npm run harness:docket && npm run harness:laws && npm run harness:opponent && npm run harness:upgrades && npm run harness:heat && npm run harness:flow && npm run harness:machine && npm run harness:rival && npm run harness:profile && npm run harness:match && npm run check:card-art && npm run check:log-markers",
+    "harness": "npm run harness:resolve && npm run harness:smoke && npm run harness:ballot && npm run harness:strategies && npm run harness:ac1 && npm run harness:ac1-parity && npm run harness:audit && npm run harness:calendar && npm run harness:setup && npm run harness:yields && npm run harness:full && npm run harness:dopamine && npm run harness:grounds && npm run harness:dead-refs && npm run harness:shop && npm run harness:obligations && npm run harness:debt && npm run harness:session && npm run harness:starmap && npm run harness:matrix && npm run harness:outside && npm run harness:chronicle && npm run harness:waiting && npm run harness:api && npm run harness:paths && npm run harness:content && npm run harness:signatures && npm run harness:observe && npm run harness:card-art && npm run harness:promo && npm run harness:docket && npm run harness:laws && npm run harness:opponent && npm run harness:upgrades && npm run harness:heat && npm run harness:flow && npm run harness:machine && npm run harness:rival && npm run harness:profile && npm run harness:match && npm run check:card-art && npm run check:log-markers && npm run check:version",
     "smoke:ui": "node scripts/ui-smoke.mjs",
     "a11y:layout": "node scripts/layout-audit.mjs",
     "a11y": "node scripts/a11y-audit.mjs",
     "promo:new": "node scripts/new-promo.mjs",
+    "check:version": "node scripts/check-version.mjs",
     "check:card-art": "node scripts/check-card-art.mjs",
     "check:log-markers": "node scripts/check-log-markers.mjs",
     "harness:upgrades": "npx tsx src/harness/upgrades.ts",

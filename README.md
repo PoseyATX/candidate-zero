@@ -23,9 +23,11 @@ engine in C#).
 
 **Play the alpha:** https://poseyatx.github.io/candidate-zero/
 
-## Current Status (v0.0.x — Phases 0–3 done; not v0.1)
+## Current Status (v0.1.x — Phases 0–7 done; v0.2 is earned at Phase 8)
 
-- Phases **0–3 done:** foundation, grounds, allies/shop/obligations, debt leverage
+- Phases **0–7 done:** foundation, grounds, allies/shop/obligations, debt leverage,
+  Session, balance breadth, mobile UI, and the v0.1 label earned under Covenant 8
+  ([`V0.1-EVIDENCE.md`](docs/V0.1-EVIDENCE.md))
 - Pure resolution engine (four-tier brutal RNG); SAFE never DISASTER
 - Primary **8** + General **6**; ballot labor/money paths; setup binds
 - Ground picker, asset shop, structured obligations, debt as optionality

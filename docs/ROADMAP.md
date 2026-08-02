@@ -22,7 +22,7 @@ Grounded in repo evidence (`TICKET-v0.1-modular-baseline.md`, `ARCHITECTURE.md`,
 - **Card residency law** — Main / Special / Outside + control channel
   (`docs/CARD-RESIDENCY.md`); schema + catalog tags; no boosters/event deck yet.
 - **Phase 5** — balance breadth (issue #9) **DONE** 2026-07-19.
-- **Phases 6–7** — mobile polish, honest v0.1.
+- **Phases 6–7** — mobile polish, honest v0.1. **DONE** 2026-07-22 (`V0.1-EVIDENCE.md`). This summary line said "upcoming" for months after the phase shipped, and README's status heading still read "not v0.1" — which is how a legitimately earned label came to look like a lie. `check:version` now enforces the rule: v0.N is earned by Phase N+6, recorded DONE here.
 - **Phase 8** — ship path: **TS pure engine → Unity presentation → iOS / App Store**
   (issue #12). Unity is not a second rules engine.
 - **North star:** career graph / no true game over — see `docs/STARMAP.md`.
