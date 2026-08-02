@@ -8,6 +8,50 @@ There is **no true game over** — only redirection into a new orbit. This folde
 
 ---
 
+## The far horizon — recorded 2026-08-02, from the owner. Not scheduled. Not forgotten.
+
+This is where the whole thing is going. It is written here rather than in a backlog because
+it is a *direction*, not a ticket, and everything built between now and then should be built
+so it can grow into this shape rather than have to be torn out.
+
+**A living chamber, procedurally generated.**
+
+- **All 181 members**, both chambers — 150 House, 31 Senate — not the 18 hand-authored names
+  in `data/members.ts`. Those eighteen are a proof of the mechanism (name, county, want,
+  price, memory), deliberately small enough to write with real voice. The generator has to
+  produce that same texture at scale: a person, a county, a thing they need, and a reason
+  they are the way they are.
+- **Statewide executives and commissioners who win and lose their offices as you progress.**
+  The Governor who vetoes you in your first session should be beatable, replaceable, and
+  someday gone — and the Land Commissioner who owed you a favour may be the Governor by your
+  fourth cycle. Positions are held by people, and people lose them.
+- **The feeling to hit:** new blood walking into the pink dome for the first time since a
+  grade-school field trip. Overwhelmed, and slowly learning which of the hundred and eighty
+  faces actually matters this week.
+
+**And the texture that makes it a place rather than a board:**
+
+> *"Everywhere that a card could be played, there should be an opportunity to play it. The
+> open world of the game means every moving part can be acted upon by the player, even if
+> that means taking them down a rabbit hole that uses up their cards and actions wastefully.
+> The game should have alleyways, some of which are shortcuts, some of which are traps."*
+
+That was the original starmap concept: an intricate interconnection between every card —
+persona, position, action, asset, ally — where playing one produces pathways or consequences.
+A menu of only-good options is a spreadsheet. **Wasting an afternoon has to be possible**, or
+none of the choices are real.
+
+> *"One of the most odd things about the capitol is, among the overwhelming spirit of action
+> and controversy and debate and victory and defeat, is HOURS of boredom and minutiae that
+> allow for the infamous extracurriculars."*
+
+The boredom is not dead air to be designed out. It is the medium the extracurriculars happen
+in — the back rail, the members' lounge, the four hours waiting on a quorum call. Any design
+that optimises all the idle time away removes the thing that makes the building itself a
+character.
+
+---
+
 ## Legend
 
 | Term | Meaning |

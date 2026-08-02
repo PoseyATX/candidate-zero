@@ -186,14 +186,55 @@ identical). Names are a layer on top, not a replacement, so a system this large 
 without re-tuning everything underneath it. What the room adds is a *career* bonus on the
 floor count: a member with a record has friends before the bill is filed.
 
+## Working the members, and the alleyway (`data/member-plays.ts`)
+
+Every member carried a `price` — favor, capital, casework — that was authored and
+**unspendable**. You could read that Wendell Cobb expects to be asked properly, in person,
+before the hearing and not during it, and there was no way in the game to ask him. A person
+you cannot approach is set dressing.
+
+Two design laws from the owner drive this:
+
+> *"Everywhere that a card could be played, there should be an opportunity to play it. The
+> open world of the game means every moving part can be acted upon by the player."*
+
+So each price now has a card that pays it, and `harness:chamber` asserts that mapping is
+complete — a price with no card fails the build.
+
+- **MB01 Ask Him Properly** (1 AP + a favour) — the scarcest currency, buys a member outright.
+- **MB02 Trade for the Vote** (1 AP + 2 capital) — capital is what moves your bill, so this
+  competes directly with your own legislation. Buys a vote, not a friend. Can fail, and a
+  member who is not for sale gets colder for the asking.
+- **MB03 Run Their Casework** (2 AP) — no money, no favours; the expensive part is the
+  afternoon. Slowest way to make an ally and the one that lasts.
+
+> *"The game should have alleyways, some of which are shortcuts, some of which are traps…
+> among the overwhelming spirit of action and controversy and debate and victory and defeat,
+> is HOURS of boredom and minutiae that allow for the infamous extracurriculars."*
+
+- **MB04 The Back Rail** — stand through a quorum call and two hours of local bills. Measured
+  over 300 plays: **38% wasted, 21% actively harmful** (a reporter notes who was at the rail
+  while appropriations met down the hall — standing −2), **41% worth it**. Sometimes the right
+  person is bored beside you and says the thing they would never say in a meeting.
+
+The harness asserts the floor is *real*: `nothing + harmed > 40%` and `harmed > 0`. **This is
+not a bug to be tuned upward.** A game where every option is productive is a spreadsheet with
+a theme; the boredom is the medium the extracurriculars happen in.
+
+Session relationship work writes to the run's roster and folds back into the career at sine
+die via `mergeRoomBack` — taking the larger magnitude rather than summing, so a career does
+not compound itself every cycle just for existing.
+
 ## What is next
 
 Still a foundation. Named openly:
 
-- Members do not yet have their own asks — the price field (`favor` / `capital` / `casework`)
-  is authored and not yet spent against. That is the next depth: Cobb wanting to be asked
-  properly, in person, as an actual card.
 - Only the screw worm names an opening. Every outside event should.
+- The far horizon — 181 procedurally generated members across both chambers, plus statewide
+  executives and commissioners who win and lose their offices as you progress — is recorded
+  in [`STARMAP.md`](./STARMAP.md). The eighteen hand-authored members are a proof of the
+  mechanism, deliberately small enough to write with real voice; the generator has to hit
+  that same texture at scale.
 ## Repeal has a face (`engine/rival.ts`)
 
 The first version of repeal was a flat roll: a statute quietly evaporated between runs and

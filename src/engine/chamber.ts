@@ -146,6 +146,59 @@ export function chamberSwing(state: GameState): number {
   return n;
 }
 
+/**
+ * Move a named member during the session.
+ *
+ * Session-time work writes to the RUN's roster; `mergeRoomBack` folds it into
+ * the career at sine die. Without this the price field on every member was
+ * authored and unspendable — you could read that Wendell Cobb expects to be
+ * asked properly, in person, and there was no way to ask him.
+ */
+export function workMember(state: GameState, id: string, delta: number): number {
+  if (!MEMBER_BY_ID[id]) return 0;
+  if (!state.chamberRoster) state.chamberRoster = {};
+  const before = state.chamberRoster[id] ?? 0;
+  const after = Math.max(-100, Math.min(100, before + delta));
+  state.chamberRoster[id] = after;
+  return after - before;
+}
+
+/** Members reachable this session, warmest first. */
+export function roomOrder(state: GameState): MemberDef[] {
+  const roster = state.chamberRoster ?? {};
+  return MEMBERS.slice().sort(
+    (a, b) => (roster[b.id] ?? 0) - (roster[a.id] ?? 0) || b.weight - a.weight
+  );
+}
+
+/**
+ * Somebody worth an afternoon: the member your bill needs who is not yet with
+ * you. Prefers heavy members whose want matches your issue.
+ */
+export function nextWorthWorking(state: GameState): MemberDef | undefined {
+  const roster = state.chamberRoster ?? {};
+  const issue = state.issueId ?? null;
+  return MEMBERS.slice()
+    .filter(m => (roster[m.id] ?? 0) < ALLY_LINE)
+    .sort((a, b) => {
+      const aw = (a.wants === issue ? 10 : 0) + a.weight;
+      const bw = (b.wants === issue ? 10 : 0) + b.weight;
+      return bw - aw;
+    })[0];
+}
+
+/** Fold the session's relationship work back into the career. */
+export function mergeRoomBack(legacy: LegacyState, state: GameState): void {
+  for (const [id, disp] of Object.entries(state.chamberRoster ?? {})) {
+    if (!MEMBER_BY_ID[id]) continue;
+    const st = standingOf(legacy, id);
+    // The run's value already includes what was carried in, so take the larger
+    // magnitude rather than summing — otherwise a career would compound itself
+    // every cycle just for existing.
+    st.disposition = Math.abs(disp) > Math.abs(st.disposition) ? disp : st.disposition;
+  }
+}
+
 /** Copy the memory onto the run, so the session never needs LegacyState. */
 export function carryChamber(state: GameState, legacy: LegacyState): void {
   const out: Record<string, number> = {};

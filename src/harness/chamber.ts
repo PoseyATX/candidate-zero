@@ -35,6 +35,9 @@ import {
   HOSTILE_LINE
 } from '../engine/chamber.js';
 import { MEMBERS, MEMBER_BY_ID, membersReachedBy } from '../data/members.js';
+import { MEMBER_PLAYS } from '../data/member-plays.js';
+import { SESSION_PLAYS } from '../data/session-plays.js';
+import { executePlay } from '../engine/play.js';
 import { ISSUE_PROFILES } from '../data/issue-profiles.js';
 import type { GameState, LegacyState, Provision } from '../engine/types.js';
 
@@ -231,6 +234,85 @@ function session(issueId = 'ag-subsidies', seed = 11): GameState {
     legacy.chamber === undefined || Object.keys(legacy.chamber).length === 0,
     'looking at the room does not create records in it'
   );
+}
+
+// --- EVERY PRICE HAS A CARD THAT PAYS IT ---
+//
+// "Everywhere that a card could be played, there should be an opportunity to
+// play it." Each member carries a price; a price with no card is a person you
+// can read about and never approach, which is set dressing.
+{
+  const priced = new Set(MEMBERS.map(m => m.price).filter(p => p !== 'nothing'));
+  const cardFor: Record<string, string> = { favor: 'MB01', capital: 'MB02', casework: 'MB03' };
+  for (const price of priced) {
+    const id = cardFor[price];
+    assert(!!id && MEMBER_PLAYS.some(c => c.id === id), `the '${price}' price has a card that pays it`);
+  }
+  assert(
+    SESSION_PLAYS.some(c => c.id === 'MB01'),
+    'and the member cards are actually in the session catalog'
+  );
+}
+
+// --- WORKING A MEMBER MOVES THAT NAMED PERSON ---
+{
+  useRng(createRng(31));
+  setDefaultSeed(31);
+  const s = session('hospitals', 31);
+  s.ap = 9;
+  s.favors = 2;
+  const ask = MEMBER_PLAYS.find(c => c.id === 'MB01')!;
+  const before = { ...(s.chamberRoster ?? {}) };
+  const out = executePlay(s, ask);
+  assert(out.ok, `MB01 resolves (${out.reason ?? 'ok'})`);
+  const moved = Object.entries(s.chamberRoster ?? {}).filter(
+    ([id, v]) => v !== (before[id] ?? 0)
+  );
+  assert(moved.length === 1, 'exactly one named member moved');
+  const [movedId] = moved[0]!;
+  assert(!!MEMBER_BY_ID[movedId], 'and it is a real person');
+  assert(
+    (out.text ?? '').includes(MEMBER_BY_ID[movedId]!.name),
+    'whose name the result says out loud'
+  );
+  assert(s.favors === 1, 'and the favour was actually spent');
+}
+
+// --- THE ALLEYWAY CAN COST YOU ---
+//
+// MB04 The Back Rail is deliberately a bad median play: the Capitol is hours of
+// nothing punctuated by the thing that only happens because you were standing
+// there. A game where every option is productive is a spreadsheet with a theme.
+// This asserts the floor is REAL — do not "fix" a failing run by raising it.
+{
+  const rail = MEMBER_PLAYS.find(c => c.id === 'MB04')!;
+  assert(rail.risk === 'VOL', 'the back rail is volatile, honestly labelled');
+  assert((rail.odds?.(createNewState({ seed: 1 })) ?? 1) < 0.5, 'and its odds are genuinely poor');
+
+  let nothing = 0;
+  let harmed = 0;
+  let gold = 0;
+  const N = 300;
+  for (let i = 0; i < N; i++) {
+    useRng(createRng(8000 + i));
+    setDefaultSeed(8000 + i);
+    const s = session('water', 8000 + i);
+    s.ap = 9;
+    const standBefore = s.districtStanding;
+    const rosterBefore = JSON.stringify(s.chamberRoster ?? {});
+    executePlay(s, rail);
+    const movedRoom = JSON.stringify(s.chamberRoster ?? {}) !== rosterBefore;
+    if (s.districtStanding < standBefore) harmed++;
+    else if (!movedRoom) nothing++;
+    else gold++;
+  }
+  const pct = (n: number) => `${((100 * n) / N).toFixed(0)}%`;
+  console.log(
+    `  back rail (n=${N}): wasted ${pct(nothing)} · actively harmful ${pct(harmed)} · worth it ${pct(gold)}`
+  );
+  assert(nothing + harmed > N * 0.4, `an afternoon at the rail is usually a waste (${pct(nothing + harmed)})`);
+  assert(harmed > 0, 'and sometimes it costs you standing outright — the trap end of the alleyway');
+  assert(gold > 0, 'but the door is real, or nobody would ever stand there');
 }
 
 if (failed) {

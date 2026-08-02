@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "counts": {
-    "cards": 125,
+    "cards": 129,
     "personas": 24,
     "issues": 18,
     "districts": 4,
@@ -2037,6 +2037,138 @@
       },
       "attrs": [
         "CRA"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_FRESHMAN_MEMBER",
+        "ENT_STATE_REP"
+      ],
+      "deck": "session"
+    },
+    {
+      "id": "MB01",
+      "name": "Ask Him Properly",
+      "tagline": "in person, before the hearing",
+      "description": "Some members do not want to be traded with. They want to be asked, face to face, before the hearing and not during it, by somebody who came to their office to do it. Spends a favour and brings that member the whole way over. Diplomacy is the attribute, and it is SAFE — the only thing this can cost you is the favour, which you were never getting back anyway.",
+      "risk": "SAFE",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 1
+      },
+      "attrs": [
+        "DIP"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_FRESHMAN_MEMBER",
+        "ENT_STATE_REP"
+      ],
+      "deck": "session"
+    },
+    {
+      "id": "MB02",
+      "name": "Trade for the Vote",
+      "tagline": "two capital and a handshake",
+      "description": "A straight trade: your capital for their aye. Spends 2 political capital — the same capital that moves your bill through the pipeline — so this competes with your own legislation for the only resource that does both. Craft is the attribute. Cheaper than a favour, and it buys a vote rather than a friend: they will be with you on this, and no warmer than that afterwards.",
+      "risk": "STD",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CRA"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_FRESHMAN_MEMBER",
+        "ENT_STATE_REP"
+      ],
+      "deck": "session"
+    },
+    {
+      "id": "MB03",
+      "name": "Run Their Casework",
+      "tagline": "somebody else's constituent",
+      "description": "Take a case out of another member's district office and actually close it. Two action points, no money, no favours — the expensive part is the afternoon. Charm is the attribute and it is SAFE. The slowest way to make an ally and the one that lasts: a member who watched you fix something for their constituent does not forget it the way they forget a trade.",
+      "risk": "SAFE",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 2,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_FRESHMAN_MEMBER",
+        "ENT_STATE_REP"
+      ],
+      "deck": "session"
+    },
+    {
+      "id": "MB04",
+      "name": "The Back Rail",
+      "tagline": "hours of nothing, and then",
+      "description": "Stand at the back rail through a quorum call and two hours of local bills. Most of the time this is exactly what it sounds like: an afternoon you do not get back. Sometimes the right person is bored next to you and says the thing they would never say in a meeting. Charm is the attribute, and this is VOLATILE in the honest sense — the usual result is nothing at all. Play it when you can afford to lose the hour, which is not most weeks.",
+      "risk": "VOL",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA"
       ],
       "residency": "special",
       "control": "player",

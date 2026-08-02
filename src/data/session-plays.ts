@@ -24,6 +24,7 @@ import {
 import { provisionSwing, coalitionBonus } from '../engine/docket.js';
 import { chamberSwing } from '../engine/chamber.js';
 import { POLICY_PLAYS } from './policy-plays.js';
+import { MEMBER_PLAYS } from './member-plays.js';
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
@@ -590,6 +591,7 @@ export const SS29_FaceThreat: PlayCard = {
 export const SESSION_PLAYS: PlayCard[] = (() => {
   const cards: PlayCard[] = [
     ...POLICY_PLAYS,
+    ...MEMBER_PLAYS,
     SS27_RibbonCircuit,
     SS28_CharityGala,
     SS29_FaceThreat,

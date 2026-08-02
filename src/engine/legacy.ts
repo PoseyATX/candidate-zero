@@ -39,7 +39,7 @@ import {
   type EnactedLaw
 } from './laws.js';
 import { lawWasDefended } from './docket.js';
-import { settleChamber, carryChamber, chamberLine } from './chamber.js';
+import { settleChamber, carryChamber, chamberLine, mergeRoomBack } from './chamber.js';
 import { takeStripped } from '../data/policy-plays.js';
 import type { MemberDef } from '../data/members.js';
 
@@ -467,6 +467,7 @@ export function recordRun(legacy: LegacyState, state: GameState, kind: CampaignO
   if (kind === 'session_law') recordLaw(legacy, state, legacy.runs.length);
   // Who you delivered for, and who you pulled the rug from under. Both by name,
   // both remembered — a coalition you cannot betray is not a coalition.
+  mergeRoomBack(legacy, state);
   lastChamber = settleChamber(legacy, state, takeStripped());
   // And the other direction: a statute you did not defend this session can be
   // struck. A win you cannot lose is a high score, not a win — the people your

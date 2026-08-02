@@ -123,7 +123,7 @@ console.log('=== CANDIDATE ZERO — Phase 4 Session Harness ===\n');
   // with the Docket. The guard's job is to keep CAMPAIGN cards (PL*, MV*, WA*)
   // out of the chamber, so it widens to the legitimate session prefixes rather
   // than being deleted.
-  const strayIds = playable.map(p => p.card.id).filter(id => !/^(SS|PO)/.test(id));
+  const strayIds = playable.map(p => p.card.id).filter(id => !/^(SS|PO|MB)/.test(id));
   assert(
     strayIds.length === 0,
     `session menu is the session catalog only (stray: ${strayIds.join(', ') || 'none'})`
