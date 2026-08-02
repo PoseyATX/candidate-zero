@@ -45,6 +45,12 @@ import {
 import { clearPendingOutside } from './outside.js';
 import { DEFAULT_HAND_SIZE } from './deck.js';
 import { PRIMARY_WEEKS } from './calendar.js';
+import {
+  liveOpenings,
+  missedOpenings,
+  provisionSwing,
+  takeBlockedReason
+} from './docket.js';
 import { getPhase, stageLabel, stageWeek } from './state.js';
 import { createRng, getRng, useRng } from './rng.js';
 import {
@@ -68,7 +74,7 @@ import { discardsLeft, MAX_DISCARDS } from './flow.js';
  *  command gained an optional `press` flag. See engine/heat.ts.
  *  1.1.0 — pendingDraft options gained `upgrade`; cardId is now always a real
  *  catalog id (previously it could carry the engine's "UP:" option encoding). */
-export const ENGINE_API_VERSION = '1.3.0';
+export const ENGINE_API_VERSION = '1.4.0';
 
 /** Fully reproducible, JSON-serializable game state. */
 export interface EngineSnapshot {
@@ -212,6 +218,32 @@ export interface RenderView {
   } | null;
   /** World weather chrome — host shows, then dismissOutside. Never a hand card. */
   pendingOutside: { id: string; n: string; text: string } | null;
+  /**
+   * The Docket — hearings the world has opened, and the language in your bill.
+   *
+   * Crosses the host boundary because a host that cannot show the window closing
+   * cannot show the decision. The old outside deck failed for exactly this
+   * reason: an event that changes two numbers and tells nobody is not an event.
+   * `weeksLeft` is precomputed so a host never has to know the calendar, and
+   * `blocked` is the engine's own reason string rather than a boolean, so hosts
+   * do not reimplement the rules to explain them.
+   */
+  docket: {
+    openings: {
+      id: string;
+      name: string;
+      detail: string;
+      opposition: string;
+      weeksLeft: number;
+      weight: number;
+      blocked: string;
+    }[];
+    provisions: { id: string; name: string; ayes: number; nays: number; heat: number }[];
+    /** Net members the attached language brings to a floor vote. */
+    swing: number;
+    /** Windows that shut unused. The ones that haunt a run. */
+    missed: number;
+  };
   /** true when there is nothing left but to end the week. */
   canEndWeek: boolean;
   log: { week: number; kind: string; text: string; tier?: number }[];
@@ -394,6 +426,26 @@ export function view(snap: EngineSnapshot): RenderView {
     pendingOutside: s.pendingOutside
       ? { id: s.pendingOutside.id, n: s.pendingOutside.n, text: s.pendingOutside.text }
       : null,
+    docket: {
+      openings: liveOpenings(s).map(o => ({
+        id: o.id,
+        name: o.n,
+        detail: o.d,
+        opposition: o.opposition,
+        weeksLeft: Math.max(0, o.expiresWeek - s.week),
+        weight: o.weight,
+        blocked: takeBlockedReason(s, o.id)
+      })),
+      provisions: (s.bill?.provisions ?? []).map(p => ({
+        id: p.id,
+        name: p.n,
+        ayes: p.ayes,
+        nays: p.nays,
+        heat: p.heat
+      })),
+      swing: provisionSwing(s),
+      missed: missedOpenings(s).length
+    },
     canEndWeek: !s.over && !(pd?.options.length),
     log: s.log.slice(-40).map(e => ({ week: e.week, kind: e.kind, text: e.text, tier: e.tier }))
   };

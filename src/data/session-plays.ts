@@ -21,6 +21,8 @@ import {
   coolBill,
   STAGE_OPENS
 } from '../engine/session.js';
+import { provisionSwing, coalitionBonus } from '../engine/docket.js';
+import { POLICY_PLAYS } from './policy-plays.js';
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
@@ -261,21 +263,28 @@ export const SS06_FloorFight: PlayCard = {
     s.week >= STAGE_OPENS[5]! &&
     pipelineMotionAvailable(s) &&
     !sessionPipelineBlocked(s, 'SS06'),
-  odds: s => billOdds(s, 0.5) + s.capital * 0.02,
+  // Language you attached is members you bought. Each net member is worth ~0.4pp
+  // on the floor — a well-amended bill genuinely walks in with a coalition, and
+  // a bill nobody is owed by walks in alone.
+  odds: s => billOdds(s, 0.5) + s.capital * 0.02 + coalitionBonus(s),
   run: (s, o) => {
     notePipelineMotion(s);
     if (o.tier === 0) {
       setBillStage(s, 6);
       s.capital += 2;
       s.nameID += 5;
-      if (s.bill) s.bill.tally = { aye: 92, nay: 48, present: 0, need: 76 };
+      if (s.bill) {
+        const sw = provisionSwing(s);
+        s.bill.tally = { aye: 92 + sw, nay: 48 - sw, present: 0, need: 76 };
+      }
       return 'Passed to third reading clean. The Old Bulls nod from the back row. That nod is currency.';
     }
     if (o.tier === 1) {
       setBillStage(s, 6);
       if (s.bill) {
         addBillHeat(s, 1);
-        s.bill.tally = { aye: 78, nay: 62, present: 0, need: 76 };
+        const sw = provisionSwing(s);
+        s.bill.tally = { aye: 78 + sw, nay: 62 - sw, present: 0, need: 76 };
       }
       return 'Passed — wearing two hostile amendments like buckshot. Alive, though.';
     }
@@ -310,7 +319,9 @@ export const SS07_WorkSenate: PlayCard = {
     s.bill.pipelineStage === 6 &&
     s.week >= STAGE_OPENS[6]! &&
     pipelineMotionAvailable(s),
-  odds: s => billOdds(s, 0.4),
+  // The House coalition travels. A bill that left the floor 92-48 arrives in the
+  // Senate with a number attached to it, and thirty-one senators can all read.
+  odds: s => billOdds(s, 0.4) + coalitionBonus(s),
   run: (s, o) => {
     notePipelineMotion(s);
     if (o.tier <= 1) {
@@ -575,6 +586,7 @@ export const SS29_FaceThreat: PlayCard = {
 
 export const SESSION_PLAYS: PlayCard[] = (() => {
   const cards: PlayCard[] = [
+    ...POLICY_PLAYS,
     SS27_RibbonCircuit,
     SS28_CharityGala,
     SS29_FaceThreat,

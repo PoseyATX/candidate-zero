@@ -29,7 +29,13 @@ import {
   publicFacts,
   HIDDEN_FROM_OPPONENT
 } from '../engine/rival-profile.js';
-import type { LegacyState } from '../engine/types.js';
+import type { GameState, LegacyState } from '../engine/types.js';
+import {
+  liveOpenings,
+  missedOpenings,
+  takeBlockedReason,
+  provisionSwing
+} from '../engine/docket.js';
 import { reducedMotion } from './motion.js';
 import { isSignatureCard } from './card-face.js';
 
@@ -106,6 +112,67 @@ export function attrDetailHtml(key: string, value: number): string {
     `<div class="ad-mech"><span class="k">Effect</span> ${attrEffect(value)}</div>` +
     `<div class="ad-mech"><span class="k">How</span> (value \u2212 10) \u00f7 40, averaged across the ` +
     `card's tagged attributes, added to its success chance. 10 is neutral; below 10 is a penalty.</div>`
+  );
+}
+
+/**
+ * What is on the docket, and how long you have.
+ *
+ * An opening the player cannot see is an opening that does not exist — that was
+ * the entire failure of the outside deck before this: events fired, changed two
+ * numbers, and left nothing anyone could act on or even read. The window is the
+ * load-bearing number here, so it is rendered as weeks remaining, and it goes
+ * red in its last week.
+ */
+function docketHtml(s: GameState): string {
+  const live = liveOpenings(s);
+  if (!live.length) {
+    const missed = missedOpenings(s);
+    return missed.length
+      ? `<div class="ledger-wide muted"><span class="k">Docket</span> nothing live · ${missed.length} window${
+          missed.length === 1 ? '' : 's'
+        } shut behind you</div>`
+      : '';
+  }
+  const rows = live
+    .slice()
+    .sort((a, b) => a.expiresWeek - b.expiresWeek)
+    .map(o => {
+      const left = Math.max(0, o.expiresWeek - s.week);
+      const urgent = left <= 1;
+      const blocked = takeBlockedReason(s, o.id);
+      return (
+        `<div class="dock-row${urgent ? ' ledger-warn' : ''}">` +
+        `<div class="dock-n">${escapeAttr(o.n)}</div>` +
+        `<div class="dock-meta">${left === 0 ? 'closes this week' : `${left} week${left === 1 ? '' : 's'} left`}` +
+        ` · ${escapeAttr(o.opposition)} is working the other side</div>` +
+        (blocked ? `<div class="dock-block">${escapeAttr(blocked)}</div>` : '') +
+        `</div>`
+      );
+    })
+    .join('');
+  return `<div class="ledger-wide"><span class="k">Docket</span>${rows}</div>`;
+}
+
+/** The language actually in your bill, and what it bought. */
+function provisionsHtml(s: GameState): string {
+  const ps = s.bill?.provisions ?? [];
+  if (!ps.length) {
+    return s.bill && s.bill.pipelineStage >= 1
+      ? '<div class="ledger-wide muted"><span class="k">Language</span> a clean shell — nothing in it, nobody owed by it</div>'
+      : '';
+  }
+  const swing = provisionSwing(s);
+  const rows = ps
+    .map(
+      p =>
+        `<div class="dock-row"><div class="dock-n">${escapeAttr(p.n)}</div>` +
+        `<div class="dock-meta">+${p.ayes} ayes · −${p.nays} nays · heat +${p.heat}` +
+        `${p.angers ? ` · ${escapeAttr(p.angers)}` : ''}</div></div>`
+    )
+    .join('');
+  return (
+    `<div class="ledger-wide"><span class="k">Language</span> net ${swing >= 0 ? '+' : ''}${swing} members${rows}</div>`
   );
 }
 
@@ -290,6 +357,8 @@ export function renderLedger(campaign: Campaign, legacy?: LegacyState): void {
                 }`
               : '—'
           }</div>
+          ${provisionsHtml(s)}
+          ${docketHtml(s)}
           ${
             s.sessionFlags?.pac_lender_claim || s.obls.includes('OB1')
               ? '<div class="ledger-wide muted">PAC claim rides — referral will collect.</div>'

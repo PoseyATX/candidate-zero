@@ -312,6 +312,7 @@ export function applySetup(state: GameState, sel: SetupSelection): GameState {
   state.persona = persona.n;
   state.personaId = sel.personaId;
   state.issue = issue.n;
+  state.issueId = issue.id;
   state.assets.push('ISSUE_' + issue.tag);
   const field = district.field(random);
   state.district = {

@@ -160,9 +160,22 @@ export interface GameState {
    *  See engine/upgrades.ts — a tier on an owned card, not a second catalog. */
   cardUpgrades?: Record<string, number>;
   pathsUnlocked: Record<string, boolean>;
+  /** Display name, e.g. "Water rights". Goes in epitaphs and headlines. */
   issue: string | null;
+  /**
+   * The issue's stable ID, e.g. "water".
+   *
+   * `state.issue` has always held the display NAME (applySetup: `state.issue =
+   * issue.n`), which meant the single mechanical use of the issue anywhere in
+   * the codebase — an outside event gated on `s.issue === 'water'` — could never
+   * fire. Not under-used: dead. Everything mechanical keys off this instead.
+   */
+  issueId?: string | null;
   district: DistrictInfo | null;
   eventsFired: Record<string, boolean>;
+  /** What the world has made possible right now. See engine/docket.ts.
+   *  Optional so every save written before it existed still loads. */
+  docket?: PolicyOpening[];
   stage: 'primary' | 'general' | 'session' | 'waiting';
   genOpp: GeneralOpponent | null;
   genBase: number;
@@ -228,6 +241,66 @@ export interface GameState {
   pendingMovement?: import('./types-entities.js').MovementOpportunity;
 }
 
+/**
+ * A thing the world has made possible, for a while.
+ *
+ * The screw worm crossed the river and the Ag committee lit up; a freeze took
+ * the grid and everyone remembered where they were. Before this existed those
+ * were flavour text that subtracted two points of something and vanished —
+ * `eventsFired` was written once to stop the event repeating and read by no card
+ * in the game. The world could speak and nothing could hear it.
+ *
+ * An opening is the hearing. It has a constituency who wants it, somebody who
+ * will fight it, and a window that closes — because in Austin the difference
+ * between a bill and a wish is whether you were ready the week the room cared.
+ */
+export interface PolicyOpening {
+  id: string;
+  n: string;
+  /** What it is, in the voice of somebody who has been in the building. */
+  d: string;
+  issueId: string | null;
+  openedWeek: number;
+  /** The window shuts here. Sine die does not wait on you. */
+  expiresWeek: number;
+  /** Ground ids that want this passed. */
+  constituency: string[];
+  /** Who shows up to kill it. */
+  opposition: string;
+  /** Capital to convert this into a provision on your bill. */
+  weight: number;
+  /** Event or card that opened it. */
+  source: string;
+  takenWeek?: number;
+}
+
+/**
+ * Language you actually put in the bill.
+ *
+ * Amendment is the central verb of legislating and this game did not have it:
+ * the bill was `{ pipelineStage, heat }`, a progress bar with a name. A
+ * provision is the trade — it buys votes from the people who wanted it and
+ * costs you the people who didn't, and it is the only reason the tally was ever
+ * worth printing.
+ */
+export interface Provision {
+  id: string;
+  n: string;
+  d: string;
+  /** The opening this language came from. */
+  fromOpening: string;
+  /** Members who come with it. */
+  ayes: number;
+  /** Members it costs you. */
+  nays: number;
+  /** What it draws from the building. */
+  heat: number;
+  /** Ground whose rapport it lifts, if any. */
+  rewards?: string;
+  /** Who it angers, by name. */
+  angers?: string;
+}
+
 export interface Bill {
   id: string;
   title: string;
@@ -240,6 +313,8 @@ export interface Bill {
   pipelineStage: number;
   heat: number;
   weeksAtStage?: number;
+  /** Language attached to the bill. Optional so old saves load. */
+  provisions?: Provision[];
 }
 
 export type BillStatus =

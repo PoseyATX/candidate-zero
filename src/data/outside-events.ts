@@ -21,6 +21,15 @@ export interface OutsideEvent {
   w: number;
   /** Extra gate beyond stage. */
   show?: (s: GameState) => boolean;
+  /**
+   * Policy openings this event puts on the Docket when it fires during session.
+   *
+   * This is the field that ends "the screw worm happens and is forgotten".
+   * Before it, `eventsFired` was written to stop the event repeating and read by
+   * exactly zero cards — the world could speak and nothing in the game could
+   * hear it. An event that names an opening is an event with consequences.
+   */
+  opens?: string[];
   apply: (s: GameState) => string;
 }
 
@@ -39,6 +48,7 @@ export const EV_SCREWWORM: OutsideEvent = {
   stages: ['primary', 'general', 'session'],
   once: true,
   w: 3,
+  opens: ['OP_AG_SCREWWORM'],
   show: s =>
     s.regionHook === 'permian' ||
     s.regionHook === 'panhandle' ||
@@ -121,7 +131,7 @@ export const EV_DROUGHT: OutsideEvent = {
   stages: ['primary', 'general'],
   once: true,
   w: 2,
-  show: s => s.regionHook === 'hill' || s.regionHook === 'permian' || s.regionHook === 'panhandle' || s.issue === 'water',
+  show: s => s.regionHook === 'hill' || s.regionHook === 'permian' || s.regionHook === 'panhandle' || s.issueId === 'water',
   apply: s => {
     s.faces.T = clamp((s.faces.T || 0) + 3, -50, 100);
     s.money = Math.max(0, s.money - 200);

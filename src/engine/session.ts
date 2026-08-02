@@ -16,6 +16,14 @@ import { random } from './rng.js';
 import { hasRep } from './reputation.js';
 import { retireDebtOnWin } from './debt.js';
 import { tickOutsideDeck } from './outside.js';
+import {
+  seedIssueOpening,
+  tickDocket,
+  openingAnnounce,
+  provisionHeat,
+  provisionSwing,
+  deliveryStanding
+} from './docket.js';
 import type { Bill, BillStatus, CampaignOutcome, Committee, GameState } from './types.js';
 import type { StageTransition } from './calendar.js';
 
@@ -232,6 +240,10 @@ export function enterSession(state: GameState): { text: string } {
   state.fieldAp = 0;
   state.momentum = 0;
   state.groundPlays = {};
+  // Your issue guarantees you one hearing. The world supplies the rest, or does
+  // not — but a member who ran on water is never left with an empty docket and
+  // no way to put language in their own bill.
+  state.docket = [];
 
   // Preserve PAC claim across the reset of incidental flags
   const pacClaim = !!(state.sessionFlags?.pac_lender_claim || state.obls.includes('OB1'));
@@ -290,6 +302,14 @@ export function enterSession(state: GameState): { text: string } {
     `(The Speaker's choice, not yours.) Signature bill on ${state.issue ?? 'your issue'} is unfiled. ` +
     `Filing deadline: week ${SESSION_FILING_DEADLINE}. Sine die: week ${SESSION_WEEKS}.`;
   state.log.push({ week: state.week, kind: 'week', text });
+
+  // The hearing your issue guarantees you. Announced, because an opening nobody
+  // is told about is the same as no opening — that was the whole failure of the
+  // outside deck before the docket existed.
+  const first = seedIssueOpening(state);
+  if (first) {
+    state.log.push({ week: state.week, kind: 'note', text: openingAnnounce(first) });
+  }
   return { text };
 }
 
@@ -368,8 +388,24 @@ export function resolveSineDie(state: GameState): StageTransition {
   // Governor desk if through senate (stage 7)
   if (state.bill && state.bill.pipelineStage === 7) {
     const freeze = Number(state.sessionFlags?.speakerFreeze || 0);
+    // Controversy at the desk = what the bill SAYS (provisions) plus what it
+    // cost in time (heat). A clean shell sails; a bill carrying the quarantine
+    // indemnity, the curtailment authority and a rural carve-out arrives with
+    // three organised enemies who all have the Governor's number.
+    const controversy = provisionHeat(state);
+    // A margin is a shield. Nobody vetoes a bill that came off the floor 120-25 —
+    // the override math is right there in the vote count, and everyone in the
+    // building can do it. So language cuts BOTH ways at the desk: what the bill
+    // says makes the Governor angrier, and how many members signed onto it makes
+    // him careful. Without this second half, amending was strictly a tax.
+    const margin = Math.max(0, provisionSwing(state));
     const vetoP =
-      0.22 + (state.favor < 40 ? 0.12 : 0) + (freeze > 0 ? 0.08 : 0) + (state.bill.heat || 0) * 0.02;
+      0.22 +
+      (state.favor < 40 ? 0.12 : 0) +
+      (freeze > 0 ? 0.08 : 0) +
+      (state.bill.heat || 0) * 0.02 +
+      controversy * 0.025 -
+      Math.min(0.18, margin * 0.007);
     if (random() < clamp(vetoP, 0.1, 0.55)) {
       state.bill.pipelineStage = -1;
       syncBillStatus(state.bill);
@@ -411,10 +447,14 @@ export function resolveSineDie(state: GameState): StageTransition {
 
   const challenger = Number(state.sessionFlags?.challengerHeat || 0);
   const freeze = Number(state.sessionFlags?.speakerFreeze || 0);
+  // What you actually delivered. See deliveryStanding() — language in the bill
+  // is the only thing in this game a voter can point at.
+  const delivered = deliveryStanding(state, passed);
   const standing =
     state.districtStanding +
     (passed ? 15 : nearMiss ? 8 : 0) +
-    Math.min(10, state.capital) -
+    Math.min(10, state.capital) +
+    delivered -
     challenger * 3 -
     freeze * 1.5;
   // Floor so a non-collapse session can still hold the seat; chaos remains.
@@ -433,6 +473,10 @@ export function resolveSineDie(state: GameState): StageTransition {
     95
   );
   text += ` Interim verdict — district ${Math.round(state.districtStanding)}, capital ${state.capital}, favor ${Math.round(state.favor)}`;
+  if (delivered > 0) {
+    const n = state.bill?.provisions?.length ?? 0;
+    text += `, ${n} thing${n === 1 ? '' : 's'} delivered for home (+${Math.round(delivered)})`;
+  }
   if (challenger > 0) text += `, challenger heat ${challenger}`;
   if (freeze > 0) text += `, fifth-floor freeze ${freeze}`;
   text += `. Reelection outlook ${reelect.toFixed(0)}%… `;
@@ -591,6 +635,9 @@ export function tickSessionPressure(state: GameState): string[] {
   // --- Stall heat ---
   const stall = applyBillStallHeat(state);
   if (stall) lines.push(stall);
+
+  // --- Windows that shut this week ---
+  for (const l of tickDocket(state)) lines.push(l);
 
   // --- Challenger heat when standing soft ---
   if (state.districtStanding < 52) {

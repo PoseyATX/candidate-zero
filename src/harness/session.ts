@@ -119,11 +119,16 @@ console.log('=== CANDIDATE ZERO — Phase 4 Session Harness ===\n');
   enterSession(c.state);
   const playable = listPlayableHand(c);
   assert(playable.length > 0, 'session has plays');
+  // SS* is the pipeline and survival kit; PO* is the policy/amendment kit added
+  // with the Docket. The guard's job is to keep CAMPAIGN cards (PL*, MV*, WA*)
+  // out of the chamber, so it widens to the legitimate session prefixes rather
+  // than being deleted.
+  const strayIds = playable.map(p => p.card.id).filter(id => !/^(SS|PO)/.test(id));
   assert(
-    playable.every(p => p.card.id.startsWith('SS')),
-    'session menu is SS* only'
+    strayIds.length === 0,
+    `session menu is the session catalog only (stray: ${strayIds.join(', ') || 'none'})`
   );
-  console.log('PASSED: listPlayableHand in session is SS* catalog');
+  console.log('PASSED: listPlayableHand in session is SS*/PO* catalog');
 }
 
 // Pipeline strategy reaches sine die with a terminal session outcome

@@ -30,6 +30,7 @@ import {
 } from '../engine/legacy.js';
 import { injectIntoDrawPile } from '../engine/deck.js';
 import { maybeInjectPromoCards } from '../engine/promo.js';
+import { enterSession } from '../engine/session.js';
 import { kitIdsForSetup } from '../data/nameplate-kits.js';
 import { enterWaiting, finishWaiting } from '../engine/waiting.js';
 import type {
@@ -93,6 +94,16 @@ function promoProofId(): string | null {
     return null;
   } catch {
     return null;
+  }
+}
+
+/** ?jump=session — QA seam for Act III work. Never reachable in normal play. */
+function jumpToSession(): boolean {
+  try {
+    if (typeof window === 'undefined') return false;
+    return new URLSearchParams(window.location.search).get('jump') === 'session';
+  } catch {
+    return false;
   }
 }
 
@@ -242,12 +253,24 @@ export function startRun(setup: SetupSelection, seed: number, lockIdentity = fal
   }
   applyLegacy(campaign.state, legacy);
   weekPlays = [];
+  if (jumpToSession()) {
+    // QA seam, same family as ?promo= — see docs. Reaching Act III legitimately
+    // takes a won primary and a won general, which made every session-stage
+    // change cost a twenty-week playthrough to eyeball once. That is why the
+    // Docket band and the session HUD went unverified for so long.
+    enterSession(campaign.state);
+    campaign.state.log.push({
+      week: campaign.state.week,
+      kind: 'note',
+      text: 'QA: jumped straight to the session (?jump=session).'
+    });
+  }
   startWeek(campaign);
   afterWeekStart(campaign, promoProofId());
   showGame();
   applyStageChrome();
   paint();
-  openActSplash('primary');
+  openActSplash(jumpToSession() ? 'session' : 'primary');
 }
 
 export function filedIdentityLabel(): string | null {

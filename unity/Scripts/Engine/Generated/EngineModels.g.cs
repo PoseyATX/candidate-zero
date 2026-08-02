@@ -38,6 +38,8 @@ namespace CandidateZero.HostData
         public PendingDraftView pendingDraft;
         /// <summary>World weather chrome — host shows, then dismissOutside. Never a hand card.</summary>
         public PendingOutsideView pendingOutside;
+        /// <summary>The Docket — hearings the world has opened, and the language in your bill. Crosses the host boundary because a host that cannot show the window closing cannot show the decision. The old outside deck failed for exactly this reason: an event that changes two numbers and tells nobody is not an event. `weeksLeft` is precomputed so a host never has to know the calendar, and `blocked` is the engine's own reason string rather than a boolean, so hosts do not reimplement the rules to explain them.</summary>
+        public DocketView docket;
         /// <summary>true when there is nothing left but to end the week.</summary>
         public bool canEndWeek;
         public List<LogEventView> log;
@@ -183,6 +185,36 @@ namespace CandidateZero.HostData
         public string id;
         public string n;
         public string text;
+    }
+
+    public sealed class DocketView
+    {
+        public List<OpeningsView> openings;
+        public List<ProvisionsView> provisions;
+        /// <summary>Net members the attached language brings to a floor vote.</summary>
+        public int swing;
+        /// <summary>Windows that shut unused. The ones that haunt a run.</summary>
+        public int missed;
+    }
+
+    public sealed class OpeningsView
+    {
+        public string id;
+        public string name;
+        public string detail;
+        public string opposition;
+        public int weeksLeft;
+        public float weight;
+        public string blocked;
+    }
+
+    public sealed class ProvisionsView
+    {
+        public string id;
+        public string name;
+        public int ayes;
+        public int nays;
+        public int heat;
     }
 
     public sealed class LogEventView

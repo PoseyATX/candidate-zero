@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "counts": {
-    "cards": 121,
+    "cards": 125,
     "personas": 24,
     "issues": 18,
     "districts": 4,
@@ -1913,6 +1913,138 @@
       "control": "player",
       "entityScope": [],
       "deck": "main"
+    },
+    {
+      "id": "PO01",
+      "name": "Hang It On The Bill",
+      "tagline": "the amendment",
+      "description": "Take what the week has put in front of you and write it into your bill. This does not roll — an amendment is a decision, not a gamble. The language brings the members who wanted it and costs you the ones it offends, draws heat that the Governor will read at the desk, and lifts the turf that asked for it. Ink is the attribute. A bill with nothing in it is a press release; a bill with everything in it never leaves the floor.",
+      "risk": "CHOICE",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 2,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "INK"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_FRESHMAN_MEMBER",
+        "ENT_STATE_REP"
+      ],
+      "deck": "session"
+    },
+    {
+      "id": "PO02",
+      "name": "Work the Window",
+      "tagline": "the calendar is a weapon",
+      "description": "Ask the chair to hold the hearing date open. Two more weeks on the oldest live item on your docket. Diplomacy is the attribute, and this is the cheapest real power in the building: the difference between a law and a good idea is usually whether you were ready the week the room cared. Fails politely — a chair who says no has still told you where you stand.",
+      "risk": "STD",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_FRESHMAN_MEMBER",
+        "ENT_STATE_REP"
+      ],
+      "deck": "session"
+    },
+    {
+      "id": "PO03",
+      "name": "Read the Room on It",
+      "tagline": "the count before the vote",
+      "description": "Walk the back rail and take an honest count on your own bill. Tells you where the tally actually stands with the language you have attached, what it has cost you in heat, and which windows are about to shut. Safe, cheap, and the single most valuable thing a freshman can do — the members who last are the ones who never get surprised on the floor.",
+      "risk": "SAFE",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_FRESHMAN_MEMBER",
+        "ENT_STATE_REP"
+      ],
+      "deck": "session"
+    },
+    {
+      "id": "PO04",
+      "name": "Strip the Language",
+      "tagline": "the retreat that saves it",
+      "description": "Pull your most inflammatory provision back out of the bill. You lose the members it bought and the turf that wanted it, and you cool the bill by everything that language was drawing. This does not roll. Craft is the attribute. A bill that reaches the desk radioactive gets vetoed with a statement about unintended consequences — knowing when to give something back is the difference between a member and a martyr.",
+      "risk": "CHOICE",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 2,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CRA"
+      ],
+      "residency": "special",
+      "control": "player",
+      "entityScope": [
+        "ENT_FRESHMAN_MEMBER",
+        "ENT_STATE_REP"
+      ],
+      "deck": "session"
     },
     {
       "id": "SS27",

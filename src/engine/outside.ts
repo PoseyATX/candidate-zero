@@ -5,6 +5,7 @@
 
 import { random } from './rng.js';
 import type { GameState } from './types.js';
+import { openFromSeed, openingAnnounce } from './docket.js';
 import { OUTSIDE_EVENTS, type OutsideEvent } from '../data/outside-events.js';
 
 function stageOk(e: OutsideEvent, state: GameState): boolean {
@@ -59,6 +60,17 @@ export function resolveOutsideEvent(state: GameState, event: OutsideEvent): stri
     kind: 'note',
     text
   });
+
+  // The world does not just happen to you — it opens doors, and only during
+  // session, because a hearing needs a chamber to be sitting in.
+  if (state.stage === 'session') {
+    for (const seedId of event.opens ?? []) {
+      const opened = openFromSeed(state, seedId, event.id);
+      if (opened) {
+        state.log.push({ week: state.week, kind: 'note', text: openingAnnounce(opened) });
+      }
+    }
+  }
   // Presentation hook — host shows weather chrome, then clears. Never hand.
   state.pendingOutside = { id: event.id, n: event.n, text };
   return text;
