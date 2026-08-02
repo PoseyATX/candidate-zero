@@ -173,6 +173,10 @@ export interface GameState {
   issueId?: string | null;
   district: DistrictInfo | null;
   eventsFired: Record<string, boolean>;
+  /** Statutes from earlier runs that are still on the books, copied onto the run
+   *  at applyLegacy so the session can raise reauthorization fights over them
+   *  without threading LegacyState through the stage machinery. */
+  carriedLaws?: import('./laws.js').EnactedLaw[];
   /** What the world has made possible right now. See engine/docket.ts.
    *  Optional so every save written before it existed still loads. */
   docket?: PolicyOpening[];
@@ -420,6 +424,9 @@ export interface LegacyState {
   /** The named opposition, carried across runs — see engine/rival.ts.
    *  Optional so every save written before it existed still loads. */
   rival?: import('./rival.js').RivalState;
+  /** Statutes you have passed, across every run — see engine/laws.ts.
+   *  Optional so every save written before it existed still loads. */
+  laws?: import('./laws.js').EnactedLaw[];
   /** Stable id for THIS career, minted once. Head-to-head needs two distinct
    *  players, and two people both running the Teacher would otherwise export
    *  the same id and fail to pair. See engine/legacy.ts playerId(). */

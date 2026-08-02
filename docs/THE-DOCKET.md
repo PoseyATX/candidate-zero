@@ -118,13 +118,46 @@ That harness caught it immediately, which is the argument for the harnesses bein
   needs a won primary and a won general, which meant every session-stage change cost a
   twenty-week playthrough to eyeball once — which is a large part of why this stage rotted.
 
+## The Statute Book — laws that outlive the run (`engine/laws.ts`)
+
+Built next, because "the bill is filed and means nothing" was still true even with language
+in it: `session_law` set an outcome string and the following campaign began in a world where
+nothing you had ever done existed.
+
+A statute now does three things, or it is still a trophy:
+
+1. **It persists**, with the language that actually made it in, who carried it, and which
+   counties it served.
+2. **It pays at home.** `GOODWILL_PER_PROVISION` points of district standing and +6 rapport
+   in every ground it served, announced in the log — an invisible bonus teaches nothing.
+   Capped at `MAX_GOODWILL`, so a long career is hard to beat rather than impossible.
+3. **It can be taken away.** The people your language beat did not stop existing when the
+   Governor signed it.
+
+**Your own laws raise this session's fights.** Every standing statute with enemies seeds a
+reauthorization opening — *"Reauthorize the Livestock quarantine and indemnity authority"*,
+opposed by the feedlot consolidators who lost the first time. The language you re-pass is
+generated from the statute itself (60% of the original ayes, 80% of the nays: the same fight,
+two years older, against people who have had time to prepare). Declining is a real option and
+the game does not scold you — defending costs the action points that would move *this*
+session's bill.
+
+But an undefended law can be struck. Exposure scales with the members your language cost you,
+plus a flat penalty if you lost the seat, because you are not there to hold the floor.
+Measured: **an undefended statute that beat 18 people is struck in 39% of sessions; a statute
+nobody opposed is never struck at all** (0 of 120). A repealed law stays in the book, marked —
+history records what was struck as well as what stands.
+
+That is the loop that turns a scoreboard into a career: winning creates your own future
+opposition, and nothing is ever settled, only currently decided.
+
 ## What is next
 
-This is a foundation, not a finished system. Named openly:
+Still a foundation. Named openly:
 
-- Provisions do not yet persist into `legacy`. A law you pass should exist in later runs and
-  be repealable — by you, or by your rival.
 - Coalitions are still a number (`ayes`/`nays`) rather than named members with their own
-  wants. Fenstemaker's power was knowing every member's box.
-- Only the screw worm currently names an opening. Every outside event should.
-- The other 90 scalar-only cards are untouched.
+  wants. Fenstemaker's power was knowing every member's box — that is the next real depth.
+- Only the screw worm names an opening. Every outside event should.
+- The rival does not yet *campaign* on repealing your record; repeal is currently the world's
+  roll rather than a named opponent's project.
+- The other ~90 scalar-only cards are untouched.

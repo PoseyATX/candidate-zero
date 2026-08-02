@@ -15,6 +15,7 @@
 import { random } from './rng.js';
 import { hasRep } from './reputation.js';
 import { retireDebtOnWin } from './debt.js';
+import { statuteBookLine } from './laws.js';
 import { tickOutsideDeck } from './outside.js';
 import {
   seedIssueOpening,
@@ -22,7 +23,9 @@ import {
   openingAnnounce,
   provisionHeat,
   provisionSwing,
-  deliveryStanding
+  deliveryStanding,
+  seedLawOpenings,
+  lawWasDefended
 } from './docket.js';
 import type { Bill, BillStatus, CampaignOutcome, Committee, GameState } from './types.js';
 import type { StageTransition } from './calendar.js';
@@ -309,6 +312,13 @@ export function enterSession(state: GameState): { text: string } {
   const first = seedIssueOpening(state);
   if (first) {
     state.log.push({ week: state.week, kind: 'note', text: openingAnnounce(first) });
+  }
+  // Statutes you already passed, coming up for air. A career creates its own
+  // opposition: the fights you walk into this session are the ones you won last.
+  const book = statuteBookLine(state);
+  if (book) state.log.push({ week: state.week, kind: 'note', text: book });
+  for (const o of seedLawOpenings(state)) {
+    state.log.push({ week: state.week, kind: 'note', text: openingAnnounce(o) });
   }
   return { text };
 }

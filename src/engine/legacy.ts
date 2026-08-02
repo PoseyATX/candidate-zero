@@ -9,7 +9,7 @@ import type {
   LegacyState,
   TraitId
 } from './types.js';
-import { createRng } from './rng.js';
+import { createRng, random } from './rng.js';
 import { hasRep } from './reputation.js';
 import { generalWinProbability, primaryWinProbability } from './calendar.js';
 import { doorCardId, MACHINE_DOOR_PLAYS } from '../data/machine-doors.js';
@@ -22,6 +22,15 @@ import {
   type MachineOutcome
 } from './machine.js';
 import { applyRival, settleRival, type RivalOutcome } from './rival.js';
+import {
+  recordLaw,
+  lawGoodwill,
+  servedGrounds,
+  standingLaws,
+  repealLaw,
+  type EnactedLaw
+} from './laws.js';
+import { lawWasDefended } from './docket.js';
 
 const STORAGE_KEY = 'cz_legacy_v1';
 
@@ -212,6 +221,28 @@ export function buildPaths(state: GameState, share: number): InterimPath[] {
 
 export function applyLegacy(state: GameState, legacy: LegacyState): void {
   const has = (t: TraitId) => legacy.traits.includes(t);
+
+  // The record you carry into the district. A statute that served a county is
+  // remembered there — that is how members with a real record survive primaries
+  // their bills do not. Capped in laws.ts so a long career is hard to beat, not
+  // impossible.
+  state.carriedLaws = standingLaws(legacy).map(l => ({ ...l }));
+  const goodwill = lawGoodwill(legacy);
+  if (goodwill > 0) {
+    state.districtStanding = Math.min(100, state.districtStanding + goodwill);
+    for (const id of servedGrounds(legacy)) {
+      const g = state.groundsArr.find(x => x.id === id);
+      if (g) g.rapport = Math.min(100, (g.rapport || 0) + 6);
+    }
+    const n = standingLaws(legacy).length;
+    state.log.push({
+      week: state.week,
+      kind: 'note',
+      text:
+        `YOUR RECORD — ${n} statute${n === 1 ? '' : 's'} of yours still on the books ` +
+        `(+${goodwill} standing). The counties they served have not forgotten who carried them.`
+    });
+  }
   if (has('T_LIST') && legacy.carry.contacts) {
     state.contacts += Math.round(legacy.carry.contacts * 0.3);
   }
@@ -392,6 +423,15 @@ export function buildGrowthLine(state: GameState): string | null {
 
 export function recordRun(legacy: LegacyState, state: GameState, kind: CampaignOutcome, share: number): void {
   legacy.runs.push({ epithet: buildEpithet(state, kind, share), kind });
+  // A signed bill goes into the book BEFORE anything else settles, so the law
+  // exists for the machine and the rival to react to. Until this line, passing
+  // a law set an outcome string and the next campaign began in a world where
+  // nothing you had ever done existed.
+  if (kind === 'session_law') recordLaw(legacy, state, legacy.runs.length);
+  // And the other direction: a statute you did not defend this session can be
+  // struck. A win you cannot lose is a high score, not a win — the people your
+  // language beat are still in the building, and they can count.
+  lastRepeal = settleRepeals(legacy, state, legacy.runs.length);
   const base = { contacts: state.contacts, nameID: state.nameID };
   legacy.carry = mergeDebtIntoCarry(base, state, kind);
   // Settle the machine AFTER the run is recorded, so runIndex is the number of
@@ -400,6 +440,42 @@ export function recordRun(legacy: LegacyState, state: GameState, kind: CampaignO
   // Rival settles AFTER the machine, so a member poached this cycle is already
   // in `departed` and counts toward the strength they gained from taking them.
   lastRivalOutcome = settleRival(legacy, state, kind, legacy.runs.length);
+}
+
+/**
+ * Strike undefended statutes.
+ *
+ * A law is exposed when its language made real enemies (nays), and it is safe
+ * for a session if you spent the actions to reauthorize it. Losing the seat
+ * leaves everything exposed — you are not there to hold the floor.
+ */
+function settleRepeals(legacy: LegacyState, state: GameState, runIndex: number): EnactedLaw[] {
+  const struck: EnactedLaw[] = [];
+  const heldSeat = state.outcome === 'session_law' || state.outcome === 'session_survived';
+  for (const law of standingLaws(legacy)) {
+    if (law.passedRun >= runIndex) continue; // passed this very session
+    const enemies = law.provisions.reduce((s, p) => s + p.nays, 0);
+    if (enemies <= 0) continue;
+    if (heldSeat && lawWasDefended(state, law.id)) continue;
+    // Exposure scales with how many members the language cost you. A quiet
+    // statute nobody minded is in no danger; the one that bought you twenty
+    // votes by beating eighteen people is.
+    const risk = Math.min(0.6, enemies * 0.02) + (heldSeat ? 0 : 0.25);
+    if (random() < risk) {
+      repealLaw(legacy, law.id, runIndex);
+      struck.push(law);
+    }
+  }
+  return struck;
+}
+
+let lastRepeal: EnactedLaw[] = [];
+
+/** Statutes struck during the run that just ended, for the terminal screen. */
+export function takeRepeals(): EnactedLaw[] {
+  const r = lastRepeal;
+  lastRepeal = [];
+  return r;
 }
 
 /**

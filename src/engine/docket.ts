@@ -271,9 +271,72 @@ export function seedIssueOpening(state: GameState): PolicyOpening | null {
   return openFromSeed(state, profile.openings[0]!.id, 'session');
 }
 
+/**
+ * A statute you already passed, coming up for air.
+ *
+ * This is what makes a law a career rather than a trophy. Money sunsets,
+ * authority expires, and the people your language beat are still in the
+ * building — so every session you walk into carries a fight you created
+ * yourself, two years ago, by winning.
+ *
+ * Declining is a real option and the game does not scold you for it: the fight
+ * costs action points that would otherwise move this session's bill. But a law
+ * left undefended is a law that can be struck (see engine/laws.ts).
+ */
+export function seedLawOpenings(state: GameState): PolicyOpening[] {
+  const laws = state.carriedLaws ?? [];
+  const out: PolicyOpening[] = [];
+  for (const law of laws) {
+    const enemies = law.provisions.reduce((s, p) => s + p.nays, 0);
+    if (enemies <= 0) continue;
+    const opening = openPolicy(state, {
+      id: `OP_REAUTH_${law.id}`,
+      n: `Reauthorize ${law.title}`,
+      d:
+        `Your own statute, up for renewal. The people it beat have had two years ` +
+        `to count votes and they have used them.`,
+      issueId: law.issueId,
+      constituency: law.serves,
+      opposition: law.provisions.find(p => p.angers)?.angers ?? 'everyone it beat the first time',
+      weight: 2,
+      window: 5,
+      source: law.id
+    });
+    if (opening) out.push(opening);
+  }
+  return out;
+}
+
+/** Did the player defend a given law this session? */
+export function lawWasDefended(state: GameState, lawId: string): boolean {
+  const o = findOpening(state, `OP_REAUTH_${lawId}`);
+  return !!o && o.takenWeek !== undefined;
+}
+
 /** The provision an opening becomes, from the issue tables. */
-export function provisionFor(openingId: string) {
-  return OPENING_SEEDS[openingId]?.provision;
+export function provisionFor(openingId: string, state?: GameState) {
+  const seeded = OPENING_SEEDS[openingId]?.provision;
+  if (seeded) return seeded;
+  // Reauthorizations are generated from the statute itself rather than the issue
+  // tables — the language you are re-passing is the language you already wrote.
+  if (openingId.startsWith('OP_REAUTH_') && state) {
+    const lawId = openingId.slice('OP_REAUTH_'.length);
+    const law = (state.carriedLaws ?? []).find(l => l.id === lawId);
+    if (law) {
+      const ayes = law.provisions.reduce((s, p) => s + p.ayes, 0);
+      const nays = law.provisions.reduce((s, p) => s + p.nays, 0);
+      return {
+        n: `Continuation of ${law.title}`,
+        d: 'The same fight, two years older, against people who have had time to prepare.',
+        ayes: Math.round(ayes * 0.6),
+        nays: Math.round(nays * 0.8),
+        heat: 2,
+        rewards: law.serves[0],
+        angers: law.provisions.find(p => p.angers)?.angers
+      };
+    }
+  }
+  return undefined;
 }
 
 /** One line for the log when the world opens something. */
