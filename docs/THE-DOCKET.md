@@ -158,6 +158,35 @@ Still a foundation. Named openly:
 - Coalitions are still a number (`ayes`/`nays`) rather than named members with their own
   wants. Fenstemaker's power was knowing every member's box — that is the next real depth.
 - Only the screw worm names an opening. Every outside event should.
-- The rival does not yet *campaign* on repealing your record; repeal is currently the world's
-  roll rather than a named opponent's project.
+## Repeal has a face (`engine/rival.ts`)
+
+The first version of repeal was a flat roll: a statute quietly evaporated between runs and
+nothing was behind it. But nobody in Texas loses a fight to *circumstances*. They lose it to
+a person who filed against them and said so out loud at every Rotary lunch for eighteen
+months.
+
+So the rival picks a law of yours and runs on gutting it — the most exposed one, because the
+members your language beat are exactly the people who will fund the campaign to strike it.
+Three archetypes, one target, three mouths:
+
+- **insurgent** — *"…is running on repealing your Livestock quarantine authority outright.
+  No amendments, no study, repeal."*
+- **machine** — *"…has found the fiscal note and is reading it aloud at every Rotary lunch
+  in the district."*
+- **incumbent** — *"…calls it government overreach and has promised to strike it in the
+  first thirty days."*
+
+It is announced **before** the session, with their name on it, and it shows in the Opposition
+band in the same red as a SETBACK. A repeal you cannot see coming is weather; one with a face
+is a decision about whether the seat or the statute is worth the session.
+
+The odds are their strength plus the money of everyone your language beat, plus a large
+penalty if you lost the seat — you are not on the floor to stop them. Measured: **41% when
+they campaign on it, and 0 of 150 when nobody does.** Statutes do not evaporate on their own.
+
+One bug worth keeping: the first wiring read `legacy.rival` directly, but the rival is
+created lazily and `applyRival` runs *later* in `applyLegacy` — so every campaign silently
+failed to be adopted while the rival still appeared to exist by the time anything checked.
+`getRival()` is the accessor for a reason.
+
 - The other ~90 scalar-only cards are untouched.

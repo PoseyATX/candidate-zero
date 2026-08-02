@@ -169,6 +169,66 @@ function sessionState(seed = 11): GameState {
   assert(lawWasDefended(s, 'LAW_ag-subsidies_1'), 'defending it is a thing you DO, not a thing you have');
 }
 
+// --- 6a. REPEAL IS SOMEBODY'S CAMPAIGN, NOT THE WEATHER ---
+//
+// The first version of this was a flat roll: a statute quietly vanished between
+// runs with nothing behind it. Nobody in Texas loses a fight to "circumstances"
+// — they lose it to a person who filed against them and said so out loud at
+// every Rotary lunch for eighteen months.
+{
+  useRng(createRng(4141));
+  setDefaultSeed(4141);
+  const legacy = emptyLegacy();
+  const past = sessionState(4141);
+  past.bill!.provisions = [prov({ nays: 18 })];
+  recordLaw(legacy, past, 1);
+  legacy.runs.push({ epithet: 'passed it', kind: 'session_law' });
+
+  const s = createNewState({ seed: 4242 });
+  applyLegacy(s, legacy);
+  assert(!!legacy.rival, 'a rival exists to run the campaign');
+  assert(
+    legacy.rival!.repealTarget === 'LAW_ag-subsidies_1',
+    'they adopt your most exposed statute as their platform'
+  );
+  assert(!!legacy.rival!.repealPitch, 'and it reads like a yard sign, not a stat');
+  assert(
+    legacy.rival!.repealPitch!.includes(legacy.rival!.name),
+    'with their NAME on it — the whole point is that it has a face'
+  );
+  assert(
+    s.log.some(l => /THE OTHER SIDE/.test(l.text)),
+    'and the player is told before the session, not after the loss'
+  );
+
+  // A law nobody is campaigning against does not evaporate.
+  const quiet = emptyLegacy();
+  const q = sessionState(4343);
+  q.bill!.provisions = [prov({ nays: 18 })];
+  recordLaw(quiet, q, 1);
+  quiet.runs.push({ epithet: 'x', kind: 'session_law' });
+  let struckWithoutCampaign = 0;
+  for (let i = 0; i < 150; i++) {
+    useRng(createRng(6000 + i));
+    setDefaultSeed(6000 + i);
+    const lg = emptyLegacy();
+    const p2 = sessionState(6000 + i);
+    p2.bill!.provisions = [prov({ nays: 18 })];
+    recordLaw(lg, p2, 1);
+    lg.runs.push({ epithet: 'x', kind: 'session_law' });
+    // No rival campaign adopted — settle straight away.
+    if (lg.rival) lg.rival.repealTarget = undefined;
+    const st = sessionState(6500 + i);
+    st.outcome = 'session_survived';
+    recordRun(lg, st, 'session_survived', 50);
+    if (standingLaws(lg).length === 0) struckWithoutCampaign++;
+  }
+  assert(
+    struckWithoutCampaign === 0,
+    `no campaign, no repeal — statutes do not evaporate on their own (${struckWithoutCampaign})`
+  );
+}
+
 // --- 6. A WIN YOU CANNOT LOSE IS A HIGH SCORE ---
 {
   // A statute that beat a lot of people, left undefended across many sessions,
@@ -186,6 +246,9 @@ function sessionState(seed = 11): GameState {
     // Without this the law and the run share an index and settleRepeals
     // correctly treats it as "passed this very session" and leaves it alone.
     legacy.runs.push({ epithet: 'passed it', kind: 'session_law' });
+    // The rival runs on striking it — repeal is their project now.
+    const carrier = createNewState({ seed: 700 + i });
+    applyLegacy(carrier, legacy);
     // A later run in which the player never reauthorizes it.
     const s = sessionState(700 + i);
     s.outcome = 'session_survived';

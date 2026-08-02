@@ -78,6 +78,18 @@ export interface RivalState {
   since: number;
   /** Retired predecessors, newest last. The scar on their side. */
   past?: { id: string; name: string; cycles: number; why: string }[];
+  /**
+   * A law of yours they are running on repealing, by id.
+   *
+   * Repeal used to be the world's dice: a statute quietly vanished between runs
+   * and nothing had a face. But nobody in Texas loses a fight to "circumstances"
+   * — they lose it to a person who filed against them and said so out loud at
+   * every Rotary lunch for eighteen months. A named campaign you can see coming,
+   * and choose to answer or ignore, is a decision; a hidden roll is weather.
+   */
+  repealTarget?: string;
+  /** How it reads on the yard sign. */
+  repealPitch?: string;
 }
 
 /**
@@ -119,6 +131,45 @@ export function archetypeTitle(a: OpponentArchetype): string {
     case 'insurgent': return 'the insurgent';
     default: return 'the machine candidate';
   }
+}
+
+/**
+ * They pick a law of yours and run on gutting it.
+ *
+ * Chosen by exposure — the statute whose language beat the most people, because
+ * those are exactly the people who will fund the campaign to strike it. An
+ * insurgent runs against the thing itself; a machine candidate runs against the
+ * spending; an incumbent runs against the overreach. Same target, three mouths.
+ *
+ * Announced the moment it is adopted. The whole point is that you can see it
+ * coming and decide whether the seat or the statute is worth the session.
+ */
+export function adoptRepealCampaign(
+  r: RivalState,
+  law: { id: string; title: string; provisions: { nays: number }[] }
+): string {
+  r.repealTarget = law.id;
+  const short = law.title.replace(/^Signature bill — /, '');
+  switch (r.archetype) {
+    case 'insurgent':
+      r.repealPitch = `${r.name} is running on repealing your ${short} outright. No amendments, no study, repeal.`;
+      break;
+    case 'machine':
+      r.repealPitch = `${r.name} has found the fiscal note on your ${short} and is reading it aloud at every Rotary lunch in the district.`;
+      break;
+    default:
+      r.repealPitch = `${r.name} calls your ${short} government overreach and has promised to strike it in the first thirty days.`;
+  }
+  return r.repealPitch;
+}
+
+/** Odds they actually strike it, given how the cycle went for you. */
+export function repealOdds(r: RivalState, enemies: number, heldSeat: boolean): number {
+  if (!r.repealTarget) return 0;
+  // Their strength is the campaign; the enemies your language made are the
+  // money behind it; losing the seat means nobody is on the floor to stop them.
+  const base = 0.10 + Math.min(0.30, r.strength * 0.004) + Math.min(0.25, enemies * 0.012);
+  return Math.min(0.75, heldSeat ? base : base + 0.25);
 }
 
 /** One line of standing, for the dossier. */

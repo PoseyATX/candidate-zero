@@ -21,13 +21,21 @@ import {
   memberName,
   type MachineOutcome
 } from './machine.js';
-import { applyRival, settleRival, type RivalOutcome } from './rival.js';
+import {
+  applyRival,
+  settleRival,
+  adoptRepealCampaign,
+  repealOdds,
+  getRival,
+  type RivalOutcome
+} from './rival.js';
 import {
   recordLaw,
   lawGoodwill,
   servedGrounds,
   standingLaws,
   repealLaw,
+  mostExposedLaw,
   type EnactedLaw
 } from './laws.js';
 import { lawWasDefended } from './docket.js';
@@ -227,6 +235,29 @@ export function applyLegacy(state: GameState, legacy: LegacyState): void {
   // their bills do not. Capped in laws.ts so a long career is hard to beat, not
   // impossible.
   state.carriedLaws = standingLaws(legacy).map(l => ({ ...l }));
+  // The opposition picks its fight before you do. If you have a statute that
+  // beat enough people to fund a campaign, your rival is already running on it.
+  const target = mostExposedLaw(legacy);
+  if (target) {
+    // getRival, not legacy.rival: the rival is created lazily and applyRival
+    // runs LATER in this function, so reading the raw field here found nothing
+    // and every campaign silently failed to be adopted.
+    const opp = getRival(legacy, state);
+    if (opp.repealTarget !== target.id) {
+      const pitch = adoptRepealCampaign(opp, target);
+      state.log.push({ week: state.week, kind: 'note', text: `THE OTHER SIDE — ${pitch}` });
+    } else if (opp.repealPitch) {
+      state.log.push({
+        week: state.week,
+        kind: 'note',
+        text: `THE OTHER SIDE — ${opp.repealPitch} Still.`
+      });
+    }
+  } else if (legacy.rival) {
+    // Nothing of yours is exposed enough to run against. They drop it.
+    legacy.rival.repealTarget = undefined;
+    legacy.rival.repealPitch = undefined;
+  }
   const goodwill = lawGoodwill(legacy);
   if (goodwill > 0) {
     state.districtStanding = Math.min(100, state.districtStanding + goodwill);
@@ -457,10 +488,13 @@ function settleRepeals(legacy: LegacyState, state: GameState, runIndex: number):
     const enemies = law.provisions.reduce((s, p) => s + p.nays, 0);
     if (enemies <= 0) continue;
     if (heldSeat && lawWasDefended(state, law.id)) continue;
-    // Exposure scales with how many members the language cost you. A quiet
-    // statute nobody minded is in no danger; the one that bought you twenty
-    // votes by beating eighteen people is.
-    const risk = Math.min(0.6, enemies * 0.02) + (heldSeat ? 0 : 0.25);
+    // Repeal is somebody's campaign, not the weather. Only the statute your
+    // rival actually ran on is at risk, and the odds are their strength plus
+    // the money of everyone your language beat. A law nobody is campaigning
+    // against does not quietly evaporate between runs.
+    const rival = legacy.rival;
+    if (!rival || rival.repealTarget !== law.id) continue;
+    const risk = repealOdds(rival, enemies, heldSeat);
     if (random() < risk) {
       repealLaw(legacy, law.id, runIndex);
       struck.push(law);

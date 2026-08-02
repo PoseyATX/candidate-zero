@@ -573,6 +573,14 @@ export function renderLedger(campaign: Campaign, legacy?: LegacyState): void {
           <span class="riv-title">${archetypeTitle(r.archetype)}</span>
         </div>
         <div class="riv-record">${rivalRecord(r)}</div>
+        ${
+          // The campaign against your record, named, before it happens. A repeal
+          // the player cannot see coming is weather; one with a face on it is a
+          // decision about whether the seat or the statute is worth the session.
+          r.repealPitch
+            ? `<div class="riv-repeal ledger-warn">${escapeAttr(r.repealPitch)}</div>`
+            : ''
+        }
         <span class="riv-bar" title="How much they bring to the next filing"><i style="width:${pct}%"></i></span>
         ${took}
       </div>`;
