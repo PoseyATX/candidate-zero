@@ -178,6 +178,32 @@ const SESSION_PIPELINE_IDS = new Set([
 
 const BALLOT_DOOR_IDS = new Set(['PL04', 'PL05']);
 
+/**
+ * Whether the dossier offers the press wager on this card.
+ *
+ * Extracted from an inline expression because that is precisely why DEFERRED A7
+ * sat open: the rule lived inside a DOM-painting function, so the only way to
+ * check it was to read it — which is what I did, before writing "honest gap"
+ * and moving on. As a pure function it can simply be asserted.
+ *
+ * The load-bearing clause is `locked`. A locked card renders with a disabled
+ * Play button, and offering a live press control next to a button you cannot
+ * use invites the player to arm a wager on a play that will never resolve.
+ * `harness:heat` asserts the table; `smoke:ui` proves this predicate is the one
+ * actually wired to the button, so neither can pass while the other rots.
+ */
+export function pressOffered(opts: {
+  locked: boolean;
+  isDraftOption: boolean;
+  hasOdds: boolean;
+  heat: number;
+}): boolean {
+  if (opts.locked) return false;
+  if (opts.isDraftOption) return false;
+  if (!opts.hasOdds) return false;
+  return opts.heat > 0;
+}
+
 function lockReason(campaign: Campaign, card: PlayCard): string {
   const state = campaign.state;
   if (!isPhaseLegal(state, card)) return `Phase ${card.ph.join('/')} only`;
@@ -403,13 +429,16 @@ function fillDossier(
   }
 
   // Press: the one decision that happens *with* the dice rather than before
-  // them. Only offered on a real, playable, odds-bearing play — pressing a
-  // card that cannot roll would charge the streak for nothing.
+  // them. Only offered on a real, playable, odds-bearing play.
   const pressBtn = root.querySelector('#btn-press') as HTMLButtonElement | null;
   const pressCopy = root.querySelector('#press-copy') as HTMLElement | null;
   const quote = quotePress(state, card);
-  const pressable =
-    detailDraftOption === null && !locked && !!card.odds && quote.heat > 0;
+  const pressable = pressOffered({
+    locked,
+    isDraftOption: detailDraftOption !== null,
+    hasOdds: !!card.odds,
+    heat: quote.heat
+  });
   detailPress = false;
   if (pressBtn) {
     pressBtn.hidden = !pressable;

@@ -15,6 +15,7 @@ import {
   pickPhaseDraft,
   maybeOfferPhaseDraft,
   summarizeWeek,
+  normalizeChoice,
   type Campaign,
   CAMP_FILING_FEE,
   CAMP_PETITION
@@ -262,10 +263,10 @@ function autoPlay(campaign: Campaign, strategyName: string, weeks: number | "ful
       if (campaign.state.pendingDraft) pickPhaseDraft(campaign, 0);
       const playable = listPlayableHand(campaign);
       if (!playable.length) break;
-      const idx = choose(playable, campaign.state);
-      if (idx == null) break;
+      const choice = normalizeChoice(choose(playable, campaign.state));
+      if (!choice) break;
       const wasBallot = campaign.state.ballot;
-      const outcome = playFromHand(campaign, idx);
+      const outcome = playFromHand(campaign, choice.index, undefined, { press: choice.press });
       if (!outcome.ok) break;
       weekPlays.push(outcome);
       const juice = outcome.feedback ? ` | ${outcome.feedback.juice}` : "";

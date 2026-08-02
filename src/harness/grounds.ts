@@ -15,7 +15,7 @@
  * field play and spend fieldAp.
  */
 
-import { createCampaign, listPlayableHand, playFromHand, startWeek, endWeekInPlace, maybeOfferPhaseDraft } from '../engine/loop.js';
+import { createCampaign, listPlayableHand, playFromHand, startWeek, endWeekInPlace, maybeOfferPhaseDraft, normalizeChoice } from '../engine/loop.js';
 import { autoResolvePhaseDraft } from '../engine/deck.js';
 import { STRATEGIES } from '../engine/strategies.js';
 import { checkBallotThreshold } from '../engine/career.js';
@@ -78,12 +78,13 @@ function runGroundCampaign(seed: number, cardStrat: string, groundStrat: GroundS
       if (c.state.pendingDraft) autoResolvePhaseDraft(c.state, c.deck);
       const playable = listPlayableHand(c);
       if (!playable.length) break;
-      const handIndex = choose(playable, c.state);
-      if (handIndex === null || handIndex === undefined) break;
+      const choice = normalizeChoice(choose(playable, c.state));
+      if (!choice) break;
+      const { index: handIndex, press } = choice;
       const entry = playable.find(p => p.index === handIndex) ?? playable[0]!;
       const wasBallot = c.state.ballot;
       const ground = entry.card.field ? pickGround(c.state, groundStrat, rot++) : undefined;
-      const out = playFromHand(c, handIndex, ground);
+      const out = playFromHand(c, handIndex, ground, { press });
       if (!wasBallot && c.state.ballot) maybeOfferPhaseDraft(c, true);
       if (!out.ok) break;
     }
