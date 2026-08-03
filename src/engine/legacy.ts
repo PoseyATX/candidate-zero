@@ -39,7 +39,13 @@ import {
   type EnactedLaw
 } from './laws.js';
 import { lawWasDefended } from './docket.js';
-import { settleChamber, carryChamber, chamberLine, mergeRoomBack } from './chamber.js';
+import {
+  settleChamber,
+  carryChamber,
+  chamberLine,
+  mergeRoomBack,
+  offerMemberHooks
+} from './chamber.js';
 import { takeStripped } from '../data/policy-plays.js';
 import type { MemberDef } from '../data/members.js';
 
@@ -239,6 +245,17 @@ export function applyLegacy(state: GameState, legacy: LegacyState): void {
   // impossible.
   state.carriedLaws = standingLaws(legacy).map(l => ({ ...l }));
   carryChamber(state, legacy);
+  // The return path: the people who owe you are offering to help on the trail.
+  const threads = offerMemberHooks(state, legacy);
+  if (threads > 0) {
+    state.log.push({
+      week: state.week,
+      kind: 'note',
+      text:
+        `THREADS — ${threads} member${threads === 1 ? '' : 's'} who owe${threads === 1 ? 's' : ''} you ` +
+        `${threads === 1 ? 'has' : 'have'} offered to help back home. Check the Dossier; none of it is obligatory.`
+    });
+  }
   const room = chamberLine(legacy);
   if (room) state.log.push({ week: state.week, kind: 'note', text: room });
   // The opposition picks its fight before you do. If you have a statute that

@@ -173,6 +173,10 @@ export interface GameState {
   issueId?: string | null;
   district: DistrictInfo | null;
   eventsFired: Record<string, boolean>;
+  /** Optional side-paths the world is dangling — see engine/hooks.ts.
+   *  A registry, not one feature: members, statutes, rivals and the machine all
+   *  offer into the same list. */
+  hooks?: import('./hooks.js').Hook[];
   /** memberId -> disposition, copied onto the run at applyLegacy so the floor
    *  count can read the room without threading LegacyState through it. */
   chamberRoster?: Record<string, number>;

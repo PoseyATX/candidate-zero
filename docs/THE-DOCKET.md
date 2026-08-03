@@ -362,3 +362,70 @@ failed to be adopted while the rival still appeared to exist by the time anythin
 `getRival()` is the accessor for a reason.
 
 - The other ~90 scalar-only cards are untouched.
+
+## Hooks — the side-paths back (`engine/hooks.ts`, `data/hook-plays.ts`)
+
+The career was a **ladder with a memory**, not a circle. Campaign fed chamber — meet Wendell
+Cobb on a mail route in October and he is warm when you are sworn in — and nothing came back.
+A member who takes your call at ten at night could not cut you an ad, work his county, or tell
+you which of your grounds was about to turn. Half the loop was missing, and a join nobody
+tests is exactly where this project's bugs have lived.
+
+D&D calls these **adventure hooks**: an optional thread the world dangles, which you may take
+or ignore, and which leads somewhere the main road does not.
+
+**This is a registry, not one feature.** `HookKind` is `member | statute | rival | machine |
+world` and `offerHook` does not care who calls it. Members are the first source, not the
+mechanism. Adding a statute that dangles a favour, a rival's mistake you can exploit, a
+machine member's ask, an outside event — each means writing the offer and a card that
+consumes it. Nothing in the engine changes. The harness asserts exactly that:
+
+> PASS: a non-member source can offer a thread with no engine change
+
+Three rules, mirroring the Docket, which is the same shape pointed at policy:
+
+1. **Optional.** A hook you must take is a quest. The harness holds two identical states,
+   cashes nothing in one, and asserts the ledgers are byte-identical — walking past every
+   thread in the game stays a legitimate way to play.
+2. **Sourced.** Every hook names who offered it. A favour from nobody in particular is a stat
+   bonus wearing a hat, and this corpus already measured 61% of itself that way.
+3. **Perishable where it makes sense.** People forget they owe you. Taken hooks stay on the
+   record after they expire — people remember what they offered.
+
+Board cap is 6. Nobody is juggling more than that.
+
+### The favour depends on who owes you
+
+Keyed on the member's `opensTo`, so three allies are three different plays rather than three
+sizes of the same one:
+
+- **HK01 Borrow His Name** (DIP) — +8 name ID, +2 endorsement, momentum. The endorsement
+  economy, but from somebody who owes you *personally* rather than a body with letterhead.
+  *"He does not ask for anything, which is how you know the ledger is now even."*
+- **HK02 She Works Her Own County** (CHA) — +20 rapport and +0.08 GOTV **on her ground
+  specifically**, +60 contacts, +1 volunteer. The most valuable thing a sitting member has is
+  not their vote, it is the list from their own first race and the people on it who still
+  answer. The most efficient turf play in the game, and it cannot be bought.
+- **HK03 Tell Me the Truth About a County** (everyone else) — sharpens your message, warms
+  their ground, and **names the ground you should stop paying for**. The rarest favour in the
+  building: everybody tells you what you want to hear, almost nobody does this.
+
+Harness asserts these reach three different systems (`name, turf, intel`), not one scalar.
+
+### Verification
+
+`npm run harness:hooks`, 27 assertions, in the main chain after `harness:alleys`. It went
+green on the first run, which in this project is a warning sign rather than a result — so the
+control: stub `offerMemberHooks` to return `[]` and four assertions fail, including the two
+that carry the actual claim (`the next CAMPAIGN opens with threads from them`, `a hook card
+appears once somebody owes you`). The instrument measures something.
+
+Reads do not mutate: `getHooks` returns a frozen `EMPTY` rather than lazily assigning
+`state.hooks = []`. `getDocket` used to do the lazy thing, and because `view()` calls it to
+render, merely *looking* at the game broke deterministic replay on every seed. Asserted
+directly — `looking at the board does not create it`.
+
+### What this is not
+
+One path. The owner's framing is many, many paths back, with shortcuts and traps among them.
+This is the first, and the registry is the part that matters.

@@ -21,6 +21,7 @@
 
 import type { GameState, LegacyState, Provision } from './types.js';
 import { MEMBERS, MEMBER_BY_ID, membersReachedBy, type MemberDef } from '../data/members.js';
+import { offerHook } from './hooks.js';
 
 /** How a member currently feels about you. Persisted between runs. */
 export interface MemberStanding {
@@ -229,6 +230,55 @@ export function carryChamber(state: GameState, legacy: LegacyState): void {
     if (st.disposition !== 0) out[id] = st.disposition;
   }
   state.chamberRoster = out;
+}
+
+/**
+ * The return path: members who owe you offer to help on the trail.
+ *
+ * The career was a ladder with a memory. The campaign fed the chamber and
+ * nothing came back — a member who takes your call at ten at night could not cut
+ * you an ad, work his county, or tell you which ground was turning.
+ *
+ * Three different favours, chosen by who the member actually is, because "an
+ * ally gives +N" is the stat-bonus-wearing-a-hat problem this project keeps
+ * measuring:
+ *
+ *   - a DIP member spends their name on you (name ID, the endorsement economy)
+ *   - a CHA member works their own county for you (rapport where they live)
+ *   - anyone else tells you the truth about a ground (intel you cannot buy)
+ *
+ * Offered at applyLegacy, taken during the campaign, and entirely optional.
+ */
+export function offerMemberHooks(state: GameState, legacy: LegacyState): number {
+  let n = 0;
+  for (const m of alliesOf(legacy)) {
+    const favour =
+      m.opensTo === 'DIP'
+        ? {
+            n: `${m.name} will lend you his name`,
+            d: `${m.name} of ${m.county} will say your name in rooms you are not in yet.`
+          }
+        : m.opensTo === 'CHA'
+          ? {
+              n: `${m.name} will work ${m.county} for you`,
+              d: `${m.name} still has the list from their own first race, and they are offering it.`
+            }
+          : {
+              n: `${m.name} will tell you the truth about a county`,
+              d: `${m.name} of ${m.county} has been counting this district for years and will say what they see.`
+            };
+    const h = offerHook(state, {
+      id: `HK_${m.id}`,
+      n: favour.n,
+      d: favour.d,
+      kind: 'member',
+      source: m.id,
+      ground: m.ground,
+      stages: ['primary', 'general']
+    });
+    if (h) n++;
+  }
+  return n;
 }
 
 /** One line for the chamber log when people already owe you. */

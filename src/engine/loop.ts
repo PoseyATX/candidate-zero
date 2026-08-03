@@ -6,6 +6,7 @@
 
 import { ALL_PLAYS, SHOP_PLAYS } from '../data/plays.js';
 import { ALLEY_PLAYS } from '../data/alley-plays.js';
+import { HOOK_PLAYS } from '../data/hook-plays.js';
 import { SESSION_PLAYS } from '../data/session-plays.js';
 import {
   createDeckState,
@@ -181,6 +182,9 @@ export function buildCatalog(plays: PlayCard[] = ALL_PLAYS): Map<string, PlayCar
   // deck (adding them there would dilute ballot-access density; see
   // STARTER_DECK_IDS). See data/alley-plays.ts.
   for (const p of ALLEY_PLAYS) map.set(p.id, p);
+  // Hook cards — the return path. Gated on a live Hook, so they simply do not
+  // appear until somebody actually owes you. See engine/hooks.ts.
+  for (const p of HOOK_PLAYS) map.set(p.id, p);
   return map;
 }
 
@@ -434,6 +438,8 @@ export const CAMP_FILING_FEE = -105;
 export const CAMP_SHOP_BASE = -200;
 /** Session play synthetic index base: -300 - i. */
 export const CAMP_SESSION_BASE = -300;
+/** Hook-cashing card synthetic index base: -700 - i. See engine/hooks.ts. */
+export const CAMP_HOOK_BASE = -700;
 /** Campaign alleyway synthetic index base: -600 - i. See data/alley-plays.ts. */
 export const CAMP_ALLEY_BASE = -600;
 /** Waiting-season play synthetic index base: -500 - i. */
@@ -515,6 +521,18 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
       mvI++;
     }
   }
+  // Hooks you can cash, offered just above the alleyways: a thread somebody
+  // dangled is worth more of the player's attention than a place to kill time,
+  // and less than the actual work of the week.
+  if (campaign.state.stage === 'primary' || campaign.state.stage === 'general') {
+    let hi = 0;
+    for (const card of HOOK_PLAYS) {
+      if (isPlayable(campaign.state, card)) {
+        out.push({ index: CAMP_HOOK_BASE - hi, card });
+        hi++;
+      }
+    }
+  }
   // The alleyways, LAST in the menu on purpose.
   //
   // They were first, and every strategy that falls back to "the first playable
@@ -541,7 +559,12 @@ export function campIndexToCardId(
 ): string | null {
   if (handIndex === CAMP_PETITION) return 'PL04';
   if (handIndex === CAMP_FILING_FEE) return 'PL05';
-  // Index bands: alley ≤-600 · waiting ≤-500 · starmap ≤-401 · session ≤-300 · shop ≤-200
+  // Index bands: hook ≤-700 · alley ≤-600 · waiting ≤-500 · starmap ≤-401 · session ≤-300 · shop ≤-200
+  if (handIndex <= CAMP_HOOK_BASE) {
+    const hooks = HOOK_PLAYS.filter(c => isPlayable(campaign.state, c));
+    const i = CAMP_HOOK_BASE - handIndex;
+    return hooks[i]?.id ?? null;
+  }
   if (handIndex <= CAMP_ALLEY_BASE) {
     const alleys = ALLEY_PLAYS.filter(c => isPlayable(campaign.state, c));
     const i = CAMP_ALLEY_BASE - handIndex;
