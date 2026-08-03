@@ -26,6 +26,7 @@
  */
 
 import type { GameState, LegacyState, Provision } from './types.js';
+import { offerHook } from './hooks.js';
 
 /** A statute on the books, carried between runs. */
 export interface EnactedLaw {
@@ -154,4 +155,40 @@ export function statuteBookLine(state: GameState): string {
     `THE BOOK — ${n} statute${n === 1 ? '' : 's'} of yours still stand${n === 1 ? 's' : ''}. ` +
     `The clerks know your name before you say it, and so do the people you beat to pass them.`
   );
+}
+
+/**
+ * The second hook source: a statute that is still working for somebody.
+ *
+ * "Bill is filed and means nothing" was the fair complaint. A law that only
+ * pays out as a quiet standing bonus is a trophy with a number on it. This is
+ * the law reaching back and offering you something specific, on the ground it
+ * actually serves, with its own name attached.
+ *
+ * Only laws that CARRY PROVISIONS offer. A shell bill that passed is a line in
+ * your obituary; nobody in Lamesa organizes a phone bank over it.
+ *
+ * See engine/hooks.ts — this is the registry proving it is a registry. Nothing
+ * in hooks.ts changed to admit statutes.
+ */
+export function offerStatuteHooks(state: GameState, legacy: LegacyState): number {
+  let n = 0;
+  for (const law of standingLaws(legacy)) {
+    if (!law.provisions.length) continue;
+    const ground = law.serves[0];
+    if (!ground) continue;
+    const h = offerHook(state, {
+      id: `HK_${law.id}`,
+      n: `The people ${law.title} actually helped`,
+      d:
+        `Somebody who got the money is asking what they can do about it. ` +
+        `A statute nobody organizes around is just paper in Austin.`,
+      kind: 'statute',
+      source: law.id,
+      ground,
+      stages: ['primary', 'general']
+    });
+    if (h) n++;
+  }
+  return n;
 }

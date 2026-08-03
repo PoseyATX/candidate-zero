@@ -19,6 +19,7 @@
 import type { PlayCard } from '../engine/types.js';
 import { hooksOfKind, takeHook } from '../engine/hooks.js';
 import { MEMBER_BY_ID } from './members.js';
+import { addObl, oblName } from './obligations.js';
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
@@ -161,8 +162,113 @@ export const HK03_TellMeTheTruth: PlayCard = {
   }
 };
 
+/**
+ * HK04 — The Program Works.
+ *
+ * The statute source. "Bill is filed and means nothing" was the fair complaint;
+ * a law that only pays out as a quiet standing bonus is a trophy with a number
+ * on it. This is the people it actually helped, organizing, on the ground it
+ * actually serves — and they do it because of a specific thing you passed,
+ * which the card names.
+ */
+export const HK04_TheProgramWorks: PlayCard = {
+  id: 'HK04',
+  n: 'The Program Works',
+  cost: { a: 1 },
+  risk: 'SAFE',
+  ph: [1, 2, 3],
+  tag: 'something you passed, still working',
+  attrs: ['CRA'],
+  d:
+    'The people a statute of yours actually helped turn out for you, on the ground it serves. ' +
+    'One action, no money, no risk. Rapport, turnout and contacts where your record is a fact ' +
+    'rather than a claim. ' +
+    'Craft is the attribute. ' +
+    'This is what a law is FOR beyond the standing bonus: a program with nobody organized around it ' +
+    'is just paper in Austin, and a program with people around it is a firewall.',
+  show: s => hooksOfKind(s, 'statute').length > 0,
+  odds: () => 0.95,
+  run: s => {
+    const h = hooksOfKind(s, 'statute')[0];
+    if (!h) return 'No statute of yours is working on anybody right now.';
+    takeHook(s, h.id);
+    const g = s.groundsArr.find(x => x.id === h.ground);
+    if (g) {
+      g.rapport = clamp((g.rapport || 0) + 14, 0, 100);
+      g.gotv = (g.gotv || 0) + 0.05;
+    }
+    s.contacts += 35;
+    s.districtStanding += 2;
+    return (
+      `${h.n} show up without being asked. ` +
+      `+14 rapport and turnout banked on ${g?.n ?? 'the ground it serves'}, +35 contacts, +2 district standing. ` +
+      `Nobody had to be persuaded of anything. They already got the money.`
+    );
+  }
+};
+
+/**
+ * HK05 — The Ask Behind the Ask.
+ *
+ * The trap. Every hook before this one is a gift; that is only half of how the
+ * building runs. A machine member who is genuinely with you does not offer a
+ * favour, they offer a deal.
+ *
+ * COVENANT 5 — this is not SAFE, and the price is on the card face before you
+ * take it. What you do not know is WHICH price. A trap you can read and walk
+ * into anyway is a decision; a hidden one is a cheat.
+ */
+export const HK05_AskBehindTheAsk: PlayCard = {
+  id: 'HK05',
+  n: 'The Ask Behind the Ask',
+  cost: { a: 1 },
+  risk: 'STD',
+  ph: [1, 2, 3],
+  tag: 'a deal, not a favour',
+  attrs: ['DIP'],
+  d:
+    'Somebody in your machine who is genuinely WITH you moves real money and real people this week. ' +
+    'It works. It always works. ' +
+    'It also attaches an obligation you do not get to choose and cannot hand back. ' +
+    'NOT SAFE, and the price is printed here on purpose. ' +
+    'The price is whoever you dealt with: the Slate-Maker takes his marker, everybody else ' +
+    'runs money and money comes with a string. ' +
+    'Everybody at the capitol knows exactly what the slate-maker wants; the only question ' +
+    'has ever been whether you are far enough behind to pay it.',
+  show: s => hooksOfKind(s, 'machine').length > 0,
+  odds: () => 1,
+  run: s => {
+    const h = hooksOfKind(s, 'machine')[0];
+    if (!h) return 'Nobody in your machine is offering a deal right now.';
+    takeHook(s, h.id);
+    s.money += 900;
+    s.contacts += 70;
+    s.volPool += 2;
+    s.momentum += 1;
+    // The price is WHO you dealt with, not a coin flip. The Slate-Maker charges
+    // his own marker — OB3 has been in the registry since Phase 2 and gates real
+    // starmap paths downstream. Everybody else runs money, and money comes with
+    // a string that pulls on you every single week (OB1).
+    //
+    // This was a `random() < 0.5` for about ten minutes. It made the trap
+    // uneven for no reason — one branch a heavy weekly drag, the other a purely
+    // narrative marker — and it made the harness assertion depend on the seed,
+    // which is the exact "my instrument measures nothing and passes" shape this
+    // project keeps stepping in.
+    const price = h.source === 'AL16' ? 'OB3' : 'OB1';
+    addObl(s, price);
+    return (
+      `It works exactly as advertised: +$900, +70 contacts, two volunteers who have done this before, ` +
+      `and the room tilts. Then, on the way out, the ask behind the ask — ` +
+      `${oblName(price)}. You are carrying it now, every week, until this is over.`
+    );
+  }
+};
+
 export const HOOK_PLAYS: PlayCard[] = [
   HK01_BorrowHisName,
   HK02_WorksHisCounty,
-  HK03_TellMeTheTruth
+  HK03_TellMeTheTruth,
+  HK04_TheProgramWorks,
+  HK05_AskBehindTheAsk
 ];

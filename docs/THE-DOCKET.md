@@ -425,7 +425,63 @@ Reads do not mutate: `getHooks` returns a frozen `EMPTY` rather than lazily assi
 render, merely *looking* at the game broke deterministic replay on every seed. Asserted
 directly — `looking at the board does not create it`.
 
+### Three sources, one registry — and the first trap
+
+The registry claim was cheap until something other than a member used it. Two more sources
+went in, and **nothing in `hooks.ts` changed to admit either of them.**
+
+**Statutes** (`offerStatuteHooks` in `laws.ts`) — the direct answer to *"bill is filed and
+means nothing."* A law that only pays out as a quiet standing bonus is a trophy with a number
+on it. Now the people it actually helped organize, on the ground it actually serves, under the
+statute's own title. **HK04 The Program Works**: +14 rapport and turnout on the served ground,
++35 contacts, +2 district standing, SAFE and free. A shell bill that passed offers nothing —
+it is a real statute and a line in your obituary, but nobody in Lamesa organizes a phone bank
+over an empty bill. Asserted both ways.
+
+**The machine** (`offerMachineHooks` in `machine.ts`) — the first hook that is a **trap**.
+Everything above is a gift, which is only half of how the building runs. Somebody genuinely
+`with` you does not offer a favour, they offer a deal. **HK05 The Ask Behind the Ask**: +$900,
++70 contacts, two volunteers, momentum. It works. It always works. It also attaches an
+obligation you do not choose and cannot hand back.
+
+Only the single strongest relationship offers. Six simultaneous devil's bargains is a shop,
+not a trap.
+
+**Covenant 5 holds:** HK05 is `STD`, never `SAFE`, and the price is printed on the card face
+before you take it. A trap you can read and walk into anyway is a decision; a hidden one is a
+cheat. Everybody at the capitol knows exactly what the slate-maker wants — the only question
+has ever been whether you are far enough behind to pay it. The harness asserts both the risk
+label and the presence of the price in the card text.
+
+### The bug I wrote and then measured out
+
+The price started as `random() < 0.5 ? 'OB3' : 'OB1'`. Two things wrong with that, and the
+harness only caught them because the assertion was specific:
+
+1. **OB3 has no weekly drag.** It is a marker spent elsewhere — it gates starmap paths and
+   counts as a debt obligation — so the branches were wildly uneven: heavy weekly cost, or a
+   narrative note. Same card, same flavour text, two different games.
+2. **The assertion depended on the seed.** `and that obligation has real weekly drag` passed
+   on OB1 and would have failed on OB3. That is precisely the *"my instrument measures nothing
+   and passes"* shape this project keeps stepping in, except worse — it passes and then fails
+   later for a reason nobody will connect to this commit.
+
+Fixed at the design level rather than the assertion level: **the price is who you dealt with.**
+The Slate-Maker (`AL16`) takes his own marker, `OB3` — which has been sitting in the
+obligations registry since Phase 2 waiting for something to charge it. Everybody else runs
+money, and money comes with a string that pulls every week, `OB1`. Deterministic, in character,
+and the harness now drives both branches and asserts what is actually true of each rather than
+one claim that happens to hold for whichever branch the seed picked.
+
+### Verification
+
+52 assertions. Control: stub `offerStatuteHooks` and `offerMachineHooks` to `0` and **17
+fail** — including every claim that carries weight. The harness was also made to fail
+*cleanly* rather than throw on the first missing hook, because a control run that dies at
+assertion one hides the sixteen behind it.
+
 ### What this is not
 
-One path. The owner's framing is many, many paths back, with shortcuts and traps among them.
-This is the first, and the registry is the part that matters.
+Finished. Three of five `HookKind`s are live; `rival` and `world` are declared and unused. The
+obvious next ones: a rival's misstep you can walk into, and an outside event that leaves a door
+open only for a few weeks. The registry is the part that matters.

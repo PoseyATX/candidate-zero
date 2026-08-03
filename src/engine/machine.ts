@@ -27,6 +27,7 @@ import type { GameState, LegacyState, CampaignOutcome } from './types.js';
 import { ALLIES } from '../data/allies.js';
 import { askAdjustedIds, pendingAskAdjustment } from './ask.js';
 import { random } from './rng.js';
+import { offerHook } from './hooks.js';
 
 /** Standing bounds. Below WALK_AT they leave for good. */
 export const MAX_STANDING = 100;
@@ -346,4 +347,46 @@ export function rosterForDisplay(legacy: LegacyState): MachineMember[] {
   return [...getMachine(legacy).members].sort(
     (a, b) => b.standing - a.standing || b.runs - a.runs
   );
+}
+
+/**
+ * The third hook source, and the first one that is a TRAP.
+ *
+ * The owner's framing for the whole open world: *"The game should have
+ * alleyways, some of which are shortcuts, some of which are traps."* Every hook
+ * shipped so far is a gift — a member who owes you, a statute that worked. That
+ * is only half of how the building runs.
+ *
+ * A machine member who is genuinely WITH you does not offer you a favour. They
+ * offer you a deal, and there is an ask behind the ask. The Slate-Maker will put
+ * you on the slate; OB3 is literally called "Slate-Maker's Price" and has been
+ * sitting in the obligations registry since Phase 2 waiting for somebody to
+ * charge it.
+ *
+ * COVENANT 5 — SAFE means safe, so this hook's card is not SAFE, and the price
+ * is stated on its face before you take it. A trap you can read and walk into
+ * anyway is a decision. A hidden one is a cheat, and everybody at the capitol
+ * knows exactly what the slate-maker wants.
+ *
+ * Only `with`-tier offers. Somebody who merely owes you has nothing to trade.
+ */
+export function offerMachineHooks(state: GameState, legacy: LegacyState): number {
+  const machine = getMachine(legacy);
+  // The strongest relationship only. This is a standing temptation, not a
+  // market stall — six simultaneous devil's bargains is a shop, not a trap.
+  const best = machine.members
+    .filter(m => tierOf(m) === 'with')
+    .sort((a, b) => b.standing - a.standing)[0];
+  if (!best) return 0;
+  const h = offerHook(state, {
+    id: `HK_MACH_${best.id}`,
+    n: `${memberName(best.id)} wants to move some weight for you`,
+    d:
+      `${memberName(best.id)} can put real money and real people behind you this week. ` +
+      `There is an ask behind the ask, and you will not be told what it is until you have taken it.`,
+    kind: 'machine',
+    source: best.id,
+    stages: ['primary', 'general']
+  });
+  return h ? 1 : 0;
 }

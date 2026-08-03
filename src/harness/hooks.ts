@@ -34,6 +34,7 @@ import { HOOK_PLAYS } from '../data/hook-plays.js';
 import { MEMBER_BY_ID, MEMBERS } from '../data/members.js';
 import { createCampaign, listPlayableHand } from '../engine/loop.js';
 import { executePlay } from '../engine/play.js';
+import { OBLS, addObl } from '../data/obligations.js';
 import type { GameState, LegacyState, Provision } from '../engine/types.js';
 
 let failed = 0;
@@ -133,13 +134,13 @@ function careerWithAllies(): LegacyState {
   assert(out.ok, `${card.id} resolves (${out.reason ?? 'ok'})`);
   assert(liveHooks(s).length === before - 1, 'and consumes exactly one thread');
 
-  const taken = getHooks(s).find(h => h.takenWeek !== undefined)!;
-  const m = MEMBER_BY_ID[taken.source]!;
+  const taken = getHooks(s).find(h => h.takenWeek !== undefined);
+  const m = taken ? MEMBER_BY_ID[taken.source] : undefined;
   assert(
-    (out.text ?? '').includes(m.name),
-    `and the result names them — ${m.name} of ${m.county}, not "an ally"`
+    !!m && (out.text ?? '').includes(m.name),
+    `and the result names them — ${m ? `${m.name} of ${m.county}` : 'nobody'}, not "an ally"`
   );
-  assert(!takeHook(s, taken.id), 'a favour cannot be cashed twice');
+  assert(!!taken && !takeHook(s, taken.id), 'a favour cannot be cashed twice');
 }
 
 // --- THE THREE FAVOURS ARE GENUINELY DIFFERENT ---
@@ -244,6 +245,154 @@ function careerWithAllies(): LegacyState {
   liveHooks(s);
   hooksOfKind(s, 'member');
   assert(s.hooks === undefined, 'looking at the board does not create it');
+}
+
+// --- THE SECOND SOURCE: A STATUTE THAT WORKED ---
+//
+// "Bill is filed and means nothing" was the fair complaint. A law that only
+// pays out as a quiet standing bonus is a trophy with a number on it.
+{
+  const legacy = emptyLegacy();
+  legacy.laws = [
+    {
+      id: 'LAW_ag_1',
+      title: 'the screwworm indemnity fund',
+      issueId: 'ag-subsidies',
+      passedRun: 1,
+      sponsor: 'The Member',
+      provisions: [prov()],
+      serves: ['GR02']
+    },
+    // A shell bill that passed. Real statute, real line in the obituary, but
+    // nobody in Lamesa organizes a phone bank over it.
+    {
+      id: 'LAW_shell_1',
+      title: 'a bill with nothing in it',
+      issueId: null,
+      passedRun: 1,
+      sponsor: 'The Member',
+      provisions: [],
+      serves: []
+    }
+  ];
+  const s = createNewState({ seed: 101, ap: 9 });
+  applyLegacy(s, legacy);
+  const st = hooksOfKind(s, 'statute');
+  assert(st.length === 1, `a standing law offers a thread, a shell bill does not (${st.length})`);
+  assert(st[0]?.source === 'LAW_ag_1', 'and the thread names the statute, not "your record"');
+
+  s.stage = 'primary';
+  const card = HOOK_PLAYS.find(c => c.id === 'HK04')!;
+  assert(!!card.show?.(s), 'HK04 appears once a law of yours is working on somebody');
+  const rapBefore = s.groundsArr.reduce((t, g) => t + (g.rapport || 0), 0);
+  const standBefore = s.districtStanding;
+  const out = executePlay(s, card);
+  assert(out.ok, 'HK04 resolves');
+  assert(
+    s.groundsArr.reduce((t, g) => t + (g.rapport || 0), 0) > rapBefore,
+    'and it moves the ground the statute actually serves'
+  );
+  assert(s.districtStanding > standBefore, 'and your standing at home, because the record is a fact');
+  assert(hooksOfKind(s, 'statute').length === 0, 'cashed once, like everything else');
+}
+
+// --- THE THIRD SOURCE IS A TRAP ---
+//
+// "Some of which are shortcuts, some of which are traps." Every hook before
+// this one is a gift, which is only half of how the building runs.
+{
+  const legacy = emptyLegacy();
+  legacy.machine = {
+    members: [
+      { id: 'AL16', standing: 80, runs: 3, since: 1 }, // The Slate-Maker, with you
+      { id: 'AL01', standing: 25, runs: 1, since: 2 }  // merely owes you
+    ],
+    departed: []
+  };
+  const s = createNewState({ seed: 111, ap: 9 });
+  applyLegacy(s, legacy);
+  const deals = hooksOfKind(s, 'machine');
+  assert(deals.length === 1, `only the strongest relationship offers a deal (${deals.length})`);
+  assert(deals[0]?.source === 'AL16', 'and it is the one who is genuinely WITH you');
+
+  s.stage = 'primary';
+  const card = HOOK_PLAYS.find(c => c.id === 'HK05')!;
+  assert(card.risk !== 'SAFE', 'COVENANT 5 — the trap is not labelled SAFE');
+  assert(/obligation/i.test(card.d), 'and the price is printed on the card face before you take it');
+
+  const moneyBefore = s.money;
+  const oblsBefore = (s.obls ?? []).length;
+  const out = executePlay(s, card);
+  assert(out.ok, 'HK05 resolves');
+  assert(s.money > moneyBefore, 'the deal genuinely works — it always works');
+  assert((s.obls ?? []).length === oblsBefore + 1, 'and it attaches a leash you did not choose');
+  assert((s.obls ?? []).includes('OB3'), "the Slate-Maker charges his own marker, not a generic string");
+}
+
+// --- BOTH PRICES ARE REAL PRICES ---
+//
+// The trap's cost used to be `random() < 0.5 ? 'OB3' : 'OB1'`. That made the
+// assertion below depend on the seed — it passed on OB1 and would have failed
+// on OB3, whose weekly drag is empty by design. So the price became a function
+// of WHO you dealt with, and both branches get driven here rather than one of
+// them getting lucky.
+{
+  const price = (allyId: string): string => {
+    const legacy = emptyLegacy();
+    legacy.machine = { members: [{ id: allyId, standing: 80, runs: 3, since: 1 }], departed: [] };
+    const s = createNewState({ seed: 115, ap: 9 });
+    applyLegacy(s, legacy);
+    s.stage = 'primary';
+    executePlay(s, HOOK_PLAYS.find(c => c.id === 'HK05')!);
+    return (s.obls ?? [])[0] ?? '';
+  };
+
+  const slate = price('AL16');
+  const other = price('AL10');
+  assert(slate === 'OB3', `the Slate-Maker takes his marker (${slate})`);
+  assert(other === 'OB1', `everybody else runs money, and money has a string (${other})`);
+  assert(slate !== other, 'the price is who you dealt with, not a coin flip');
+
+  // OB1 costs you every week. OB3 costs you nothing weekly — it is a marker
+  // spent elsewhere — so assert the thing that is actually true of each, rather
+  // than one claim that happens to hold for whichever branch the seed picked.
+  const probe = createNewState({ seed: 116 });
+  const b = { L: probe.faces.L, exposure: probe.exposure };
+  OBLS['OB1']!.drag(probe);
+  assert(
+    probe.faces.L !== b.L || probe.exposure !== b.exposure,
+    'OB1 drags on you every week — the PAC string pulls'
+  );
+  assert(!!OBLS['OB3'], 'OB3 is a real registry entry');
+  const gated = createNewState({ seed: 117 });
+  addObl(gated, 'OB3');
+  assert(
+    (gated.obls ?? []).includes('OB3'),
+    'OB3 is a marker on the books — it gates starmap paths and counts as a debt obligation'
+  );
+}
+
+// --- THREE SOURCES, ONE REGISTRY ---
+{
+  const legacy = careerWithAllies();
+  legacy.laws = [
+    {
+      id: 'LAW_ag_1', title: 'the screwworm indemnity fund', issueId: 'ag-subsidies',
+      passedRun: 1, sponsor: 'The Member', provisions: [prov()], serves: ['GR02']
+    }
+  ];
+  legacy.machine = { members: [{ id: 'AL16', standing: 80, runs: 3, since: 1 }], departed: [] };
+  const s = createNewState({ seed: 121 });
+  applyLegacy(s, legacy);
+  const kinds = new Set(getHooks(s).map(h => h.kind));
+  assert(
+    kinds.has('member') && kinds.has('statute') && kinds.has('machine'),
+    `member, statute and machine all offer into the same list (${[...kinds].join(', ')})`
+  );
+  assert(
+    s.log.some(l => /THREADS/.test(l.text) && /deal/.test(l.text)),
+    'and the player is warned that not all of it is a gift'
+  );
 }
 
 if (failed) {

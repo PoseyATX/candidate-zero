@@ -39,6 +39,8 @@ import {
   type EnactedLaw
 } from './laws.js';
 import { lawWasDefended } from './docket.js';
+import { offerStatuteHooks } from './laws.js';
+import { offerMachineHooks } from './machine.js';
 import {
   settleChamber,
   carryChamber,
@@ -245,15 +247,25 @@ export function applyLegacy(state: GameState, legacy: LegacyState): void {
   // impossible.
   state.carriedLaws = standingLaws(legacy).map(l => ({ ...l }));
   carryChamber(state, legacy);
-  // The return path: the people who owe you are offering to help on the trail.
-  const threads = offerMemberHooks(state, legacy);
+  // The return path. Three sources offer into ONE registry — members who owe
+  // you, statutes still working for somebody, and the machine, which does not
+  // offer favours so much as deals. Order matters only for the board cap.
+  const fromMembers = offerMemberHooks(state, legacy);
+  const fromStatutes = offerStatuteHooks(state, legacy);
+  const fromMachine = offerMachineHooks(state, legacy);
+  const threads = fromMembers + fromStatutes + fromMachine;
   if (threads > 0) {
+    const kinds = [
+      fromMembers > 0 ? 'people who owe you' : '',
+      fromStatutes > 0 ? 'programs that worked' : '',
+      fromMachine > 0 ? 'a deal that is not a favour' : ''
+    ].filter(Boolean);
     state.log.push({
       week: state.week,
       kind: 'note',
       text:
-        `THREADS — ${threads} member${threads === 1 ? '' : 's'} who owe${threads === 1 ? 's' : ''} you ` +
-        `${threads === 1 ? 'has' : 'have'} offered to help back home. Check the Dossier; none of it is obligatory.`
+        `THREADS — ${threads} open thread${threads === 1 ? '' : 's'} back home: ${kinds.join(', ')}. ` +
+        `Check the Dossier. None of it is obligatory, and not all of it is a gift.`
     });
   }
   const room = chamberLine(legacy);
