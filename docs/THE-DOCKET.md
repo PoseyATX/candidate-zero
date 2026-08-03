@@ -269,6 +269,44 @@ hidden in the pipeline. And with that fixed, 0.009 and 0.016 measure *identicall
 that the constant was never the lever. It is back at its original value with a comment saying
 not to tune it to fix something else.
 
+## The campaign gets alleyways too (`data/alley-plays.ts`)
+
+The session became a place while Acts I and II were still a board: grounds, allies and a
+shop, every option productive with a known return. There was no way to spend a week badly,
+and **an afternoon you cannot waste is an afternoon you never had to decide about.**
+
+Four real places a Texas candidate actually goes:
+
+- **AL01 The Domino Table** — the square, four men, a game older than you. 90% thin or worse;
+  at the top, the oldest one remembers your daddy hauled his hay in 1974 (+14 rapport on
+  Courthouse Square, +30 contacts, and the Operator face notices). Push too hard and you get
+  filed under "pushy."
+- **AL02 Ride the FM Route** — 2 AP and a whole day in somebody else's truck. The highest
+  variance day in the game: sixty hands at their own gates, or nine hours of caliche and a
+  thrown belt outside Nolanville.
+- **AL03 Sit at the Dairy Queen** — the actual civic centre of small-town Texas. Deliberately
+  the *safe, low-ceiling* one: 100% thin, 0% "worth it." **It feels like work. That is the
+  trap.**
+- **AL04 Chase the Endorsement** — the deepest rabbit hole in the game. Three meetings and a
+  questionnaire asked twice in a different order; they endorse who they were always going to
+  endorse and the minutes note you were "engaged and enthusiastic."
+
+Measured (n=400 each, from a realistic mid-campaign state): **10% actively harmful, ~80%
+thin, ~10% worth it** for three of them. `harness:alleys` asserts the median is poor per
+card, that at least two have a genuine top end, that at least one can leave you worse off
+than you walked in, and that they touch other systems rather than bumping a scalar — the
+61%-of-the-corpus problem this project already measured.
+
+Two instrument bugs worth recording, both of which made the design look better than it was:
+
+1. **They were first in the menu.** Every strategy that falls back to "the first playable
+   thing" started spending its week at the domino table — the money strategy's ballot rate
+   fell 70% → 59.8% and a ground condition meant to fire 12–65% of the time hit 86%. They
+   sit at the *bottom* now: a place to waste an afternoon has to be somewhere you choose to
+   go.
+2. **The sweep started at momentum 0**, so every −1 penalty clamped to nothing and all four
+   alleys measured 0% harmful. The trap was invisible to the instrument, not absent.
+
 ## What is next
 
 Still a foundation. Named openly:

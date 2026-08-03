@@ -5,6 +5,7 @@
  */
 
 import { ALL_PLAYS, SHOP_PLAYS } from '../data/plays.js';
+import { ALLEY_PLAYS } from '../data/alley-plays.js';
 import { SESSION_PLAYS } from '../data/session-plays.js';
 import {
   createDeckState,
@@ -176,6 +177,10 @@ export function buildCatalog(plays: PlayCard[] = ALL_PLAYS): Map<string, PlayCar
   for (const p of PATH_REWARDS) map.set(p.id, p);
   // One ask card per machine member (gated by show: askerId — see engine/ask.ts).
   for (const p of MACHINE_ASK_PLAYS) map.set(p.id, p);
+  // The campaign's alleyways — always available in Acts I and II, never in the
+  // deck (adding them there would dilute ballot-access density; see
+  // STARTER_DECK_IDS). See data/alley-plays.ts.
+  for (const p of ALLEY_PLAYS) map.set(p.id, p);
   return map;
 }
 
@@ -429,6 +434,8 @@ export const CAMP_FILING_FEE = -105;
 export const CAMP_SHOP_BASE = -200;
 /** Session play synthetic index base: -300 - i. */
 export const CAMP_SESSION_BASE = -300;
+/** Campaign alleyway synthetic index base: -600 - i. See data/alley-plays.ts. */
+export const CAMP_ALLEY_BASE = -600;
 /** Waiting-season play synthetic index base: -500 - i. */
 export const CAMP_WAITING_BASE = -500;
 /**
@@ -508,6 +515,22 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
       mvI++;
     }
   }
+  // The alleyways, LAST in the menu on purpose.
+  //
+  // They were first, and every strategy that falls back to "the first playable
+  // thing" immediately started spending its week at the domino table: the
+  // money strategy's ballot rate fell 70% -> 59.8% and a ground condition
+  // meant to be met 12-65% of the time hit 86%. A place to waste an afternoon
+  // has to be somewhere you CHOOSE to go, not the top of the list.
+  if (campaign.state.stage === 'primary' || campaign.state.stage === 'general') {
+    let ai = 0;
+    for (const card of ALLEY_PLAYS) {
+      if (isPlayable(campaign.state, card)) {
+        out.push({ index: CAMP_ALLEY_BASE - ai, card });
+        ai++;
+      }
+    }
+  }
   return out;
 }
 
@@ -518,7 +541,12 @@ export function campIndexToCardId(
 ): string | null {
   if (handIndex === CAMP_PETITION) return 'PL04';
   if (handIndex === CAMP_FILING_FEE) return 'PL05';
-  // Index bands: waiting ≤-500 · starmap ≤-401 · session ≤-300 · shop ≤-200
+  // Index bands: alley ≤-600 · waiting ≤-500 · starmap ≤-401 · session ≤-300 · shop ≤-200
+  if (handIndex <= CAMP_ALLEY_BASE) {
+    const alleys = ALLEY_PLAYS.filter(c => isPlayable(campaign.state, c));
+    const i = CAMP_ALLEY_BASE - handIndex;
+    return alleys[i]?.id ?? null;
+  }
   if (handIndex <= CAMP_WAITING_BASE) {
     const waitingCards = WAITING_PLAYS.filter(c => isPlayable(campaign.state, c));
     const i = CAMP_WAITING_BASE - handIndex;
