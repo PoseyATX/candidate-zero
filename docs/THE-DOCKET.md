@@ -307,6 +307,21 @@ Two instrument bugs worth recording, both of which made the design look better t
 2. **The sweep started at momentum 0**, so every −1 penalty clamped to nothing and all four
    alleys measured 0% harmful. The trap was invisible to the instrument, not absent.
 
+### The trail and the chamber are one building
+
+The clearest available version of the starmap concept — an intricate interconnection between
+every card — is this: **members have counties, and the campaign is played on those same
+counties.** The man at the domino table on Courthouse Square is *from* Courthouse Square.
+
+So a breakthrough on an alleyway can introduce you to a named legislator months before Austin:
+*"And Wendell Cobb of Nacogdoches is there — eleven years on the same subcommittee. You will
+not have to introduce yourself in Austin."* `chamberRoster` lives on the run and
+`enterSession` does not clear it, so the acquaintance is still warm when you are sworn in.
+`harness:alleys` proves the whole chain: the FM route meets FM-route people, it is a real
+member, and the relationship survives into the session.
+
+That is what makes Acts I–III one place rather than two games sharing a save file.
+
 ## What is next
 
 Still a foundation. Named openly:

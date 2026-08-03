@@ -24,6 +24,8 @@ import { createNewState } from '../engine/state.js';
 import { createRng, setDefaultSeed, useRng } from '../engine/rng.js';
 import { executePlay } from '../engine/play.js';
 import { ALLEY_PLAYS } from '../data/alley-plays.js';
+import { MEMBER_BY_ID } from '../data/members.js';
+import { chamberSwing } from '../engine/chamber.js';
 import { enterSession } from '../engine/session.js';
 import type { GameState } from '../engine/types.js';
 
@@ -165,6 +167,51 @@ function score(s: GameState): number {
     if (s.groundsArr.map(g => g.rapport || 0).join(',') !== before) touchedGround = true;
   }
   assert(touchedGround, 'the domino table actually moves rapport on the square, not a generic counter');
+}
+
+// --- THE TRAIL AND THE CHAMBER ARE ONE BUILDING ---
+//
+// The starmap concept is an intricate interconnection between every card. The
+// clearest possible version of it: members have counties, the campaign is played
+// on those same counties, so the man at the domino table on Courthouse Square is
+// FROM Courthouse Square. Meet him in October and he is already warm when you
+// are sworn in — chamberRoster lives on the run and enterSession does not clear
+// it.
+{
+  let introduced: string | null = null;
+  let sVal: GameState | null = null;
+  for (let i = 0; i < 600 && !introduced; i++) {
+    const seed = 55_000 + i;
+    useRng(createRng(seed));
+    setDefaultSeed(seed);
+    const s = createNewState({ seed, ap: 9 });
+    s.stage = 'primary';
+    executePlay(s, ALLEY_PLAYS.find(a => a.id === 'AL02')!);
+    const met = Object.keys(s.chamberRoster ?? {})[0];
+    if (met) {
+      introduced = met;
+      sVal = s;
+    }
+  }
+  assert(!!introduced, 'an alleyway can introduce you to a named legislator on the trail');
+  const m = MEMBER_BY_ID[introduced ?? ''];
+  assert(!!m, `and it is a real member (${introduced})`);
+  assert(
+    m?.ground === 'GR02',
+    'from the county you were actually working — the FM route meets FM-route people'
+  );
+
+  // The whole point: it survives into Austin.
+  const before = sVal!.chamberRoster![introduced!];
+  enterSession(sVal!);
+  assert(
+    sVal!.chamberRoster?.[introduced!] === before,
+    'and the acquaintance is still there when you are sworn in months later'
+  );
+  assert(
+    chamberSwing(sVal!) >= 0,
+    'an introduction never counts against you on the floor'
+  );
 }
 
 if (failed) {

@@ -29,6 +29,25 @@
  */
 
 import type { PlayCard } from '../engine/types.js';
+import { unmetMemberFrom, workMember, INTRODUCTION_WARMTH } from '../engine/chamber.js';
+
+/**
+ * An introduction made on the trail, months before Austin.
+ *
+ * This is the seam that makes the campaign and the chamber one building rather
+ * than two games sharing a save file. Members have counties; the campaign is
+ * played on those counties. The man at the domino table on Courthouse Square is
+ * from Courthouse Square.
+ */
+function introduce(s: Parameters<NonNullable<PlayCard['run']>>[0], ground: string): string {
+  const m = unmetMemberFrom(s, ground);
+  if (!m) return '';
+  workMember(s, m.id, INTRODUCTION_WARMTH);
+  return (
+    ` And ${m.name} of ${m.county} is there — ${m.d.split('.')[0]}. ` +
+    `You will not have to introduce yourself in Austin.`
+  );
+}
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
@@ -68,7 +87,8 @@ export const AL01_DominoTable: PlayCard = {
       return (
         'Two hours in, the oldest one says your daddy hauled his hay in 1974 and he had wondered ' +
         'when you would come by. The square is yours in a way no mailer buys. ' +
-        'Rapport +14 on Courthouse Square, +30 contacts, and the Operator face notices.'
+        'Rapport +14 on Courthouse Square, +30 contacts, and the Operator face notices.' +
+        introduce(s, 'GR01')
       );
     }
     if (o.tier === 1) {
@@ -119,7 +139,8 @@ export const AL02_RideTheRoute: PlayCard = {
       return (
         'He knows which gates to honk at and which to walk up to, and by four o\'clock you have ' +
         'shaken sixty hands nobody in this race will ever reach. ' +
-        'Rapport +18 on the FM Roads, +70 contacts, and one of them offers to drive people on election day.'
+        'Rapport +18 on the FM Roads, +70 contacts, and one of them offers to drive people on election day.' +
+        introduce(s, 'GR02')
       );
     }
     if (o.tier === 1) {

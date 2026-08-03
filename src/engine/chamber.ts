@@ -187,6 +187,29 @@ export function nextWorthWorking(state: GameState): MemberDef | undefined {
     })[0];
 }
 
+/**
+ * Somebody from a given county you have not met yet.
+ *
+ * The seam that makes the campaign and the chamber one building. A member's
+ * `ground` is their county, and the campaign is played on those same grounds —
+ * so the domino table on Courthouse Square and the FM route are literally where
+ * these people are from. Meet Wendell Cobb on a mail route in October and he is
+ * already warm when you are sworn in, because `chamberRoster` lives on the run
+ * and `enterSession` does not clear it.
+ *
+ * Prefers the heaviest member you do not already have, so the introduction is
+ * worth having.
+ */
+export function unmetMemberFrom(state: GameState, ground: string): MemberDef | undefined {
+  const roster = state.chamberRoster ?? {};
+  return MEMBERS.filter(m => m.ground === ground && (roster[m.id] ?? 0) < ALLY_LINE).sort(
+    (a, b) => b.weight - a.weight
+  )[0];
+}
+
+/** How much an introduction on the trail is worth. Short of an ally on its own. */
+export const INTRODUCTION_WARMTH = 20;
+
 /** Fold the session's relationship work back into the career. */
 export function mergeRoomBack(legacy: LegacyState, state: GameState): void {
   for (const [id, disp] of Object.entries(state.chamberRoster ?? {})) {
