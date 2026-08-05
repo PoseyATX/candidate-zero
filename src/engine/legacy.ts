@@ -27,6 +27,7 @@ import {
   adoptRepealCampaign,
   repealOdds,
   getRival,
+  offerRivalHooks,
   type RivalOutcome
 } from './rival.js';
 import {
@@ -253,12 +254,17 @@ export function applyLegacy(state: GameState, legacy: LegacyState): void {
   const fromMembers = offerMemberHooks(state, legacy);
   const fromStatutes = offerStatuteHooks(state, legacy);
   const fromMachine = offerMachineHooks(state, legacy);
-  const threads = fromMembers + fromStatutes + fromMachine;
+  // The rival source is offered LAST of the persistent four, because it is the
+  // only one you did not earn and the board cap should spend itself on the
+  // things you built before it spends itself on an envelope.
+  const fromRival = offerRivalHooks(state, legacy);
+  const threads = fromMembers + fromStatutes + fromMachine + fromRival;
   if (threads > 0) {
     const kinds = [
       fromMembers > 0 ? 'people who owe you' : '',
       fromStatutes > 0 ? 'programs that worked' : '',
-      fromMachine > 0 ? 'a deal that is not a favour' : ''
+      fromMachine > 0 ? 'a deal that is not a favour' : '',
+      fromRival > 0 ? 'and an envelope somebody left for you' : ''
     ].filter(Boolean);
     state.log.push({
       week: state.week,

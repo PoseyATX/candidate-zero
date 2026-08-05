@@ -34,6 +34,7 @@
  */
 
 import { random } from './rng.js';
+import { offerHook } from './hooks.js';
 import { memberName, poachedIds } from './machine.js';
 import { archetypeForDistrict, WELL_FUNDED_AT, type OpponentArchetype } from './opponent.js';
 import { applyRivalProfile, profileFromRival } from './rival-profile.js';
@@ -365,4 +366,46 @@ export function settleRival(
 
   out.strengthAfter = legacy.rival!.strength;
   return out;
+}
+
+/**
+ * The fourth hook source: a file on the rival, and it does not keep.
+ *
+ * The first three sources are things you EARNED — a member who owes you, a
+ * statute that worked, a machine you built. This one you did not earn. It shows
+ * up. Somebody who used to work for them, or somebody who just does not like
+ * them, puts an envelope in front of you, and the only question is what kind of
+ * candidate you are when nobody is looking.
+ *
+ * COVENANT 6, power is never clean: this is the source that is a genuine WAGER
+ * rather than a gift with a price tag. HK05's cost is printed on the card;
+ * HK06's cost is that it might not work and you might become the story. Those
+ * are different kinds of bad and the game needs both.
+ *
+ * PERISHABLE, and this is the first source that actually exercises that
+ * machinery under a real card rather than a synthetic harness hook. A file is
+ * worth something for about a month. After that the news cycle has moved and
+ * you are the man dredging up old business, which is worse than nothing.
+ *
+ * Offered only when they have a RECORD — `cycles > 0`. A first-time filer has
+ * not been in public life long enough for anybody to have kept receipts.
+ */
+export const FILE_KEEPS_WEEKS = 4;
+
+export function offerRivalHooks(state: GameState, legacy: LegacyState): number {
+  const r = getRival(legacy, state);
+  if (r.cycles < 1) return 0;
+  const h = offerHook(state, {
+    id: `HK_FILE_${r.id}_${r.cycles}`,
+    n: `Somebody sent you a file on ${r.name}`,
+    d:
+      `No return address. Whether it is true is a separate question from whether it works, ` +
+      `and both are separate from whether you are the one who should be holding it. ` +
+      `Good for about a month.`,
+    kind: 'rival',
+    source: r.id,
+    stages: ['primary', 'general'],
+    expiresWeek: state.week + FILE_KEEPS_WEEKS
+  });
+  return h ? 1 : 0;
 }

@@ -31,6 +31,9 @@ import {
   MAX_LIVE_HOOKS
 } from '../engine/hooks.js';
 import { HOOK_PLAYS } from '../data/hook-plays.js';
+import { FILE_KEEPS_WEEKS } from '../engine/rival.js';
+import { resolveOutsideEvent } from '../engine/outside.js';
+import { OUTSIDE_EVENTS } from '../data/outside-events.js';
 import { MEMBER_BY_ID, MEMBERS } from '../data/members.js';
 import { createCampaign, listPlayableHand } from '../engine/loop.js';
 import { executePlay } from '../engine/play.js';
@@ -226,6 +229,46 @@ function careerWithAllies(): LegacyState {
   );
 }
 
+// --- A FULL BOARD MUST NOT SWALLOW THE THING HAPPENING THIS WEEK ---
+//
+// Found by measurement, not reasoning. Five sources went live and the world's
+// door — the only kind that expires — was silently refused every time, because
+// the standing gifts had filled all six slots at applyLegacy before the season
+// started. The flood came, you could not go, and nothing would have said why.
+{
+  const s = createNewState({ seed: 85 });
+  s.stage = 'primary';
+  for (let i = 0; i < MAX_LIVE_HOOKS; i++) {
+    offerHook(s, { id: `HK_S${i}`, n: 'a standing offer', d: 'x', kind: 'member', source: 'm', stages: ['primary'] });
+  }
+  assert(liveHooks(s).length === MAX_LIVE_HOOKS, 'board full of threads that wait forever');
+
+  const door = offerHook(s, {
+    id: 'HK_NOW', n: 'a room with people in it right now', d: 'x',
+    kind: 'world', source: 'w', stages: ['primary'], expiresWeek: s.week + 2
+  });
+  assert(!!door, 'a perishable thread still gets in');
+  assert(liveHooks(s).length === MAX_LIVE_HOOKS, 'and the cap still holds');
+  assert(!findHook(s, 'HK_S0'), 'the oldest standing offer gave up its slot');
+  assert(!!findHook(s, 'HK_S1'), 'but only one of them');
+
+  // A displaced thread was never offered — the record must not claim you
+  // turned it down.
+  assert(
+    getHooks(s).every(h => h.id !== 'HK_S0'),
+    'a displaced thread is removed, not marked as one you refused'
+  );
+
+  // Perishable does not beat perishable; nothing here may cannibalise a door
+  // the player is already racing.
+  const second = offerHook(s, {
+    id: 'HK_NOW2', n: 'another room', d: 'x',
+    kind: 'world', source: 'w2', stages: ['primary'], expiresWeek: s.week + 2
+  });
+  assert(!!second, 'a second perishable thread takes the next standing slot');
+  assert(!!findHook(s, 'HK_NOW'), 'and does not eat the first door');
+}
+
 // --- A FIRST-TERM CANDIDATE IS OWED NOTHING ---
 {
   useRng(createRng(91));
@@ -392,6 +435,154 @@ function careerWithAllies(): LegacyState {
   assert(
     s.log.some(l => /THREADS/.test(l.text) && /deal/.test(l.text)),
     'and the player is warned that not all of it is a gift'
+  );
+}
+
+// --- THE FOURTH SOURCE: AN ENVELOPE, AND IT GOES STALE ---
+//
+// The first three sources are things you EARNED. This one shows up. It is also
+// the first PERISHABLE hook offered by real production code rather than by a
+// synthetic hook the harness built itself — the expiry machinery had never been
+// exercised by an actual card.
+{
+  const legacy = emptyLegacy();
+  legacy.rival = {
+    id: 'RIV1', name: 'Hollis Rakestraw', archetype: 'incumbent',
+    cycles: 2, beatYou: 1, youBeatThem: 1, streak: 0, strength: 40, since: 1
+  };
+  const s = createNewState({ seed: 131, ap: 9 });
+  applyLegacy(s, legacy);
+  const files = hooksOfKind(s, 'rival');
+  assert(files.length === 1, `a rival with a record attracts an envelope (${files.length})`);
+  assert(
+    files[0]?.expiresWeek !== undefined,
+    'and it PERISHES — production code, not a harness fixture, sets a window'
+  );
+
+  s.stage = 'primary';
+  const card = HOOK_PLAYS.find(c => c.id === 'HK06')!;
+  assert(card.risk === 'VOL', 'the envelope is a genuine wager, not a priced deal');
+  assert(!!card.show?.(s), 'HK06 appears while the file is fresh');
+  s.week += FILE_KEEPS_WEEKS + 1;
+  assert(!card.show?.(s), 'and is gone once it is stale — you are just dredging up old business');
+
+  // A first-time filer has no receipts on them.
+  const fresh = emptyLegacy();
+  fresh.rival = {
+    id: 'RIV1', name: 'Wade Coker', archetype: 'insurgent',
+    cycles: 0, beatYou: 0, youBeatThem: 0, streak: 0, strength: 18, since: 1
+  };
+  const s2 = createNewState({ seed: 132 });
+  applyLegacy(s2, fresh);
+  assert(hooksOfKind(s2, 'rival').length === 0, 'nobody has kept receipts on a first-time filer');
+}
+
+// --- THE WAGER HAS A BAD END, AND IT IS THE PLAYER WHO PAYS ---
+//
+// COVENANT 6. A "risky" card whose worst branch is merely a smaller gift is not
+// risky, and this corpus has shipped that mistake before. The bad tier has to
+// cost something the player can feel.
+{
+  const legacy = emptyLegacy();
+  legacy.rival = {
+    id: 'RIV1', name: 'Hollis Rakestraw', archetype: 'incumbent',
+    cycles: 2, beatYou: 1, youBeatThem: 1, streak: 0, strength: 40, since: 1
+  };
+  const card = HOOK_PLAYS.find(c => c.id === 'HK06')!;
+  const seen = new Set<number>();
+  let worstHurt = false;
+  let bestHelped = false;
+  for (let seed = 200; seed < 260; seed++) {
+    const s = createNewState({ seed, ap: 9 });
+    applyLegacy(s, legacy);
+    s.stage = 'primary';
+    if (!card.show?.(s)) continue;
+    const before = { hits: s.hitPieces, rap: s.groundsArr.reduce((t, g) => t + (g.rivalRap || 0), 0) };
+    useRng(createRng(seed));
+    const out = executePlay(s, card);
+    if (out.tier !== undefined) seen.add(out.tier);
+    if (s.hitPieces > before.hits) worstHurt = true;
+    if (s.groundsArr.reduce((t, g) => t + (g.rivalRap || 0), 0) < before.rap) bestHelped = true;
+  }
+  assert(seen.size >= 3, `the envelope really does swing (${seen.size} distinct tiers over 60 seeds)`);
+  assert(bestHelped, 'a good outcome actually knocks the rival down');
+  assert(worstHurt, 'and a bad one puts a hit piece on YOU — the wager can be lost');
+}
+
+// --- THE FIFTH SOURCE: THE WORLD LEAVES A DOOR ---
+//
+// "The screw worm happens and is forgotten." `opens` fixed that inside the
+// chamber. This is the campaign half: an event you could only ever read is now
+// a room you can go stand in.
+{
+  const withDoors = OUTSIDE_EVENTS.filter(e => e.hook);
+  assert(withDoors.length >= 3, `outside events leave doors (${withDoors.length} of them)`);
+
+  const ev = OUTSIDE_EVENTS.find(e => e.id === 'EV_SCREWWORM')!;
+  assert(!!ev.hook, 'including the screwworm, which is the one that was named as forgotten');
+
+  const s = createNewState({ seed: 141, ap: 9 });
+  s.stage = 'primary';
+  resolveOutsideEvent(s, ev);
+  const doors = hooksOfKind(s, 'world');
+  assert(doors.length === 1, `the event leaves a door on the trail (${doors.length})`);
+  assert(doors[0]?.source === 'EV_SCREWWORM', 'and the door names the event that opened it');
+  assert(
+    s.log.some(l => /A DOOR/.test(l.text) && /closes in/.test(l.text)),
+    'and the player is told how long they have'
+  );
+
+  const card = HOOK_PLAYS.find(c => c.id === 'HK07')!;
+  assert(!!card.show?.(s), 'HK07 appears while it is still happening');
+  const g = s.groundsArr.find(x => x.id === 'GR02');
+  const rapBefore = g?.rapport ?? 0;
+  const out = executePlay(s, card);
+  assert(out.ok, 'HK07 resolves');
+  assert((g?.rapport ?? 0) > rapBefore, 'and going lands on the ground the event actually hit');
+
+  // The door closes whether you go or not.
+  const s2 = createNewState({ seed: 142 });
+  s2.stage = 'primary';
+  resolveOutsideEvent(s2, ev);
+  assert(hooksOfKind(s2, 'world').length === 1, 'the door is open');
+  s2.week += (ev.hook!.weeks ?? 0) + 1;
+  assert(hooksOfKind(s2, 'world').length === 0, 'and it closes whether you went or not');
+
+  // A door is a TRAIL thing. The chamber is a different building.
+  const s3 = createNewState({ seed: 143 });
+  s3.stage = 'session';
+  resolveOutsideEvent(s3, ev);
+  assert(
+    getHooks(s3).filter(h => h.kind === 'world').length === 0,
+    'the world does not open trail doors while you are on the floor'
+  );
+}
+
+// --- ALL FIVE KINDS ARE LIVE ---
+{
+  const legacy = careerWithAllies();
+  legacy.laws = [
+    {
+      id: 'LAW_ag_1', title: 'the screwworm indemnity fund', issueId: 'ag-subsidies',
+      passedRun: 1, sponsor: 'The Member', provisions: [prov()], serves: ['GR02']
+    }
+  ];
+  legacy.machine = { members: [{ id: 'AL16', standing: 80, runs: 3, since: 1 }], departed: [] };
+  legacy.rival = {
+    id: 'RIV1', name: 'Hollis Rakestraw', archetype: 'incumbent',
+    cycles: 2, beatYou: 1, youBeatThem: 1, streak: 0, strength: 40, since: 1
+  };
+  const s = createNewState({ seed: 151 });
+  applyLegacy(s, legacy);
+  s.stage = 'primary';
+  resolveOutsideEvent(s, OUTSIDE_EVENTS.find(e => e.id === 'EV_SCREWWORM')!);
+  const kinds = new Set(getHooks(s).map(h => h.kind));
+  for (const k of ['member', 'statute', 'machine', 'rival', 'world'] as const) {
+    assert(kinds.has(k), `${k} offers into the same registry`);
+  }
+  assert(
+    HOOK_PLAYS.length === 7,
+    `and there is a card for each flavour of each (${HOOK_PLAYS.length} hook cards)`
   );
 }
 

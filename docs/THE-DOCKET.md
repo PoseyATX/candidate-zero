@@ -480,8 +480,73 @@ fail** — including every claim that carries weight. The harness was also made 
 *cleanly* rather than throw on the first missing hook, because a control run that dies at
 assertion one hides the sixteen behind it.
 
+### The last two: an envelope, and a door
+
+**The rival** (`offerRivalHooks` in `rival.ts`) — the first three sources are things you
+*earned*. This one shows up. Somebody who used to work for them, or somebody who just does not
+like them, puts an envelope in front of you with no return address.
+
+**HK06 Somebody Sent You a File** is the one genuine **wager** in the set. HK05's cost is
+printed on the card; HK06's cost is that it might not work and *you might become the story*.
+Those are different kinds of bad and the game needs both. Four tiers:
+
+- it goes to a reporter who has waited two years for exactly this and runs under **her** byline
+  — rival down 6 everywhere, momentum, +3 name ID
+- three paragraphs on page six and a shrug
+- *"You read it four times and cannot make yourself do anything with it, which is either
+  character or cowardice and you will not know which for about twenty years."*
+- it gets traced back inside a week — **+1 hit piece on you**, +1 exposure, −1 momentum.
+  *"The file was probably true. That turns out not to be the part anybody cares about."*
+
+Measured over 60 seeds: all four tiers reachable, the good end really moves `rivalRap`, the bad
+end really puts a hit piece on the player. A "risky" card whose worst branch is a smaller gift
+is not risky, and this corpus has shipped that mistake before.
+
+Offered only when the rival has `cycles > 0` — nobody has kept receipts on a first-time filer.
+It expires in **four weeks**, and this is the first perishable hook offered by production code
+rather than by a fixture the harness built for itself.
+
+**The world** (`OutsideEvent.hook` + `resolveOutsideEvent`) — `opens` ended *"the screw worm
+happens and is forgotten"* **inside the chamber**. This is the campaign half, and it is the last
+thing the world could not do: an event could hit you and there was no way to go stand in it.
+
+Any outside event can now declare a door — a name, a description, and how many weeks it stays
+open. Three carry one so far, including the screwworm, which is the event that was named as
+forgotten in the first place:
+
+> **A DOOR** — The sale barn is holding a meeting about it. Every rancher inside forty miles,
+> folding chairs, bad coffee, and somebody from the state who will not answer the question.
+> You can be in that room. Three weeks, then they stop meeting. *It closes in 3 weeks, whether
+> you go or not.*
+
+**HK07 Show Up Where It Happened** costs two actions and no money and carries no risk. The cost
+is that it lands in a week you already had plans. *"Nobody thanks you for it. Two years from now
+four of them will still remember you were there."*
+
+### The bug the fifth source found
+
+Wiring all five lit up a failure that no amount of reading the code would have produced:
+
+> FAIL: world offers into the same registry
+
+`MAX_LIVE_HOOKS` is 6. Three members, a statute, a machine deal and an envelope fill all six at
+`applyLegacy` **before the season starts**. Every door the world opened after that was silently
+refused. The flood came, you could not go, and nothing anywhere would have told you why.
+
+The cap is not the bug — the cap models the player's attention. The rule was. A thing happening
+*this week* gets your attention over a standing offer that will still be there in October, so
+**a perishable thread displaces the oldest one that waits forever.** Perishable never displaces
+perishable; nothing may cannibalise a door the player is already racing. The displaced thread is
+*removed*, not marked taken — you never got it, so the record must not claim you turned it down.
+
+### Verification
+
+88 assertions. Controls, each reverted after measuring: stub the rival source → 7 fail; stub the
+world door → 8 fail; make the board cap refuse unconditionally → 6 fail. Every source and the
+eviction rule have an instrument that goes red without them.
+
 ### What this is not
 
-Finished. Three of five `HookKind`s are live; `rival` and `world` are declared and unused. The
-obvious next ones: a rival's misstep you can walk into, and an outside event that leaves a door
-open only for a few weeks. The registry is the part that matters.
+Finished. All five `HookKind`s are live and each has at least one card, which was the point —
+the registry is real, not a shape. Three of nine outside events carry doors; the other six, and
+every event written after them, are one `hook: { … }` literal away.

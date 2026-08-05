@@ -30,6 +30,23 @@ export interface OutsideEvent {
    * hear it. An event that names an opening is an event with consequences.
    */
   opens?: string[];
+  /**
+   * A door this event leaves open ON THE TRAIL, for a few weeks, then closed.
+   *
+   * `opens` is the same idea pointed at the session Docket — it is what ended
+   * "the screw worm happens and is forgotten" inside the chamber. This is the
+   * campaign half, and it is the last thing the world could not do: an event
+   * could hit you and there was no way to go stand in it.
+   *
+   * The owner's framing: everywhere a card could be played there should be an
+   * opportunity to play it, and every moving part should be actionable. A flood
+   * is a moving part. So is a boom. So is a school-board war.
+   *
+   * PERISHABLE on purpose — `weeks` is how long showing up still reads as
+   * showing up rather than as opportunism. Miss the window and it is gone, and
+   * that is the whole tension: it lands in a week you already had plans.
+   */
+  hook?: { n: string; d: string; weeks: number; ground?: string };
   apply: (s: GameState) => string;
 }
 
@@ -49,6 +66,14 @@ export const EV_SCREWWORM: OutsideEvent = {
   once: true,
   w: 3,
   opens: ['OP_AG_SCREWWORM'],
+  hook: {
+    n: 'The sale barn is holding a meeting about it',
+    d:
+      'Every rancher inside forty miles, folding chairs, bad coffee, and somebody from the state ' +
+      'who will not answer the question. You can be in that room. Three weeks, then they stop meeting.',
+    weeks: 3,
+    ground: 'GR02'
+  },
   show: s =>
     s.regionHook === 'permian' ||
     s.regionHook === 'panhandle' ||
@@ -73,7 +98,7 @@ export const EV_SCREWWORM: OutsideEvent = {
     s.contacts = Math.max(0, s.contacts - 15);
     return (
       'OUTSIDE — NEW WORLD SCREW WORM. Livestock panic on the FM roads. Contacts scatter (−15); ' +
-      'rural rapport dips. You cannot play the worm. You can only show up.'
+      'rural rapport dips. You cannot play the worm. You can only show up — and now you can.'
     );
   }
 };
@@ -206,6 +231,13 @@ export const EV_FLOOD_WEEK: OutsideEvent = {
   once: true,
   w: 2,
   show: s => s.regionHook === 'gulf' || s.regionHook === 'east' || s.regionHook === 'valley',
+  hook: {
+    n: 'They are still pulling carpet out of houses',
+    d:
+      'The water went down and the cameras left, which is exactly when everybody who lives ' +
+      'there finds out who is still around. Two weeks, and then it is somebody else.',
+    weeks: 2
+  },
   apply: s => {
     s.ap = Math.max(0, s.ap - 1);
     s.volPool = Math.max(0, s.volPool - 1);
@@ -229,6 +261,13 @@ export const EV_SCHOOL_BOARD_WAR: OutsideEvent = {
   once: true,
   w: 3,
   show: _s => true,
+  hook: {
+    n: 'There is a school board meeting Thursday and it will be packed',
+    d:
+      'Everybody in the county with an opinion will be in that cafeteria. So will a reporter. ' +
+      'Going means picking a side out loud, in a room, with your name on it.',
+    weeks: 3
+  },
   apply: s => {
     s.momentum += 1;
     s.exposure = (s.exposure || 0) + 1;

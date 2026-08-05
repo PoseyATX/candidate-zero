@@ -265,10 +265,138 @@ export const HK05_AskBehindTheAsk: PlayCard = {
   }
 };
 
+/**
+ * HK06 — Somebody Sent You a File.
+ *
+ * The rival source, and the one that is a genuine WAGER rather than a gift with
+ * a price tag. HK05's cost is printed on the card; this one's cost is that it
+ * might not work and you might become the story. Those are different kinds of
+ * bad and the game needs both.
+ *
+ * The file also PERISHES — four weeks, then the news cycle has moved and you are
+ * the man dredging up old business, which is worse than nothing.
+ *
+ * COVENANT 6: power is never clean. There is no version of this where you use
+ * it and stay the person who did not.
+ */
+export const HK06_SomebodySentYouAFile: PlayCard = {
+  id: 'HK06',
+  n: 'Somebody Sent You a File',
+  cost: { a: 2 },
+  risk: 'VOL',
+  ph: [1, 2, 3],
+  tag: 'no return address',
+  attrs: ['CRA'],
+  d:
+    'An envelope with no return address and your opponent inside it. ' +
+    'Whether it is true is a separate question from whether it works, and both are separate from ' +
+    'whether you are the one who should be holding it. ' +
+    'VOLATILE, genuinely: it can knock them down a peg, do nothing, or come back with your ' +
+    'fingerprints on it and make YOU the story. ' +
+    'Craft is the attribute. ' +
+    'The file goes stale in about a month — after that you are just the man dredging up old business.',
+  show: s => hooksOfKind(s, 'rival').length > 0,
+  odds: () => 0.4,
+  run: (s, o) => {
+    const h = hooksOfKind(s, 'rival')[0];
+    if (!h) return 'Nobody has put anything in front of you.';
+    takeHook(s, h.id);
+    const them = s.rivals?.[0]?.n ?? 'your opponent';
+    if (o.tier === 0) {
+      // It lands, and it lands on somebody else's byline, which is the only
+      // way this ever works cleanly. It is still not clean.
+      for (const g of s.groundsArr) g.rivalRap = Math.max(0, (g.rivalRap || 0) - 6);
+      s.momentum += 1;
+      s.nameID += 3;
+      return (
+        `It goes to a reporter who has been waiting two years for somebody to hand her exactly this, ` +
+        `and it runs under her name instead of yours. ${them} loses ground everywhere (−6), momentum, ` +
+        `+3 name ID. Nobody can prove where it came from. You know where it came from.`
+      );
+    }
+    if (o.tier === 1) {
+      for (const g of s.groundsArr) g.rivalRap = Math.max(0, (g.rivalRap || 0) - 2);
+      return (
+        `It gets three paragraphs on page six and a shrug. ${them} softens slightly. ` +
+        `You spent two days of your life on it.`
+      );
+    }
+    if (o.tier === 2) {
+      return (
+        `You read it four times and cannot make yourself do anything with it, which is either ` +
+        `character or cowardice and you will not know which for about twenty years. Nothing happens.`
+      );
+    }
+    // It comes back on you. This is the reason the card is VOL and not STD.
+    s.hitPieces += 1;
+    s.exposure = (s.exposure || 0) + 1;
+    s.momentum = Math.max(0, s.momentum - 1);
+    return (
+      `It gets traced back to your side inside a week, and the story stops being about ${them} ` +
+      `and starts being about you. Hit piece +1, exposure +1, momentum −1. ` +
+      `The file was probably true. That turns out not to be the part anybody cares about.`
+    );
+  }
+};
+
+/**
+ * HK07 — Show Up Where It Happened.
+ *
+ * The world source, and the last of the five. An outside event could hit you and
+ * there was nothing to do but read the line — the worm happened, the water came
+ * up, and it was forgotten. `opens` fixed that inside the chamber. This is the
+ * campaign half.
+ *
+ * The cost is not money and not risk. The cost is that it lands in a week you
+ * already had plans, and it closes whether you go or not.
+ */
+export const HK07_ShowUpWhereItHappened: PlayCard = {
+  id: 'HK07',
+  n: 'Show Up Where It Happened',
+  cost: { a: 2 },
+  risk: 'SAFE',
+  ph: [1, 2, 3],
+  tag: 'while it is still happening',
+  attrs: ['CON'],
+  d:
+    'Something happened to this district and there is a room where people are dealing with it. ' +
+    'Go stand in it. Two actions, no money, no risk, and no way to buy it back later — ' +
+    'the door closes in a few weeks whether you walk through it or not. ' +
+    'Constituency is the attribute. ' +
+    'Big rapport and standing, because showing up while it is still happening is the whole thing. ' +
+    'Showing up a month late is a photo opportunity, and the district can tell the difference.',
+  show: s => hooksOfKind(s, 'world').length > 0,
+  odds: () => 0.95,
+  run: s => {
+    const h = hooksOfKind(s, 'world')[0];
+    if (!h) return 'Nothing is happening that you can go stand in.';
+    takeHook(s, h.id);
+    const g = h.ground ? s.groundsArr.find(x => x.id === h.ground) : undefined;
+    if (g) {
+      g.rapport = clamp((g.rapport || 0) + 18, 0, 100);
+      g.gotv = (g.gotv || 0) + 0.06;
+    } else {
+      // No named ground: it was county-wide, so it lands thinly everywhere.
+      for (const x of s.groundsArr) x.rapport = clamp((x.rapport || 0) + 5, 0, 100);
+    }
+    s.districtStanding += 3;
+    s.faces.G += 3;
+    s.contacts += 25;
+    return (
+      `You go. ${h.n} — and you are there in the folding chair like everybody else, for the whole thing. ` +
+      `${g ? `Rapport +18 and turnout banked on ${g.n}` : 'Rapport +5 across the district'}, ` +
+      `+3 standing, +3 Grit, +25 contacts. ` +
+      `Nobody thanks you for it. Two years from now four of them will still remember you were there.`
+    );
+  }
+};
+
 export const HOOK_PLAYS: PlayCard[] = [
   HK01_BorrowHisName,
   HK02_WorksHisCounty,
   HK03_TellMeTheTruth,
   HK04_TheProgramWorks,
-  HK05_AskBehindTheAsk
+  HK05_AskBehindTheAsk,
+  HK06_SomebodySentYouAFile,
+  HK07_ShowUpWhereItHappened
 ];

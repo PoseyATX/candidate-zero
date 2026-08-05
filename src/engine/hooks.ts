@@ -85,11 +85,33 @@ export function findHook(state: GameState, id: string): Hook | undefined {
   return getHooks(state).find(h => h.id === id);
 }
 
-/** Offer a thread. Idempotent by id; refused when the board is full. */
+/**
+ * Offer a thread. Idempotent by id.
+ *
+ * When the board is full, a PERISHABLE thread displaces the oldest one that
+ * waits forever. This is not politeness, it is the whole point of the cap: the
+ * cap models the player's attention, and a thing happening this week gets your
+ * attention over a standing offer that will still be there in October.
+ *
+ * Found by measurement, not by reasoning. Five sources went live and the world's
+ * door — the only kind that expires — was silently refused every time, because
+ * three members, a statute, a machine deal and an envelope had already filled
+ * the six slots at `applyLegacy` before the season even started. The flood came
+ * and you could not go, and nothing anywhere would have told you why.
+ *
+ * The displaced hook is REMOVED, not marked taken: you never got it, so the
+ * record should not claim you turned it down.
+ */
 export function offerHook(state: GameState, h: Omit<Hook, 'takenWeek'>): Hook | null {
   const hooks = mutableHooks(state);
   if (hooks.some(x => x.id === h.id)) return null;
-  if (liveHooks(state).length >= MAX_LIVE_HOOKS) return null;
+  if (liveHooks(state).length >= MAX_LIVE_HOOKS) {
+    if (h.expiresWeek === undefined) return null;
+    const standing = liveHooks(state).filter(x => x.expiresWeek === undefined);
+    const evicted = standing[0];
+    if (!evicted) return null;
+    hooks.splice(hooks.indexOf(evicted), 1);
+  }
   const hook: Hook = { ...h };
   hooks.push(hook);
   return hook;

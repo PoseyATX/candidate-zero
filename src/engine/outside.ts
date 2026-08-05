@@ -6,6 +6,7 @@
 import { random } from './rng.js';
 import type { GameState } from './types.js';
 import { openFromSeed, openingAnnounce } from './docket.js';
+import { offerHook } from './hooks.js';
 import { OUTSIDE_EVENTS, type OutsideEvent } from '../data/outside-events.js';
 
 function stageOk(e: OutsideEvent, state: GameState): boolean {
@@ -69,6 +70,37 @@ export function resolveOutsideEvent(state: GameState, event: OutsideEvent): stri
       if (opened) {
         state.log.push({ week: state.week, kind: 'note', text: openingAnnounce(opened) });
       }
+    }
+  }
+  // And on the trail it leaves a DOOR — the campaign half of `opens`.
+  //
+  // An event could hit you and there was no way to go stand in it: the worm
+  // happened, the water came up, and all you could do was read the line. This
+  // is the fifth and last hook source, and it is the one that makes the world
+  // itself actionable rather than something that is done to you.
+  //
+  // Perishable, always. Showing up while it is still happening is showing up;
+  // showing up a month later is a photo opportunity, and the district can tell
+  // the difference.
+  if (event.hook && (state.stage === 'primary' || state.stage === 'general')) {
+    const h = offerHook(state, {
+      id: `HK_WORLD_${event.id}`,
+      n: event.hook.n,
+      d: event.hook.d,
+      kind: 'world',
+      source: event.id,
+      ground: event.hook.ground,
+      stages: ['primary', 'general'],
+      expiresWeek: state.week + event.hook.weeks
+    });
+    if (h) {
+      state.log.push({
+        week: state.week,
+        kind: 'note',
+        text:
+          `A DOOR — ${h.n}. ${h.d} It closes in ${event.hook.weeks} week` +
+          `${event.hook.weeks === 1 ? '' : 's'}, whether you go or not.`
+      });
     }
   }
   // Presentation hook — host shows weather chrome, then clears. Never hand.
