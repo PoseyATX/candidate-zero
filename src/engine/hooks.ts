@@ -57,6 +57,10 @@ export interface Hook {
   flavour?: string;
   /** Set when taken; a hook is cashed once. */
   takenWeek?: number;
+  /** Set when the offer was pulled. Kept on the record with the reason. */
+  withdrawnWeek?: number;
+  /** Why they took it back, in voice. Shown to the player; never silent. */
+  withdrawnWhy?: string;
   /** Optional shelf life. Omitted means it waits for you. */
   expiresWeek?: number;
 }
@@ -87,6 +91,7 @@ export function liveHooks(state: GameState): Hook[] {
   return getHooks(state).filter(
     h =>
       h.takenWeek === undefined &&
+      h.withdrawnWeek === undefined &&
       h.stages.includes(state.stage) &&
       (h.expiresWeek === undefined || h.expiresWeek >= state.week)
   );
@@ -136,6 +141,28 @@ export function takeHook(state: GameState, id: string): boolean {
   if (!h.stages.includes(state.stage)) return false;
   if (h.expiresWeek !== undefined && h.expiresWeek < state.week) return false;
   h.takenWeek = state.week;
+  return true;
+}
+
+/**
+ * Somebody takes their offer back.
+ *
+ * The board was a list: five sources, fourteen cards, and no thread had any
+ * opinion about any other thread. That is not how a building where everybody
+ * knows everybody works. The Old Bull has watched people take the Slate-Maker's
+ * deal for forty years, and when you take it he stops having the conversation.
+ *
+ * Withdrawn, not deleted, and never silent — the reason is carried and logged.
+ * A favour that evaporates without explanation is a bug from the player's side
+ * even when it is intended, and this project has shipped that read before.
+ */
+export function withdrawHook(state: GameState, id: string, why: string): boolean {
+  const h = findHook(state, id);
+  if (!h) return false;
+  if (h.takenWeek !== undefined || h.withdrawnWeek !== undefined) return false;
+  h.withdrawnWeek = state.week;
+  h.withdrawnWhy = why;
+  state.log.push({ week: state.week, kind: 'note', text: `A THREAD CLOSES — ${why}` });
   return true;
 }
 

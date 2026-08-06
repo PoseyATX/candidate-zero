@@ -17,13 +17,31 @@
  */
 
 import type { PlayCard } from '../engine/types.js';
-import { hooksOfKind, takeHook } from '../engine/hooks.js';
-import { MEMBER_BY_ID } from './members.js';
+import { hooksOfKind, takeHook, withdrawHook } from '../engine/hooks.js';
+import { MEMBER_BY_ID, MEMBERS } from './members.js';
 import { addObl, oblName } from './obligations.js';
+import { memberName } from '../engine/machine.js';
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
 }
+
+/**
+ * Disposition a member gains for watching you defend, unasked, the statute that
+ * pays their own county. The single thing a member most wants from somebody they
+ * carried a bill with.
+ */
+export const DEFEND_SEEN_WARMTH = 12;
+
+/**
+ * Disposition a member loses for having spent his name on you.
+ *
+ * Deliberately smaller than what it buys. This is not a punishment for using the
+ * card, it is the reason the card is a decision: cash the favour on the trail,
+ * or keep him warm for the floor. You cannot have both, because he only had the
+ * one thing to spend.
+ */
+export const NAME_SPENT_CHILL = 8;
 
 /**
  * The member hook this card would cash, matched by the favour they offered.
@@ -70,10 +88,18 @@ export const HK01_BorrowHisName: PlayCard = {
     s.nameID += 8;
     s.endorsePts += 2;
     s.momentum += 1;
+    // COVENANT 6 — power is never clean, and this is the favour economy running
+    // backwards, which means somebody is spending. A member who puts his name on
+    // you has spent capital he does not get back, and he is a little cooler in
+    // the chamber next session for it. The ledger being "even" is the point:
+    // even is not warm.
+    s.chamberRoster = s.chamberRoster ?? {};
+    s.chamberRoster[m.id] = (s.chamberRoster[m.id] ?? 0) - NAME_SPENT_CHILL;
     return (
       `${m.name} of ${m.county} makes three calls and mentions you in each one. ` +
       `+8 name ID, +2 endorsement points, momentum. ` +
-      `He does not ask for anything, which is how you know the ledger is now even.`
+      `He does not ask for anything, which is how you know the ledger is now even — ` +
+      `and even is not warm. He spent something he does not get back, and the floor is a long game.`
     );
   }
 };
@@ -275,6 +301,25 @@ export const HK05_AskBehindTheAsk: PlayCard = {
     // project keeps stepping in.
     const price = h.source === 'AL16' ? 'OB3' : 'OB1';
     addObl(s, price);
+    // The building is small and everybody watches. Somebody who has spent forty
+    // years watching people take exactly this deal stops offering to talk you
+    // out of things once you have taken it.
+    // ONLY the slate. Raising money in a room on a Tuesday is ordinary politics
+    // and the Old Bull has done it himself. Letting somebody else decide which
+    // list your name goes on is the specific thing he has watched end careers.
+    const bull =
+      h.flavour === 'slate'
+        ? hooksOfKind(s, 'machine').find(x => x.flavour === 'counsel')
+        : undefined;
+    if (bull) {
+      withdrawHook(
+        s,
+        bull.id,
+        `${memberName(bull.source)} hears what you took by Thursday and stops returning the call. ` +
+          `He has watched people take that deal since before you were born and he has given up ` +
+          `having the conversation twice.`
+      );
+    }
     return (
       `It works exactly as advertised: +$900, +70 contacts, two volunteers who have done this before, ` +
       `and the room tilts. Then, on the way out, the ask behind the ask — ` +
@@ -349,6 +394,18 @@ export const HK06_SomebodySentYouAFile: PlayCard = {
     s.hitPieces += 1;
     s.exposure = (s.exposure || 0) + 1;
     s.momentum = Math.max(0, s.momentum - 1);
+    // The one person in this district who was calling you before the story ran
+    // is the same person who now knows where the envelope went. Nobody who
+    // would rather be right than first wants to be your laundry.
+    const press = hooksOfKind(s, 'machine').find(x => x.flavour === 'press');
+    if (press) {
+      withdrawHook(
+        s,
+        press.id,
+        `${memberName(press.source)} works out where it came from about a day after everybody else ` +
+          `does, and stops calling first. They would rather be right than useful to you.`
+      );
+    }
     return (
       `It gets traced back to your side inside a week, and the story stops being about ${them} ` +
       `and starts being about you. Hit piece +1, exposure +1, momentum −1. ` +
@@ -685,11 +742,27 @@ export const HK12_DefendItWhereItLives: PlayCard = {
     for (const x of s.groundsArr) x.rivalRap = Math.max(0, (x.rivalRap || 0) - 3);
     s.messageSharp = true;
     s.districtStanding += 2;
+    // Austin notices. The members whose own ground that law pays watched you
+    // defend it in public without being asked, which is the single thing a
+    // member most wants from somebody they carried a bill with.
+    //
+    // Written into chamberRoster, which mergeRoomBack carries into legacy at
+    // recordRun — so the trail really does feed the floor, not just the reverse.
+    const watching = MEMBERS.filter(m => m.ground === h.ground);
+    s.chamberRoster = s.chamberRoster ?? {};
+    for (const m of watching) {
+      s.chamberRoster[m.id] = (s.chamberRoster[m.id] ?? 0) + DEFEND_SEEN_WARMTH;
+    }
+    const named = watching[0];
     return (
       `You hold it in the county that gets the money and you make him say out loud, to those people, ` +
       `which part he is taking away. He does not have a good version of that sentence. ` +
       `+20 rapport and −10 for him on ${g?.n ?? 'the ground it serves'}, −3 for him everywhere else, ` +
-      `message sharpens, +2 standing.`
+      `message sharpens, +2 standing.` +
+      (named
+        ? ` And it gets back to Austin: ${named.name} of ${named.county} did not have to ask you ` +
+          `to defend it, which they will remember on the floor.`
+        : '')
     );
   }
 };

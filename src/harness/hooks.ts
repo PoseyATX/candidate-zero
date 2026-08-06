@@ -38,7 +38,8 @@ import { MEMBER_BY_ID, MEMBERS } from '../data/members.js';
 import { createCampaign, listPlayableHand } from '../engine/loop.js';
 import { executePlay } from '../engine/play.js';
 import { OBLS, addObl } from '../data/obligations.js';
-import { MAX_MACHINE_HOOKS } from '../engine/machine.js';
+import { MAX_MACHINE_HOOKS, memberName } from '../engine/machine.js';
+import { mergeRoomBack } from '../engine/chamber.js';
 import type { GameState, LegacyState, Provision } from '../engine/types.js';
 
 let failed = 0;
@@ -51,6 +52,11 @@ function assert(cond: boolean, msg: string): void {
 }
 
 console.log('=== CANDIDATE ZERO — Hooks ===\n');
+
+/** A live machine thread of a given flavour, for the interaction checks. */
+function machineHookOf(s: GameState, flavour: string) {
+  return hooksOfKind(s, 'machine').find(h => h.flavour === flavour);
+}
 
 /** Which state the one statute thread on the board is in. */
 function statuteFlavour(s: GameState): string {
@@ -841,6 +847,147 @@ function careerWithAllies(): LegacyState {
     (reached['HK10'] ?? []).includes('shield'),
     'the map door is the one that blunts an attack you saw coming'
   );
+}
+
+// --- THREADS HAVE OPINIONS ABOUT OTHER THREADS ---
+//
+// The board was a list. Five sources, fourteen cards, and no thread had any
+// view on any other thread — which is not how a building where everybody knows
+// everybody works.
+{
+  const machineOf = (ids: string[]) => {
+    const legacy = emptyLegacy();
+    legacy.machine = {
+      members: ids.map((id, i) => ({ id, standing: 80 - i, runs: 3, since: 1 })),
+      departed: []
+    };
+    const s = createNewState({ seed: 181, ap: 9 });
+    applyLegacy(s, legacy);
+    s.stage = 'primary';
+    return s;
+  };
+
+  // (a) Taking the Slate-Maker's deal costs you the Old Bull.
+  {
+    const s = machineOf(['AL16', 'AL12']);
+    assert(!!machineHookOf(s, 'counsel'), 'the Old Bull is offering before you take the deal');
+    executePlay(s, HOOK_PLAYS.find(c => c.id === 'HK05')!);
+    assert(
+      !machineHookOf(s, 'counsel'),
+      'and stops offering the moment you take it — he has watched that deal for forty years'
+    );
+    const pulled = getHooks(s).find(h => h.withdrawnWeek !== undefined);
+    assert(!!pulled, 'the offer is WITHDRAWN, not deleted — the record keeps what was pulled');
+    assert(
+      !!pulled?.withdrawnWhy && pulled.withdrawnWhy.includes(memberName(pulled.source)),
+      'and it says who pulled it, by name'
+    );
+    assert(
+      s.log.some(l => /A THREAD CLOSES/.test(l.text)),
+      'and the player is told — a favour that evaporates silently is a bug from their side'
+    );
+  }
+
+  // Control on the same mechanism: no Slate-Maker, no chill.
+  {
+    const s = machineOf(['AL10', 'AL12']);
+    executePlay(s, HOOK_PLAYS.find(c => c.id === 'HK05')!);
+    assert(
+      !!machineHookOf(s, 'counsel'),
+      'taking the Finance Chair\'s money does not cost you counsel — it is the SLATE he objects to'
+    );
+  }
+
+  // (c) A file that gets traced costs you the reporter.
+  {
+    const legacy = emptyLegacy();
+    legacy.machine = { members: [{ id: 'AL04', standing: 80, runs: 3, since: 1 }], departed: [] };
+    legacy.rival = {
+      id: 'RIV1', name: 'Hollis Rakestraw', archetype: 'incumbent',
+      cycles: 2, beatYou: 1, youBeatThem: 1, streak: 0, strength: 40, since: 1
+    };
+    const card = HOOK_PLAYS.find(c => c.id === 'HK06')!;
+    let sawTraced = false;
+    let sawKept = false;
+    for (let seed = 600; seed < 680; seed++) {
+      const s = createNewState({ seed, ap: 9 });
+      applyLegacy(s, legacy);
+      s.stage = 'primary';
+      if (!card.show?.(s)) continue;
+      const hits = s.hitPieces;
+      useRng(createRng(seed));
+      executePlay(s, card);
+      const traced = s.hitPieces > hits;
+      const stillThere = !!machineHookOf(s, 'press');
+      if (traced) {
+        assert(!stillThere, `a traced file costs you the reporter (seed ${seed})`);
+        sawTraced = true;
+      } else if (stillThere) {
+        sawKept = true;
+      }
+    }
+    assert(sawTraced, 'the traced branch was actually reached, so the assertion above ran');
+    assert(sawKept, 'and a file that does NOT come back leaves the reporter in place');
+  }
+}
+
+// --- THE TRAIL WRITES TO THE FLOOR, NOT JUST THE OTHER WAY ---
+//
+// Everything so far ran chamber → campaign. These two run campaign → chamber,
+// through chamberRoster, which mergeRoomBack carries into legacy at recordRun.
+// That path existed and no campaign card had ever used it.
+{
+  // (b) Defending your statute at home is seen by the members it pays.
+  const legacy = emptyLegacy();
+  legacy.laws = [{
+    id: 'LAW_targeted', title: 'the screwworm indemnity fund', issueId: 'ag-subsidies',
+    passedRun: 1, sponsor: 'The Member', provisions: [prov({ nays: 9 })], serves: ['GR02']
+  }];
+  legacy.rival = {
+    id: 'RIV1', name: 'Hollis Rakestraw', archetype: 'incumbent',
+    cycles: 2, beatYou: 1, youBeatThem: 1, streak: 0, strength: 40, since: 1,
+    repealTarget: 'LAW_targeted', repealPitch: 'repeal it'
+  };
+  const watching = MEMBERS.filter(m => m.ground === 'GR02');
+  assert(watching.length > 0, 'somebody in the chamber represents that ground (precondition)');
+
+  const s = createNewState({ seed: 191, ap: 9 });
+  applyLegacy(s, legacy);
+  s.stage = 'primary';
+  const before = watching.map(m => s.chamberRoster?.[m.id] ?? 0);
+  executePlay(s, HOOK_PLAYS.find(c => c.id === 'HK12')!);
+  const after = watching.map(m => s.chamberRoster?.[m.id] ?? 0);
+  assert(
+    after.every((v, i) => v > before[i]!),
+    'the members whose county that law pays warm to you for defending it unasked'
+  );
+
+  // And it must SURVIVE into the next session, or it is theatre.
+  mergeRoomBack(legacy, s);
+  const carried = watching.every(m => (legacy.chamber?.[m.id]?.disposition ?? 0) > 0);
+  assert(carried, 'and it carries into legacy — the trail really does feed the floor');
+
+  // (d) Borrowing a member's name spends capital he does not get back.
+  const careerLegacy = careerWithAllies();
+  const s2 = createNewState({ seed: 192, ap: 9 });
+  applyLegacy(s2, careerLegacy);
+  s2.stage = 'primary';
+  const hk01 = HOOK_PLAYS.find(c => c.id === 'HK01')!;
+  if (hk01.show?.(s2)) {
+    const h = hooksOfKind(s2, 'member').find(x => x.flavour === 'name')!;
+    const was = s2.chamberRoster?.[h.source] ?? 0;
+    executePlay(s2, hk01);
+    assert(
+      (s2.chamberRoster?.[h.source] ?? 0) < was,
+      'a member who spends his name on you is cooler on the floor for it'
+    );
+    assert(
+      (was - (s2.chamberRoster?.[h.source] ?? 0)) < 20,
+      'but not so much that using the card is a mistake — it is a decision, not a penalty'
+    );
+  } else {
+    assert(false, 'HK01 should be available on a career with a DIP ally (precondition)');
+  }
 }
 
 if (failed) {

@@ -669,9 +669,56 @@ to 0 and the assertion measured nothing and passed. Same shape that once made an
 report 0% harmful outcomes because every penalty clamped at momentum 0. The fixture seeds exposure
 at 3 now, with a comment saying why.
 
+### Threads have opinions about other threads
+
+The board was a list: five sources, fourteen cards, and no thread with any view on any other
+thread. That is not how a building where everybody knows everybody works.
+
+The missing verb was **`withdrawHook`** — somebody takes their offer back. Withdrawn, not
+deleted, carrying the reason, and **never silent**: it logs `A THREAD CLOSES — …` with the name
+attached. A favour that evaporates without explanation reads as a bug from the player's side even
+when it is intended, and this project has shipped that read before.
+
+Four interactions, each with a control:
+
+**The Slate-Maker's deal costs you the Old Bull.** Take `HK05` from `AL16` and the `counsel`
+thread is pulled: *"He hears what you took by Thursday and stops returning the call. He has
+watched people take that deal since before you were born and he has given up having the
+conversation twice."* Gated on `slate` specifically — raising money in a room on a Tuesday is
+ordinary politics and he has done it himself. Letting somebody else decide which list your name
+goes on is the thing he has watched end careers. The control asserts the Finance Chair's money
+does **not** cost you counsel.
+
+**A file that comes back costs you the reporter.** `HK06`'s worst tier — the one where it gets
+traced — also pulls the `press` thread. The one person calling you before the story ran is the
+same person who now knows where the envelope went. *They would rather be right than useful to
+you.* Measured over 80 seeds so the traced branch is actually reached, with the untraced branch
+asserted to leave them in place.
+
+### The trail writes to the floor
+
+Everything before this ran chamber → campaign. Two of these run **campaign → chamber**, through
+`chamberRoster`, which `mergeRoomBack` carries into legacy at `recordRun`. That path existed and
+no campaign card had ever used it.
+
+**Defending your statute at home is seen in Austin.** `HK12` warms every member whose own county
+that law pays, by 12, because they did not have to ask. Asserted twice: that it moves, and that it
+**survives `mergeRoomBack` into legacy** — otherwise it is theatre.
+
+**Borrowing a member's name spends capital he does not get back.** `HK01` now costs the member 8
+disposition on the floor. Covenant 6: the favour economy running backwards still means somebody
+is spending. *"He does not ask for anything, which is how you know the ledger is now even — and
+even is not warm."* Asserted in both directions: it must go down, and by **less than 20**, because
+this is a decision between the trail and the floor, not a penalty for using the card.
+
+### Verification
+
+323 assertions. Controls, each reverted after measuring: remove the slate→counsel chill, 4 fail;
+remove defend→chamber, 2 fail; remove traced→press, 9 fail; remove the name-spent chill, 1 fail.
+
 ### What this is not
 
-Finished. Five sources, fourteen cards, and every source has real verbs — but the hook *board*
-itself is still just a list. Nothing yet plays two threads against each other: cashing the
-Slate-Maker's deal should make the Old Bull's counsel colder, and defending a statute at home
-should be visible to the member who helped you pass it.
+Finished. The interactions are hand-wired one at a time, which is right for four and wrong for
+forty. When there are enough of them the pattern will want to be declarative — a thread naming
+what it closes and what it warms — rather than a `withdrawHook` call buried in each card's `run`.
+Worth doing when the shape is clear from more examples, not before.
