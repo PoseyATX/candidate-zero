@@ -580,9 +580,101 @@ function careerWithAllies(): LegacyState {
   for (const k of ['member', 'statute', 'machine', 'rival', 'world'] as const) {
     assert(kinds.has(k), `${k} offers into the same registry`);
   }
+  assert(HOOK_PLAYS.length === 10, `and there are cards for them (${HOOK_PLAYS.length} hook cards)`);
+}
+
+// --- EVERY DOOR HAS A CARD, AND EVERY CARD HAS A DOOR ---
+//
+// A door with no card is a log line that lies to the player. A card with no
+// door is dead weight in the catalog. Both have shipped in this project before.
+{
+  const doors = OUTSIDE_EVENTS.filter(e => e.hook);
   assert(
-    HOOK_PLAYS.length === 7,
-    `and there is a card for each flavour of each (${HOOK_PLAYS.length} hook cards)`
+    doors.length === OUTSIDE_EVENTS.length,
+    `EVERY outside event leaves a door (${doors.length}/${OUTSIDE_EVENTS.length})`
+  );
+
+  const CARD_FOR: Record<string, string> = {
+    room: 'HK07', fight: 'HK08', money: 'HK09', map: 'HK10'
+  };
+  const usedFlavours = new Set<string>(doors.map(e => String(e.hook!.flavour ?? 'room')));
+  for (const f of usedFlavours) {
+    assert(!!CARD_FOR[f], `every door flavour in the catalog has a card (${f})`);
+  }
+  for (const [flavour, cardId] of Object.entries(CARD_FOR)) {
+    assert(
+      usedFlavours.has(flavour),
+      `and every card has at least one door that reaches it (${cardId} ← ${flavour})`
+    );
+  }
+
+  // Each door is actually reachable: fire the event, find the card, play it.
+  let checked = 0;
+  for (const ev of doors) {
+    const s = createNewState({ seed: 300 + checked, ap: 9 });
+    s.stage = 'primary';
+    resolveOutsideEvent(s, ev);
+    const live = hooksOfKind(s, 'world');
+    assert(live.length === 1, `${ev.id} opens exactly one door`);
+    const want = CARD_FOR[live[0]?.flavour ?? 'room']!;
+    const card = HOOK_PLAYS.find(c => c.id === want)!;
+    assert(!!card.show?.(s), `${ev.id} → ${want} is playable`);
+    const out = executePlay(s, card);
+    assert(out.ok, `${ev.id} → ${want} resolves`);
+    assert(hooksOfKind(s, 'world').length === 0, `${ev.id} door closes when walked through`);
+    // The wrong verb must NOT open on this door.
+    const s2 = createNewState({ seed: 400 + checked, ap: 9 });
+    s2.stage = 'primary';
+    resolveOutsideEvent(s2, ev);
+    for (const [f, id] of Object.entries(CARD_FOR)) {
+      if (id === want) continue;
+      const other = HOOK_PLAYS.find(c => c.id === id)!;
+      assert(!other.show?.(s2), `${ev.id} does not offer ${id} (${f}) — verbs are not interchangeable`);
+    }
+    checked++;
+  }
+  assert(checked === OUTSIDE_EVENTS.length, `checked every door end to end (${checked})`);
+}
+
+// --- THE FOUR VERBS REACH FOUR DIFFERENT PLACES ---
+{
+  const reached: Record<string, string[]> = {};
+  const FL = { HK07: 'room', HK08: 'fight', HK09: 'money', HK10: 'map' } as const;
+  for (const [cardId, flavour] of Object.entries(FL)) {
+    const ev = OUTSIDE_EVENTS.find(e => (e.hook?.flavour ?? 'room') === flavour && e.hook)!;
+    const s = createNewState({ seed: 500, ap: 9 });
+    s.stage = 'primary';
+    s.hitPieces = 2; // so HK10's relief has somewhere to land
+    resolveOutsideEvent(s, ev);
+    const before = {
+      money: s.money, rap: s.groundsArr.reduce((t, g) => t + (g.rapport || 0), 0),
+      name: s.nameID, sharp: s.messageSharp, hits: s.hitPieces, stand: s.districtStanding
+    };
+    useRng(createRng(7));
+    executePlay(s, HOOK_PLAYS.find(c => c.id === cardId)!);
+    const touched: string[] = [];
+    if (s.money > before.money) touched.push('money');
+    if (s.groundsArr.reduce((t, g) => t + (g.rapport || 0), 0) > before.rap) touched.push('ground');
+    if (s.nameID > before.name) touched.push('name');
+    if (s.messageSharp && !before.sharp) touched.push('message');
+    if (s.hitPieces < before.hits) touched.push('shield');
+    if (s.districtStanding > before.stand) touched.push('standing');
+    reached[cardId] = touched;
+  }
+  const sigs = new Set(Object.values(reached).map(v => v.slice().sort().join('+')));
+  assert(
+    sigs.size === 4,
+    `four verbs, four distinct effects — not one scalar (${Object.entries(reached)
+      .map(([k, v]) => `${k}:${v.join('/') || 'none'}`)
+      .join(' · ')})`
+  );
+  assert(
+    (reached['HK09'] ?? []).includes('money'),
+    'the money door is the one that produces money'
+  );
+  assert(
+    (reached['HK10'] ?? []).includes('shield'),
+    'the map door is the one that blunts an attack you saw coming'
   );
 }
 

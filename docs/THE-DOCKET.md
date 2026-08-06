@@ -545,8 +545,73 @@ perishable; nothing may cannibalise a door the player is already racing. The dis
 world door → 8 fail; make the board cap refuse unconditionally → 6 fail. Every source and the
 eviction rule have an instrument that goes red without them.
 
+### Every event has a door, and the doors are four different verbs
+
+All **21** outside events now leave a door. Writing them exposed the next problem immediately:
+one `HK07 Show Up Where It Happened` card was resolving a flood, an oil boom, a redistricting
+rumour and a library shelf fight **identically**. That is the stat-bonus-wearing-a-hat problem
+raised to the level of a whole source — the same failure this project measured at 61% of the
+corpus, one level up.
+
+A room you stand in, a fight you take a side in, money that is moving, and a rumour you go
+verify are four different verbs. So doors carry a `flavour`, and there is one card per verb:
+
+| verb | card | what it is | risk |
+|---|---|---|---|
+| `room` | **HK07 Show Up Where It Happened** | presence, on the ground it hit | SAFE |
+| `fight` | **HK08 Say It With the Camera On** | a podium and no way back | VOL |
+| `money` | **HK09 Ask While the Checkbook Is Open** | the window is open right now | SAFE |
+| `map` | **HK10 Go Find Out What Is True** | a rumour is not information | SAFE |
+
+Measured, one seed, four cards: `HK07: ground/standing · HK08: name/message · HK09: money ·
+HK10: message/shield`. Four distinct signatures, asserted as four, so a later pass cannot quietly
+collapse them back into one.
+
+Some texture the doors bought:
+
+- **The water district board meets and nobody ever comes.** *Eleven people, a folding table, and
+  the single most consequential body in this county that nobody has ever voted in.*
+- **There is a disclaimer at the bottom of that mailer.** *Six point type, a committee name
+  nobody has heard of, and a treasurer who is somebody's cousin. It is a public filing.*
+- **The line at the annex is two hours long right now.** *You will never again have this many
+  voters trapped and mildly bored in one place.* One week only.
+- **The church is running a cooling station and is short of hands.** *No press, no sign-in sheet,
+  no reason to go except that they are short of hands.*
+
+`HK10` is the one nobody will play and it is the best card in the set: it produces no photograph,
+cannot be posted, and takes a hit piece **off** you because you saw it coming.
+
+Verification: 251 assertions. Every door is fired, matched to its card, played, and confirmed
+closed — and the three wrong verbs are asserted **absent** on each, so the verbs are not
+interchangeable. Control: collapse `doorFor` back to "any world door" and **63 fail**.
+
+### The gate that was measuring a coin flip
+
+The door work tripped `harness:grounds`:
+
+> FAIL: money/spread ground condition met 66% — expected 12-65%
+
+The obvious read was "the new content is a power creep." That read was wrong, and the only
+reason I know is that I measured both sides instead of adjusting the number.
+
+| | without doors | with doors |
+|---|---|---|
+| N=50 (the gate's default) | ≤65, passing | 66, failing |
+| **N=400** | **66.3%** | **68.8%** |
+
+SE at N=400 is ~2.4pp; SE of the difference ~3.3pp. The 2.5pp gap is inside one SE. **The doors
+did not move it.** The ceiling was set *below the true baseline*, and at N=50 — SE ~6.7pp — the
+gate straddled its own boundary and had been passing on sampling luck. A gate whose pass/fail is
+a coin flip against the value it sits on is not measuring anything, which is this project's
+oldest recurring bug wearing yet another hat.
+
+Ceiling raised 65 → 80 **on evidence**, with the measurement written into the harness comment and
+an instruction not to move the number to fit a diff. Above 80 would be a real power creep.
+
 ### What this is not
 
-Finished. All five `HookKind`s are live and each has at least one card, which was the point —
-the registry is real, not a shape. Three of nine outside events carry doors; the other six, and
-every event written after them, are one `hook: { … }` literal away.
+Finished. All five `HookKind`s are live, all 21 events leave doors, and four verbs answer them.
+What is still thin: `member`, `statute` and `machine` sources each have exactly one shape of
+offer, where the world now has four. The Slate-Maker's deal should not be the same object as the
+Finance Chair's, and a statute up for reauthorization should offer something different from one
+that is simply working.

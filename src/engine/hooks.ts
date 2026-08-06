@@ -44,6 +44,17 @@ export interface Hook {
   stages: Array<GameState['stage']>;
   /** Ground it acts on, when it acts on one. */
   ground?: string;
+  /**
+   * What KIND of thing this door is, when the source has several.
+   *
+   * Added when the world became the fifth source and it turned out that one
+   * `HK07 Show Up` card was resolving a flood, a boom, a redistricting rumour
+   * and a library fight identically — which is the stat-bonus-wearing-a-hat
+   * problem at the level of the whole source. A room you stand in, a fight you
+   * take a side in, money that is moving, and a rumour you go verify are four
+   * different verbs and they get four different cards.
+   */
+  flavour?: string;
   /** Set when taken; a hook is cashed once. */
   takenWeek?: number;
   /** Optional shelf life. Omitted means it waits for you. */

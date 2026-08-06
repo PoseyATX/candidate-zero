@@ -340,6 +340,23 @@ export const HK06_SomebodySentYouAFile: PlayCard = {
 };
 
 /**
+ * The world door this card would walk through, matched by verb.
+ *
+ * One `Show Up` card was resolving a flood, an oil boom, a redistricting rumour
+ * and a library fight identically. That is the stat-bonus-wearing-a-hat problem
+ * raised to the level of a whole source, and it is exactly the thing this
+ * project measured at 61% of the corpus. A room you stand in, a fight you take
+ * a side in, money that is moving, and a rumour you go verify are four
+ * different verbs.
+ */
+function doorFor(
+  s: Parameters<NonNullable<PlayCard['show']>>[0],
+  flavour: 'room' | 'fight' | 'money' | 'map'
+) {
+  return hooksOfKind(s, 'world').find(h => (h.flavour ?? 'room') === flavour);
+}
+
+/**
  * HK07 — Show Up Where It Happened.
  *
  * The world source, and the last of the five. An outside event could hit you and
@@ -365,10 +382,10 @@ export const HK07_ShowUpWhereItHappened: PlayCard = {
     'Constituency is the attribute. ' +
     'Big rapport and standing, because showing up while it is still happening is the whole thing. ' +
     'Showing up a month late is a photo opportunity, and the district can tell the difference.',
-  show: s => hooksOfKind(s, 'world').length > 0,
+  show: s => !!doorFor(s, 'room'),
   odds: () => 0.95,
   run: s => {
-    const h = hooksOfKind(s, 'world')[0];
+    const h = doorFor(s, 'room');
     if (!h) return 'Nothing is happening that you can go stand in.';
     takeHook(s, h.id);
     const g = h.ground ? s.groundsArr.find(x => x.id === h.ground) : undefined;
@@ -391,6 +408,169 @@ export const HK07_ShowUpWhereItHappened: PlayCard = {
   }
 };
 
+/**
+ * HK08 — Say It With the Camera On.
+ *
+ * The `fight` door. Some rooms are not rooms you stand in, they are rooms where
+ * somebody hands you a microphone and everybody in the county finds out what you
+ * think. The HOA stage, the library podium, the hour of talk radio.
+ *
+ * VOLATILE, and the good outcome is not "everybody agreed with you" — it is that
+ * you sounded like a person instead of a candidate. The bad outcome is a clip.
+ *
+ * COVENANT 6. There is no tier here where you take a public side and nothing
+ * happens; even the middle costs you somebody.
+ */
+export const HK08_SayItWithTheCameraOn: PlayCard = {
+  id: 'HK08',
+  n: 'Say It With the Camera On',
+  cost: { a: 2 },
+  risk: 'VOL',
+  ph: [1, 2, 3],
+  tag: 'a microphone and no way back',
+  attrs: ['INK'],
+  d:
+    'Somewhere in this district there is a podium and a camera and a fight already in progress. ' +
+    'Go take a side out loud, on the record, with your name on it. ' +
+    'VOLATILE. It can make you the only candidate anybody can quote, or it can make ninety seconds ' +
+    'of you that runs for the rest of the cycle. ' +
+    'Ink is the attribute. ' +
+    'There is no version where you say something real and nobody minds.',
+  show: s => !!doorFor(s, 'fight'),
+  odds: () => 0.45,
+  run: (s, o) => {
+    const h = doorFor(s, 'fight');
+    if (!h) return 'Nobody is offering you a microphone.';
+    takeHook(s, h.id);
+    if (o.tier === 0) {
+      s.messageSharp = true;
+      s.nameID += 7;
+      s.momentum += 1;
+      s.faces.T = clamp((s.faces.T || 0) + 4, -50, 100);
+      s.exposure = (s.exposure || 0) + 1;
+      return (
+        `You answer the actual question, which nobody on that stage was doing, and the room goes ` +
+        `quiet in the good way. +7 name ID, message sharpens, momentum, Truth +4. ` +
+        `Exposure +1, because now they know where you are. That was always the price of being findable.`
+      );
+    }
+    if (o.tier === 1) {
+      s.nameID += 3;
+      s.exposure = (s.exposure || 0) + 1;
+      return (
+        `You say a true thing carefully and half the room nods. +3 name ID, exposure +1. ` +
+        `Nobody writes it down, which is neither the best nor the worst outcome available.`
+      );
+    }
+    if (o.tier === 2) {
+      s.exposure = (s.exposure || 0) + 1;
+      s.faces.O = clamp((s.faces.O || 0) + 1, -50, 100);
+      return (
+        `You give the answer that offends nobody, and everybody in the room recognises it as ` +
+        `the answer that offends nobody. Exposure +1 and a small credit for keeping order. ` +
+        `You drive home knowing exactly what you did.`
+      );
+    }
+    s.hitPieces += 1;
+    s.exposure = (s.exposure || 0) + 2;
+    s.momentum = Math.max(0, s.momentum - 1);
+    return (
+      `Eleven seconds of it get cut out and put on the internet without the question attached. ` +
+      `Hit piece +1, exposure +2, momentum −1. ` +
+      `You said what you meant. That is not the same as it being what they heard.`
+    );
+  }
+};
+
+/**
+ * HK09 — Ask While the Checkbook Is Open.
+ *
+ * The `money` door. Money moves in windows and the window is the whole point:
+ * it is open right now, it closes at the end of the month, and it goes to
+ * whoever asks first. Everybody involved knows this and nobody says it.
+ *
+ * SAFE because asking is safe. What it costs you is a face — you are now
+ * somebody who asks — and the exposure that comes with taking it.
+ */
+export const HK09_AskWhileOpen: PlayCard = {
+  id: 'HK09',
+  n: 'Ask While the Checkbook Is Open',
+  cost: { a: 1 },
+  risk: 'SAFE',
+  ph: [1, 2, 3],
+  tag: 'the window is open right now',
+  attrs: ['CLO'],
+  d:
+    'Money is moving in this district this month and it will go to whoever asks first. ' +
+    'That is the entire mechanism and everybody involved knows it. ' +
+    'One action. Real money and a volunteer or two, reliably. ' +
+    'Closing is the attribute and it is SAFE. ' +
+    'It costs you Loyalty and a point of exposure, because you are now somebody who asked, ' +
+    'and the window closes whether you ask or not.',
+  show: s => !!doorFor(s, 'money'),
+  odds: () => 0.9,
+  run: s => {
+    const h = doorFor(s, 'money');
+    if (!h) return 'No money is moving that you can get in front of.';
+    takeHook(s, h.id);
+    s.money += 1100;
+    s.volPool += 1;
+    s.faces.L = clamp((s.faces.L || 0) - 4, -50, 100);
+    s.exposure = (s.exposure || 0) + 1;
+    return (
+      `You ask, early, before the people who will spend two weeks deciding whether asking is beneath them. ` +
+      `+$1,100 and a volunteer. Loyalty −4, exposure +1. ` +
+      `Nobody says thank you and nobody says no. It is a transaction and it was always going to be.`
+    );
+  }
+};
+
+/**
+ * HK10 — Go Find Out What Is True.
+ *
+ * The `map` door. A rumour is not information. Somebody in Austin has seen the
+ * actual draft; the complaint is public and so is the file it came from; two
+ * phone calls will tell you who started the whisper.
+ *
+ * The rarest verb in the game and the one nobody does, because it produces no
+ * photograph and cannot be posted. It sharpens your message and it warns you.
+ */
+export const HK10_GoFindOut: PlayCard = {
+  id: 'HK10',
+  n: 'Go Find Out What Is True',
+  cost: { a: 1 },
+  risk: 'SAFE',
+  ph: [1, 2, 3],
+  tag: 'a rumour is not information',
+  attrs: ['CRA'],
+  d:
+    'Something is going around and nobody has checked it. Go check it. ' +
+    'One action, no money, no risk, and no photograph at the end of it — which is why almost ' +
+    'nobody in this building ever does it. ' +
+    'Craft is the attribute. ' +
+    'Sharpens your message, steadies you against the next hit, and tells you which ground is ' +
+    'already gone so you stop paying for it.',
+  show: s => !!doorFor(s, 'map'),
+  odds: () => 0.92,
+  run: s => {
+    const h = doorFor(s, 'map');
+    if (!h) return 'Nothing is going around that is worth verifying.';
+    takeHook(s, h.id);
+    s.messageSharp = true;
+    s.faces.P = clamp((s.faces.P || 0) + 3, -50, 100);
+    // Knowing what is coming is worth a hit piece you would otherwise have eaten.
+    s.hitPieces = Math.max(0, s.hitPieces - 1);
+    const worst = s.groundsArr.slice().sort((a, b) => (b.rivalRap || 0) - (a.rivalRap || 0))[0];
+    return (
+      `${h.n} — and you go, and you read the whole thing, and now you know. ` +
+      `Message sharpens, Parliamentarian +3, and one line of attack lands on somebody who was ready for it ` +
+      `(hit piece −1)` +
+      `${worst && (worst.rivalRap || 0) > 0 ? `. You also learn that ${worst.n} was decided months ago` : ''}. ` +
+      `There is no picture of this and you cannot post it. It is worth more than the week you spent on signs.`
+    );
+  }
+};
+
 export const HOOK_PLAYS: PlayCard[] = [
   HK01_BorrowHisName,
   HK02_WorksHisCounty,
@@ -398,5 +578,8 @@ export const HOOK_PLAYS: PlayCard[] = [
   HK04_TheProgramWorks,
   HK05_AskBehindTheAsk,
   HK06_SomebodySentYouAFile,
-  HK07_ShowUpWhereItHappened
+  HK07_ShowUpWhereItHappened,
+  HK08_SayItWithTheCameraOn,
+  HK09_AskWhileOpen,
+  HK10_GoFindOut
 ];

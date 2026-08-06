@@ -90,6 +90,7 @@ export function resolveOutsideEvent(state: GameState, event: OutsideEvent): stri
       kind: 'world',
       source: event.id,
       ground: event.hook.ground,
+      flavour: event.hook.flavour ?? 'room',
       stages: ['primary', 'general'],
       expiresWeek: state.week + event.hook.weeks
     });
