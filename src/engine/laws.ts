@@ -171,21 +171,54 @@ export function statuteBookLine(state: GameState): string {
  * See engine/hooks.ts — this is the registry proving it is a registry. Nothing
  * in hooks.ts changed to admit statutes.
  */
-export function offerStatuteHooks(state: GameState, legacy: LegacyState): number {
+export function offerStatuteHooks(
+  state: GameState,
+  legacy: LegacyState,
+  underAttack?: string
+): number {
   let n = 0;
   for (const law of standingLaws(legacy)) {
     if (!law.provisions.length) continue;
     const ground = law.serves[0];
     if (!ground) continue;
+    // Three states a statute can be in, and they are three different asks.
+    //
+    // The world source got four verbs and the statute source had one, which
+    // made "the registry is extensible" true of exactly one source. A law the
+    // opposition is campaigning to strike, a law whose money runs out next
+    // biennium, and a law that is simply working are not the same conversation.
+    const enemies = law.provisions.reduce((t, p) => t + p.nays, 0);
+    const flavour =
+      underAttack === law.id ? 'attacked' : enemies > 0 ? 'sunset' : 'working';
+    const copy =
+      flavour === 'attacked'
+        ? {
+            n: `They are running to repeal ${law.title}`,
+            d:
+              `The people who lost that vote did not stop existing when it was signed, and now ` +
+              `they have a candidate. The district it serves does not know yet.`
+          }
+        : flavour === 'sunset'
+          ? {
+              n: `${law.title} runs out of money next biennium`,
+              d:
+                `Authority expires, the appropriation sunsets, and somebody has to carry the ` +
+                `renewal. The people it pays are asking whether that is going to be you.`
+            }
+          : {
+              n: `The people ${law.title} actually helped`,
+              d:
+                `Somebody who got the money is asking what they can do about it. ` +
+                `A statute nobody organizes around is just paper in Austin.`
+            };
     const h = offerHook(state, {
       id: `HK_${law.id}`,
-      n: `The people ${law.title} actually helped`,
-      d:
-        `Somebody who got the money is asking what they can do about it. ` +
-        `A statute nobody organizes around is just paper in Austin.`,
+      n: copy.n,
+      d: copy.d,
       kind: 'statute',
       source: law.id,
       ground,
+      flavour,
       stages: ['primary', 'general']
     });
     if (h) n++;

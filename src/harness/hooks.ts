@@ -38,6 +38,7 @@ import { MEMBER_BY_ID, MEMBERS } from '../data/members.js';
 import { createCampaign, listPlayableHand } from '../engine/loop.js';
 import { executePlay } from '../engine/play.js';
 import { OBLS, addObl } from '../data/obligations.js';
+import { MAX_MACHINE_HOOKS } from '../engine/machine.js';
 import type { GameState, LegacyState, Provision } from '../engine/types.js';
 
 let failed = 0;
@@ -50,6 +51,11 @@ function assert(cond: boolean, msg: string): void {
 }
 
 console.log('=== CANDIDATE ZERO — Hooks ===\n');
+
+/** Which state the one statute thread on the board is in. */
+function statuteFlavour(s: GameState): string {
+  return hooksOfKind(s, 'statute')[0]?.flavour ?? 'none';
+}
 
 function prov(over: Partial<Provision> = {}): Provision {
   return {
@@ -303,7 +309,8 @@ function careerWithAllies(): LegacyState {
       issueId: 'ag-subsidies',
       passedRun: 1,
       sponsor: 'The Member',
-      provisions: [prov()],
+      // No nays: nobody is waiting to strike it, so it is simply WORKING.
+      provisions: [prov({ nays: 0 })],
       serves: ['GR02']
     },
     // A shell bill that passed. Real statute, real line in the obituary, but
@@ -580,7 +587,165 @@ function careerWithAllies(): LegacyState {
   for (const k of ['member', 'statute', 'machine', 'rival', 'world'] as const) {
     assert(kinds.has(k), `${k} offers into the same registry`);
   }
-  assert(HOOK_PLAYS.length === 10, `and there are cards for them (${HOOK_PLAYS.length} hook cards)`);
+  assert(HOOK_PLAYS.length === 14, `and there are cards for them (${HOOK_PLAYS.length} hook cards)`);
+}
+
+// --- A STATUTE IS IN ONE OF THREE STATES, AND THEY ARE THREE ASKS ---
+//
+// The world source got four verbs while the statute source had one, which made
+// "the registry is extensible" true of exactly one source. A law the opposition
+// is campaigning to strike, a law whose money runs out next biennium, and a law
+// that is simply working are not the same conversation.
+{
+  const lawOf = (id: string, nays: number) => ({
+    id, title: `the ${id} act`, issueId: 'ag-subsidies', passedRun: 1,
+    sponsor: 'The Member', provisions: [prov({ nays })], serves: ['GR02']
+  });
+
+  // WORKING — nobody waiting to strike it.
+  {
+    const legacy = emptyLegacy();
+    legacy.laws = [lawOf('LAW_calm', 0)];
+    const s = createNewState({ seed: 161, ap: 9 });
+    applyLegacy(s, legacy);
+    s.stage = 'primary';
+    assert(statuteFlavour(s) === 'working', `a law nobody opposes reads as working (${statuteFlavour(s)})`);
+    assert(!!HOOK_PLAYS.find(c => c.id === 'HK04')!.show?.(s), 'and HK04 is the card for it');
+    assert(!HOOK_PLAYS.find(c => c.id === 'HK11')!.show?.(s), 'HK11 is not — nothing is sunsetting');
+    assert(!HOOK_PLAYS.find(c => c.id === 'HK12')!.show?.(s), 'HK12 is not — nobody is attacking it');
+  }
+
+  // SUNSET — it made enemies, so it faces reauthorization.
+  {
+    const legacy = emptyLegacy();
+    legacy.laws = [lawOf('LAW_contested', 9)];
+    const s = createNewState({ seed: 162, ap: 9 });
+    applyLegacy(s, legacy);
+    s.stage = 'primary';
+    assert(statuteFlavour(s) === 'sunset', `a law with enemies comes up for air (${statuteFlavour(s)})`);
+    const card = HOOK_PLAYS.find(c => c.id === 'HK11')!;
+    assert(!!card.show?.(s), 'HK11 is the card for it');
+    assert(card.risk !== 'SAFE', 'and promising a session you have not won is not SAFE');
+    const oblsBefore = (s.obls ?? []).length;
+    const g = s.groundsArr.find(x => x.id === 'GR02');
+    const rapBefore = g?.rapport ?? 0;
+    const out = executePlay(s, card);
+    assert(out.ok, 'HK11 resolves');
+    assert((g?.rapport ?? 0) > rapBefore, 'the people it pays go to work for you');
+    assert((s.obls ?? []).length === oblsBefore + 1, 'and you are carrying a bill you have not filed');
+    assert((s.obls ?? []).includes('OB11'), 'specifically the renewal you promised');
+    // The leash has to bite, or the promise is free.
+    const probe = createNewState({ seed: 163 });
+    const b = { ex: probe.exposure, p: probe.faces.P };
+    OBLS['OB11']!.drag(probe);
+    assert(
+      probe.exposure !== b.ex || probe.faces.P !== b.p,
+      'OB11 drags — a promise you keep repeating is a week not spent on this race'
+    );
+  }
+
+  // ATTACKED — the rival is running on repealing it. This is the join.
+  {
+    const legacy = emptyLegacy();
+    legacy.laws = [lawOf('LAW_targeted', 9)];
+    legacy.rival = {
+      id: 'RIV1', name: 'Hollis Rakestraw', archetype: 'incumbent',
+      cycles: 2, beatYou: 1, youBeatThem: 1, streak: 0, strength: 40, since: 1,
+      repealTarget: 'LAW_targeted', repealPitch: 'repeal it outright'
+    };
+    const s = createNewState({ seed: 164, ap: 9 });
+    applyLegacy(s, legacy);
+    s.stage = 'primary';
+    assert(
+      statuteFlavour(s) === 'attacked',
+      `a targeted law reads as attacked, not merely sunsetting (${statuteFlavour(s)})`
+    );
+    const card = HOOK_PLAYS.find(c => c.id === 'HK12')!;
+    assert(!!card.show?.(s), 'HK12 is the card for it');
+    assert(!HOOK_PLAYS.find(c => c.id === 'HK11')!.show?.(s), 'and HK11 is not — this is a fight, not a renewal');
+    const g = s.groundsArr.find(x => x.id === 'GR02')!;
+    g.rivalRap = 40;
+    for (const x of s.groundsArr) if (x.id !== 'GR02') x.rivalRap = 20;
+    const before = {
+      rap: g.rapport,
+      theirs: g.rivalRap,
+      theirsElsewhere: s.groundsArr.filter(x => x.id !== 'GR02').reduce((t, x) => t + (x.rivalRap || 0), 0)
+    };
+    const out = executePlay(s, card);
+    assert(out.ok, 'HK12 resolves');
+    assert(g.rapport > before.rap, 'answering it at home warms the county that gets the money');
+    assert(g.rivalRap < before.theirs, 'and costs him ground exactly there');
+    assert(
+      s.groundsArr.filter(x => x.id !== 'GR02').reduce((t, x) => t + (x.rivalRap || 0), 0) <
+        before.theirsElsewhere,
+      'and the repeal pitch gets harder everywhere once he has had to answer it once'
+    );
+  }
+}
+
+// --- SIXTEEN PEOPLE ARE NOT ONE TRANSACTION ---
+//
+// One `machine` hook reading "somebody wants to move some weight" flattened the
+// whole roster into a single deal. The Slate-Maker does not offer what the Beat
+// Reporter offers, and neither offers what the Old Bull offers.
+{
+  const withOnly = (ids: string[]) => {
+    const legacy = emptyLegacy();
+    legacy.machine = {
+      members: ids.map((id, i) => ({ id, standing: 80 - i, runs: 3, since: 1 })),
+      departed: []
+    };
+    const s = createNewState({ seed: 171, ap: 9 });
+    applyLegacy(s, legacy);
+    s.stage = 'primary';
+    return s;
+  };
+
+  const CARD = { slate: 'HK05', money: 'HK05', press: 'HK13', counsel: 'HK14' } as const;
+  const WHO = { slate: 'AL16', money: 'AL10', press: 'AL04', counsel: 'AL12' } as const;
+
+  for (const [flavour, allyId] of Object.entries(WHO)) {
+    const s = withOnly([allyId]);
+    const live = hooksOfKind(s, 'machine');
+    assert(live.length === 1, `${allyId} offers exactly one thing (${live.length})`);
+    assert(
+      live[0]?.flavour === flavour,
+      `${allyId} offers ${flavour}, not a generic deal (${live[0]?.flavour})`
+    );
+    const want = CARD[flavour as keyof typeof CARD];
+    assert(!!HOOK_PLAYS.find(c => c.id === want)!.show?.(s), `${allyId} → ${want} is playable`);
+    for (const other of ['HK05', 'HK13', 'HK14']) {
+      if (other === want) continue;
+      assert(
+        !HOOK_PLAYS.find(c => c.id === other)!.show?.(s),
+        `${allyId} does not offer ${other} — relationships are not interchangeable`
+      );
+    }
+  }
+
+  // Two people, two different offers, and the board does not become a shop.
+  const both = withOnly(['AL16', 'AL04', 'AL12', 'AL10']);
+  const kinds = new Set(hooksOfKind(both, 'machine').map(h => h.flavour));
+  assert(
+    hooksOfKind(both, 'machine').length === MAX_MACHINE_HOOKS,
+    `at most ${MAX_MACHINE_HOOKS} machine offers at once (${hooksOfKind(both, 'machine').length})`
+  );
+  assert(kinds.size === hooksOfKind(both, 'machine').length, 'and never two of the same kind');
+
+  // The free one is genuinely free, and genuinely not a stat dump.
+  //
+  // Exposure is seeded above 0 on purpose: it ships at 0, so a −1 clamps to 0
+  // and the assertion below would measure nothing and pass. Exactly the shape
+  // that made an earlier alley sweep report 0% harmful outcomes at momentum 0.
+  const s = withOnly(['AL12']);
+  s.exposure = 3;
+  const before = { money: s.money, contacts: s.contacts, name: s.nameID, ex: s.exposure };
+  executePlay(s, HOOK_PLAYS.find(c => c.id === 'HK14')!);
+  assert(s.money === before.money, 'the Old Bull does not hand you money');
+  assert(s.contacts === before.contacts, 'or contacts');
+  assert(s.nameID === before.name, 'or name ID — there is nothing to post');
+  assert(s.messageSharp, 'what you get is that you stop making the mistake');
+  assert(s.exposure < before.ex, 'and you are a little harder to hit');
 }
 
 // --- EVERY DOOR HAS A CARD, AND EVERY CARD HAS A DOOR ---

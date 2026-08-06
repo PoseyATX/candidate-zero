@@ -370,23 +370,106 @@ export function rosterForDisplay(legacy: LegacyState): MachineMember[] {
  *
  * Only `with`-tier offers. Somebody who merely owes you has nothing to trade.
  */
+/**
+ * What this person is actually good for.
+ *
+ * The Slate-Maker does not offer what the Beat Reporter offers, and neither of
+ * them offers what the Old Bull offers. One `machine` hook that read "somebody
+ * wants to move some weight" flattened sixteen distinct people into one
+ * transaction — which is the same flattening the world source was carrying
+ * before doors got verbs.
+ */
+function machineFlavour(allyId: string): 'slate' | 'money' | 'press' | 'counsel' {
+  switch (allyId) {
+    case 'AL16': return 'slate';                      // The Slate-Maker
+    case 'AL10': case 'AL13': return 'money';         // Finance Chair, Lobbyist
+    case 'AL04': case 'AL05': return 'press';         // Beat Reporter, Drive-Time Host
+    case 'AL06': case 'AL12': case 'AL15': return 'counsel'; // Judge, Old Bull, County Judge
+    default: return 'money';
+  }
+}
+
+const MACHINE_OFFER: Record<
+  ReturnType<typeof machineFlavour>,
+  (who: string) => { n: string; d: string }
+> = {
+  slate: who => ({
+    n: `${who} will put you on the slate`,
+    d:
+      `He can do it this week and it will hold. There is an ask behind the ask and you will ` +
+      `not be told what it is until you have taken it.`
+  }),
+  money: who => ({
+    n: `${who} will move real money for you`,
+    d:
+      `Not a check. A room, on a Tuesday, with the people who write them. ` +
+      `Nobody in that room has ever given without wanting.`
+  }),
+  press: who => ({
+    n: `${who} will run your side of it`,
+    d:
+      `Not a favour exactly. They will call you first, print what you say, and let you answer ` +
+      `before the story is already shaped. That is worth more than coverage.`
+  }),
+  counsel: who => ({
+    n: `${who} will tell you what you are doing wrong`,
+    d:
+      `Forty years of watching people lose this seat, offered free, to somebody who probably ` +
+      `will not listen. They have made this offer before.`
+  })
+};
+
+/**
+ * The third hook source, and the one that is a TRAP — sometimes.
+ *
+ * The owner's framing for the whole open world: *"The game should have
+ * alleyways, some of which are shortcuts, some of which are traps."* Every hook
+ * shipped before this one was a gift. That is only half of how the building runs.
+ *
+ * A machine member who is genuinely WITH you does not offer a favour so much as
+ * a relationship, and what that is worth depends entirely on who they are. The
+ * Slate-Maker will put you on the slate; OB3 is literally called "Slate-Maker's
+ * Price" and has been sitting in the obligations registry since Phase 2 waiting
+ * for somebody to charge it. The Old Bull will just tell you the truth.
+ *
+ * COVENANT 5 — SAFE means safe, so the cards that cash the priced offers are not
+ * SAFE, and the price is stated on their face before you take it. A trap you can
+ * read and walk into anyway is a decision. A hidden one is a cheat, and everybody
+ * at the capitol knows exactly what the slate-maker wants.
+ *
+ * Only `with`-tier offers. Somebody who merely owes you has nothing to trade.
+ */
+export const MAX_MACHINE_HOOKS = 2;
+
 export function offerMachineHooks(state: GameState, legacy: LegacyState): number {
   const machine = getMachine(legacy);
-  // The strongest relationship only. This is a standing temptation, not a
-  // market stall — six simultaneous devil's bargains is a shop, not a trap.
-  const best = machine.members
+  const withYou = machine.members
     .filter(m => tierOf(m) === 'with')
-    .sort((a, b) => b.standing - a.standing)[0];
-  if (!best) return 0;
-  const h = offerHook(state, {
-    id: `HK_MACH_${best.id}`,
-    n: `${memberName(best.id)} wants to move some weight for you`,
-    d:
-      `${memberName(best.id)} can put real money and real people behind you this week. ` +
-      `There is an ask behind the ask, and you will not be told what it is until you have taken it.`,
-    kind: 'machine',
-    source: best.id,
-    stages: ['primary', 'general']
-  });
-  return h ? 1 : 0;
+    .sort((a, b) => b.standing - a.standing);
+
+  // One offer per FLAVOUR, strongest relationship of each, and at most two in
+  // total. Six simultaneous devil's bargains is a shop, not a trap — and two
+  // people offering you the identical thing is the flattening this split exists
+  // to undo.
+  const seen = new Set<string>();
+  let n = 0;
+  for (const m of withYou) {
+    if (n >= MAX_MACHINE_HOOKS) break;
+    const flavour = machineFlavour(m.id);
+    if (seen.has(flavour)) continue;
+    seen.add(flavour);
+    const who = memberName(m.id);
+    const copy = MACHINE_OFFER[flavour](who);
+    const h = offerHook(state, {
+      id: `HK_MACH_${m.id}`,
+      n: copy.n,
+      d: copy.d,
+      kind: 'machine',
+      source: m.id,
+      flavour,
+      stages: ['primary', 'general']
+    });
+    if (h) n++;
+  }
+  return n;
 }

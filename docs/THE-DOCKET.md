@@ -608,10 +608,70 @@ oldest recurring bug wearing yet another hat.
 Ceiling raised 65 → 80 **on evidence**, with the measurement written into the harness comment and
 an instruction not to move the number to fit a diff. Above 80 would be a real power creep.
 
+### Every source gets verbs
+
+The world had four verbs and everything else had one, which made "the registry is extensible"
+true of exactly one source. Fixed by asking what each source can actually be *in*.
+
+**A statute is in one of three states, and they are three different asks:**
+
+| state | when | card |
+|---|---|---|
+| `working` | nobody is waiting to strike it | **HK04 The Program Works** |
+| `sunset` | the language made enemies, so it faces reauthorization | **HK11 Promise to Carry the Renewal** |
+| `attacked` | the rival's `repealTarget` is this law | **HK12 Defend It Where It Lives** |
+
+**HK11** is the trap in the set. The people a sunsetting program pays will go to work for you
+today on the strength of a sentence — and the cost is not money and not a roll, it is that you
+have spent a session you have not been elected to yet. It attaches **OB11 The Renewal Promised**,
+the first obligation this project wrote rather than ported from the archive, with a small constant
+drag: a promise you keep repeating is a week spent defending last term instead of arguing this one.
+
+**HK12 is the join** between three systems that were each real and never touched. The rival picks
+a repeal target. The statute book knows which grounds that law serves. And the fight happened
+entirely in Austin. Now you can answer it in the county that gets the money, in front of the
+people who lose it — big rapport there, `rivalRap` down hard on that ground and down everywhere
+else, because *he does not have a good version of that sentence*. A repeal campaign nobody answers
+at home is the easiest campaign in Texas to run.
+
+**Sixteen people are not one transaction.** The machine offered one thread that read "somebody
+wants to move some weight," flattening the whole roster into a single deal. Now the offer is who
+they are:
+
+| flavour | who | card |
+|---|---|---|
+| `slate` | The Slate-Maker | **HK05 The Ask Behind the Ask** → OB3 |
+| `money` | Finance Chair, the Lobbyist | **HK05** → OB1 |
+| `press` | Beat Reporter, Drive-Time Host | **HK13 They Will Call You First** |
+| `counsel` | The Old Bull, Retired Judge, County Judge | **HK14 Let the Old Bull Talk** |
+
+`MAX_MACHINE_HOOKS = 2`, one per flavour, strongest relationship of each. Two people offering the
+identical thing is the flattening this split exists to undo.
+
+**HK14 is the only completely free thing in the hook set and gives you nothing you can post** —
+no money, no contacts, no name ID, asserted as all three. What it gives is a sharper message, a
+steadier hand, and one mistake you do not make. *Two hours, most of it about a race in 1988 that
+you did not ask about, and about forty seconds of it is the most useful thing anybody will say to
+you this cycle. You will not know which forty seconds until November.*
+
+**Members now carry their flavour too.** `HK01–03` used to reach back into `MEMBER_BY_ID` and
+re-derive the favour from `opensTo`. It worked, and it was one rename away from silently matching
+nothing forever. The flavour is written at the offer now, like every other source.
+
+### Verification
+
+301 assertions. Controls: collapse the statute states to `working` → **12 fail**; collapse every
+machine relationship to `slate` → **10 fail**.
+
+One instrument bug caught on the way, and it is the house special. `and you are a little harder to
+hit` asserted `exposure` went **down** after HK14 — but exposure ships at 0, so the `−1` clamped
+to 0 and the assertion measured nothing and passed. Same shape that once made an alley sweep
+report 0% harmful outcomes because every penalty clamped at momentum 0. The fixture seeds exposure
+at 3 now, with a comment saying why.
+
 ### What this is not
 
-Finished. All five `HookKind`s are live, all 21 events leave doors, and four verbs answer them.
-What is still thin: `member`, `statute` and `machine` sources each have exactly one shape of
-offer, where the world now has four. The Slate-Maker's deal should not be the same object as the
-Finance Chair's, and a statute up for reauthorization should offer something different from one
-that is simply working.
+Finished. Five sources, fourteen cards, and every source has real verbs — but the hook *board*
+itself is still just a list. Nothing yet plays two threads against each other: cashing the
+Slate-Maker's deal should make the Old Bull's counsel colder, and defending a statute at home
+should be visible to the member who helped you pass it.

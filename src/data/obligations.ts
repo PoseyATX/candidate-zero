@@ -112,6 +112,26 @@ export const OBLS: Record<string, ObligationDef> = {
     n: 'Debt of Gratitude',
     desc: 'repay in kind, someday',
     drag: () => {}
+  },
+  /**
+   * NOT from the archive. The first obligation this project wrote itself.
+   *
+   * A statute of yours sunsets, you tell the county you will carry the renewal,
+   * and they go to work for you on the strength of the sentence. The leash is
+   * that you have spent a session you have not been elected to yet.
+   *
+   * Its drag is small and constant rather than empty: a promise made at home is
+   * a thing you have to keep saying, and every week you say it is a week you are
+   * defending last term instead of arguing this one.
+   */
+  OB11: {
+    id: 'OB11',
+    n: 'The Renewal Promised',
+    desc: 'a bill is owed before you are sworn in',
+    drag: s => {
+      s.exposure += 0.1;
+      s.faces.P = Math.max(-50, (s.faces.P || 0) - 1);
+    }
   }
 };
 

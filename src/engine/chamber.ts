@@ -274,6 +274,11 @@ export function offerMemberHooks(state: GameState, legacy: LegacyState): number 
       kind: 'member',
       source: m.id,
       ground: m.ground,
+      // Written HERE, at the offer, rather than re-derived by each card from
+      // MEMBER_BY_ID. Every other source carries its own flavour; a card that
+      // reaches back into a different data table to work out what it is looking
+      // at is one rename away from silently matching nothing.
+      flavour: m.opensTo === 'DIP' ? 'name' : m.opensTo === 'CHA' ? 'turf' : 'truth',
       stages: ['primary', 'general']
     });
     if (h) n++;

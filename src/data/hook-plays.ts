@@ -25,16 +25,18 @@ function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
 }
 
-/** The member hook this card would cash, matched by the favour they offered. */
+/**
+ * The member hook this card would cash, matched by the favour they offered.
+ *
+ * Matches on the hook's own `flavour`, set at the offer in chamber.ts. This used
+ * to reach back into MEMBER_BY_ID and re-derive it from `opensTo`, which worked
+ * and was one rename away from silently matching nothing forever.
+ */
 function hookFor(
   s: Parameters<NonNullable<PlayCard['show']>>[0],
-  opensTo: 'DIP' | 'CHA' | 'other'
+  flavour: 'name' | 'turf' | 'truth'
 ) {
-  return hooksOfKind(s, 'member').find(h => {
-    const m = MEMBER_BY_ID[h.source];
-    if (!m) return false;
-    return opensTo === 'other' ? m.opensTo !== 'DIP' && m.opensTo !== 'CHA' : m.opensTo === opensTo;
-  });
+  return hooksOfKind(s, 'member').find(h => h.flavour === flavour);
 }
 
 /**
@@ -58,10 +60,10 @@ export const HK01_BorrowHisName: PlayCard = {
     'Name ID, endorsement weight, and a gust of momentum, safely. ' +
     'Diplomacy is the attribute. ' +
     'This is what a record is FOR: the favour economy runs backwards as well as forwards.',
-  show: s => !!hookFor(s, 'DIP'),
+  show: s => !!hookFor(s, 'name'),
   odds: () => 0.95,
   run: s => {
-    const h = hookFor(s, 'DIP');
+    const h = hookFor(s, 'name');
     if (!h) return 'Nobody owes you that particular favour.';
     takeHook(s, h.id);
     const m = MEMBER_BY_ID[h.source]!;
@@ -97,10 +99,10 @@ export const HK02_WorksHisCounty: PlayCard = {
     'not spread thinly across the map. ' +
     'Charm is the attribute and it is SAFE. ' +
     'The single most efficient turf play in the game, and you cannot buy it — only earn it.',
-  show: s => !!hookFor(s, 'CHA'),
+  show: s => !!hookFor(s, 'turf'),
   odds: () => 0.95,
   run: s => {
-    const h = hookFor(s, 'CHA');
+    const h = hookFor(s, 'turf');
     if (!h) return 'Nobody owes you that particular favour.';
     takeHook(s, h.id);
     const m = MEMBER_BY_ID[h.source]!;
@@ -141,10 +143,10 @@ export const HK03_TellMeTheTruth: PlayCard = {
     'Craft is the attribute. ' +
     'The rarest favour in the building: everybody will tell you what they think you want to hear, ' +
     'and almost nobody will do this.',
-  show: s => !!hookFor(s, 'other'),
+  show: s => !!hookFor(s, 'truth'),
   odds: () => 0.95,
   run: s => {
-    const h = hookFor(s, 'other');
+    const h = hookFor(s, 'truth');
     if (!h) return 'Nobody owes you that particular favour.';
     takeHook(s, h.id);
     const m = MEMBER_BY_ID[h.source]!;
@@ -161,6 +163,22 @@ export const HK03_TellMeTheTruth: PlayCard = {
     );
   }
 };
+
+/** A statute thread in a given state. See engine/laws.ts for the three states. */
+function statuteHook(
+  s: Parameters<NonNullable<PlayCard['show']>>[0],
+  flavour: 'working' | 'sunset' | 'attacked'
+) {
+  return hooksOfKind(s, 'statute').find(h => h.flavour === flavour);
+}
+
+/** A machine relationship of a given kind. See engine/machine.ts. */
+function machineHook(
+  s: Parameters<NonNullable<PlayCard['show']>>[0],
+  flavour: 'slate' | 'money' | 'press' | 'counsel'
+) {
+  return hooksOfKind(s, 'machine').find(h => h.flavour === flavour);
+}
 
 /**
  * HK04 — The Program Works.
@@ -186,10 +204,10 @@ export const HK04_TheProgramWorks: PlayCard = {
     'Craft is the attribute. ' +
     'This is what a law is FOR beyond the standing bonus: a program with nobody organized around it ' +
     'is just paper in Austin, and a program with people around it is a firewall.',
-  show: s => hooksOfKind(s, 'statute').length > 0,
+  show: s => !!statuteHook(s, 'working'),
   odds: () => 0.95,
   run: s => {
-    const h = hooksOfKind(s, 'statute')[0];
+    const h = statuteHook(s, 'working');
     if (!h) return 'No statute of yours is working on anybody right now.';
     takeHook(s, h.id);
     const g = s.groundsArr.find(x => x.id === h.ground);
@@ -235,10 +253,10 @@ export const HK05_AskBehindTheAsk: PlayCard = {
     'runs money and money comes with a string. ' +
     'Everybody at the capitol knows exactly what the slate-maker wants; the only question ' +
     'has ever been whether you are far enough behind to pay it.',
-  show: s => hooksOfKind(s, 'machine').length > 0,
+  show: s => !!machineHook(s, 'slate') || !!machineHook(s, 'money'),
   odds: () => 1,
   run: s => {
-    const h = hooksOfKind(s, 'machine')[0];
+    const h = machineHook(s, 'slate') ?? machineHook(s, 'money');
     if (!h) return 'Nobody in your machine is offering a deal right now.';
     takeHook(s, h.id);
     s.money += 900;
@@ -571,6 +589,199 @@ export const HK10_GoFindOut: PlayCard = {
   }
 };
 
+/**
+ * HK11 — Promise to Carry the Renewal.
+ *
+ * The `sunset` statute. Money runs out, authority expires, and somebody has to
+ * file the continuation. The people it pays will work for you right now on the
+ * strength of a promise — which is the trade, and it is a real one: you are
+ * spending a session you have not been elected to yet.
+ *
+ * Not SAFE. What it costs is not money or a roll, it is that the next chamber
+ * you walk into already has a bill in your name on it, whether that is the fight
+ * you would have chosen or not.
+ */
+export const HK11_CarryTheRenewal: PlayCard = {
+  id: 'HK11',
+  n: 'Promise to Carry the Renewal',
+  cost: { a: 1 },
+  risk: 'STD',
+  ph: [1, 2, 3],
+  tag: 'a session you have not won yet',
+  attrs: ['CON'],
+  d:
+    'A statute of yours runs out of money next biennium. Tell the people it pays that you will ' +
+    'carry the renewal, and they will work for you starting today. ' +
+    'Strong rapport and volunteers where the program lives, plus standing. ' +
+    'NOT SAFE, and the cost is not a roll: you are spending a session you have not been elected ' +
+    'to yet, and the next chamber you walk into has a bill in your name on it already. ' +
+    'Constituency is the attribute. ' +
+    'Every promise a member makes at home is a bill somebody in Austin has to eat.',
+  show: s => !!statuteHook(s, 'sunset'),
+  odds: () => 0.92,
+  run: s => {
+    const h = statuteHook(s, 'sunset');
+    if (!h) return 'Nothing of yours is running out of money.';
+    takeHook(s, h.id);
+    const g = s.groundsArr.find(x => x.id === h.ground);
+    if (g) {
+      g.rapport = clamp((g.rapport || 0) + 16, 0, 100);
+      g.gotv = (g.gotv || 0) + 0.07;
+    }
+    s.volPool += 2;
+    s.contacts += 40;
+    s.districtStanding += 3;
+    // The leash: you have committed the next session before you have won it.
+    addObl(s, 'OB11');
+    return (
+      `You say it out loud, in a room, to people who will remember the sentence: the renewal gets ` +
+      `carried. +16 rapport and turnout on ${g?.n ?? 'the ground it pays'}, two volunteers, +40 contacts, ` +
+      `+3 standing. You are now carrying ${oblName('OB11')}. ` +
+      `That is a session of your life, promised to a room, before anybody voted.`
+    );
+  }
+};
+
+/**
+ * HK12 — Defend It Where It Lives.
+ *
+ * The `attacked` statute — the one your opponent is campaigning to repeal.
+ *
+ * This is the join between three systems that were each real and never touched:
+ * the rival picks a repeal target, the statute book knows which grounds that law
+ * serves, and until now the fight happened entirely in Austin. It should happen
+ * in the county that gets the money, where the people who lose it live and vote.
+ *
+ * A repeal campaign you answer at home is much harder to run than one you ignore.
+ */
+export const HK12_DefendItWhereItLives: PlayCard = {
+  id: 'HK12',
+  n: 'Defend It Where It Lives',
+  cost: { a: 2 },
+  risk: 'SAFE',
+  ph: [1, 2, 3],
+  tag: 'the county that gets the money',
+  attrs: ['CON'],
+  d:
+    'Your opponent is running on repealing a statute of yours. Go answer it in the county that ' +
+    'gets the money, in front of the people who lose it. ' +
+    'Two actions, no risk. Big rapport where the law lives, and it takes the ground out from ' +
+    'under the repeal pitch everywhere. ' +
+    'Constituency is the attribute. ' +
+    'A repeal campaign nobody answers at home is the easiest campaign in Texas to run. ' +
+    'Make him explain to their faces which part he is taking away.',
+  show: s => !!statuteHook(s, 'attacked'),
+  odds: () => 0.95,
+  run: s => {
+    const h = statuteHook(s, 'attacked');
+    if (!h) return 'Nobody is running against anything you passed.';
+    takeHook(s, h.id);
+    const g = s.groundsArr.find(x => x.id === h.ground);
+    if (g) {
+      g.rapport = clamp((g.rapport || 0) + 20, 0, 100);
+      g.rivalRap = Math.max(0, (g.rivalRap || 0) - 10);
+    }
+    // The pitch gets harder everywhere once he has had to answer it once.
+    for (const x of s.groundsArr) x.rivalRap = Math.max(0, (x.rivalRap || 0) - 3);
+    s.messageSharp = true;
+    s.districtStanding += 2;
+    return (
+      `You hold it in the county that gets the money and you make him say out loud, to those people, ` +
+      `which part he is taking away. He does not have a good version of that sentence. ` +
+      `+20 rapport and −10 for him on ${g?.n ?? 'the ground it serves'}, −3 for him everywhere else, ` +
+      `message sharpens, +2 standing.`
+    );
+  }
+};
+
+/**
+ * HK13 — They Will Call You First.
+ *
+ * The `press` machine relationship. Not coverage — coverage is a lottery. This
+ * is somebody who calls you BEFORE the story is shaped and lets you answer while
+ * it is still a question rather than after it is a headline.
+ *
+ * Worth more than an ad and it cannot be bought, only carried for a few cycles.
+ */
+export const HK13_TheyWillCallYouFirst: PlayCard = {
+  id: 'HK13',
+  n: 'They Will Call You First',
+  cost: { a: 1 },
+  risk: 'SAFE',
+  ph: [1, 2, 3],
+  tag: 'before the story is shaped',
+  attrs: ['INK'],
+  d:
+    'Somebody who writes in this district will call you before the story is shaped, print what ' +
+    'you actually say, and let you answer while it is still a question. ' +
+    'One action. Name ID, a sharper message, and it takes a hit piece off you — you got to ' +
+    'respond before it ran. ' +
+    'Ink is the attribute and it is SAFE. ' +
+    'This is not coverage. Coverage is a lottery. This is a phone call, and you cannot buy it.',
+  show: s => !!machineHook(s, 'press'),
+  odds: () => 0.93,
+  run: s => {
+    const h = machineHook(s, 'press');
+    if (!h) return 'Nobody who writes in this district owes you a phone call.';
+    takeHook(s, h.id);
+    s.nameID += 5;
+    s.messageSharp = true;
+    s.hitPieces = Math.max(0, s.hitPieces - 1);
+    s.faces.T = clamp((s.faces.T || 0) + 2, -50, 100);
+    return (
+      `The phone rings before the piece runs, which is the entire difference between being ` +
+      `covered and being quoted. +5 name ID, message sharpens, one line of attack lands soft ` +
+      `(hit piece −1), Truth +2. ` +
+      `They are not doing you a favour. They would rather be right than first, and almost nobody ` +
+      `in this business still is.`
+    );
+  }
+};
+
+/**
+ * HK14 — Let the Old Bull Talk.
+ *
+ * The `counsel` machine relationship, and the only completely free thing in the
+ * hook set. Forty years of watching people lose this exact seat, offered to
+ * somebody who probably will not listen.
+ *
+ * It costs an action and gives no money, no contacts and no name ID. What it
+ * gives is that you stop making the mistake you were about to make.
+ */
+export const HK14_LetTheOldBullTalk: PlayCard = {
+  id: 'HK14',
+  n: 'Let the Old Bull Talk',
+  cost: { a: 1 },
+  risk: 'SAFE',
+  ph: [1, 2, 3],
+  tag: 'forty years of watching people lose',
+  attrs: ['CRA'],
+  d:
+    'Somebody who has watched people lose this exact seat for forty years will tell you what you ' +
+    'are doing wrong, for free, over coffee, at length. ' +
+    'One action. No money, no contacts, no name ID, nothing you can post. ' +
+    'A sharper message, steadier hands, and one mistake you do not make. ' +
+    'Craft is the attribute. ' +
+    'They have made this offer to every candidate in this county and almost none of them sat down.',
+  show: s => !!machineHook(s, 'counsel'),
+  odds: () => 0.95,
+  run: s => {
+    const h = machineHook(s, 'counsel');
+    if (!h) return 'Nobody is offering to tell you what you are doing wrong.';
+    takeHook(s, h.id);
+    s.messageSharp = true;
+    s.faces.P = clamp((s.faces.P || 0) + 4, -50, 100);
+    s.faces.O = clamp((s.faces.O || 0) + 2, -50, 100);
+    s.exposure = Math.max(0, (s.exposure || 0) - 1);
+    return (
+      `Two hours, most of it about a race in 1988 that you did not ask about, and about forty ` +
+      `seconds of it is the most useful thing anybody will say to you this cycle. ` +
+      `Message sharpens, Parliamentarian +4, Order +2, exposure −1. ` +
+      `You will not know which forty seconds until November.`
+    );
+  }
+};
+
 export const HOOK_PLAYS: PlayCard[] = [
   HK01_BorrowHisName,
   HK02_WorksHisCounty,
@@ -581,5 +792,9 @@ export const HOOK_PLAYS: PlayCard[] = [
   HK07_ShowUpWhereItHappened,
   HK08_SayItWithTheCameraOn,
   HK09_AskWhileOpen,
-  HK10_GoFindOut
+  HK10_GoFindOut,
+  HK11_CarryTheRenewal,
+  HK12_DefendItWhereItLives,
+  HK13_TheyWillCallYouFirst,
+  HK14_LetTheOldBullTalk
 ];

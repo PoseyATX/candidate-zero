@@ -252,7 +252,11 @@ export function applyLegacy(state: GameState, legacy: LegacyState): void {
   // you, statutes still working for somebody, and the machine, which does not
   // offer favours so much as deals. Order matters only for the board cap.
   const fromMembers = offerMemberHooks(state, legacy);
-  const fromStatutes = offerStatuteHooks(state, legacy);
+  // The rival's repeal target is what makes a statute thread READ as "attacked"
+  // rather than "up for renewal". Three systems that were each real and never
+  // touched: the rival picks a target, the book knows which grounds that law
+  // serves, and the fight used to happen entirely in Austin.
+  const fromStatutes = offerStatuteHooks(state, legacy, getRival(legacy, state).repealTarget);
   const fromMachine = offerMachineHooks(state, legacy);
   // The rival source is offered LAST of the persistent four, because it is the
   // only one you did not earn and the board cap should spend itself on the
