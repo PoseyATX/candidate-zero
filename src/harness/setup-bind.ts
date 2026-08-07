@@ -36,9 +36,12 @@ console.log('=== CANDIDATE ZERO — Setup Binding Harness ===\n');
   });
   assert(teacher.state.attrs.CHA > biz.state.attrs.CHA, 'teacher should out-CHA feed-store');
   assert(biz.state.attrs.CRA > teacher.state.attrs.CRA, 'feed-store should out-CRA teacher');
-  assert(biz.state.money > teacher.state.money, 'feed-store starts richer');
-  assert(teacher.state.contacts > biz.state.contacts, 'teacher starts with more contacts');
-  console.log('PASSED: persona attrs + starting ledgers bind', {
+  // Day-one cast is not well-seated: no free cash or contact dump. Attrs + bio only.
+  assert(biz.state.money === teacher.state.money, 'day-one personas start equally broke (no free ledger)');
+  assert(teacher.state.contacts === biz.state.contacts, 'day-one personas start without free contacts');
+  assert(teacher.state.assets.includes('BIO_TEACHER'), 'teacher bio asset binds');
+  assert(biz.state.assets.includes('BIO_FEEDSTORE'), 'feed-store bio asset binds');
+  console.log('PASSED: persona attrs bind; day-one not well-seated', {
     teacherCHA: teacher.state.attrs.CHA,
     bizCRA: biz.state.attrs.CRA,
     teacher$: teacher.state.money,
