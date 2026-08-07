@@ -123,6 +123,30 @@ export function paint(): void {
   renderLog(campaign);
 }
 
+/**
+ * Smoke / QA only (`?smoke=1`). Lets ui-smoke construct heat+locked without
+ * depending on Zero-kit early luck. Not a player path.
+ */
+export function wireSmokeSeam(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (new URLSearchParams(window.location.search).get('smoke') !== '1') return;
+  } catch {
+    return;
+  }
+  (window as unknown as { __czSmoke?: { forceHeatLock: (heat?: number) => boolean } }).__czSmoke = {
+    forceHeatLock(heat = 2) {
+      if (!campaign) return false;
+      campaign.state.heat = Math.max(1, heat);
+      // Exhaust campaign + turf AP so costed cards lock; free camp doors may remain.
+      campaign.state.ap = 0;
+      campaign.state.fieldAp = 0;
+      paint();
+      return true;
+    }
+  };
+}
+
 export function openActSplash(
   actId: Parameters<typeof openActSplashShell>[0],
   engineDetail?: string
