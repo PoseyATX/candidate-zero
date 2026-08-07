@@ -159,7 +159,7 @@ async function main() {
       await page.locator('#btn-title-start').click();
       await page.waitForTimeout(200);
       await check('setup');
-      const persona = page.locator('.id-card[data-kind="persona"][data-id="teacher"]');
+      const persona = page.locator('.id-card[data-kind="persona"][data-id="blockwalker"]');
       await persona.waitFor({ state: 'visible', timeout: 10_000 });
       await persona.click();
       await page.waitForTimeout(60);

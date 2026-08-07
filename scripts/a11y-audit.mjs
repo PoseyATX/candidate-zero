@@ -109,7 +109,7 @@ function main() {
       byState['setup'] = await runAxe(page);
 
       // --- In-game (one-beat open → seeded run, clear the act splash) ---
-      const persona = page.locator('.id-card[data-kind="persona"][data-id="teacher"]');
+      const persona = page.locator('.id-card[data-kind="persona"][data-id="blockwalker"]');
       await persona.waitFor({ state: 'visible', timeout: 10_000 });
       await persona.click();
       await page.waitForTimeout(40);
