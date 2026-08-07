@@ -1,8 +1,9 @@
 /**
- * Nameplate as a 3-step card draft (not a form).
- * 1 Persona → 2 Issue → 3 Place (district + region).
- * Identity is filed once; session layer persists it.
- * Seed survives re-renders so the player (and smoke) can set 4242 early.
+ * Zero open — one immersive beat, not a 3-step form.
+ *
+ * Who walks into the clerk's office with nothing. Tap a person, file, table.
+ * Place defaults on first filing (open / east / taxes). Career refile keeps
+ * locked identity via session layer. Seed is advanced only, not the star.
  */
 
 import {
@@ -12,28 +13,34 @@ import {
   REGIONS,
   type SetupSelection
 } from '../data/setup.js';
+import { DAY_ONE_PERSONA_IDS } from '../engine/zero.js';
 import { emblem } from './card-art.js';
 
-export type DraftStep = 1 | 2 | 3;
+/** Act I cast only — well-seated PA_* personas unlock much later. */
+const NAMEPLATE_PERSONAS = PERSONAS.filter(p =>
+  (DAY_ONE_PERSONA_IDS as readonly string[]).includes(p.id)
+);
+
+/** First-run place defaults — nobody picks a map before they have a name. */
+export const FIRST_FILING_DEFAULTS = {
+  issueId: 'taxes',
+  districtId: 'open',
+  regionId: 'east'
+} as const;
 
 export interface NameplateDraftState {
-  step: DraftStep;
   personaId: string | null;
-  issueId: string | null;
-  districtId: string | null;
-  regionId: string | null;
   /** Sticky seed string across re-renders (empty = random on file). */
   seedText: string;
+  /** Expand advanced seed field. */
+  showAdvanced: boolean;
 }
 
 export function emptyDraft(): NameplateDraftState {
   return {
-    step: 1,
     personaId: null,
-    issueId: null,
-    districtId: null,
-    regionId: null,
-    seedText: ''
+    seedText: '',
+    showAdvanced: false
   };
 }
 
@@ -57,16 +64,14 @@ function readSeedFromDom(): string {
 }
 
 function identityCardHtml(
-  kind: string,
   id: string,
   title: string,
   tag: string,
   body: string,
   selected: boolean
 ): string {
-  // Star for every identity card — no incomplete emblem map.
   return `
-    <button type="button" class="id-card ${selected ? 'selected' : ''}" data-kind="${kind}" data-id="${esc(id)}"
+    <button type="button" class="id-card ${selected ? 'selected' : ''}" data-kind="persona" data-id="${esc(id)}"
       aria-pressed="${selected ? 'true' : 'false'}">
       <span class="id-card-emblem">${emblem('star')}</span>
       <span class="id-card-name">${esc(title)}</span>
@@ -75,19 +80,17 @@ function identityCardHtml(
     </button>`;
 }
 
-function stepPips(step: DraftStep): string {
-  return [1, 2, 3]
-    .map(
-      n =>
-        `<span class="id-pip ${n === step ? 'active' : n < step ? 'done' : ''}" aria-hidden="true">${n}</span>`
-    )
-    .join('');
-}
-
 function resolveSeed(seedText: string): number {
   const n = Number(seedText);
   if (seedText.trim() !== '' && Number.isFinite(n) && n >= 0) return Math.floor(n);
   return Date.now() % 1_000_000;
+}
+
+function placeLine(): string {
+  const i = ISSUES.find(x => x.id === FIRST_FILING_DEFAULTS.issueId);
+  const d = DISTRICTS.find(x => x.id === FIRST_FILING_DEFAULTS.districtId);
+  const r = REGIONS.find(x => x.id === FIRST_FILING_DEFAULTS.regionId);
+  return [i?.n, d?.n, r?.n].filter(Boolean).join(' · ');
 }
 
 export function renderNameplateDraft(
@@ -96,84 +99,54 @@ export function renderNameplateDraft(
   onFile: (setup: SetupSelection, seed: number) => void
 ): void {
   const host = $('nameplate-draft');
-  // Prefer live DOM seed if present (player typed between paints).
   const seedText = readSeedFromDom() || draft.seedText;
-
-  const stepLabel =
-    draft.step === 1
-      ? 'Who walks in with nothing'
-      : draft.step === 2
-        ? 'What hill you die on'
-        : 'Where they will try to bury you';
-
-  let grid = '';
-  if (draft.step === 1) {
-    grid = PERSONAS.map(p =>
-      identityCardHtml(
-        'persona',
-        p.id,
-        p.n.replace(/^The /, ''),
-        p.tag,
-        p.d,
-        draft.personaId === p.id
-      )
-    ).join('');
-  } else if (draft.step === 2) {
-    grid = ISSUES.map(i =>
-      identityCardHtml('issue', i.id, i.n, i.tag, i.d, draft.issueId === i.id)
-    ).join('');
-  } else {
-    const districts = DISTRICTS.map(d =>
-      identityCardHtml(
-        'district',
-        d.id,
-        d.n,
-        d.align,
-        d.d,
-        draft.districtId === d.id
-      )
-    ).join('');
-    const regions = REGIONS.map(r =>
-      identityCardHtml('region', r.id, r.n, r.hook, r.d, draft.regionId === r.id)
-    ).join('');
-    grid =
-      `<div class="id-place-block"><h3 class="id-subhead">District</h3><div class="id-card-grid">${districts}</div></div>` +
-      `<div class="id-place-block"><h3 class="id-subhead">Region</h3><div class="id-card-grid">${regions}</div></div>`;
-  }
-
-  const canFile =
-    !!draft.personaId && !!draft.issueId && !!draft.districtId && !!draft.regionId;
-
   const p = PERSONAS.find(x => x.id === draft.personaId);
-  const i = ISSUES.find(x => x.id === draft.issueId);
-  const d = DISTRICTS.find(x => x.id === draft.districtId);
-  const r = REGIONS.find(x => x.id === draft.regionId);
-  const summary = [p?.n.replace(/^The /, ''), i?.n, d?.n, r?.n].filter(Boolean).join(' · ');
+  const canFile = !!draft.personaId;
+
+  const grid = NAMEPLATE_PERSONAS.map(persona =>
+    identityCardHtml(
+      persona.id,
+      persona.n.replace(/^The /, ''),
+      persona.tag,
+      persona.d,
+      draft.personaId === persona.id
+    )
+  ).join('');
 
   host.innerHTML = `
-    <div class="id-pips" role="group" aria-label="Filing step ${draft.step} of 3">${stepPips(draft.step)}</div>
-    <p class="id-step-label">${stepLabel}</p>
-    <p class="hint id-step-hint">Tap a card to choose. Your picks stick for the career until you refile.</p>
-    ${draft.step < 3 ? `<div class="id-card-grid">${grid}</div>` : grid}
-    <p class="id-summary" aria-live="polite">${summary ? esc(summary) : 'Pick who you are, what you run on, and where you file.'}</p>
+    <p class="id-step-label">The clerk's window is open</p>
+    <p class="hint id-step-hint">
+      Four people who are not well-seated. One of them is you. Legs, a voice, a filing deadline —
+      no list, no machine, no blessing. Tap who walks in.
+    </p>
+    <div class="id-card-grid">${grid}</div>
+    <p class="id-summary" aria-live="polite">${
+      p
+        ? esc(
+            `${p.n.replace(/^The /, '')} · first filing · ${placeLine()} · you start with boots and a voice`
+          )
+        : 'Nobody has filed yet.'
+    }</p>
     <div class="id-draft-actions">
-      ${draft.step > 1 ? `<button type="button" class="btn" id="id-back">Back</button>` : ''}
-      <label class="id-seed-label">Seed
-        <input id="seed-input" type="number" min="0" step="1" placeholder="random" value="${esc(seedText)}" />
-      </label>
+      <button type="button" class="btn" id="id-advanced-toggle" aria-expanded="${draft.showAdvanced}">
+        ${draft.showAdvanced ? 'Hide seed' : 'Seed (advanced)'}
+      </button>
       ${
-        draft.step === 3
-          ? `<button type="button" class="btn btn-gold" id="btn-start" ${canFile ? '' : 'disabled'}
-               title="${canFile ? 'File this identity and begin the primary' : 'Pick district and region first'}">
-               Begin primary
-             </button>`
-          : ''
+        draft.showAdvanced
+          ? `<label class="id-seed-label">Seed
+              <input id="seed-input" type="number" min="0" step="1" placeholder="random" value="${esc(seedText)}" />
+            </label>`
+          : `<input id="seed-input" type="hidden" value="${esc(seedText)}" />`
       }
+      <button type="button" class="btn btn-gold" id="btn-start" ${canFile ? '' : 'disabled'}
+        title="${canFile ? 'File and begin the primary' : 'Pick who walks in first'}">
+        Walk in and file
+      </button>
     </div>
   `;
 
   const seedInput = document.getElementById('seed-input') as HTMLInputElement | null;
-  if (seedInput) {
+  if (seedInput && seedInput.type !== 'hidden') {
     seedInput.addEventListener('input', () => {
       draft.seedText = seedInput.value;
     });
@@ -181,46 +154,28 @@ export function renderNameplateDraft(
 
   host.querySelectorAll('.id-card').forEach(btn => {
     btn.addEventListener('click', () => {
-      const kind = (btn as HTMLElement).dataset.kind;
       const id = (btn as HTMLElement).dataset.id;
-      if (!kind || !id) return;
-      const next: NameplateDraftState = {
+      if (!id) return;
+      onChange({
         ...draft,
+        personaId: id,
         seedText: readSeedFromDom() || draft.seedText
-      };
-      if (kind === 'persona') {
-        next.personaId = id;
-        // Auto-advance — pick is the action, not a two-tap dance.
-        next.step = 2;
-      } else if (kind === 'issue') {
-        next.issueId = id;
-        next.step = 3;
-      } else if (kind === 'district') {
-        next.districtId = id;
-      } else if (kind === 'region') {
-        next.regionId = id;
-      }
-      onChange(next);
+      });
     });
   });
 
-  const back = document.getElementById('id-back');
-  if (back) {
-    back.addEventListener('click', () => {
-      onChange({
-        ...draft,
-        seedText: readSeedFromDom() || draft.seedText,
-        step: Math.max(1, draft.step - 1) as DraftStep
-      });
+  document.getElementById('id-advanced-toggle')?.addEventListener('click', () => {
+    onChange({
+      ...draft,
+      seedText: readSeedFromDom() || draft.seedText,
+      showAdvanced: !draft.showAdvanced
     });
-  }
+  });
 
   const startBtn = document.getElementById('btn-start');
   if (startBtn) {
     startBtn.addEventListener('click', () => {
-      if (!canFile || !draft.personaId || !draft.issueId || !draft.districtId || !draft.regionId) {
-        return;
-      }
+      if (!draft.personaId) return;
       const liveSeed = readSeedFromDom() || draft.seedText;
       const seed = resolveSeed(liveSeed);
       const input = document.getElementById('seed-input') as HTMLInputElement | null;
@@ -228,9 +183,9 @@ export function renderNameplateDraft(
       onFile(
         {
           personaId: draft.personaId,
-          issueId: draft.issueId,
-          districtId: draft.districtId,
-          regionId: draft.regionId
+          issueId: FIRST_FILING_DEFAULTS.issueId,
+          districtId: FIRST_FILING_DEFAULTS.districtId,
+          regionId: FIRST_FILING_DEFAULTS.regionId
         },
         seed
       );

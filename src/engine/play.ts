@@ -14,6 +14,9 @@ import { syncMovementFlags } from './entities.js';
 import { effectiveApCost, upgradeOddsBonus } from './upgrades.js';
 import { bankHeat, canPress, quotePress, pressLabel } from './heat.js';
 import { maybeTriggerNotice } from './notice.js';
+import { noteCardContacts } from './promotion.js';
+import { hasTableSlot, spendTableSlot, ensureSlots } from './slots.js';
+import { LIABILITY_IDS } from '../data/zero-deck.js';
 import type { AttrId, GameState, Ground, PlayCard, PlayOutcome, RollResult } from './types.js';
 
 /** Turf AP a field card can draw on; non-field cards can never touch it. */
@@ -50,7 +53,16 @@ export function isVisible(state: GameState, card: PlayCard): boolean {
 }
 
 export function isPlayable(state: GameState, card: PlayCard): boolean {
-  return isPhaseLegal(state, card) && isVisible(state, card) && canAfford(state, card);
+  if (!isPhaseLegal(state, card) || !isVisible(state, card) || !canAfford(state, card)) {
+    return false;
+  }
+  // Zero table slots: camp/shop free actions still need a slot when zeroMode
+  if (state.sessionFlags?.zeroMode === 1) {
+    ensureSlots(state);
+    // Liability cards that cost 0 AP still consume a slot if played as actions
+    if ((state.tableSlots ?? 0) <= 0 && (card.cost.a ?? 0) > 0) return false;
+  }
+  return true;
 }
 
 export function payCost(state: GameState, card: PlayCard): void {
@@ -132,6 +144,12 @@ export function executePlay(
   if (!canAfford(state, card)) {
     return { ok: false, reason: 'Cannot afford cost', cardId: card.id, cardName: card.n };
   }
+  // Spec §3.3: table slot is the scarce resource on Zero runs
+  if (state.sessionFlags?.zeroMode === 1 && (card.cost.a ?? 0) > 0) {
+    if (!hasTableSlot(state)) {
+      return { ok: false, reason: 'No room on the table this week', cardId: card.id, cardName: card.n };
+    }
+  }
 
   const g = ground ?? (card.field ? pickDefaultGround(state) : undefined);
   if (card.field && !g) {
@@ -156,6 +174,14 @@ export function executePlay(
   state.tier = getPhase(state) - 1;
 
   payCost(state, card);
+  if (state.sessionFlags?.zeroMode === 1 && (card.cost.a ?? 0) > 0) {
+    spendTableSlot(state);
+  }
+
+  // The play is committed, so the meeting happened — a figure banks the contact
+  // whether the roll lands or not. Standing in front of somebody badly is still
+  // standing in front of them. See engine/promotion.ts.
+  noteCardContacts(state, card.figures);
 
   const before = {
     ballot: state.ballot,
@@ -171,8 +197,22 @@ export function executePlay(
   const attrMod = cardAttrMod(state, card);
   const rivalPen = card.field ? rivalOddsPenalty(g) : 0;
   // Upgrades shift the odds going INTO resolve; they never touch the roll,
-  // the bands, or the tier mapping (Covenant 4).
+  // the bands, or the tier mapping (Covenant 4). Carried assets/allies only
+  // ever adjust p here — never force a tier (spec §5 anti-creep).
   const upBonus = upgradeOddsBonus(state, card);
+  // Liabilities in kit: No Standing / Expectations / Rigidity shift bands only
+  let liabilityPen = 0;
+  const kit = state.deck || [];
+  if (kit.includes('ZS_NOSTANDING') && (card.attrs || []).some(a => a === 'CHA' || a === 'DIP')) {
+    liabilityPen += 0.08;
+  }
+  if (kit.includes('ZF_EXPECTATIONS') && card.risk !== 'SAFE') {
+    liabilityPen += 0.06;
+  }
+  if (kit.includes('ZL_RIGIDITY') && (card.id.startsWith('AL') || (card.cost.fav ?? 0) > 0)) {
+    liabilityPen += 0.12;
+  }
+  void LIABILITY_IDS;
 
   // Press: the player cashes a landed streak for better odds on this one play,
   // and pays for them with a wider disaster band. Read the wager before the
@@ -184,7 +224,7 @@ export function executePlay(
 
   p = Math.max(
     0.02,
-    Math.min(0.95, p + attrMod + groundOddsBonus - rivalPen + upBonus + pressOdds)
+    Math.min(0.95, p + attrMod + groundOddsBonus - rivalPen + upBonus + pressOdds - liabilityPen)
   );
 
   state.sessionFlags = state.sessionFlags || {};

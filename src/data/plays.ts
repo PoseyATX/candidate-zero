@@ -13,6 +13,7 @@ import { WAVE5_PLAYS } from './plays-wave5.js';
 import { PROMO_PLAYS } from './promo-plays.js';
 import { MACHINE_DOOR_PLAYS } from './machine-doors.js';
 import { CHOICE_PLAYS } from './choice-plays.js';
+import { ZERO_KIT_PLAYS } from './zero-deck.js';
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
@@ -199,6 +200,9 @@ export const PL08_KitchenTable: PlayCard = {
 export const PL09_EarnedMedia: PlayCard = {
   id: 'PL09', n: 'Earned Media', cost: { a:2, m:1 }, risk: 'VOL', refundOnBreak: true, ph: [1,2,3], tag: 'the gallery',
   attrs: ['CHA'],
+  // The host and the reporter are both named in the copy below; keep calling
+  // them and they stop being copy. See engine/promotion.ts.
+  figures: ['AL05', 'AL04'],
   d:
     'A county weekly, a drive-time host, a stringer if you are lucky. Costs a point of momentum to spend. ' +
     'Cheapest large name-ID gain when it lands — and the play most likely to hand you a hit piece, ' +
@@ -237,6 +241,9 @@ export const PL10_PressRelease: PlayCard = {
 export const PL13_FishFry: PlayCard = {
   id: 'PL13', n: 'Fish Fry', cost: { a:3, $:150 }, risk: 'SAFE', ph: [1,2,3], field: true, tag: 'clean money',
   attrs: ['CHA'],
+  // Somebody keeps the small-dollar list between fries. Enough plates and she
+  // has a title. See engine/promotion.ts.
+  figures: ['AL10'],
   d:
     'Five-dollar plates, a donation jar, and more casseroles than anyone can eat. Net positive always — ' +
     'even a rainy night clears the $150 cost. A good night is hundreds of dollars, rapport, and volunteers. ' +
@@ -419,6 +426,7 @@ export const SHOP_PLAYS: PlayCard[] = tagMainPlayer(allShopPlayTemplates());
 
 /** Includes promo injectables (PR01) — show:false keeps them out of normal pools. */
 export const ALL_PLAYS: PlayCard[] = [
+  ...ZERO_KIT_PLAYS,
   ...CORE_PLAYS,
   ...CHOICE_PLAYS,
   ...WAVE4_PLAYS,

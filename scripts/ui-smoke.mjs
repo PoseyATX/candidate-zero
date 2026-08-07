@@ -96,7 +96,12 @@ async function main() {
 
     await page.locator('#btn-title-start').click();
     assert(await page.locator('#setup').isVisible(), 'Begin the Climb → setup screen');
-    assert(await page.locator('#seed-input').isVisible(), 'seed input present on setup');
+    // Zero open: one identity beat (four people), not a 3-step form.
+    assert(await page.locator('.id-card[data-kind="persona"]').count() === 4, 'day-one cast is four people');
+    assert(
+      (await page.locator('.id-card[data-kind="issue"]').count()) === 0,
+      'no issue wizard on first filing'
+    );
     // Playtest #9: How to Play on setup (persona selection), not only title
     assert(await page.locator('#btn-setup-howto').isVisible(), 'setup has How to Play button');
     await page.locator('#btn-setup-howto').click();
@@ -104,20 +109,17 @@ async function main() {
     await page.locator('#btn-tut-back').click();
     assert(await page.locator('#setup').isVisible(), 'tutorial back → setup');
 
-    // 2. Complete the 3-step nameplate draft (Teacher · taxes · open · east) + seed.
-    // Identity draft replaced the old form; seed + Begin primary live on step 3.
-    async function pickId(kind, id) {
-      const card = page.locator(`.id-card[data-kind="${kind}"][data-id="${id}"]`);
+    // One-beat open: Teacher → seed (advanced) → Walk in and file
+    async function pickPersona(id) {
+      const card = page.locator(`.id-card[data-kind="persona"][data-id="${id}"]`);
       await card.waitFor({ state: 'visible', timeout: 10_000 });
       await card.click();
       await page.waitForTimeout(40);
     }
-    await pickId('persona', 'teacher');
-    await pickId('issue', 'taxes');
-    await pickId('district', 'open');
-    await pickId('region', 'east');
+    await pickPersona('blockwalker');
+    await page.locator('#id-advanced-toggle').click();
     await page.locator('#seed-input').fill('4242');
-    assert(await page.locator('#btn-start').isVisible(), 'Begin primary on nameplate step 3');
+    assert(await page.locator('#btn-start').isVisible(), 'Walk in and file is present');
     await page.locator('#btn-start').click();
     await page.waitForSelector('#game:not(.hidden)', { timeout: 10_000 });
     assert(true, 'Begin primary → game screen');
@@ -171,8 +173,8 @@ async function main() {
     // Human playtest checklist (automated slice) — phone 390×844 default
     const hudText = await page.locator('#hud').innerText().catch(() => '');
     assert(
-      /Teacher/i.test(hudText) && !/^The\b/m.test(hudText.split('\n')[0] || ''),
-      `HUD shows persona (Teacher), not bare article "The" (got: ${JSON.stringify(hudText.slice(0, 80))})`
+      /Blockwalker/i.test(hudText) && !/^The\b/m.test(hudText.split('\n')[0] || ''),
+      `HUD shows persona (Blockwalker), not bare article "The" (got: ${JSON.stringify(hudText.slice(0, 80))})`
     );
     assert(/\$|W\d+/i.test(hudText), 'HUD shows $ / week without Dossier');
     const goalText2 = await page.locator('#goal-strip').innerText().catch(() => '');
@@ -620,10 +622,8 @@ async function main() {
       await page.evaluate(() => localStorage.clear());
       await page.goto(`${BASE}?promo=PR01`, { waitUntil: 'networkidle' });
       await page.locator('#btn-title-start').click();
-      await pickId('persona', 'teacher');
-      await pickId('issue', 'taxes');
-      await pickId('district', 'open');
-      await pickId('region', 'east');
+      await pickPersona('blockwalker');
+      await page.locator('#id-advanced-toggle').click();
       await page.locator('#seed-input').fill('4242');
       await page.locator('#btn-start').click();
       await page.waitForSelector('#game:not(.hidden)', { timeout: 10_000 });
@@ -698,10 +698,8 @@ async function main() {
       await page.evaluate(() => localStorage.clear());
       await page.goto(`${BASE}?smoke=1`, { waitUntil: 'networkidle' });
       await page.locator('#btn-title-start').click();
-      await pickId('persona', 'teacher');
-      await pickId('issue', 'taxes');
-      await pickId('district', 'open');
-      await pickId('region', 'east');
+      await pickPersona('blockwalker');
+      await page.locator('#id-advanced-toggle').click();
       await page.locator('#seed-input').fill('4242');
       await page.locator('#btn-start').click();
       await page.waitForSelector('#game:not(.hidden)', { timeout: 10_000 });

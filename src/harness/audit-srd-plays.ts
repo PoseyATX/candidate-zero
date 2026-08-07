@@ -39,7 +39,7 @@ function audit(card: PlayCard): Row {
   // holds them, so the id has to carry the ally id rather than a serial).
   if (
     !card.id ||
-    !(/^(PL\d{2}[A-Z]?|MV\d{2}|PR\d{2}|MD_AL\d{2}|CH\d{2}|PO\d{2}|MB\d{2})$/.test(card.id))
+    !(/^(PL\d{2}[A-Z]?|MV\d{2}|PR\d{2}|MD_AL\d{2}|CH\d{2}|PO\d{2}|MB\d{2}|Z[NBLFS]_[A-Z0-9]+)$/.test(card.id))
   ) {
     issues.push('bad id');
   }

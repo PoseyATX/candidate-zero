@@ -1,7 +1,7 @@
 /**
- * CANDIDATE ZERO — Deck / Hand / Draw (pure, roguelite growth)
- * Enforces 1 new card drawn from the expanding pool every week.
- * Phase turns provide evolution opportunities (add/sharpen/cut).
+ * CANDIDATE ZERO — Deck / Hand / Draw
+ * Harness kit may drip a free weekly card for instruments.
+ * Zero kit does not — growth is opportunity (phase drafts you may walk past).
  */
 
 import type { DeckState, GameState, PlayCard } from './types.js';
@@ -9,6 +9,7 @@ import { PLAYS } from '../data/plays.js';
 import { random } from './rng.js';
 import { warm } from './reputation.js';
 import { upgradableCardIds, upgradeOptionId, parseUpgradeOption, applyUpgrade } from './upgrades.js';
+import { generateOpportunities } from './opportunity.js';
 
 /**
  * Full toolkit for **harness** instruments only (`starterKit: 'harness'`).
@@ -88,42 +89,98 @@ export function discardCard(deck: DeckState, cardId: string): void {
 
 export const DEFAULT_HAND_SIZE = 5;
 
-// === WEEKLY DRAW ENFORCEMENT (core roguelite growth rule) ===
+// === WEEKLY GROWTH (not free power drip) ===
 
 function getAvailableNewCards(state: GameState): string[] {
   const owned = new Set(state.deck || []);
   const fixedEarly = new Set(['PL01', 'PL04', 'PL05']);
+  // Cards recently shown as opportunities — do not spam the same 1–3 forever.
+  const recent = String(state.sessionFlags?.recentOffers || '')
+    .split(',')
+    .filter(Boolean);
+  const recentSet = new Set(recent);
   return PLAYS
     .filter((p: PlayCard) =>
       !owned.has(p.id) &&
       !fixedEarly.has(p.id) &&
+      !recentSet.has(p.id) &&
       (!p.show || p.show(state)) &&
       (!p.req || p.req(state))
     )
     .map((p: PlayCard) => p.id);
 }
 
+/** How well a card fits this persona's strengths (attrs above baseline 10). */
+function thematicWeight(state: GameState, cardId: string): number {
+  const p = PLAYS.find(c => c.id === cardId);
+  if (!p) return 1;
+  let w = 1;
+  const attrs = state.attrs;
+  if (attrs && p.attrs?.length) {
+    for (const a of p.attrs) {
+      const v = attrs[a] ?? 10;
+      if (v > 10) w += (v - 10) * 2;
+      else if (v < 10) w += 0.25;
+    }
+  } else {
+    w += 0.5;
+  }
+  return Math.max(0.1, w);
+}
+
+function weightedPick(ids: string[], weightOf: (id: string) => number): number {
+  if (!ids.length) return -1;
+  const total = ids.reduce((s, id) => s + weightOf(id), 0);
+  let roll = random() * total;
+  for (let i = 0; i < ids.length; i++) {
+    roll -= weightOf(ids[i]!);
+    if (roll <= 0) return i;
+  }
+  return ids.length - 1;
+}
+
+function rememberOffers(state: GameState, shown: string[]): void {
+  const prev = String(state.sessionFlags?.recentOffers || '')
+    .split(',')
+    .filter(Boolean);
+  const next = [...shown, ...prev].slice(0, 12);
+  state.sessionFlags = { ...state.sessionFlags, recentOffers: next.join(',') };
+}
+
 /**
- * Mandatory weekly draw: always add 1 new card from the growing pool.
- * Called at the start of every week (or end of previous).
- * Bonus draws come from perks (AL11).
+ * Weekly growth for **harness** kit only: free card drip keeps regression
+ * instruments moving. Player Zero does **not** get a free card every week —
+ * that is cookie-clicker power, not a campaign. Growth is opportunity
+ * (phase drafts you may walk past, paths, events), not entitlement.
  */
 export function enforceWeeklyDraw(state: GameState): string[] {
+  if (state.sessionFlags?.zeroMode === 1) {
+    return [];
+  }
   const drawn: string[] = [];
   if (!state.deck) state.deck = [];
   const pool = getAvailableNewCards(state);
   if (pool.length > 0) {
-    const idx = Math.floor(random() * pool.length);
-    const newId = pool[idx]!;
-    state.deck.push(newId);
-    drawn.push(newId);
+    const idx = weightedPick(pool, id => {
+      const r = RARITY_WEIGHT[rarityOf(id)] ?? 6;
+      return r * thematicWeight(state, id);
+    });
+    if (idx >= 0) {
+      const newId = pool[idx]!;
+      state.deck.push(newId);
+      drawn.push(newId);
+    }
   }
-  // Bonus draws (from allies/perks)
+  // Bonus draws (from allies/perks) — harness / advanced only
   const bonus = warmAllyBonus(state) ? 1 : 0;
   for (let i = 0; i < bonus; i++) {
     const extraPool = getAvailableNewCards(state);
     if (extraPool.length === 0) break;
-    const extraIdx = Math.floor(random() * extraPool.length);
+    const extraIdx = weightedPick(extraPool, id => {
+      const r = RARITY_WEIGHT[rarityOf(id)] ?? 6;
+      return r * thematicWeight(state, id);
+    });
+    if (extraIdx < 0) break;
     const extraId = extraPool[extraIdx]!;
     state.deck.push(extraId);
     drawn.push(extraId);
@@ -146,28 +203,35 @@ function warmAllyBonus(state: GameState): boolean {
 const RARITY_WEIGHT: Record<string, number> = { common: 6, uncommon: 2, rare: 1 };
 const rarityOf = (id: string): string => PLAYS.find(p => p.id === id)?.rarity ?? 'common';
 
+/**
+ * Build a phase opportunity (0–count options). Not a mall: rarity + persona
+ * theme weight the roll so runs do not re-serve the same three commons.
+ * Caller may decline — taking zero is legal.
+ */
 export function buildPhaseDraft(state: GameState, count = 3): { phase: number; options: string[] } {
+  // Zero: contextual opportunities only — empty is legal (spec §4).
+  if (state.sessionFlags?.zeroMode === 1) {
+    return generateOpportunities(state, count);
+  }
   const options: string[] = [];
-  // Depth as an alternative to breadth: one slot may offer to sharpen a card
-  // you already run. Rides the existing draft channel rather than inventing a
-  // second offer system. See engine/upgrades.ts.
   const owned = upgradableCardIds(state, state.deck ?? []);
-  if (owned.length && count > 1) {
+  if (owned.length && count > 1 && random() < 0.45) {
     options.push(upgradeOptionId(owned[Math.floor(random() * owned.length)]!));
   }
   const working = getAvailableNewCards(state);
+  const weightOf = (id: string) =>
+    (RARITY_WEIGHT[rarityOf(id)] ?? 6) * thematicWeight(state, id);
+
   while (options.length < count && working.length > 0) {
-    // Weighted pick: sum weights, roll, walk. Keeps rares rare in the draft.
-    const total = working.reduce((s, id) => s + (RARITY_WEIGHT[rarityOf(id)] ?? 6), 0);
-    let roll = random() * total;
-    let idx = 0;
-    for (; idx < working.length; idx++) {
-      roll -= RARITY_WEIGHT[rarityOf(working[idx])] ?? 6;
-      if (roll <= 0) break;
-    }
-    const [id] = working.splice(Math.min(idx, working.length - 1), 1);
+    const idx = weightedPick(working, weightOf);
+    if (idx < 0) break;
+    const [id] = working.splice(idx, 1);
     if (id) options.push(id);
   }
+  rememberOffers(
+    state,
+    options.map(o => parseUpgradeOption(o) ?? o)
+  );
   return { phase: 0, options };
 }
 
@@ -261,6 +325,21 @@ export function autoResolvePhaseDraft(state: GameState, deck?: DeckState): strin
   if (!state.pendingDraft?.options.length) return null;
   const r = resolvePhaseDraft(state, 0, deck);
   return r.cardId ?? null;
+}
+
+/** Walk past a phase opportunity — taking zero is legal. */
+export function declinePhaseDraft(state: GameState): { ok: boolean; reason?: string } {
+  if (!state.pendingDraft?.options.length) {
+    return { ok: false, reason: 'No pending opportunity' };
+  }
+  const shown = state.pendingDraft.options.join(', ');
+  state.pendingDraft = undefined;
+  state.log.push({
+    week: state.week,
+    kind: 'note',
+    text: `Walked past the opportunity (${shown}). The deck stays lean on purpose.`
+  });
+  return { ok: true };
 }
 
 /**

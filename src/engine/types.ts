@@ -96,6 +96,10 @@ export interface PlayCard {
    *  (drawn once per run, kept out of normal draft/growth pools via show:()=>false).
    *  See engine/promo.ts. */
   promoRate?: number;
+  /** Named background figures (ally ids) this play puts the player in front of.
+   *  Each play banks a contact; enough contacts and the figure stops being
+   *  scenery and starts being an actor. See engine/promotion.ts. */
+  figures?: string[];
 }
 
 export interface RollResult {
@@ -202,7 +206,8 @@ export interface GameState {
   districtStanding: number;
   bill: Bill | null;
   committee: Committee | null;
-  sessionFlags: Record<string, boolean | number>;
+  /** Session-scoped flags. Numbers/bools preferred; short strings for lists (e.g. recentOffers). */
+  sessionFlags: Record<string, boolean | number | string>;
   wave: number;
   skippedTownHall: boolean;
   townHallThisWeek: boolean;
@@ -212,6 +217,12 @@ export interface GameState {
   attrs: Attrs;
   seed?: number;
   regionHook?: string;
+  /**
+   * Table play slots remaining this week (spec §3.3). Scarce resource.
+   * Never shown as a progress unlock — just how many plays fit the table.
+   */
+  tableSlots?: number;
+  tableSlotsMax?: number;
   slowDecay?: boolean;
   globalBand?: number;
   pieMalus?: number;
@@ -250,6 +261,10 @@ export interface GameState {
   entityHistory?: string[];
   orbitWarmth?: Record<string, number>;
   pendingMovement?: import('./types-entities.js').MovementOpportunity;
+  /** figureId -> times the player has crossed their path. On the third the
+   *  figure is promoted into the actor system, silently. Optional so every save
+   *  written before it existed still loads. See engine/promotion.ts. */
+  contactLog?: Record<string, number>;
 }
 
 /**
@@ -417,6 +432,9 @@ export interface LegacyCarry {
   careerDeck?: string[];
   /** Short felt scars from losses (last N kept). */
   scars?: string[];
+  /** §5 carry — ally ids / assets banked for density, not card re-deal. */
+  bankedAllyIds?: string[];
+  bankedAssets?: string[];
 }
 
 /** Filed identity — set once at nameplate; never re-prompted until Chronicle wipe. */

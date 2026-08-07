@@ -159,16 +159,11 @@ async function main() {
       await page.locator('#btn-title-start').click();
       await page.waitForTimeout(200);
       await check('setup');
-      const pick = async (kind, id) => {
-        const c = page.locator(`.id-card[data-kind="${kind}"][data-id="${id}"]`);
-        await c.waitFor({ state: 'visible', timeout: 10_000 });
-        await c.click();
-        await page.waitForTimeout(60);
-      };
-      await pick('persona', 'teacher');
-      await pick('issue', 'taxes');
-      await pick('district', 'open');
-      await pick('region', 'east');
+      const persona = page.locator('.id-card[data-kind="persona"][data-id="blockwalker"]');
+      await persona.waitFor({ state: 'visible', timeout: 10_000 });
+      await persona.click();
+      await page.waitForTimeout(60);
+      await page.locator('#id-advanced-toggle').click();
       await page.locator('#seed-input').fill('4242');
       await page.locator('#btn-start').click();
       await page.waitForSelector('#game:not(.hidden)', { timeout: 10_000 });

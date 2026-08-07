@@ -6,6 +6,7 @@
 import { PERSONAS } from '../data/setup.js';
 import { SIGNATURE_BY_PERSONA, SIGNATURE_PLAYS } from '../data/signature-plays.js';
 import { createCampaign, buildCatalog } from '../engine/loop.js';
+import { DAY_ONE_PERSONA_IDS } from '../engine/zero.js';
 
 function assert(cond: boolean, msg: string): void {
   if (!cond) throw new Error('FAIL: ' + msg);
@@ -13,7 +14,10 @@ function assert(cond: boolean, msg: string): void {
 
 console.log('=== CANDIDATE ZERO — Signature coverage ===\n');
 
-assert(SIGNATURE_PLAYS.length >= PERSONAS.length, 'at least one SIG per persona');
+// Day-one Zero personas use intrinsic 10-card kits (spec §3.2), not SIGs.
+const sigPersonas = PERSONAS.filter(p => !(DAY_ONE_PERSONA_IDS as readonly string[]).includes(p.id));
+
+assert(SIGNATURE_PLAYS.length >= sigPersonas.length, 'at least one SIG per deep persona');
 assert(
   new Set(SIGNATURE_PLAYS.map(c => c.id)).size === SIGNATURE_PLAYS.length,
   'unique SIG ids'
@@ -21,7 +25,7 @@ assert(
 
 const missing: string[] = [];
 const doubles: string[] = [];
-for (const p of PERSONAS) {
+for (const p of sigPersonas) {
   const id = SIGNATURE_BY_PERSONA[p.id];
   if (!id) missing.push(p.id);
 }

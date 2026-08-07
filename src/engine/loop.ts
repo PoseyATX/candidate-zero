@@ -24,8 +24,10 @@ import {
   autoResolvePhaseDraft,
   resolvePhaseDraft,
   injectIntoDrawPile,
-  injectNearTop
+  injectNearTop,
+  declinePhaseDraft
 } from './deck.js';
+import { resetTableSlots, handCap } from './slots.js';
 import { executePlay, isPlayable, type PlayOpts } from './play.js';
 import {
   cycleCard,
@@ -63,9 +65,7 @@ import {
 import {
   applyZeroStartingLedgers,
   campGrowthUnlocked,
-  isFirstRun,
-  resolveStarterIds,
-  ZERO_BOOTS
+  resolveStarterIds
 } from './zero.js';
 import type {
   DeckState,
@@ -238,8 +238,14 @@ export function createCampaign(overrides: CreateCampaignOptions = {}): Campaign 
   applySetup(state, setup);
   state.lastPhase = getPhase(state);
 
-  const { physical, owned } = resolveStarterIds(starterKit, legacy, STARTER_DECK_IDS);
-  state.deck = [...new Set(owned)];
+  const { physical, owned } = resolveStarterIds(
+    starterKit,
+    legacy,
+    STARTER_DECK_IDS,
+    setup.personaId
+  );
+  // Keep multi-copy piles (two Knocks). Unique-only ownership would delete density.
+  state.deck = starterKit === 'zero' ? [...owned] : [...new Set(owned)];
   const deckState = createDeckState(physical);
 
   state.sessionFlags = state.sessionFlags || {};
@@ -249,42 +255,36 @@ export function createCampaign(overrides: CreateCampaignOptions = {}): Campaign 
 
   if (starterKit === 'zero') {
     applyZeroStartingLedgers(state);
-    // Signature is the persona's voice — earned after you have a past, not
-    // free power on the first filing.
-    if (!isFirstRun(legacy)) {
-      const sigId = SIGNATURE_BY_PERSONA[setup.personaId];
-      if (sigId) injectNearTop(deckState, state, [sigId]);
-    } else {
-      state.log.push({
-        week: 1,
-        kind: 'note',
-        text:
-          'ZERO — You have boots and a filing window. No list. No machine. No blessing. ' +
-          'Everything else is built in public, or it is not built.'
-      });
-      if (physical.includes(ZERO_BOOTS)) {
-        state.log.push({
-          week: 1,
-          kind: 'note',
-          text: 'What you own: one pair of boots. The rest of the deck is empty on purpose.'
-        });
-      }
-    }
+    state.log.push({
+      week: 1,
+      kind: 'note',
+      text:
+        'ZERO — Persona kit only. Knock is the floor. Liabilities travel with you. ' +
+        'No list. No machine. No blessing. Opportunities, not a mall.'
+    });
+    state.log.push({
+      week: 1,
+      kind: 'note',
+      text: `What you own: ${physical.length} cards — your body, your voice, your baggage.`
+    });
   } else {
-    // Harness kit: persona signature near the top (existing contract).
+    // Harness kit: persona signature near the top if not already in the pile.
     const sigId = SIGNATURE_BY_PERSONA[setup.personaId];
-    if (sigId) injectNearTop(deckState, state, [sigId]);
+    if (sigId && !physical.includes(sigId)) injectNearTop(deckState, state, [sigId]);
   }
 
   // Persist seed on state for multi-cycle deterministic re-file.
   if (stateOverrides.seed !== undefined) {
     state.seed = Number(stateOverrides.seed) >>> 0 || 1;
   }
+  if (starterKit === 'zero') {
+    resetTableSlots(state);
+  }
   return {
     state,
     deck: deckState,
     catalog: buildCatalog(),
-    handSize: DEFAULT_HAND_SIZE,
+    handSize: starterKit === 'zero' ? handCap(state) : DEFAULT_HAND_SIZE,
     filingDeadline: PRIMARY_WEEKS,
     setup
   };
@@ -418,6 +418,7 @@ export function maybeOfferPhaseDraft(campaign: Campaign, auto = true): string | 
   const draft = buildPhaseDraft(campaign.state, 3);
   draft.phase = phase;
   campaign.state.lastPhase = phase;
+  // Spec §4: if nothing thematically qualifies, present nothing. Not a bug.
   if (!draft.options.length) return null;
   campaign.state.pendingDraft = draft;
   campaign.state.log.push({
@@ -433,6 +434,11 @@ export function maybeOfferPhaseDraft(campaign: Campaign, auto = true): string | 
 
 export function pickPhaseDraft(campaign: Campaign, index: number): ReturnType<typeof resolvePhaseDraft> {
   return resolvePhaseDraft(campaign.state, index, campaign.deck);
+}
+
+/** Walk past a phase opportunity without adding a card. */
+export function walkPastPhaseDraft(campaign: Campaign): ReturnType<typeof declinePhaseDraft> {
+  return declinePhaseDraft(campaign.state);
 }
 
 /**
@@ -562,11 +568,11 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
       inHandIds.add(id);
     }
   });
+
+  const zeroMode = campaign.state.sessionFlags?.zeroMode === 1;
+
+  // Ballot doors: the only standing camp verbs for a nobody. Not a mall.
   if (!campaign.state.ballot) {
-    // Only offer the camp-action fallback when the real card isn't already
-    // sitting in hand — otherwise Petition Drive / Filing Fee show up twice
-    // in the same menu (harmless but confusing: two entries, two mechanics
-    // for discarding the physical copy vs. leaving it inert).
     const petition = campaign.catalog.get('PL04');
     const fee = campaign.catalog.get('PL05');
     if (petition && !inHandIds.has('PL04') && isPlayable(campaign.state, petition)) {
@@ -576,10 +582,26 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
       out.push({ index: CAMP_FILING_FEE, card: fee });
     }
   }
-  // Zero law: Block Walk is a card you own (boots), not an always-on mall verb.
-  // Phone bank is earned into the deck — never free camp power on day one.
-  // Phase 2: asset shop — always-available BUY* plays (archive assetPlays).
-  // 0 AP; paid with $ or volunteers. Not drawn into hand.
+
+  // Zero player path: HAND + ballot doors only.
+  // No shop strip, no starmap verb flood, no CHOICE/alley mall after filing.
+  // Earned hooks (someone actually dangled a thread) may still surface —
+  // those are relationships, not a menu. Everything else stays out until we
+  // design real opportunities. Harness kit keeps the instrument surface below.
+  if (zeroMode) {
+    if (campaign.state.stage === 'primary' || campaign.state.stage === 'general') {
+      let hi = 0;
+      for (const card of HOOK_PLAYS) {
+        if (isPlayable(campaign.state, card)) {
+          out.push({ index: CAMP_HOOK_BASE - hi, card });
+          hi++;
+        }
+      }
+    }
+    return out;
+  }
+
+  // --- Harness / non-Zero instruments below (regression surface) ---
   let shopI = 0;
   for (const [id, card] of campaign.catalog) {
     if (!id.startsWith('BUY')) continue;
@@ -588,7 +610,6 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
       shopI++;
     }
   }
-  // Starmap pilots: all open Special movement verbs as camp actions.
   const openVerbs = listAvailableMovementVerbIds(campaign.state);
   let mvI = 0;
   for (const verbId of openVerbs) {
@@ -598,9 +619,6 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
       mvI++;
     }
   }
-  // Hooks you can cash, offered just above the alleyways: a thread somebody
-  // dangled is worth more of the player's attention than a place to kill time,
-  // and less than the actual work of the week.
   if (campaign.state.stage === 'primary' || campaign.state.stage === 'general') {
     let hi = 0;
     for (const card of HOOK_PLAYS) {
@@ -610,8 +628,6 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
       }
     }
   }
-  // CHOICE forks and alleyways: growth after the world has a reason to offer
-  // them (noticed / prior career). First-run Zero is doors + boots, not a mall.
   const growthOpen = campGrowthUnlocked(campaign.state, null);
   if (
     growthOpen &&
@@ -619,24 +635,12 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
   ) {
     let ci = 0;
     for (const card of CHOICE_PLAYS) {
-      if (card.id === 'CH05') continue; // session only
+      if (card.id === 'CH05') continue;
       if (isPlayable(campaign.state, card)) {
         out.push({ index: CAMP_CHOICE_BASE - ci, card });
         ci++;
       }
     }
-  }
-  // The alleyways, LAST in the menu on purpose.
-  //
-  // They were first, and every strategy that falls back to "the first playable
-  // thing" immediately started spending its week at the domino table: the
-  // money strategy's ballot rate fell 70% -> 59.8% and a ground condition
-  // meant to be met 12-65% of the time hit 86%. A place to waste an afternoon
-  // has to be somewhere you CHOOSE to go, not the top of the list.
-  if (
-    growthOpen &&
-    (campaign.state.stage === 'primary' || campaign.state.stage === 'general')
-  ) {
     let ai = 0;
     for (const card of ALLEY_PLAYS) {
       if (isPlayable(campaign.state, card)) {
@@ -737,6 +741,10 @@ export function startWeek(campaign: Campaign): string[] {
   markWeekStart(campaign.state);
   // Cuts refresh with the week — the limit is what makes cycling a decision.
   resetDiscards(campaign.state);
+  if (campaign.state.sessionFlags?.zeroMode === 1) {
+    resetTableSlots(campaign.state);
+    campaign.handSize = handCap(campaign.state);
+  }
   // Someone with you may call in a favour. Only people actually seated can ask;
   // a stranger has no claim. The card lands in hand below.
   const asker = maybeOpenAsk(campaign.state, machineSeatedIds(campaign.state));
@@ -763,11 +771,9 @@ export function startWeek(campaign: Campaign): string[] {
     return [];
   }
 
-  // Mandatory weekly growth: own new cards AND put them in the draw pile
+  // Harness kit: free weekly card drip for instruments. Zero: none — not a mall.
   const newCards = enforceWeeklyDraw(campaign.state);
   if (newCards.length > 0) {
-    // enforceWeeklyDraw already pushed ownership; inject physical copies
-    // (ownership may already include them — push to draw only)
     for (const id of newCards) {
       campaign.deck.draw.push(id);
     }

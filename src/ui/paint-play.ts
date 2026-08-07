@@ -6,6 +6,7 @@
 import {
   listPlayableHand,
   pickPhaseDraft,
+  walkPastPhaseDraft,
   campIndexToCardId,
   cycleReason,
   cycleCautionReason,
@@ -593,7 +594,7 @@ export function renderDraft(campaign: Campaign): void {
   const draft = campaign.state.pendingDraft;
   box.classList.add('draft-active');
   box.innerHTML =
-    `<p class="hint play-section-label draft-heading">Phase ${draft.phase} draft — pick one for your pool</p>` +
+    `<p class="hint play-section-label draft-heading">Phase ${draft.phase} opportunity — take one, or walk past</p>` +
     `<div class="play-section-cards draft-cards">` +
     draft.options
       .map((id, i) => {
@@ -611,11 +612,16 @@ export function renderDraft(campaign: Campaign): void {
         </button>`;
       })
       .join('') +
-    `</div>`;
+    `</div>` +
+    `<button type="button" class="btn draft-walk-past" id="btn-draft-pass">Walk past — keep the deck lean</button>`;
   box.querySelectorAll<HTMLButtonElement>('[data-draft]').forEach(btn => {
     btn.addEventListener('click', () => {
       openDraftDetail(campaign, Number(btn.dataset.draft));
     });
+  });
+  box.querySelector('#btn-draft-pass')?.addEventListener('click', () => {
+    walkPastPhaseDraft(campaign);
+    afterPaintHook?.();
   });
   requestAnimationFrame(() => {
     box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -725,31 +731,38 @@ export function renderPlayables(campaign: Campaign): void {
     })
     .join('');
 
+  // Zero law: never invent a "Camp actions" mall. Pre-ballot = ballot doors.
+  // Post-ballot with nothing earned = no camp section at all.
   const hasDoors = campEntries.some(e => BALLOT_DOOR_IDS.has(e.card.id));
-  const campLabel = !state.ballot && hasDoors ? 'Ballot doors' : 'Camp actions';
-  const hasSpine = campEntries.some(e => e.card.id === 'PL01' || e.card.id === 'PL02');
-  const hasChoice = campEntries.some(e => e.card.risk === 'CHOICE');
+  const campLabel =
+    !state.ballot && hasDoors
+      ? 'Ballot doors'
+      : campEntries.some(e => e.card.id.startsWith('HK'))
+        ? 'Threads'
+        : '';
   const campSub =
     !state.ballot && hasDoors
-      ? hasSpine
-        ? 'Ballot doors + spine (walk/phone) — always on, not a draw'
-        : 'Petition labor or filing fee — make the ballot'
-      : hasSpine || hasChoice
-        ? 'Standing spine and CHOICE forks — always on when gated'
-        : campEntries.length
-          ? 'Always-on camp / starmap verbs'
-          : undefined;
+      ? 'Petition labor or filing fee — make the ballot'
+      : campEntries.some(e => e.card.id.startsWith('HK'))
+        ? 'Someone dangled a thread. Cash it or ignore it.'
+        : undefined;
+
+  const campBlock =
+    campEntries.length && campLabel
+      ? sectionHtml('camp', campLabel, campHtml, campSub)
+      : '';
+
+  // Shop section only when harness (or future unlock) actually surfaces BUY*.
+  // Zero never dumps a shop strip into the table.
+  const shopBlock = shopCards.length
+    ? sectionHtml('shop', 'Shop', shopHtml, '0 AP · money or volunteers · Main unlocks')
+    : '';
 
   grid.innerHTML =
     statusHint +
-    sectionHtml('camp', campLabel, campHtml, campSub) +
+    campBlock +
     sectionHtml('hand', 'Hand', handHtml, act.kitLabel) +
-    sectionHtml(
-      'shop',
-      'Shop',
-      shopHtml,
-      '0 AP · money or volunteers · Main unlocks'
-    );
+    shopBlock;
 
   wirePlayCards(grid, campaign, true);
 }

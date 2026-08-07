@@ -393,6 +393,7 @@ export const MV09_FinanceBook: PlayCard = {
   residency: 'special',
   control: 'player',
   entityScope: [PILOT_FINANCE.entityId],
+  figures: ['AL10'],
   attrs: ['CRA', 'CLO'],
   d:
     'The Finance Chair opens the call sheet and starts dialling. ' +
@@ -430,6 +431,7 @@ export const MV10_DriveTime: PlayCard = {
   residency: 'special',
   control: 'player',
   entityScope: [PILOT_RADIO.entityId],
+  figures: ['AL05'],
   attrs: ['CHA', 'CRA'],
   d:
     'An open mic between the farm reports and the noon news. ' +
@@ -468,6 +470,7 @@ export const MV11_LobbyMap: PlayCard = {
   residency: 'special',
   control: 'player',
   entityScope: [PILOT_LOBBY.entityId],
+  figures: ['AL13'],
   attrs: ['DIP', 'CRA'],
   d:
     'A junior lobbyist with a conscience walks you in the side door. ' +
@@ -591,6 +594,7 @@ export const MV14_FeedBench: PlayCard = {
   residency: 'special',
   control: 'player',
   entityScope: [PILOT_FEED.entityId],
+  figures: ['AL07'],
   attrs: ['CHA', 'CON'],
   d:
     'The unofficial senate meets on the bench out front, and rumour is infrastructure. ' +
