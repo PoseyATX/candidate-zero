@@ -22,6 +22,7 @@
 
 import type { DeckState, GameState } from './types.js';
 import { drawCards, discardCard } from './deck.js';
+import { isUpgraded, upgradeTier } from './upgrades.js';
 
 /** Discards per week. The limit is the cost — cycling never spends AP. */
 export const MAX_DISCARDS = 2;
@@ -77,6 +78,29 @@ export function canCycle(state: GameState, deck: DeckState, handIndex: number): 
   return cycleBlockReason(state, deck, handIndex) === '';
 }
 
+/**
+ * Soft caution when a cut is *allowed* but the player may not realise what
+ * they are pitching (DEFERRED A5). Empty string = nothing special.
+ *
+ * Cutting a practised card is sometimes correct — dead *this* week, returns
+ * to the deck, not out of the run — so this never blocks. It only names the
+ * fact so the cut button does not look like a free dig past a draft investment.
+ */
+export function cycleCaution(
+  state: GameState,
+  deck: DeckState,
+  handIndex: number
+): string {
+  if (cycleBlockReason(state, deck, handIndex)) return '';
+  const id = deck.hand[handIndex];
+  if (id === undefined) return '';
+  if (!isUpgraded(state, id)) return '';
+  const tier = upgradeTier(state, id);
+  return tier > 1
+    ? 'Practised twice — cut puts it back in the deck, not out of the run'
+    : 'Practised — cut puts it back in the deck, not out of the run';
+}
+
 export interface CycleResult {
   ok: boolean;
   reason?: string;
@@ -84,6 +108,8 @@ export interface CycleResult {
   pitched?: string;
   /** The card drawn to replace it, or undefined when the deck had nothing left. */
   drew?: string;
+  /** Non-empty when the pitch was a practised card (still allowed). */
+  caution?: string;
 }
 
 /**
@@ -101,6 +127,7 @@ export function cycleCard(
   const reason = cycleBlockReason(state, deck, handIndex);
   if (reason) return { ok: false, reason };
 
+  const caution = cycleCaution(state, deck, handIndex);
   const [pitched] = deck.hand.splice(handIndex, 1);
   if (pitched === undefined) return { ok: false, reason: 'No such card in hand' };
   discardCard(deck, pitched);
@@ -111,13 +138,14 @@ export function cycleCard(
   // deck, not a bug. It can also draw nothing if the whole deck is in hand.
   const [drew] = drawCards(deck, 1);
 
+  const practised = caution ? 'practised ' : '';
   state.log.push({
     week: state.week,
     kind: 'draw',
     text: drew
-      ? `Cut ${nameOf(pitched)}, drew ${nameOf(drew)}. ${discardsLeft(state)} cut${discardsLeft(state) === 1 ? '' : 's'} left this week.`
-      : `Cut ${nameOf(pitched)} — nothing left to draw. ${discardsLeft(state)} cut${discardsLeft(state) === 1 ? '' : 's'} left this week.`
+      ? `Cut ${practised}${nameOf(pitched)}, drew ${nameOf(drew)}. ${discardsLeft(state)} cut${discardsLeft(state) === 1 ? '' : 's'} left this week.`
+      : `Cut ${practised}${nameOf(pitched)} — nothing left to draw. ${discardsLeft(state)} cut${discardsLeft(state) === 1 ? '' : 's'} left this week.`
   });
 
-  return { ok: true, pitched, drew };
+  return { ok: true, pitched, drew, caution: caution || undefined };
 }

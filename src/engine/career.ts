@@ -44,19 +44,19 @@ export interface BallotThresholdResult {
  * against an economy that was never built and was met 0% of the time in every
  * strategy since Phase 1.
  *
- * Measured medians after the affinity/gating pass, per campaign:
- *   money/spread  home 13 · 2nd 8 · 3rd 5
- *   labor/spread  home  5 · 2nd 2 · 3rd 0
- *   *focus        home 10-28 · 2nd 0 · 3rd 0
+ * 2026-08-07 re-calibration: standing PL01/PL02 always camp. money/spread met
+ * the prior 12/5/2 sketch at 100% (free win) because bots no longer starve for
+ * door draws. Thresholds raised so breadth remains a choice, not a given.
+ * Guardrail: harness:grounds asserts the met-rate band.
  *
  * Focus play banks nothing on a second ground, so a breadth condition is
- * unreachable for it by construction — that is intended. This condition
- * rewards contesting "a few, not all eight", the stated Phase 1 design target.
- * Guardrail: harness:grounds asserts the met-rate band.
+ * unreachable for it by construction — that is intended.
  */
 const THRESHOLDS = {
-  primary: { home: 12, other: 5, othersNeeded: 2 },
-  general: { home: 8, other: 4, othersNeeded: 2 }
+  // Calibrated for harness full kit (field density). Zero player kit is thinner
+  // and is not what harness:grounds measures.
+  primary: { home: 18, other: 10, othersNeeded: 2 },
+  general: { home: 12, other: 7, othersNeeded: 2 }
 } as const;
 
 /**

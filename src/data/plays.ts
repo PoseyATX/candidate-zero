@@ -12,6 +12,7 @@ import { STARMAP_PLAYS } from './plays-starmap.js';
 import { WAVE5_PLAYS } from './plays-wave5.js';
 import { PROMO_PLAYS } from './promo-plays.js';
 import { MACHINE_DOOR_PLAYS } from './machine-doors.js';
+import { CHOICE_PLAYS } from './choice-plays.js';
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
@@ -25,11 +26,11 @@ export const PL01_BlockWalk: PlayCard = {
   id: 'PL01', n: 'Block Walk', cost: { a: 2 }, risk: 'SAFE', refundOnBreak: true, ph: [1,2,3], field: true, tag: 'the spine',
   attrs: ['CHA'],
   d:
-    'Boots and a clipboard — the spine of the whole operation, and the one play that never turns on you. ' +
-    'Pick a ground and it converts that ground\'s pool into contacts, plus rapport and usually a volunteer; ' +
-    'in the general the same walk banks GOTV conversion instead of introductions. ' +
-    'Charm carries it, but the odds actually climb with volunteers, a sharp message, and the Van (A01). ' +
-    'A breakthrough refunds the AP — this is the card combo weeks are built on.',
+    'Boots and a clipboard — the spine of the operation, and it is always available: you do not wait for the ' +
+    'shuffle to go walk. Pick a ground. You take that ground\'s pool into contacts, bank rapport, and usually ' +
+    'pick up a volunteer; in the general the same walk banks turnout conversion instead of introductions. ' +
+    'Volunteers, a sharp message, and the Van (A01) make the doors open easier. A breakthrough refunds the ' +
+    'AP — the week you chain walks is the week the list starts to look like a district.',
   odds: (s) => clamp(0.62 + s.volPool*0.02 + (s.assets.includes('A01')?0.12:0) + (s.messageSharp?0.05:0), 0, 0.95),
   run: (s, o, g) => {
     if (!g) return 'No ground selected.'; s.walkCount++;
@@ -59,10 +60,9 @@ export const PL02_PhoneBank: PlayCard = {
   id: 'PL02', n: 'Phone Bank', cost: { a:2, vp:1 }, risk: 'SAFE', refundOnBreak: true, ph: [1,2,3], field: true, tag: 'rain-proof',
   attrs: ['CHA'],
   d:
-    'Half the yield of a walk, none of the weather, and it costs a volunteer instead of your boots. ' +
-    'Reach for it when the ground is far, the day is ugly, or you need a safe contact floor. ' +
-    'Charm works the call; the Phone Room (A09) doubles the take outright. ' +
-    'In the general it stops being introductions and becomes turnout conversion.',
+    'Half a walk\'s haul, none of the weather — and always on the camp strip next to Block Walk. ' +
+    'Spend a volunteer instead of your boots when the ground is far or the day is ugly. ' +
+    'The Phone Room (A09) doubles the take. In the general it becomes turnout conversion, not introductions.',
   odds: (s) => clamp(0.6 + (s.assets.includes('A09')?0.15:0), 0, 0.95),
   run: (s, o, g) => {
     if (!g) return 'No ground.';
@@ -85,9 +85,8 @@ export const PL03_YardSignBlitz: PlayCard = {
   attrs: ['CLO'],
   d:
     'A district that sees your name starts believing it belongs there. ' +
-    'Cheap and near-certain: 1 AP and $150 for name ID and a point of rapport on the ground you choose. ' +
-    'Close is the attribute, but nothing here rolls badly — this is the card for a week with one AP left over ' +
-    'and no appetite for a gamble.',
+    'One action and $150: name ID and a point of rapport on the ground you plant. ' +
+    'Near-certain. The play for a leftover action when you will not gamble the week.',
   odds: () => 0.8,
   run: (s, _o, g) => { if (!g) return 'No ground.'; s.nameID+=2; rapGain(g,1,s); return `Signs up along ${g.n}. The name is out in the weather now.`; }
 };
@@ -97,10 +96,10 @@ export const PL04_PetitionDrive: PlayCard = {
   attrs: ['CLO'],
   d:
     'Signatures instead of a fee — labor is the currency you were born holding. ' +
-    'The free road onto the ballot: land it and you bank 50–120 valid signatures against your threshold. ' +
-    'Close is the attribute, and every volunteer you own raises the odds, as does a warm Canvass Captain. ' +
-    'It is not safe. A disaster means the county chair challenges your sheets and STRIKES signatures ' +
-    'you already had, so do not leave the whole ballot on one late drive.',
+    'Land it and you bank fifty to a hundred-twenty valid names against the threshold. ' +
+    'Volunteers and a warm Canvass Captain make the sheets cleaner. ' +
+    'It is not safe: a disaster is the county chair striking names you already had. ' +
+    'Do not leave the whole ballot on one late Saturday.',
   show: (s) => !s.ballot,
   odds: (s) => clamp(0.57 + s.volPool * 0.033 + (warm(s, 'AL09') ? 0.08 : 0), 0, 0.95),
   run: (s, o) => {
@@ -131,9 +130,9 @@ export const PL06_TownHall: PlayCard = {
   attrs: ['CHA'],
   d:
     'Folding chairs, burnt coffee, real questions. The kids notice if you skip these. ' +
-    'Lands contacts, a point of momentum and a volunteer — the cheapest momentum in the primary. ' +
-    'Charm carries the room and a sharp message helps, but a disaster hands the night to a heckler ' +
-    'and COSTS you momentum, so it is a worse idea on a week you are already wobbling.',
+    'Contacts, a point of momentum, and a volunteer when it lands — the cheapest momentum in the primary. ' +
+    'A sharp message helps. A disaster hands the night to a heckler and costs momentum; ' +
+    'do not walk in already wobbling.',
   odds: (s) => clamp(0.55 + (s.messageSharp?0.08:0), 0, 0.9),
   run: (s, o) => { s.townHallThisWeek = true; if (o.tier <= 1) { s.contacts+=15; s.momentum+=1; s.volPool+=1; return 'A fair hearing, two new believers, and one of them signs up to walk.'; } if (o.tier === 2) return 'Six attendees, one of them lost.'; s.momentum = Math.max(0, s.momentum-1); return 'A heckler wins the room. It happens.'; }
 };
@@ -143,9 +142,8 @@ export const PL07_CandidateForum: PlayCard = {
   attrs: ['CON', 'CHA'],
   d:
     'Sixty seconds and every rival watching for the stumble. ' +
-    'The biggest name-ID swing available — a breakthrough is +10 name ID, momentum and a clip that travels. ' +
-    'Conviction and Charm carry it, and Debate Prep, a sharp message and your Firebrand face all widen the odds. ' +
-    'VOLATILE, and it bites: a disaster is a hit piece on tape, name ID up the wrong way. ' +
+    'Biggest name-ID swing in the deck when it lands — a clip that travels, momentum, and a room that remembers. ' +
+    'Debate Prep and a sharp message matter. VOLATILE: a disaster is a hit piece on tape and name ID the wrong way. ' +
     'Do not walk in cold.',
   odds: (s) => clamp(0.42 + (s.messageSharp?0.12:0) + (s.debatePrepped?0.1:0) + s.faces.F*0.002 + (s.reps.includes('R06')?0.06:0), 0, 0.9),
   run: (s, o) => {
@@ -162,11 +160,9 @@ export const PL08_KitchenTable: PlayCard = {
   attrs: ['DIP'],
   d:
     "A chair's kitchen, her rules. Bring pie; leave with a precinct or nothing. " +
-    'The way you bank precinct chairs and endorsement points one at a time — and at three chairs ' +
-    'the County Chairwoman starts taking your call. ' +
-    'Diplomacy is the attribute; every chair you already hold makes the next one easier, as do your ' +
-    'Operator and Grandee faces. Push too hard on a disaster and word of the pushing beats you home. ' +
-    'Primary circuit — it is off the table in the general.',
+    'Bank chairs and endorsement points one porch at a time — at three chairs the County Chairwoman ' +
+    'starts taking your call. Every chair you already hold opens the next door. ' +
+    'Push too hard on a disaster and word of the pushing beats you home. Primary only.',
   odds: (s) => {
     const chairs =
       s.allies.filter(a => a.id === 'AL01' && a.warm > 0).length + (s.chairCount || 0);
@@ -205,10 +201,9 @@ export const PL09_EarnedMedia: PlayCard = {
   attrs: ['CHA'],
   d:
     'A county weekly, a drive-time host, a stringer if you are lucky. Costs a point of momentum to spend. ' +
-    'The cheapest large name-ID gain in the deck when it lands — and the one most likely to hand you ' +
-    'a hit piece instead, because the reporter goes looking either way. ' +
-    'Charm pitches it; momentum, your Firebrand face, a warm press ally and a metro district all raise the odds. ' +
-    'A warm Beat Reporter upgrades a merely good result into a great one.',
+    'Cheapest large name-ID gain when it lands — and the play most likely to hand you a hit piece, ' +
+    'because the reporter goes looking either way. Momentum and a warm Beat Reporter matter. ' +
+    'Metro districts open more doors.',
   odds: (s) => clamp(0.3 + s.momentum*0.02 + s.faces.F*0.004 + (s.mediaBonus||0) + (warm(s,'AL05')?0.1:0) + (s.regionHook==='metro'?0.1:0), 0, 0.9),
   run: (s, o) => {
     let t = o.tier; if (warm(s,'AL04') && t===1) t=0;
@@ -224,9 +219,8 @@ export const PL10_PressRelease: PlayCard = {
   attrs: ['CRA'],
   d:
     'Nobody prints it. Everybody files it. The reporter learns how your name is spelled. ' +
-    'One AP for a point of momentum and a point of name ID, at odds that almost never fail — ' +
-    'the filler card for a week with a spare action, and the fuel for Earned Media, which spends momentum. ' +
-    'Craft writes it. File your second one and the beat reporter starts calling you back.',
+    'One action: a point of momentum and a point of name ID. Fuel for Earned Media, which spends momentum. ' +
+    'File the second one and the beat reporter starts calling you back.',
   odds: () => 0.85,
   run: (s) => {
     s.momentum += 1;
@@ -244,11 +238,10 @@ export const PL13_FishFry: PlayCard = {
   id: 'PL13', n: 'Fish Fry', cost: { a:3, $:150 }, risk: 'SAFE', ph: [1,2,3], field: true, tag: 'clean money',
   attrs: ['CHA'],
   d:
-    'Five-dollar plates, a donation jar, and more casseroles than anyone can eat. Net positive, always — ' +
-    'even the worst result clears its own $150 cost. ' +
-    'This is how the money road onto the ballot gets paid for: a good night is several hundred dollars, ' +
-    'rapport, and volunteers. Charm runs the room and name ID raises the take. ' +
-    'It pays far more on friendly ground, and the small-dollar list it starts keeps paying after.',
+    'Five-dollar plates, a donation jar, and more casseroles than anyone can eat. Net positive always — ' +
+    'even a rainy night clears the $150 cost. A good night is hundreds of dollars, rapport, and volunteers. ' +
+    'Name ID raises the take; friendly ground multiplies it. The small-dollar list it starts keeps paying after. ' +
+    'This is how the money door onto the ballot gets paid for.',
   odds: (s) => clamp(0.75 + s.nameID*0.004, 0, 0.95),
   run: (s, o, g) => {
     if (!g) return 'No ground selected.';
@@ -265,9 +258,8 @@ export const PL14_CourtTheChairs: PlayCard = {
   d:
     'The kitchen-table circuit at scale — three actions, several kitchens, one long Saturday. ' +
     'Where Kitchen Table banks one chair, this banks endorsement points and Operator standing in bulk. ' +
-    'Diplomacy is the attribute; contacts and your Grandee face raise it. ' +
-    'Working the same circuit too often sours it, and a disaster costs you Operator standing outright. ' +
-    'By Phase III the chairs are already spoken for.',
+    'Contacts help. Working the same circuit too often sours it; a disaster costs Operator standing. ' +
+    'By the late primary the chairs are already spoken for.',
   odds: (s) => clamp(0.34 + s.contacts*0.001 + s.faces.G*0.004 - (s.pieMalus||0) - (s.reps.includes('R07')?0.2:0) + (s.reps.includes('R05')?0.15:0), 0, 0.9),
   run: (s, o) => {
     s.pieCount = (s.pieCount || 0) + 1;
@@ -428,6 +420,7 @@ export const SHOP_PLAYS: PlayCard[] = tagMainPlayer(allShopPlayTemplates());
 /** Includes promo injectables (PR01) — show:false keeps them out of normal pools. */
 export const ALL_PLAYS: PlayCard[] = [
   ...CORE_PLAYS,
+  ...CHOICE_PLAYS,
   ...WAVE4_PLAYS,
   ...STARMAP_PLAYS,
   ...WAVE5_PLAYS,

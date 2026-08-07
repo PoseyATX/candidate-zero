@@ -393,6 +393,8 @@ export interface LegacyRun {
   epithet: string;
   kind: CampaignOutcome;
   interim?: string;
+  /** Felt scar from a loss — the sentence the player takes into the next run. */
+  scar?: string;
 }
 
 export interface LegacyCarry {
@@ -408,6 +410,13 @@ export interface LegacyCarry {
   waitingVols?: number;
   waitingFavors?: number;
   higherOfficeFork?: 'senate' | 'statewide';
+  /**
+   * The deck you have built across the career — unique card ids.
+   * Candidate Zero: the legacy *is* the deck, not a loaded starter kit.
+   */
+  careerDeck?: string[];
+  /** Short felt scars from losses (last N kept). */
+  scars?: string[];
 }
 
 /** Filed identity — set once at nameplate; never re-prompted until Chronicle wipe. */

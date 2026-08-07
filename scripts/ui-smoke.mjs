@@ -670,11 +670,9 @@ async function main() {
     // predicate is the one actually wired to #btn-press, so neither test can
     // pass while the other rots.
     //
-    // Written as a DIFFERENTIAL: in the SAME game state, an unlocked card must
-    // show the control and a locked one must not. Checking only the locked case
-    // would pass trivially whenever heat happened to be 0 — which is exactly the
-    // "my instrument measures nothing" failure this repo keeps hitting. Both
-    // halves must be observed or the assertion fails.
+    // Zero kit: early heat is scarce (you earn it). Construction uses the
+    // `?smoke=1` seam (session.wireSmokeSeam) — not a player path — so the
+    // wiring assert does not depend on lucky streak banking under thin deck.
     {
       let sawPressOnPlayable = false;
       let sawNoPressOnLocked = false;
@@ -696,23 +694,43 @@ async function main() {
         return visible;
       }
 
-      // Before banking anything: heat is 0, so no card may offer the wager.
-      // This is the case that would have caught the CSS defeating `hidden` on
-      // day one — it is true of EVERY card in the opening hand.
+      await page.goto(`${BASE}?smoke=1`, { waitUntil: 'networkidle' });
+      await page.evaluate(() => localStorage.clear());
+      await page.goto(`${BASE}?smoke=1`, { waitUntil: 'networkidle' });
+      await page.locator('#btn-title-start').click();
+      await pickId('persona', 'teacher');
+      await pickId('issue', 'taxes');
+      await pickId('district', 'open');
+      await pickId('region', 'east');
+      await page.locator('#seed-input').fill('4242');
+      await page.locator('#btn-start').click();
+      await page.waitForSelector('#game:not(.hidden)', { timeout: 10_000 });
+      if ((await page.locator('#act-splash').count()) && (await page.locator('#act-splash').isVisible())) {
+        await page.locator('#act-splash-ok').click();
+        await page.waitForTimeout(60);
+      }
+
+      // Heat still 0: no card may offer the wager.
       if ((await page.locator('#hud .chip-heat').count()) === 0) {
         const anyCard = page.locator('#playables .play-card:not(.locked)');
         if (await anyCard.count()) {
           sawNoPressAtZeroHeat = (await pressVisibleFor(anyCard.first())) === false;
         }
       } else {
-        sawNoPressAtZeroHeat = true; // heat already banked; not applicable
+        sawNoPressAtZeroHeat = true;
       }
 
-      // Drive to a state where BOTH halves exist at once: heat banked (the HUD
-      // shows .chip-heat) and at least one locked card on screen. Cards lock
-      // when AP is exhausted (paint-play: `apExhausted || !playable`), so
-      // spending the week produces them naturally.
-      let built = false;
+      const forced = await page.evaluate(() => {
+        const api = window.__czSmoke;
+        return api && typeof api.forceHeatLock === 'function' ? api.forceHeatLock(2) : false;
+      });
+      assert(forced, 'smoke seam forceHeatLock available under ?smoke=1');
+
+      let built =
+        (await page.locator('#hud .chip-heat').count()) > 0 &&
+        (await page.locator('#playables .play-card.locked').count()) > 0;
+
+      // Fallback: natural drive if the seam is missing (should not happen in CI).
       for (let step = 0; step < 40 && !built; step++) {
         await closeOverlays();
         const hasHeat = (await page.locator('#hud .chip-heat').count()) > 0;
@@ -761,8 +779,6 @@ async function main() {
         }
       }
 
-      // If the scenario could not be built the assertions below fail rather
-      // than quietly pass — an unconstructed case is not a passing case.
       assert(
         sawNoPressAtZeroHeat,
         'with no heat banked, no card offers the press wager'

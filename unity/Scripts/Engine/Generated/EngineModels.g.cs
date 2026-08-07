@@ -115,6 +115,8 @@ namespace CandidateZero.HostData
         public bool playable;
         /// <summary>'' when this card may be pitched for a fresh draw, else why it may not.</summary>
         public string cycleBlocked;
+        /// <summary>Soft warning when a cut is allowed but noteworthy (e.g. practised). '' if none.</summary>
+        public string cycleCaution;
     }
 
     public sealed class GroundView
@@ -147,6 +149,8 @@ namespace CandidateZero.HostData
         public string costLabel;
         /// <summary>'' when this card may be pitched for a fresh draw, else why it may not.</summary>
         public string cycleBlocked;
+        /// <summary>Soft warning when a cut is allowed but noteworthy (e.g. practised). '' if none.</summary>
+        public string cycleCaution;
         /// <summary>effective success probability given current state, or null if odds-less.</summary>
         public float? approxOdds;
         /// <summary>Odds this play would gain if the command sets `press`. 0 when no heat.</summary>

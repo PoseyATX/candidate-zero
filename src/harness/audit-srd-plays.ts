@@ -37,7 +37,10 @@ function audit(card: PlayCard): Row {
   // PL## campaign, MV## starmap movement verbs, PR## sponsor promo cards,
   // MD_AL## machine doors (data/machine-doors.ts — keyed to the member who
   // holds them, so the id has to carry the ally id rather than a serial).
-  if (!card.id || !(/^(PL\d{2}[A-Z]?|MV\d{2}|PR\d{2}|MD_AL\d{2})$/.test(card.id))) {
+  if (
+    !card.id ||
+    !(/^(PL\d{2}[A-Z]?|MV\d{2}|PR\d{2}|MD_AL\d{2}|CH\d{2}|PO\d{2}|MB\d{2})$/.test(card.id))
+  ) {
     issues.push('bad id');
   }
   if (!card.n) issues.push('missing name');
@@ -53,8 +56,10 @@ function audit(card: PlayCard): Row {
     // free is ok for some; Filing Fee is $ only — fine
   }
   if (!card.run) issues.push('missing run');
-  // SAFE cards with show/req still need odds or implicit
-  if (card.risk !== 'SAFE' && !card.odds) issues.push('missing odds');
+  // SAFE and CHOICE: no odds required. CHOICE skips the dice (resolve.ts).
+  if (card.risk !== 'SAFE' && card.risk !== 'CHOICE' && !card.odds) {
+    issues.push('missing odds');
+  }
   // 2026-07-17 design decision: trap cards are no longer labeled — the
   // "honestly labeled" covenant was retired by the project owner (alpha).
   // The engine-side trap flag stays (it drives balance/audit tooling);

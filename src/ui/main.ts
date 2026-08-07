@@ -20,7 +20,8 @@ import {
   paintTitleIdentity,
   exportMyProfile,
   importOpponent,
-  setPlayerName
+  setPlayerName,
+  wireSmokeSeam
 } from './session.js';
 import { closeCardDetail } from './paint-play.js';
 import { attrDetailHtml } from './paint-hud.js';
@@ -183,6 +184,7 @@ function boot(): void {
     draft = emptyDraft();
     paintDraft();
   });
+  wireSmokeSeam();
   showTitle();
   paintTitleIdentity();
 }

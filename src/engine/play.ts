@@ -13,6 +13,7 @@ import { canAffordCash } from './debt.js';
 import { syncMovementFlags } from './entities.js';
 import { effectiveApCost, upgradeOddsBonus } from './upgrades.js';
 import { bankHeat, canPress, quotePress, pressLabel } from './heat.js';
+import { maybeTriggerNotice } from './notice.js';
 import type { AttrId, GameState, Ground, PlayCard, PlayOutcome, RollResult } from './types.js';
 
 /** Turf AP a field card can draw on; non-field cards can never touch it. */
@@ -246,6 +247,9 @@ export function executePlay(
   if (roll.tier === 3) {
     state.disasterLog.push(state.week);
   }
+
+  // Indifference → notice → targeted resistance (SRD node). Once per run.
+  maybeTriggerNotice(state);
 
   const feedback = buildPlayFeedback(state, card, roll, before);
 

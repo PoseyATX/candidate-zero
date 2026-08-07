@@ -143,7 +143,8 @@ assert(WAITING_WEEKS === 4, 'compressed season');
   assert(c1.state.personaId === 'teacher', 'same personaId on state');
   assert(c1.state.seed === nextSeed, 'deterministic refile seed');
   assert(c1.state.contacts >= 40, 'waiting contacts applied via applyLegacy');
-  assert(c1.state.nameID >= 5 + 2, 'waiting name applied (plus baseline)'); // baseline nameID 2 + bank
+  // Zero kit starts name at 0; waiting bank is the whole carry.
+  assert(c1.state.nameID >= 5, 'waiting name applied from bank');
   // Same inputs → same next seed / persona
   const c2 = continueAfterWaiting(c0, leg);
   assert(c2.state.seed === c1.state.seed, 'refile seed stable');

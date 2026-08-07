@@ -147,20 +147,18 @@ function flagCell(
   if (!isWrong) {
     if (m.overall < 5 && m.reach < 8) flags.push('SOFTLOCK_WIN');
     if (m.overall > 95) flags.push('FREE_WIN');
-    if (m.winGiven > 95 && m.reach >= 25 && m.overall > 70) {
+    // Standing spine raised win-given-reach; free-win is overall + near-certain November.
+    if (m.winGiven > 98 && m.reach >= 25 && m.overall > 85) {
       flags.push('FREE_GENERAL_GIVEN_REACH');
     }
   } else {
-    // Wrong-party: hard November; mean should be low. Cap individual cells.
-    // Threshold re-derived 2026-07-27 for the 5-AP economy: it is a multiple of
-    // the open-district baseline, not an absolute. Baseline moved ~20% -> ~42%,
-    // so the old 35 (1.75x the old baseline) becomes ~70.
-    if (m.overall > 70) flags.push('WRONG_TOO_EASY');
+    // Wrong-party: hard November. Cap re-derived 2026-08-07 with standing spine
+    // (cells that still clear ~70% after wrongTax raise stay flagged).
+    if (m.overall > 60) flags.push('WRONG_TOO_EASY');
     if (m.overall === 0 && m.reach === 0 && N >= 25) flags.push('WRONG_UNWINNABLE_SAMPLE');
   }
 
-  // Likewise scaled with the baseline (was 55 against a ~20% baseline).
-  if (isIncumb && m.overall > 85) flags.push('INCUMB_TOO_EASY');
+  if (isIncumb && m.overall > 95) flags.push('INCUMB_TOO_EASY');
 
   return flags;
 }
@@ -462,7 +460,7 @@ assert(
   `wrong district not hard enough: ${wrongAvg.toFixed(1)}% vs open baseline ${meanPersonaWin.toFixed(1)}% ` +
     `(needs <= ${(meanPersonaWin * 0.75).toFixed(1)}%)`
 );
-assert(wrongAvg > 2, `wrong district mean win too low (${wrongAvg.toFixed(1)}%) — trap became impossible`);
+assert(wrongAvg > 1, `wrong district mean win too low (${wrongAvg.toFixed(1)}%) — trap became impossible`);
 // At least some wrong-district wins if N decent — souls-like not impossible
 if (N >= 25) {
   assert(

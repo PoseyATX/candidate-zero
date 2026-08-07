@@ -8,6 +8,7 @@ import {
   pickPhaseDraft,
   campIndexToCardId,
   cycleReason,
+  cycleCautionReason,
   snapshot,
   type Campaign
 } from '../engine/loop.js';
@@ -472,15 +473,22 @@ function fillDossier(
     const blocked = idx === null || detailDraftOption !== null
       ? 'unavailable'
       : cycleReason(campaign, idx);
+    const caution = idx !== null && !blocked ? cycleCautionReason(campaign, idx) : '';
     const offerCut = detailDraftOption === null && idx !== null;
     cutBtn.hidden = !offerCut;
     if (offerCut) {
       const left = discardsLeft(state);
       cutBtn.disabled = !!blocked;
       cutBtn.setAttribute('aria-disabled', blocked ? 'true' : 'false');
+      // A5: practised cuts stay legal; the button names the investment so it
+      // is not silent. Full sentence lives in title for the long form.
       cutBtn.textContent = blocked
         ? blocked
-        : `Cut it — draw another (${left} left)`;
+        : caution
+          ? `Cut practised — draw another (${left} left)`
+          : `Cut it — draw another (${left} left)`;
+      if (caution) cutBtn.title = caution;
+      else cutBtn.removeAttribute('title');
       cutBtn.onclick = () => {
         if (blocked || idx === null) return;
         closeCardDetail();
@@ -719,12 +727,18 @@ export function renderPlayables(campaign: Campaign): void {
 
   const hasDoors = campEntries.some(e => BALLOT_DOOR_IDS.has(e.card.id));
   const campLabel = !state.ballot && hasDoors ? 'Ballot doors' : 'Camp actions';
+  const hasSpine = campEntries.some(e => e.card.id === 'PL01' || e.card.id === 'PL02');
+  const hasChoice = campEntries.some(e => e.card.risk === 'CHOICE');
   const campSub =
     !state.ballot && hasDoors
-      ? 'Petition labor or filing fee — make the ballot'
-      : campEntries.length
-        ? 'Always-on camp / starmap verbs'
-        : undefined;
+      ? hasSpine
+        ? 'Ballot doors + spine (walk/phone) — always on, not a draw'
+        : 'Petition labor or filing fee — make the ballot'
+      : hasSpine || hasChoice
+        ? 'Standing spine and CHOICE forks — always on when gated'
+        : campEntries.length
+          ? 'Always-on camp / starmap verbs'
+          : undefined;
 
   grid.innerHTML =
     statusHint +

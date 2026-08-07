@@ -7,7 +7,9 @@
 import { ALL_PLAYS, SHOP_PLAYS } from '../data/plays.js';
 import { ALLEY_PLAYS } from '../data/alley-plays.js';
 import { HOOK_PLAYS } from '../data/hook-plays.js';
+import { CHOICE_PLAYS } from '../data/choice-plays.js';
 import { SESSION_PLAYS } from '../data/session-plays.js';
+import { CH05_SeatOrStatute } from '../data/choice-plays.js';
 import {
   createDeckState,
   discardCard,
@@ -15,6 +17,7 @@ import {
   drawCards,
   DEFAULT_HAND_SIZE,
   STARTER_DECK_IDS,
+  STANDING_OWNED_IDS,
   takeFromHand,
   enforceWeeklyDraw,
   buildPhaseDraft,
@@ -24,7 +27,13 @@ import {
   injectNearTop
 } from './deck.js';
 import { executePlay, isPlayable, type PlayOpts } from './play.js';
-import { cycleCard, cycleBlockReason, resetDiscards, type CycleResult } from './flow.js';
+import {
+  cycleCard,
+  cycleBlockReason,
+  cycleCaution,
+  resetDiscards,
+  type CycleResult
+} from './flow.js';
 import { maybeOpenAsk, settleUnansweredAsk } from './ask.js';
 import { seatedIds as machineSeatedIds } from './machine.js';
 import { MACHINE_ASK_PLAYS, askCardId } from '../data/machine-asks.js';
@@ -51,6 +60,13 @@ import {
   HARNESS_DEFAULT_SETUP,
   type SetupSelection
 } from '../data/setup.js';
+import {
+  applyZeroStartingLedgers,
+  campGrowthUnlocked,
+  isFirstRun,
+  resolveStarterIds,
+  ZERO_BOOTS
+} from './zero.js';
 import type {
   DeckState,
   GameState,
@@ -73,6 +89,13 @@ export interface CreateCampaignOptions extends Partial<GameState> {
   setup?: SetupSelection | Partial<SetupSelection>;
   /** When true (default for harnesses), auto-resolve phase drafts. */
   autoDraft?: boolean;
+  /**
+   * `zero` (player default): boots only + ballot doors on camp; career deck
+   * from legacy if any. `harness`: full toolkit for regression instruments.
+   */
+  starterKit?: 'zero' | 'harness';
+  /** Prior career — supplies careerDeck on Zero kits. */
+  legacy?: LegacyState | null;
 }
 
 export interface WeekReport {
@@ -189,11 +212,23 @@ export function buildCatalog(plays: PlayCard[] = ALL_PLAYS): Map<string, PlayCar
 }
 
 export function createCampaign(overrides: CreateCampaignOptions = {}): Campaign {
-  const { setup: setupIn, autoDraft: _autoDraft, ...stateOverrides } = overrides;
+  const {
+    setup: setupIn,
+    autoDraft: _autoDraft,
+    starterKit: kitIn,
+    legacy: legacyIn,
+    ...stateOverrides
+  } = overrides;
+  // Harness instruments default to the full kit so regression math stays an
+  // instrument. Player UI must pass starterKit: 'zero'.
+  const starterKit = kitIn ?? 'harness';
+  const legacy = legacyIn ?? null;
+
   // Seed first so deck shuffle and weekly draws share the stream.
+  // Never pass `undefined` fields — they overwrite createNewState defaults (NaN nameID).
   const state = createNewState({
-    money: 200,
-    volPool: 1,
+    money: starterKit === 'zero' ? 80 : 200,
+    volPool: starterKit === 'zero' ? 0 : 1,
     ...stateOverrides
   });
   const setup: SetupSelection = {
@@ -203,18 +238,44 @@ export function createCampaign(overrides: CreateCampaignOptions = {}): Campaign 
   applySetup(state, setup);
   state.lastPhase = getPhase(state);
 
-  // Seed starter deck inventory (ownership) from the same list that seeds the
-  // physical draw pile (createDeckState's default), so the two can't drift.
-  state.deck = [...new Set(STARTER_DECK_IDS)];
-  const deckState = createDeckState();
-  // Deal this persona their one signature card — exclusive (no other persona's
-  // deck ever contains it) and reachable (shuffled into the draw pile).
-  // Near the TOP, not the bottom. This is the one card that is exclusively
-  // yours — the mechanical expression of the persona you chose — so it belongs
-  // in the opening hand, not at position 26 of 27 where it surfaced around
-  // week 6 and read as if it did not exist.
-  const sigId = SIGNATURE_BY_PERSONA[setup.personaId];
-  if (sigId) injectNearTop(deckState, state, [sigId]);
+  const { physical, owned } = resolveStarterIds(starterKit, legacy, STARTER_DECK_IDS);
+  state.deck = [...new Set(owned)];
+  const deckState = createDeckState(physical);
+
+  state.sessionFlags = state.sessionFlags || {};
+  state.sessionFlags.zeroMode = starterKit === 'zero' ? 1 : 0;
+  state.sessionFlags.priorRuns = legacy?.runs?.length ?? 0;
+  state.sessionFlags.careerCards = owned.length;
+
+  if (starterKit === 'zero') {
+    applyZeroStartingLedgers(state);
+    // Signature is the persona's voice — earned after you have a past, not
+    // free power on the first filing.
+    if (!isFirstRun(legacy)) {
+      const sigId = SIGNATURE_BY_PERSONA[setup.personaId];
+      if (sigId) injectNearTop(deckState, state, [sigId]);
+    } else {
+      state.log.push({
+        week: 1,
+        kind: 'note',
+        text:
+          'ZERO — You have boots and a filing window. No list. No machine. No blessing. ' +
+          'Everything else is built in public, or it is not built.'
+      });
+      if (physical.includes(ZERO_BOOTS)) {
+        state.log.push({
+          week: 1,
+          kind: 'note',
+          text: 'What you own: one pair of boots. The rest of the deck is empty on purpose.'
+        });
+      }
+    }
+  } else {
+    // Harness kit: persona signature near the top (existing contract).
+    const sigId = SIGNATURE_BY_PERSONA[setup.personaId];
+    if (sigId) injectNearTop(deckState, state, [sigId]);
+  }
+
   // Persist seed on state for multi-cycle deterministic re-file.
   if (stateOverrides.seed !== undefined) {
     state.seed = Number(stateOverrides.seed) >>> 0 || 1;
@@ -249,7 +310,12 @@ export function continueAfterWaiting(
 ): Campaign {
   const prevSeed = prev.state.seed ?? 1;
   const nextSeed = seed ?? nextCycleSeed(prevSeed);
-  const next = createCampaign({ seed: nextSeed, setup: prev.setup });
+  const next = createCampaign({
+    seed: nextSeed,
+    setup: prev.setup,
+    starterKit: 'zero',
+    legacy
+  });
   applyLegacy(next.state, legacy);
   return next;
 }
@@ -270,7 +336,7 @@ export function createIncumbentCampaign(old: Campaign, legacy: LegacyState): Cam
   // Settle the last race's notes before the wheel turns (win branch).
   const retirement = retireDebtOnWin(old.state);
 
-  const next = createCampaign({ setup: old.setup });
+  const next = createCampaign({ setup: old.setup, starterKit: 'zero', legacy });
   const s = next.state;
   const o = old.state;
 
@@ -433,6 +499,9 @@ export function ensureGeneralTools(campaign: Campaign): void {
 }
 
 export const CAMP_PETITION = -101;
+/** Standing spine: Block Walk always-on camp (SRD standing actions). */
+export const CAMP_BLOCK_WALK = -102;
+export const CAMP_PHONE_BANK = -103;
 export const CAMP_FILING_FEE = -105;
 /** Camp-style shop index base: -200 - i for the i-th available BUY* play. */
 export const CAMP_SHOP_BASE = -200;
@@ -440,6 +509,8 @@ export const CAMP_SHOP_BASE = -200;
 export const CAMP_SESSION_BASE = -300;
 /** Hook-cashing card synthetic index base: -700 - i. See engine/hooks.ts. */
 export const CAMP_HOOK_BASE = -700;
+/** Campaign CHOICE fork synthetic index base: -650 - i. See data/choice-plays.ts. */
+export const CAMP_CHOICE_BASE = -650;
 /** Campaign alleyway synthetic index base: -600 - i. See data/alley-plays.ts. */
 export const CAMP_ALLEY_BASE = -600;
 /** Waiting-season play synthetic index base: -500 - i. */
@@ -464,6 +535,10 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
         out.push({ index: CAMP_SESSION_BASE - i, card });
         i++;
       }
+    }
+    // Freshman fork — CHOICE, always listed when its week gate allows.
+    if (isPlayable(campaign.state, CH05_SeatOrStatute)) {
+      out.push({ index: CAMP_SESSION_BASE - i, card: CH05_SeatOrStatute });
     }
     return out;
   }
@@ -501,6 +576,8 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
       out.push({ index: CAMP_FILING_FEE, card: fee });
     }
   }
+  // Zero law: Block Walk is a card you own (boots), not an always-on mall verb.
+  // Phone bank is earned into the deck — never free camp power on day one.
   // Phase 2: asset shop — always-available BUY* plays (archive assetPlays).
   // 0 AP; paid with $ or volunteers. Not drawn into hand.
   let shopI = 0;
@@ -533,6 +610,22 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
       }
     }
   }
+  // CHOICE forks and alleyways: growth after the world has a reason to offer
+  // them (noticed / prior career). First-run Zero is doors + boots, not a mall.
+  const growthOpen = campGrowthUnlocked(campaign.state, null);
+  if (
+    growthOpen &&
+    (campaign.state.stage === 'primary' || campaign.state.stage === 'general')
+  ) {
+    let ci = 0;
+    for (const card of CHOICE_PLAYS) {
+      if (card.id === 'CH05') continue; // session only
+      if (isPlayable(campaign.state, card)) {
+        out.push({ index: CAMP_CHOICE_BASE - ci, card });
+        ci++;
+      }
+    }
+  }
   // The alleyways, LAST in the menu on purpose.
   //
   // They were first, and every strategy that falls back to "the first playable
@@ -540,7 +633,10 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
   // money strategy's ballot rate fell 70% -> 59.8% and a ground condition
   // meant to be met 12-65% of the time hit 86%. A place to waste an afternoon
   // has to be somewhere you CHOOSE to go, not the top of the list.
-  if (campaign.state.stage === 'primary' || campaign.state.stage === 'general') {
+  if (
+    growthOpen &&
+    (campaign.state.stage === 'primary' || campaign.state.stage === 'general')
+  ) {
     let ai = 0;
     for (const card of ALLEY_PLAYS) {
       if (isPlayable(campaign.state, card)) {
@@ -558,12 +654,21 @@ export function campIndexToCardId(
   handIndex: number
 ): string | null {
   if (handIndex === CAMP_PETITION) return 'PL04';
+  if (handIndex === CAMP_BLOCK_WALK) return 'PL01';
+  if (handIndex === CAMP_PHONE_BANK) return 'PL02';
   if (handIndex === CAMP_FILING_FEE) return 'PL05';
-  // Index bands: hook ≤-700 · alley ≤-600 · waiting ≤-500 · starmap ≤-401 · session ≤-300 · shop ≤-200
+  // Index bands: hook ≤-700 · choice ≤-650 · alley ≤-600 · waiting ≤-500 · starmap ≤-401 · session ≤-300 · shop ≤-200
   if (handIndex <= CAMP_HOOK_BASE) {
     const hooks = HOOK_PLAYS.filter(c => isPlayable(campaign.state, c));
     const i = CAMP_HOOK_BASE - handIndex;
     return hooks[i]?.id ?? null;
+  }
+  if (handIndex <= CAMP_CHOICE_BASE) {
+    const choices = CHOICE_PLAYS.filter(
+      c => c.id !== 'CH05' && isPlayable(campaign.state, c)
+    );
+    const i = CAMP_CHOICE_BASE - handIndex;
+    return choices[i]?.id ?? null;
   }
   if (handIndex <= CAMP_ALLEY_BASE) {
     const alleys = ALLEY_PLAYS.filter(c => isPlayable(campaign.state, c));
@@ -584,7 +689,10 @@ export function campIndexToCardId(
     return openVerbs[i] ?? null;
   }
   if (handIndex <= CAMP_SESSION_BASE) {
-    const sessionCards = SESSION_PLAYS.filter(c => isPlayable(campaign.state, c));
+    const sessionCards = [
+      ...SESSION_PLAYS.filter(c => isPlayable(campaign.state, c)),
+      ...(isPlayable(campaign.state, CH05_SeatOrStatute) ? [CH05_SeatOrStatute] : [])
+    ];
     const i = CAMP_SESSION_BASE - handIndex;
     return sessionCards[i]?.id ?? null;
   }
@@ -730,6 +838,11 @@ export function cycleFromHand(campaign: Campaign, handIndex: number): CycleResul
 /** Why a hand card cannot be pitched right now, '' when it can. */
 export function cycleReason(campaign: Campaign, handIndex: number): string {
   return cycleBlockReason(campaign.state, campaign.deck, handIndex);
+}
+
+/** Soft caution when a cut is allowed but noteworthy (practised card). '' if none. */
+export function cycleCautionReason(campaign: Campaign, handIndex: number): string {
+  return cycleCaution(campaign.state, campaign.deck, handIndex);
 }
 
 export function endWeekInPlace(campaign: Campaign): StageTransition {

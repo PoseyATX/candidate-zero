@@ -34,9 +34,27 @@ function assert(cond: boolean, msg: string): void {
   if (!cond) failures++;
 }
 
-/** Canonical comparison — normalizes undefined/order-independent shape via JSON. */
+/**
+ * Canonical comparison key.
+ * Live engine objects can carry own-props set to `undefined` (JSON omits them)
+ * and key insertion order that differs from a post-deserialize tree. Value
+ * equality is what save/load fidelity means; sort keys so order is not a fail.
+ */
+function stableStringify(value: unknown): string {
+  return JSON.stringify(value, (_key, v) => {
+    if (v && typeof v === 'object' && !Array.isArray(v)) {
+      const sorted: Record<string, unknown> = {};
+      for (const k of Object.keys(v as object).sort()) {
+        sorted[k] = (v as Record<string, unknown>)[k];
+      }
+      return sorted;
+    }
+    return v;
+  });
+}
+
 function stateKey(snap: EngineSnapshot): string {
-  return JSON.stringify({ state: snap.state, deck: snap.deck, rng: snap.rng });
+  return stableStringify({ state: snap.state, deck: snap.deck, rng: snap.rng });
 }
 
 /** Pure policy: a command is a deterministic function of the snapshot. */

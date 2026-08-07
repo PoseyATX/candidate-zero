@@ -18,7 +18,8 @@ import {
   normalizeChoice,
   type Campaign,
   CAMP_FILING_FEE,
-  CAMP_PETITION
+  CAMP_PETITION,
+  CAMP_BLOCK_WALK
 } from "../engine/loop.js";
 import { formatPlayJuice } from "../engine/feedback.js";
 import { getPhase, stageLabel, stageWeek, CAMPAIGN_WEEKS_TOTAL } from "../engine/state.js";
@@ -142,7 +143,10 @@ function buildMenu(campaign: Campaign): MenuEntry[] {
     key: String(i + 1),
     handIndex: p.index,
     card: p.card,
-    camp: p.index === CAMP_PETITION || p.index === CAMP_FILING_FEE
+    camp:
+      p.index === CAMP_PETITION ||
+      p.index === CAMP_FILING_FEE ||
+      p.index === CAMP_BLOCK_WALK
   }));
 }
 
@@ -299,7 +303,7 @@ async function main(): Promise<void> {
   printBanner();
   const seed = args.seed ?? (Date.now() % 1_000_000);
   const setup = setupFromArgs(args);
-  const campaign = createCampaign({ seed, setup });
+  const campaign = createCampaign({ seed, setup, starterKit: 'zero' });
   console.log("Seed:", seed);
   console.log("Setup:", setup);
   printLedger(campaign);

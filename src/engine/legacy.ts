@@ -51,6 +51,12 @@ import {
 } from './chamber.js';
 import { takeStripped } from '../data/policy-plays.js';
 import type { MemberDef } from '../data/members.js';
+import {
+  bankScar,
+  buildLossScar,
+  isLossOutcome,
+  mergeCareerDeck
+} from './zero.js';
 
 const STORAGE_KEY = 'cz_legacy_v1';
 
@@ -499,6 +505,12 @@ export function buildGrowthLine(state: GameState): string | null {
 
 export function recordRun(legacy: LegacyState, state: GameState, kind: CampaignOutcome, share: number): void {
   legacy.runs.push({ epithet: buildEpithet(state, kind, share), kind });
+  // The deck *is* the legacy — every card you owned this run carries forward.
+  mergeCareerDeck(legacy, state);
+  // Losses leave a scar the player can read. Wins do not erase the scars.
+  if (isLossOutcome(kind)) {
+    bankScar(legacy, buildLossScar(state, kind));
+  }
   // A signed bill goes into the book BEFORE anything else settles, so the law
   // exists for the machine and the rival to react to. Until this line, passing
   // a law set an outcome string and the next campaign began in a world where
@@ -512,7 +524,12 @@ export function recordRun(legacy: LegacyState, state: GameState, kind: CampaignO
   // struck. A win you cannot lose is a high score, not a win — the people your
   // language beat are still in the building, and they can count.
   lastRepeal = settleRepeals(legacy, state, legacy.runs.length);
-  const base = { contacts: state.contacts, nameID: state.nameID };
+  // Spread prior carry so careerDeck/scars/waiting banks survive debt merge.
+  const base = {
+    ...legacy.carry,
+    contacts: state.contacts,
+    nameID: state.nameID
+  };
   legacy.carry = mergeDebtIntoCarry(base, state, kind);
   // Settle the machine AFTER the run is recorded, so runIndex is the number of
   // the cycle just finished — the departure line reads "since your third".
