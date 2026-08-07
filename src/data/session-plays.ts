@@ -537,16 +537,35 @@ export const SS27_RibbonCircuit: PlayCard = {
   tag: 'the home fires', attrs: ['CHA'],
   d:
     'A new bridge, a clinic wing, a fire truck. You hold the giant scissors and the district sees you deliver. ' +
-    'District standing plus name ID, safely, every time. ' +
-    'Charm is the attribute. It pays less standing than Casework but adds name ID and never diminishes — ' +
-    'the card for a member who is already well liked at home and wants to be well known.',
+    'District standing plus name ID — the first circuit is real; each one after pays less, because the cameras ' +
+    'already know your face. ' +
+    'Charm is the attribute. It pays less standing than Casework but adds name ID on the early circuits. ' +
+    'It is not a second job for every week of session — the fourth ribbon is an empty scissors pose.',
   show: s => s.stage === 'session',
-  odds: () => 0.85,
+  // Same truth rule as SS12: the number on the face has to fall with the reward,
+  // or an odds-following player just spam-turtles Act III.
+  odds: s => Math.max(0.4, 0.85 - Number(s.sessionFlags?.ribbonCircuits || 0) * 0.12),
   run: (s, o) => {
-    const g = o.tier === 0 ? 6 : 4;
+    s.sessionFlags = s.sessionFlags || {};
+    const n = Number(s.sessionFlags.ribbonCircuits || 0);
+    s.sessionFlags.ribbonCircuits = n + 1;
+    const base = o.tier === 0 ? 6 : 4;
+    const g = Math.max(1, base - n * 2);
+    // Name ID is the early-circuit hook; by the third ribbon you are not news.
+    const nameGain = Math.max(0, 2 - n);
     s.districtStanding = clamp(s.districtStanding + g, 0, 100);
-    s.nameID += 2;
-    return `Scissors, cameras, a check with your name near it. Standing +${g}, +2 name ID.`;
+    s.nameID += nameGain;
+    if (n === 0) {
+      return `Scissors, cameras, a check with your name near it. Standing +${g}, +${nameGain} name ID.`;
+    }
+    if (n < 3) {
+      return (
+        `Another ribbon. The district has seen this before. Standing +${g}` +
+        (nameGain ? `, +${nameGain} name ID` : '') +
+        '.'
+      );
+    }
+    return `You are cutting ribbons because the calendar said so. Standing +${g}, and the cameras already left.`;
   }
 };
 export const SS28_CharityGala: PlayCard = {

@@ -38,6 +38,7 @@ import {
   campIndexToCardId,
   cycleFromHand,
   cycleReason,
+  cycleCautionReason,
   CAMP_PETITION,
   CAMP_FILING_FEE,
   type Campaign
@@ -114,6 +115,8 @@ export interface ActionOption {
   costLabel: string;
   /** '' when this card may be pitched for a fresh draw, else why it may not. */
   cycleBlocked: string;
+  /** Soft warning when a cut is allowed but noteworthy (e.g. practised). '' if none. */
+  cycleCaution: string;
   /** effective success probability given current state, or null if odds-less. */
   approxOdds: number | null;
   /** Odds this play would gain if the command sets `press`. 0 when no heat. */
@@ -145,6 +148,8 @@ export interface HandCardView {
   playable: boolean;
   /** '' when this card may be pitched for a fresh draw, else why it may not. */
   cycleBlocked: string;
+  /** Soft warning when a cut is allowed but noteworthy (e.g. practised). '' if none. */
+  cycleCaution: string;
 }
 
 export interface GroundView {
@@ -338,7 +343,8 @@ function handView(campaign: Campaign, actions: ActionOption[]): HandCardView[] {
       risk: card?.risk ?? '',
       costLabel: card ? costLabel(card) : '',
       playable: playable.has(index),
-      cycleBlocked: cycleReason(campaign, index)
+      cycleBlocked: cycleReason(campaign, index),
+      cycleCaution: cycleCautionReason(campaign, index)
     };
   });
 }
@@ -358,6 +364,7 @@ export function legalActions(snap: EngineSnapshot): ActionOption[] {
     field: !!card.field,
     costLabel: costLabel(card),
     cycleBlocked: cycleReason(campaign, index),
+    cycleCaution: cycleCautionReason(campaign, index),
     approxOdds: effectiveOdds(campaign.state, card),
     pressOdds: quotePress(campaign.state, card).odds,
     pressBand: quotePress(campaign.state, card).band

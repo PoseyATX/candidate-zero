@@ -26,10 +26,17 @@ import {
   SESSION_WEEKS,
   SESSION_FILING_DEADLINE
 } from '../engine/session.js';
-import { SS05_CalendarSlot, SS08_Casework, SS09_SpeakerErrand, SS12_StudyRules } from '../data/session-plays.js';
+import {
+  SS05_CalendarSlot,
+  SS08_Casework,
+  SS09_SpeakerErrand,
+  SS12_StudyRules,
+  SS27_RibbonCircuit
+} from '../data/session-plays.js';
 import { selectGoalKey, formatGoalStrip, buildGoalStripInput } from '../ui/goal-strip.js';
 import { createNewState } from '../engine/state.js';
 import { setDefaultSeed, createRng, useRng } from '../engine/rng.js';
+import type { RollResult } from '../engine/types.js';
 import { sessionPipelineStrategy, laborBallotStrategy, STRATEGIES } from '../engine/strategies.js';
 import { applySelfLoan, maybePacBridge, retireDebtOnWin } from '../engine/debt.js';
 import { executePlay } from '../engine/play.js';
@@ -359,6 +366,47 @@ console.log('=== CANDIDATE ZERO — Phase 4 Session Harness ===\n');
   );
   assert(fourth >= 0.3, 'but it never becomes a dead card');
   console.log('PASSED: SS12 odds decay with reads — the printed signal tells the truth');
+}
+
+{
+  // --- DEFERRED B6: SS27 Ribbon-Cutting is not a free turtle ---
+  // Same class of lie SS12 used to tell: SAFE, high odds, "never diminishes",
+  // and an odds-following bot pinned standing for the whole session while the
+  // bill never moved. Reward AND odds fall with circuits.
+  setDefaultSeed(89);
+  const s = createNewState({ seed: 89, nameID: 10 });
+  enterSession(s);
+  const firstOdds = SS27_RibbonCircuit.odds!(s);
+  const beforeStand = s.districtStanding;
+  const beforeName = s.nameID;
+  // Force a breakthrough-tier payoff without the dice.
+  const bt: RollResult = { tier: 0, p: 1, roll: 0, band: 0 };
+  const firstText = SS27_RibbonCircuit.run!(s, bt);
+  assert(
+    s.districtStanding === beforeStand + 6,
+    `first circuit standing +6 (got ${s.districtStanding - beforeStand})`
+  );
+  assert(s.nameID === beforeName + 2, 'first circuit +2 name ID');
+  assert(/scissors/i.test(firstText), 'first circuit reads as the real event');
+
+  s.sessionFlags.ribbonCircuits = 3;
+  const lateOdds = SS27_RibbonCircuit.odds!(s);
+  assert(firstOdds > 0.8, `first circuit odds are strong (${firstOdds})`);
+  assert(
+    lateOdds < firstOdds - 0.25,
+    `a fourth ribbon is a worse bet (${firstOdds} -> ${lateOdds})`
+  );
+  assert(lateOdds >= 0.35, 'but the card never becomes dead ink');
+
+  const standAt = s.districtStanding;
+  const nameAt = s.nameID;
+  SS27_RibbonCircuit.run!(s, bt);
+  assert(
+    s.districtStanding - standAt === 1,
+    `late circuit standing is minimal (got +${s.districtStanding - standAt})`
+  );
+  assert(s.nameID === nameAt, 'late circuits stop minting name ID');
+  console.log('PASSED: SS27 ribbon odds and payoffs decay — Act III is not scissors forever');
 }
 
 {

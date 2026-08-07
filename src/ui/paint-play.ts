@@ -8,6 +8,7 @@ import {
   pickPhaseDraft,
   campIndexToCardId,
   cycleReason,
+  cycleCautionReason,
   snapshot,
   type Campaign
 } from '../engine/loop.js';
@@ -472,15 +473,22 @@ function fillDossier(
     const blocked = idx === null || detailDraftOption !== null
       ? 'unavailable'
       : cycleReason(campaign, idx);
+    const caution = idx !== null && !blocked ? cycleCautionReason(campaign, idx) : '';
     const offerCut = detailDraftOption === null && idx !== null;
     cutBtn.hidden = !offerCut;
     if (offerCut) {
       const left = discardsLeft(state);
       cutBtn.disabled = !!blocked;
       cutBtn.setAttribute('aria-disabled', blocked ? 'true' : 'false');
+      // A5: practised cuts stay legal; the button names the investment so it
+      // is not silent. Full sentence lives in title for the long form.
       cutBtn.textContent = blocked
         ? blocked
-        : `Cut it — draw another (${left} left)`;
+        : caution
+          ? `Cut practised — draw another (${left} left)`
+          : `Cut it — draw another (${left} left)`;
+      if (caution) cutBtn.title = caution;
+      else cutBtn.removeAttribute('title');
       cutBtn.onclick = () => {
         if (blocked || idx === null) return;
         closeCardDetail();

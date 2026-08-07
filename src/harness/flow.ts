@@ -20,11 +20,13 @@ import { createDeckState, drawCards, DEFAULT_HAND_SIZE } from '../engine/deck.js
 import {
   cycleCard,
   cycleBlockReason,
+  cycleCaution,
   canCycle,
   discardsLeft,
   resetDiscards,
   MAX_DISCARDS
 } from '../engine/flow.js';
+import { applyUpgrade } from '../engine/upgrades.js';
 import { heatOf } from '../engine/heat.js';
 import { createRng, setDefaultSeed, useRng } from '../engine/rng.js';
 import type { DeckState, GameState } from '../engine/types.js';
@@ -177,6 +179,34 @@ function fixture(hand: string[], draw: string[], seed = 1): { s: GameState; d: D
   assert(
     reasons.every(r => r.length > 0 && /^[A-Z]/.test(r) && !/[_]/.test(r)),
     `blocked reasons read as sentences (${JSON.stringify(reasons)})`
+  );
+}
+
+// --- DEFERRED A5: practised cards warn, they do not refuse ---
+// Cutting a practised card is sometimes correct (dead this week; returns to
+// the deck). Hard-blocking would be wrong. Silent cutting is also wrong — the
+// draft pick that sharpened it must be named on the cut.
+{
+  const { s, d } = fixture(['PL01', 'PL10', 'PL13'], ['PL02', 'PL03']);
+  assert(cycleCaution(s, d, 0) === '', 'an unpractised card carries no caution');
+  applyUpgrade(s, 'PL01');
+  const caution = cycleCaution(s, d, 0);
+  assert(/practised/i.test(caution), `practised caution names the investment (${JSON.stringify(caution)})`);
+  assert(canCycle(s, d, 0), 'practised still leaves the cut legal');
+  const res = cycleCard(s, d, 0);
+  assert(res.ok, 'the practised cut resolves');
+  assert(res.pitched === 'PL01', 'the practised card is the one named');
+  assert(/practised/i.test(res.caution ?? ''), 'the result carries the caution');
+  const logLine = s.log[s.log.length - 1]?.text ?? '';
+  assert(/practised/i.test(logLine), `the log names practised (${JSON.stringify(logLine)})`);
+
+  // A blocked cut must not invent a caution that pretends the cut is available.
+  const blocked = fixture(['PL04', 'PL01'], ['PL02']);
+  blocked.s.ballot = false;
+  applyUpgrade(blocked.s, 'PL04');
+  assert(
+    cycleCaution(blocked.s, blocked.d, 0) === '',
+    'ballot-guarded cards get a block, not a soft practised caution'
   );
 }
 

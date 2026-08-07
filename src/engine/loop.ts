@@ -24,7 +24,13 @@ import {
   injectNearTop
 } from './deck.js';
 import { executePlay, isPlayable, type PlayOpts } from './play.js';
-import { cycleCard, cycleBlockReason, resetDiscards, type CycleResult } from './flow.js';
+import {
+  cycleCard,
+  cycleBlockReason,
+  cycleCaution,
+  resetDiscards,
+  type CycleResult
+} from './flow.js';
 import { maybeOpenAsk, settleUnansweredAsk } from './ask.js';
 import { seatedIds as machineSeatedIds } from './machine.js';
 import { MACHINE_ASK_PLAYS, askCardId } from '../data/machine-asks.js';
@@ -730,6 +736,11 @@ export function cycleFromHand(campaign: Campaign, handIndex: number): CycleResul
 /** Why a hand card cannot be pitched right now, '' when it can. */
 export function cycleReason(campaign: Campaign, handIndex: number): string {
   return cycleBlockReason(campaign.state, campaign.deck, handIndex);
+}
+
+/** Soft caution when a cut is allowed but noteworthy (practised card). '' if none. */
+export function cycleCautionReason(campaign: Campaign, handIndex: number): string {
+  return cycleCaution(campaign.state, campaign.deck, handIndex);
 }
 
 export function endWeekInPlace(campaign: Campaign): StageTransition {
