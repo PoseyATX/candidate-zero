@@ -73,39 +73,39 @@ export const GOAL_COPY: Record<GoalCopyKey, GoalCopyRow> = {
     next: 'Start a new run from the masthead'
   },
   draft: {
-    primary: 'Phase draft',
-    progress: 'Pick one card for your pool',
-    next: 'Resolve draft before End Week'
+    primary: 'An opportunity',
+    progress: 'Take one card — or walk past',
+    next: 'Resolve or decline before End Week'
   },
   primary_pre_ballot: {
     primary: 'Make the ballot by end of week 8',
-    progress: '{signatures}/{sigNeed} sigs · W{stageWeek}/8',
-    next: 'Petition · Filing Fee · or raise cash for the fee'
+    progress: '{signatures}/{sigNeed} sigs · ${money} cash · W{stageWeek}/8',
+    next: 'Labor door: Petitions. Money door: Filing Fee ($1250) — you do not have it yet'
   },
   primary_pre_ballot_ap0: {
     primary: 'Make the ballot by end of week 8',
-    progress: '{signatures}/{sigNeed} sigs · W{stageWeek}/8',
-    next: 'Shop (0 AP) still open · or End Week'
+    progress: '{signatures}/{sigNeed} sigs · ${money} cash · W{stageWeek}/8',
+    next: 'End Week — the deadline does not care that you are tired'
   },
   primary_on_ballot: {
     primary: 'Survive the primary',
     progress: 'Contacts {contacts} · Name {nameID} · W{stageWeek}/8',
-    next: 'Field · chairs · force · shop'
+    next: 'Play what is in your hand. Build the deck in public.'
   },
   primary_on_ballot_ap0: {
     primary: 'Survive the primary',
     progress: 'Contacts {contacts} · Name {nameID} · W{stageWeek}/8',
-    next: 'Shop (0 AP) still open · or End Week'
+    next: 'End Week'
   },
   general: {
     primary: 'Win November — bank GOTV',
     progress: 'GOTV {totalGotv} · W{stageWeek}/6 · cal W{week}/{weeksTotal}',
-    next: 'Field → turnout · GOTV Weekend · contrast'
+    next: 'Field → turnout · what you carried from the primary'
   },
   general_ap0: {
     primary: 'Win November — bank GOTV',
     progress: 'GOTV {totalGotv} · W{stageWeek}/6',
-    next: 'Shop if open · or End Week'
+    next: 'End Week'
   },
   session_seat: {
     primary: 'Your seat is bleeding',
@@ -280,7 +280,8 @@ export function formatGoalStrip(input: GoalStripInput): {
     path: input.waitingPathId ?? 'orbit',
     bankContacts: input.bankContacts,
     bankName: input.bankName,
-    waitingWeeks: input.waitingWeeks
+    waitingWeeks: input.waitingWeeks,
+    money: input.money
   };
   return {
     key,

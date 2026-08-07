@@ -15,10 +15,12 @@ Brutal impartial RNG; SAFE never DISASTER; power is never clean; choices bind; h
 - **First-run deck:** legs (`PL01`) + voice (persona signature). Ballot doors camp-only.
 - **Career:** `legacy.carry.careerDeck` is the only lasting power. You lose; what you built returns on the next filing.
 - **No free weekly card** in player Zero mode. Opportunities ≠ forced offers; walking past is legal.
-- **Draft opportunities:** rarity + persona theme; exclude recently shown; never the same 1–3 every run.
-- **Hand is tight (5–7).** Table has spaces, not infinite slots. Cheap spam is a trap. Trash during the game, not as a lazy out-of-game click.
-- **Harness kit** (`starterKit: 'harness'`) is a separate instrument — never confuse its win rates with Zero fantasy.
-- **Do not regress act splash / ceremony chrome.**
+- **Camp mall forbidden** on Zero: no BUY shop strip, no starmap verb flood, no CHOICE/alley after filing. Empty camp is correct.
+- **Opening:** one immersive beat (four people, clerk's window) — **not** a 3-step form. That form is not a hook.
+- **Initial hooks:** dual-path ballot doors (labor vs money you cannot afford) + earned threads later — not seven free verbs.
+- **Hand is tight (5–7).** Table has spaces, not infinite slots.
+- **Harness kit** is a separate instrument.
+- **Do not regress act splash / ceremony chrome.** Live product is GitHub Pages.
 
 ## Standing actions (architecture law)
 Always-available verbs live on a **Camp strip**, not the draw pile. Same resolve/odds/cost as a card. Petition (PL04) and Filing Fee (PL05) already follow this. Day-one Zero: ballot doors on camp; legs are in the pile as owned boots, not a free mall infinite.
