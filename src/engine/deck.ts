@@ -10,10 +10,13 @@ import { random } from './rng.js';
 import { warm } from './reputation.js';
 import { upgradableCardIds, upgradeOptionId, parseUpgradeOption, applyUpgrade } from './upgrades.js';
 
-// Starter deck (early accessibility + dual ballot paths)
+/**
+ * Full toolkit for **harness** instruments only (`starterKit: 'harness'`).
+ * Player Zero campaigns ignore this list — see engine/zero.ts.
+ */
 export const STARTER_DECK_IDS: string[] = [
-  // Block Walk (PL01) and Phone Bank (PL02) are standing camp actions — always
-  // on the strip, not draw-pile density (SRD standing-actions / .10x).
+  'PL01', 'PL01', 'PL01',
+  'PL02',
   'PL03',
   'PL04', 'PL04', 'PL04', 'PL04', 'PL04',
   'PL05', 'PL05',
@@ -21,34 +24,11 @@ export const STARTER_DECK_IDS: string[] = [
   'PL10',
   'PL13', 'PL13', 'PL13',
   'PL08',
-  // --- Cheap plays, added 2026-07-28 from alpha feedback ---
-  // "It's kinda stupid to have 5 AP and no single-AP cards to play." Fair: the
-  // catalog has 12 one-AP cards, but this deck had two, and one of those (Yard
-  // Signs) also wants $150 against a $200 opening bankroll. Mean cost was
-  // 1.83 AP, so a 5-AP week bought 2.7 plays — a "week" was two or three taps.
-  // These three are 1 AP, cash-free, phase-1 legal and ungated.
-  'PL80', 'PL80',   // Grocery-Store Handshakes
-  'PL84', 'PL84',   // Coffee-Shop Sit-Down
-  'PL83', 'PL83',   // Letter to the Editor
-  // Density compensation, measured not guessed. Adding six cards dropped the
-  // money path's ballot rate from 72% to 47% by thinning BOTH the filing fee
-  // (PL05) and the fundraiser that pays for it (PL13). ensureBallotAccessInHand
-  // is no help there — it prefers PL04, so the labor door gets the net and the
-  // money door does not. One more of each restores the ratio.
-  //
-  // Final measured week-8 ballot rates (400 trials each, SE ~2.4pp) against the
-  // pre-change baseline: labor 87 (was 84.5), money 68.5 (was 72), hybrid 94.8
-  // (was 94), grind 26.8 (was 31.3). Every path within ~2 SE, and the grind
-  // control did not get easier — a second PL13 fixed money outright (85.5%) but
-  // pushed grind to 45%, which would have quietly drained what little tension
-  // Act I has left. Keeping the deadline's teeth beat closing a 3.5pp gap.
+  'PL80', 'PL80',
+  'PL84', 'PL84',
+  'PL83', 'PL83',
   'PL05',
   'PL13'
-  // NOTE: this deck is tuned for ballot-access density (petition / filing-fee
-  // draw timing). Adding cards dilutes that and can make the money path miss
-  // the ballot — see harness:full "money should usually clear ballot" and the
-  // harness:strategies week-8 baselines. The additions above were measured
-  // against both, not assumed safe; ensureBallotAccessInHand is the backstop.
 ];
 
 /** @deprecated Zero law: no free standing ownership. Kept empty for imports. */

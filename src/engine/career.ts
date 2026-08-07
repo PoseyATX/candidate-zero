@@ -53,10 +53,10 @@ export interface BallotThresholdResult {
  * unreachable for it by construction — that is intended.
  */
 const THRESHOLDS = {
-  // money/spread top ~40, contested ~5 under standing spine; home+2×other at
-  // 30/18 still rewards true breadth without free-win at 100%.
-  primary: { home: 30, other: 18, othersNeeded: 2 },
-  general: { home: 20, other: 12, othersNeeded: 2 }
+  // Calibrated for harness full kit (field density). Zero player kit is thinner
+  // and is not what harness:grounds measures.
+  primary: { home: 18, other: 10, othersNeeded: 2 },
+  general: { home: 12, other: 7, othersNeeded: 2 }
 } as const;
 
 /**
