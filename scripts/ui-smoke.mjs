@@ -173,8 +173,8 @@ async function main() {
     // Human playtest checklist (automated slice) — phone 390×844 default
     const hudText = await page.locator('#hud').innerText().catch(() => '');
     assert(
-      /Teacher/i.test(hudText) && !/^The\b/m.test(hudText.split('\n')[0] || ''),
-      `HUD shows persona (Teacher), not bare article "The" (got: ${JSON.stringify(hudText.slice(0, 80))})`
+      /Blockwalker/i.test(hudText) && !/^The\b/m.test(hudText.split('\n')[0] || ''),
+      `HUD shows persona (Blockwalker), not bare article "The" (got: ${JSON.stringify(hudText.slice(0, 80))})`
     );
     assert(/\$|W\d+/i.test(hudText), 'HUD shows $ / week without Dossier');
     const goalText2 = await page.locator('#goal-strip').innerText().catch(() => '');
