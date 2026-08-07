@@ -4185,7 +4185,7 @@
       "id": "veteran",
       "name": "The Veteran",
       "tagline": "bio armor",
-      "description": "Two tours and a flag on the porch. Bio is armor.",
+      "description": "Two tours and a flag on the porch. Bio is armor — not a list, not a PAC.",
       "attrs": {
         "CON": 3,
         "CLO": 2,
@@ -4196,7 +4196,7 @@
       "id": "teacher",
       "name": "The Teacher",
       "tagline": "the rooms",
-      "description": "Twenty years of parent-teacher nights. You know the rooms.",
+      "description": "Twenty years of parent-teacher nights. You know the rooms — you do not own them yet.",
       "attrs": {
         "CHA": 3,
         "DIP": 2,
@@ -4207,7 +4207,7 @@
       "id": "preacher",
       "name": "The Preacher",
       "tagline": "pulpit precinct",
-      "description": "A pulpit is a precinct. Sundays are turnout.",
+      "description": "A pulpit is a precinct. Sundays are turnout — if you still have the room.",
       "attrs": {
         "CHA": 3,
         "CLO": 2,
@@ -4218,7 +4218,7 @@
       "id": "smallbiz",
       "name": "The Feed-Store Owner",
       "tagline": "credit and favors",
-      "description": "Everyone owes you credit or a favor.",
+      "description": "Everyone still knows the name on the awning. The ledger is thin until you work it.",
       "attrs": {
         "CRA": 3,
         "DIP": 2,
