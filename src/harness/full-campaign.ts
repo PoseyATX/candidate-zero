@@ -149,20 +149,22 @@ assert(grind.missedFilingPct >= 50, `grind should usually miss filing (got ${gri
 assert(labor.ballotRate >= minBallot, 'labor should usually clear ballot');
 assert(money.ballotRate >= minBallot, 'money should usually clear ballot');
 assert(labor.reachGeneralRate >= minReach, 'labor should reach general often enough to teach the loop');
-// Upper bound raised 50 -> 70 for the 5-AP economy. The primary is now the
-// ramp rather than the wall (difficulty relocates to Session / higher office),
-// so a competent labor campaign winning ~43% is intended, not a regression.
-// The bound still catches a free win.
+// Upper bound history: 50 → 70 for 5-AP; 70 → 78 for standing spine (PL01/PL02
+// always camp) + CHOICE forks (2026-08-07). Measured labor overall 71% and
+// money 72% at N=200 — bots no longer starve for door draws. Cap still fails
+// free-win (~90%+). Difficulty remains Session / notice / debt, not Act I wall.
 assert(
-  labor.overallGeneralWin >= minOverall && labor.overallGeneralWin <= 70,
+  labor.overallGeneralWin >= minOverall && labor.overallGeneralWin <= 78,
   `labor overall win out of band (${labor.overallGeneralWin}%)`
 );
 assert(
   labor.avgGotvIfGeneral !== null && labor.avgGotvIfGeneral > 0.05,
   'labor generalists must bank GOTV (deck inject + play path)'
 );
+// Reach→win climbed with always-on field spine (measured labor 90.4%, hybrid
+// 93%). Bound 96 catches free wins; floor still requires skill on GOTV path.
 assert(
-  labor.generalWinGivenReach >= minWinGiven && labor.generalWinGivenReach <= 90,
+  labor.generalWinGivenReach >= minWinGiven && labor.generalWinGivenReach <= 96,
   'general win given reach should reward skill without free win'
 );
 // 2026-07-17 re-tune: labor vs money is meant to be a texture choice
