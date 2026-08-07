@@ -15,6 +15,7 @@ import { effectiveApCost, upgradeOddsBonus } from './upgrades.js';
 import { bankHeat, canPress, quotePress, pressLabel } from './heat.js';
 import { maybeTriggerNotice } from './notice.js';
 import { noteCardContacts } from './promotion.js';
+import { liabilityBlockReason } from './liabilities.js';
 import type { AttrId, GameState, Ground, PlayCard, PlayOutcome, RollResult } from './types.js';
 
 /** Turf AP a field card can draw on; non-field cards can never touch it. */
@@ -51,7 +52,14 @@ export function isVisible(state: GameState, card: PlayCard): boolean {
 }
 
 export function isPlayable(state: GameState, card: PlayCard): boolean {
-  return isPhaseLegal(state, card) && isVisible(state, card) && canAfford(state, card);
+  return (
+    isPhaseLegal(state, card) &&
+    isVisible(state, card) &&
+    canAfford(state, card) &&
+    // What is in your hand can stop what else you may do — Rigidity will not
+    // trade, No Standing has no standing. See engine/liabilities.ts.
+    liabilityBlockReason(state, card) === ''
+  );
 }
 
 export function payCost(state: GameState, card: PlayCard): void {
@@ -132,6 +140,10 @@ export function executePlay(
   }
   if (!canAfford(state, card)) {
     return { ok: false, reason: 'Cannot afford cost', cardId: card.id, cardName: card.n };
+  }
+  const blocked = liabilityBlockReason(state, card);
+  if (blocked) {
+    return { ok: false, reason: blocked, cardId: card.id, cardName: card.n };
   }
 
   const g = ground ?? (card.field ? pickDefaultGround(state) : undefined);

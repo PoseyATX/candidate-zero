@@ -1,8 +1,8 @@
 {
   "version": "1.0.0",
   "counts": {
-    "cards": 134,
-    "personas": 24,
+    "cards": 155,
+    "personas": 28,
     "issues": 18,
     "districts": 4,
     "regions": 7,
@@ -1937,6 +1937,636 @@
         "CHA"
       ],
       "residency": "special",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL40",
+      "name": "Knock",
+      "tagline": "the floor",
+      "description": "One street, one afternoon, one door at a time. It is the smallest thing you can do and it is never nothing — a handful of contacts and a little rapport where you stood. It cannot go badly. That is the entire reason it exists: when the week has gone wrong and every good card wants money you do not have, this one still works.",
+      "risk": "SAFE",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": true,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL41",
+      "name": "Ask",
+      "tagline": "no reason to say yes",
+      "description": "You want something small from somebody who owes you nothing. A list, an introduction, the loan of a folding table. Sometimes people are kind for no reason. Sometimes they tell the person you were going to ask next.",
+      "risk": "STD",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL42",
+      "name": "Speak",
+      "tagline": "whoever is in front of you",
+      "description": "Not a speech. Eleven people in a fellowship hall, or four at a folding table, or the checkout line if that is what today gave you. You say the thing you came to say. It travels further when you have already said it well somewhere else.",
+      "risk": "STD",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL43",
+      "name": "Show Up",
+      "tagline": "you were not invited",
+      "description": "A ribbon cutting, a sale barn, a funeral you have no business at, the back of a meeting where the agenda does not have your name on it. Being in the room is not nothing in Texas. Being in the wrong room is also not nothing.",
+      "risk": "STD",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CON"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL44",
+      "name": "Endure",
+      "tagline": "take it and keep going",
+      "description": "You do not answer it. You do not sue. You take the hit and you make it a smaller problem later instead of a big one now. Clears a hit piece and settles exposure, and costs you a little of the momentum you were spending on being liked.",
+      "risk": "SAFE",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CON"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL45",
+      "name": "Legs",
+      "tagline": "more afternoons than anyone",
+      "description": "You can do this all day and the other candidates cannot. Buys turf action back — more of the small stuff, which is the only stuff you have. It does not make any single afternoon better. It makes there be more afternoons.",
+      "risk": "SAFE",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CON"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL46",
+      "name": "Doorstep Read",
+      "tagline": "what the street is actually saying",
+      "description": "Nobody polls this district. You know what is wrong on this street because a woman in a housecoat told you for eleven minutes. Sharpens the message off direct contact — the one kind of information you can afford.",
+      "risk": "SAFE",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": true,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL47",
+      "name": "Neighbor's Word",
+      "tagline": "one small credibility token",
+      "description": "Somebody on the block will say your name to somebody else on the block. That is the entire asset and it is worth more than a mailer on this street. Real rapport where you are standing, and it does not travel.",
+      "risk": "STD",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": true,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL49",
+      "name": "Blister",
+      "tagline": "liability — the body is the campaign",
+      "description": "Two miles of hot asphalt in the wrong boots and now every afternoon costs more than it did. While this is in your hand you have less turf action, every week. Two actions and a week of staying off it and it is gone from the deck for good — which is the only way anything leaves this deck.",
+      "risk": "SAFE",
+      "kind": "liability",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 2,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CON"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL50",
+      "name": "Cause",
+      "tagline": "the reason you filed",
+      "description": "You are not doing this to be a state representative. You are doing it because of a specific thing that happened to a specific person. Recurring conviction: momentum and true-believer ground, every time, because you have not gotten tired of saying it.",
+      "risk": "SAFE",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CON"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL51",
+      "name": "The Faithful",
+      "tagline": "unpaid and unreliable",
+      "description": "Nine people who believe, of whom four will show up, of whom two can be trusted with a list. Free labor is worth exactly what you pay for it and it is still more than your opponent has at this stage. High ceiling, real floor — sometimes nobody comes.",
+      "risk": "VOL",
+      "kind": "ally",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL52",
+      "name": "Plain Truth",
+      "tagline": "says it, costs it",
+      "description": "You say the true thing in the room where everyone had agreed not to. It moves people and it ends relationships, both immediately. Large name ID and true-believer ground; it burns the old guard and it will cost you an ally who was on the fence.",
+      "risk": "VOL",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 2,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CON"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL53",
+      "name": "Rigidity",
+      "tagline": "liability — will not bend",
+      "description": "The thing that makes people believe you is the thing that makes you impossible to deal with. While this is in your hand you cannot trade: no bargains, no favors spent, no deals. Playing it is the compromise — it costs momentum and the certainty you were running on, and then it is out of the deck for good.",
+      "risk": "STD",
+      "kind": "liability",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 2,
+        "money": 0,
+        "vol": 0,
+        "momentum": 1,
+        "favor": 0
+      },
+      "attrs": [
+        "CON"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL54",
+      "name": "Procedure",
+      "tagline": "you know the rule",
+      "description": "You have read the filing calendar, the local government code section that applies, and the part everybody skips. Knowing the rule that governs the room is worth an afternoon of charm — signatures move, deadlines stop being a surprise.",
+      "risk": "SAFE",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "INK"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL55",
+      "name": "Back Hallway",
+      "tagline": "access without standing",
+      "description": "You know which door is unlocked, which elevator the members use, and what time the staff goes to lunch. You can get in anywhere. Nobody in there has any reason to talk to you, but you will hear things.",
+      "risk": "STD",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CRA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL56",
+      "name": "The Boss's Name",
+      "tagline": "borrowed, and spent",
+      "description": "You can say whose office you came from and the room re-sorts itself. It is real authority and none of it is yours. CONSUMABLE — it works once and then it is out of the deck, because the second time somebody checks.",
+      "risk": "STD",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL57",
+      "name": "No Standing",
+      "tagline": "liability — nobody knows your name",
+      "description": "You have been in every one of these rooms and never once as yourself. While this is in your hand, anything that runs on your own credibility fails — you are still staff to them. Playing it is the first time you speak in a room under your own name, and it is expensive and it does not go well. Then it is gone.",
+      "risk": "STD",
+      "kind": "liability",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 2,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CON"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL58",
+      "name": "The Surname",
+      "tagline": "opens one door, once",
+      "description": "Your father built the hospital wing, or your grandfather had the Ford dealership and two terms in the House. People still know the name. CONSUMABLE — it opens one door and everyone in the room notices you needed to use it.",
+      "risk": "STD",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL59",
+      "name": "Old Money",
+      "tagline": "finite and not coming back",
+      "description": "What is left after the land was sold and split three ways. It is real money and there is not much of it and there will never be any more. NON-RENEWING — it pays out smaller every time you go back to it, because that is what a finite thing does.",
+      "risk": "SAFE",
+      "kind": "item",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CRA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL60",
+      "name": "Someone Who Remembers",
+      "tagline": "one dormant contact",
+      "description": "An old man who worked a campaign for your family in 1978 and has not been asked for anything since. He is not connected any more. He knows who is, and he will pick up the phone for the name.",
+      "risk": "STD",
+      "kind": "ally",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "PL61",
+      "name": "Expectations",
+      "tagline": "liability — they assume you can",
+      "description": "Everybody assumes you know how to do this, because of who you are. You do not. While this is in your hand the room keeps handing you things you cannot carry, and noticing. Playing it is the moment you admit it out loud — badly, and in front of people, and then it is gone from the deck.",
+      "risk": "VOL",
+      "kind": "liability",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 2,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA"
+      ],
+      "residency": "main",
       "control": "player",
       "entityScope": [],
       "deck": "main"
@@ -4181,6 +4811,46 @@
     }
   ],
   "personas": [
+    {
+      "id": "blockwalker",
+      "name": "The Blockwalker",
+      "tagline": "legs and a voice",
+      "description": "You have knocked this district for somebody else for six years. Nobody is going to fund you and everybody on Third Street knows your face.",
+      "attrs": {
+        "CON": 3,
+        "CLO": 2
+      }
+    },
+    {
+      "id": "believer",
+      "name": "The Believer",
+      "tagline": "a cause and no give",
+      "description": "Something specific happened to somebody specific and you have not been able to let it go. You cannot trade, because trading is how it happened.",
+      "attrs": {
+        "CON": 3,
+        "CHA": 2
+      }
+    },
+    {
+      "id": "staffer",
+      "name": "The Junior Staffer",
+      "tagline": "knows where the rooms are",
+      "description": "Four sessions carrying somebody else's binder. You know the building, the calendar and the rule that applies. Nobody in it knows your name.",
+      "attrs": {
+        "INK": 3,
+        "CRA": 2
+      }
+    },
+    {
+      "id": "fadedname",
+      "name": "The Faded Name",
+      "tagline": "a surname and a little money",
+      "description": "Your grandfather had the dealership and two terms in the House. People still know the name and nobody currently owes it anything.",
+      "attrs": {
+        "DIP": 2,
+        "CHA": 1
+      }
+    },
     {
       "id": "veteran",
       "name": "The Veteran",

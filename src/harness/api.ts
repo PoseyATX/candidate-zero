@@ -170,6 +170,12 @@ for (const seed of SEEDS) {
           // name falling back to the id is how the old bug surfaced to a host.
           if (!o.name || o.name === o.cardId) unnamed.push(o.cardId);
           if (typeof o.upgrade !== 'boolean') unnamed.push(`${o.cardId}(no flag)`);
+          // An opportunity is not always a card — it may be an upgrade, or
+          // somebody taking a debt off you. The host is told which, rather than
+          // being left to parse the id. See engine/opportunity.ts.
+          if (!['card', 'upgrade', 'shed'].includes(o.kind)) {
+            unnamed.push(`${o.cardId}(bad kind ${o.kind})`);
+          }
         }
       }
       const cmd = nextCommand(snap);

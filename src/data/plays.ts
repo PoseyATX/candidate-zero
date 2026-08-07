@@ -13,6 +13,7 @@ import { WAVE5_PLAYS } from './plays-wave5.js';
 import { PROMO_PLAYS } from './promo-plays.js';
 import { MACHINE_DOOR_PLAYS } from './machine-doors.js';
 import { CHOICE_PLAYS } from './choice-plays.js';
+import { ZERO_PLAYS } from './plays-zero.js';
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
@@ -431,6 +432,11 @@ export const ALL_PLAYS: PlayCard[] = [
   ...STARMAP_PLAYS,
   ...WAVE5_PLAYS,
   ...PROMO_PLAYS,
+  // The starting ten: the universal six plus every persona's intrinsic four.
+  // In the catalog so they resolve and render; kept out of the growth and
+  // opportunity pools by ZERO_INTRINSIC_IDS (see engine/deck.ts) — you do not
+  // get offered your own legs.
+  ...ZERO_PLAYS,
   // Machine doors: in the pool, but `show` keeps them invisible unless the
   // member who holds the door is seated this run (see data/machine-doors.ts).
   ...MACHINE_DOOR_PLAYS

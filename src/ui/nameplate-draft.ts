@@ -7,6 +7,7 @@
 
 import {
   PERSONAS,
+  STARTING_PERSONAS,
   ISSUES,
   DISTRICTS,
   REGIONS,
@@ -108,7 +109,10 @@ export function renderNameplateDraft(
 
   let grid = '';
   if (draft.step === 1) {
-    grid = PERSONAS.map(p =>
+    // The filing table only ever holds the startable four. Same card markup,
+    // same styling, same everything — the better-seated personas are simply not
+    // things you can file as yet.
+    grid = STARTING_PERSONAS.map(p =>
       identityCardHtml(
         'persona',
         p.id,

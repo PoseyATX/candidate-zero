@@ -258,6 +258,13 @@ export interface GameState {
    *  figure is promoted into the actor system, silently. Optional so every save
    *  written before it existed still loads. See engine/promotion.ts. */
   contactLog?: Record<string, number>;
+  /** Mirror of the physical hand, so pure engine functions can see what is
+   *  being held. A liability's whole cost is that it is IN HAND, not merely
+   *  owned. Synced by the loop. See engine/liabilities.ts. */
+  handIds?: string[];
+  /** Spaces taken on the table this week. Reset at week start. The table is the
+   *  scarce resource, not the cost. See engine/slots.ts. */
+  slotsUsed?: number;
 }
 
 /**

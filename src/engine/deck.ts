@@ -6,6 +6,9 @@
 
 import type { DeckState, GameState, PlayCard } from './types.js';
 import { PLAYS } from '../data/plays.js';
+import { ZERO_PLAYS } from '../data/plays-zero.js';
+import { oblName } from '../data/obligations.js';
+import { SHED_PREFIX } from './opportunity.js';
 import { random } from './rng.js';
 import { warm } from './reputation.js';
 import { upgradableCardIds, upgradeOptionId, parseUpgradeOption, applyUpgrade } from './upgrades.js';
@@ -33,6 +36,9 @@ export const STARTER_DECK_IDS: string[] = [
 
 /** @deprecated Zero law: no free standing ownership. Kept empty for imports. */
 export const STANDING_OWNED_IDS: string[] = [];
+
+/** The intrinsic ten (all personas). Never drafted, never offered, never grown into. */
+export const ZERO_INTRINSIC_IDS = new Set(ZERO_PLAYS.map(p => p.id));
 
 export function createDeckState(cardIds: string[] = STARTER_DECK_IDS): DeckState {
   return {
@@ -88,6 +94,26 @@ export function discardCard(deck: DeckState, cardId: string): void {
 
 export const DEFAULT_HAND_SIZE = 5;
 
+/** The hand never grows past seven, however deep the run goes. */
+export const MAX_HAND_SIZE = 7;
+
+/**
+ * How many cards you are holding this week.
+ *
+ * Five at the shallowest depth, seven once you have actually built something.
+ * It grows off the network you have — people who take the call, names in the
+ * book — and never off a tier, a level, or a threshold the player is shown.
+ * Nothing announces it. One week you are simply holding six.
+ */
+export function handSizeFor(state: GameState): number {
+  let n = DEFAULT_HAND_SIZE;
+  const allies = state.allies?.length ?? 0;
+  const contacts = state.contacts ?? 0;
+  if (allies >= 2 || contacts >= 300) n += 1;
+  if (allies >= 4 && contacts >= 800) n += 1;
+  return Math.min(MAX_HAND_SIZE, n);
+}
+
 // === WEEKLY DRAW ENFORCEMENT (core roguelite growth rule) ===
 
 function getAvailableNewCards(state: GameState): string[] {
@@ -97,6 +123,9 @@ function getAvailableNewCards(state: GameState): string[] {
     .filter((p: PlayCard) =>
       !owned.has(p.id) &&
       !fixedEarly.has(p.id) &&
+      // You are never offered your own legs. The intrinsic ten are who you are,
+      // not something the world can hand you. See data/plays-zero.ts.
+      !ZERO_INTRINSIC_IDS.has(p.id) &&
       (!p.show || p.show(state)) &&
       (!p.req || p.req(state))
     )
@@ -224,6 +253,25 @@ export function resolvePhaseDraft(
   }
   const cardId = draft.options[pickIndex];
   if (!cardId) return { ok: false, reason: 'Invalid draft index' };
+
+  // Somebody takes a debt off you. This is a real removal path (spec §4.3) —
+  // a relationship retiring an obligation — and it costs the standing of having
+  // asked, which settlement will read.
+  if (cardId.startsWith(SHED_PREFIX)) {
+    const oblId = cardId.slice(SHED_PREFIX.length);
+    const had = state.obls.includes(oblId);
+    state.obls = state.obls.filter(x => x !== oblId);
+    state.pendingDraft = undefined;
+    state.lastPhase = draft.phase as 1 | 2 | 3;
+    if (had) {
+      state.log.push({
+        week: state.week,
+        kind: 'note',
+        text: `${oblName(oblId)} is somebody else's problem now. They will remember doing it.`
+      });
+    }
+    return { ok: had, cardId: oblId, reason: had ? undefined : 'That debt is already settled' };
+  }
 
   // Upgrade offer: sharpen a card already owned rather than adding a new one.
   const upId = parseUpgradeOption(cardId);

@@ -16,6 +16,7 @@ import {
   discardHand,
   drawCards,
   DEFAULT_HAND_SIZE,
+  handSizeFor,
   STARTER_DECK_IDS,
   STANDING_OWNED_IDS,
   takeFromHand,
@@ -27,6 +28,10 @@ import {
   injectNearTop
 } from './deck.js';
 import { executePlay, isPlayable, type PlayOpts } from './play.js';
+import { liabilityBlockReason, syncHand } from './liabilities.js';
+import { buildOpportunities } from './opportunity.js';
+import { resetSlots, slotBlockReason, slotsLeft, useSlot } from './slots.js';
+import { ZERO_CONSUMABLE_IDS, ZERO_LIABILITY_IDS } from '../data/plays-zero.js';
 import {
   cycleCard,
   cycleBlockReason,
@@ -238,9 +243,15 @@ export function createCampaign(overrides: CreateCampaignOptions = {}): Campaign 
   applySetup(state, setup);
   state.lastPhase = getPhase(state);
 
-  const { physical, owned } = resolveStarterIds(starterKit, legacy, STARTER_DECK_IDS);
+  const { physical, owned } = resolveStarterIds(
+    starterKit,
+    legacy,
+    STARTER_DECK_IDS,
+    setup.personaId
+  );
   state.deck = [...new Set(owned)];
   const deckState = createDeckState(physical);
+  syncHand(state, deckState.hand);
 
   state.sessionFlags = state.sessionFlags || {};
   state.sessionFlags.zeroMode = starterKit === 'zero' ? 1 : 0;
@@ -415,10 +426,14 @@ export function maybeOfferPhaseDraft(campaign: Campaign, auto = true): string | 
     campaign.state.lastPhase = phase;
     return null;
   }
-  const draft = buildPhaseDraft(campaign.state, 3);
-  draft.phase = phase;
+  // Opportunities, not a standing offer. Fires off persona theme, rarity and
+  // live run state, and is allowed to come back with nothing at all — a quiet
+  // phase turn is a correct outcome, not a gap to be filled. See
+  // engine/opportunity.ts.
+  const options = buildOpportunities(campaign.state, 3);
   campaign.state.lastPhase = phase;
-  if (!draft.options.length) return null;
+  if (!options.length) return null;
+  const draft = { phase, options };
   campaign.state.pendingDraft = draft;
   campaign.state.log.push({
     week: campaign.state.week,
@@ -555,9 +570,13 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
     return out;
   }
 
+  // With the table full, the cards in your hand are not options this week —
+  // they are next week's hand. Camp and shop actions below are not on the table
+  // and stay reachable, so a full table never deadlocks the week.
+  const tableOpen = slotsLeft(campaign.state) > 0;
   campaign.deck.hand.forEach((id, index) => {
     const card = campaign.catalog.get(id);
-    if (card && isPlayable(campaign.state, card)) {
+    if (tableOpen && card && isPlayable(campaign.state, card)) {
       out.push({ index, card });
       inHandIds.add(id);
     }
@@ -737,6 +756,10 @@ export function startWeek(campaign: Campaign): string[] {
   markWeekStart(campaign.state);
   // Cuts refresh with the week — the limit is what makes cycling a decision.
   resetDiscards(campaign.state);
+  // Three spaces on the table again. See engine/slots.ts.
+  resetSlots(campaign.state);
+  // The hand you can hold widens with the network you have built, quietly.
+  campaign.handSize = handSizeFor(campaign.state);
   // Someone with you may call in a favour. Only people actually seated can ask;
   // a stranger has no claim. The card lands in hand below.
   const asker = maybeOpenAsk(campaign.state, machineSeatedIds(campaign.state));
@@ -780,6 +803,7 @@ export function startWeek(campaign: Campaign): string[] {
   const need = Math.max(0, campaign.handSize - campaign.deck.hand.length);
   const drawn = drawCards(campaign.deck, need);
   const injected = ensureBallotAccessInHand(campaign);
+  syncHand(campaign.state, campaign.deck.hand);
   const note = injected ? ` [ballot access: ${injected}]` : '';
   campaign.state.log.push({
     week: campaign.state.week,
@@ -816,15 +840,39 @@ export function playFromHand(
   if (!card) {
     takeFromHand(campaign.deck, handIndex);
     discardCard(campaign.deck, id);
+    syncHand(campaign.state, campaign.deck.hand);
     return { ok: false, reason: `Unknown card ${id}` };
+  }
+  // What is in your hand can refuse what else you may do. Say which, rather
+  // than the flat "Not playable" — being blocked by your own liability is the
+  // card working, and the player has to be able to see that it is.
+  const blocked = liabilityBlockReason(campaign.state, card);
+  if (blocked) {
+    return { ok: false, reason: blocked, cardId: card.id, cardName: card.n };
+  }
+  // The table only has so many spaces on it.
+  const noRoom = slotBlockReason(campaign.state);
+  if (noRoom) {
+    return { ok: false, reason: noRoom, cardId: card.id, cardName: card.n };
   }
   if (!isPlayable(campaign.state, card)) {
     return { ok: false, reason: 'Not playable', cardId: card.id, cardName: card.n };
   }
   takeFromHand(campaign.deck, handIndex);
+  syncHand(campaign.state, campaign.deck.hand);
   const outcome = executePlay(campaign.state, card, ground, opts);
-  if (outcome.ok) advancePaths(campaign.state, card.id, campaign.deck);
-  discardCard(campaign.deck, id);
+  if (outcome.ok) {
+    advancePaths(campaign.state, card.id, campaign.deck);
+    useSlot(campaign.state);
+  }
+  // TRASHING (spec §4.3): a liability resolved through a costly play, or a
+  // borrowed thing spent, leaves the deck for good. It is never a button — the
+  // only way anything is removed is that you played it and paid for it.
+  if (outcome.ok && (ZERO_LIABILITY_IDS.has(id) || ZERO_CONSUMABLE_IDS.has(id))) {
+    campaign.state.deck = (campaign.state.deck ?? []).filter(x => x !== id);
+  } else {
+    discardCard(campaign.deck, id);
+  }
   return outcome;
 }
 

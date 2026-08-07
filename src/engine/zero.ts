@@ -7,6 +7,7 @@
  */
 
 import type { CampaignOutcome, GameState, LegacyCarry, LegacyState } from './types.js';
+import { zeroStarterDeck } from '../data/plays-zero.js';
 
 /** One pair of boots. That is the whole opening kit. */
 export const ZERO_BOOTS = 'PL01';
@@ -114,21 +115,46 @@ export function applyZeroStartingLedgers(state: GameState): void {
 
 export type StarterKit = 'zero' | 'harness';
 
+/**
+ * What you are holding when the week-one screen comes up.
+ *
+ * Run 1 is the persona and nothing else: the universal six plus that persona's
+ * intrinsic four, liability included (data/plays-zero.ts). There is no generic
+ * starting deck anywhere any more — two personas do not open on the same ten
+ * cards, so two runs do not open the same way.
+ *
+ * Run 2+ is that same intrinsic ten PLUS whatever the career actually built.
+ * The legacy still keeps the deck: a card earned in run 1 is in the pile in
+ * run 2. The intrinsic ten is the floor under it, not a replacement for it.
+ *
+ * `personaId` is optional so every existing caller keeps compiling; without a
+ * recognised persona this falls back to the old boots-only opening rather than
+ * inventing a deck for somebody who has not filed yet.
+ */
 export function resolveStarterIds(
   kit: StarterKit,
   legacy: LegacyState | null | undefined,
-  harnessIds: string[]
+  harnessIds: string[],
+  personaId?: string | null
 ): { physical: string[]; owned: string[] } {
   if (kit === 'harness') {
     return { physical: [...harnessIds], owned: [...harnessIds] };
   }
   const career = careerDeckOf(legacy);
-  if (career.length > 0) {
-    // The deck you built is the legacy. Physical pile = what you carry.
-    return { physical: [...career], owned: [...career] };
+  const intrinsic = zeroStarterDeck(personaId ?? '');
+
+  if (intrinsic.length === 0) {
+    // No recognised persona (older save, harness fixture). Previous behaviour.
+    if (career.length > 0) return { physical: [...career], owned: [...career] };
+    return { physical: [ZERO_BOOTS], owned: [ZERO_BOOTS] };
   }
-  // First run: boots only. Ballot doors live on camp, not in the pile.
-  return { physical: [ZERO_BOOTS], owned: [ZERO_BOOTS] };
+
+  // Duplicates matter in the physical pile — Knock is in there twice on
+  // purpose — so the career is appended by id, not merged into a set.
+  const inStarter = new Set(intrinsic);
+  const carried = career.filter(id => !inStarter.has(id));
+  const physical = [...intrinsic, ...carried];
+  return { physical, owned: [...new Set(physical)] };
 }
 
 /** Type patch helper — carry fields used by Zero. */

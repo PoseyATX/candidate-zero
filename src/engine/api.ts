@@ -66,6 +66,8 @@ import type { DeckState, GameState, PlayCard } from './types.js';
 import { buildGoalStripInput, formatGoalStrip, type GoalCopyKey } from '../ui/goal-strip.js';
 import { isGroundLocked, groundLockReason } from './play.js';
 import { parseUpgradeOption } from './upgrades.js';
+import { SHED_PREFIX } from './opportunity.js';
+import { oblName } from '../data/obligations.js';
 import { heatOf, canPress, quotePress, MAX_HEAT } from './heat.js';
 import { discardsLeft, MAX_DISCARDS } from './flow.js';
 
@@ -75,7 +77,11 @@ import { discardsLeft, MAX_DISCARDS } from './flow.js';
  *  command gained an optional `press` flag. See engine/heat.ts.
  *  1.1.0 — pendingDraft options gained `upgrade`; cardId is now always a real
  *  catalog id (previously it could carry the engine's "UP:" option encoding). */
-export const ENGINE_API_VERSION = '1.4.0';
+/*  1.5.0 — pendingDraft options gained `kind` ('card' | 'upgrade' | 'shed').
+ *  Opportunities are broader than cards now: an offer may be a chance to shed
+ *  an obligation somebody agrees to carry. `upgrade` is unchanged for older
+ *  hosts. See engine/opportunity.ts. */
+export const ENGINE_API_VERSION = '1.5.0';
 
 /** Fully reproducible, JSON-serializable game state. */
 export interface EngineSnapshot {
@@ -214,12 +220,21 @@ export interface RenderView {
   grounds: GroundView[];
   actions: ActionOption[];
   goal: GoalView;
-  /** `cardId` is always a real catalog id. `upgrade` marks an offer to improve a
-   *  card the player already runs rather than to add a new one — hosts must not
-   *  have to know the engine's option encoding to render truthful copy. */
+  /** `cardId` is always a real catalog id — or, for `kind: 'shed'`, a real
+   *  obligation id. `kind` says what is actually being offered, because an
+   *  opportunity is not always a card: it may be a chance to sharpen something
+   *  you already run, or somebody agreeing to take a debt off you. `upgrade` is
+   *  kept as the older boolean so existing hosts keep working. A host must
+   *  never have to know the engine's option encoding to render truthful copy. */
   pendingDraft: {
     phase: number;
-    options: { cardId: string; name: string; risk: string; upgrade: boolean }[];
+    options: {
+      cardId: string;
+      name: string;
+      risk: string;
+      upgrade: boolean;
+      kind: 'card' | 'upgrade' | 'shed';
+    }[];
   } | null;
   /** World weather chrome — host shows, then dismissOutside. Never a hand card. */
   pendingOutside: { id: string; n: string; text: string } | null;
@@ -423,10 +438,27 @@ export function view(snap: EngineSnapshot): RenderView {
       ? {
           phase: pd.phase,
           options: pd.options.map(option => {
+            // Somebody taking a debt off you is an opportunity, not a card.
+            if (option.startsWith(SHED_PREFIX)) {
+              const oblId = option.slice(SHED_PREFIX.length);
+              return {
+                cardId: oblId,
+                name: `Somebody takes on: ${oblName(oblId)}`,
+                risk: '',
+                upgrade: false,
+                kind: 'shed' as const
+              };
+            }
             const upId = parseUpgradeOption(option);
             const id = upId ?? option;
             const c = campaign.catalog.get(id);
-            return { cardId: id, name: c?.n ?? id, risk: c?.risk ?? '', upgrade: !!upId };
+            return {
+              cardId: id,
+              name: c?.n ?? id,
+              risk: c?.risk ?? '',
+              upgrade: !!upId,
+              kind: (upId ? 'upgrade' : 'card') as 'card' | 'upgrade'
+            };
           })
         }
       : null,

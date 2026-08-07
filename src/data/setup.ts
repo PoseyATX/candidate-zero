@@ -20,6 +20,9 @@ export interface PersonaDef {
   /** Root attribute deltas (cardAttrMod). Baseline is 10. */
   attrs: AttrBoost;
   apply: (s: GameState) => void;
+  /** Can a career be filed as this persona? Only the starting four. Everyone
+   *  else is better-seated and is reached through play, much later. */
+  starting?: boolean;
 }
 
 function bumpAttrs(s: GameState, boost: AttrBoost): void {
@@ -93,6 +96,45 @@ export interface SetupSelection {
 // applySetup) so the UI's pre-game blurb and the actual campaign grant can
 // never drift apart the way two hand-copied literals could.
 export const PERSONAS: PersonaDef[] = [
+  // ---------------------------------------------------------------------
+  // THE STARTING FOUR. None of them is well-seated, well-funded or
+  // well-connected, and that is the whole design: you start at nothing and the
+  // only things you have are the cards that say who you are (data/plays-zero.ts).
+  //
+  // Note how little these `apply` blocks do. That is deliberate — a persona is
+  // its intrinsic four cards, not a pile of opening resources. The Faded Name's
+  // money is the Old Money card; the surname is The Surname card. Nothing is
+  // handed to you as a number you did not play for.
+  //
+  // The other personas below are better-seated and are NOT startable. They are
+  // reachable through play, much later. They keep working everywhere they
+  // already worked (saved identities, signature cards, harness setups) — they
+  // simply do not appear on the filing table.
+  // ---------------------------------------------------------------------
+  {
+    id: 'blockwalker', n: 'The Blockwalker', tag: 'legs and a voice', starting: true,
+    d: 'You have knocked this district for somebody else for six years. Nobody is going to fund you and everybody on Third Street knows your face.',
+    attrs: { CON: 3, CLO: 2 },
+    apply: s => { s.faces.T += 6; s.faces.G += 4; }
+  },
+  {
+    id: 'believer', n: 'The Believer', tag: 'a cause and no give',  starting: true,
+    d: 'Something specific happened to somebody specific and you have not been able to let it go. You cannot trade, because trading is how it happened.',
+    attrs: { CON: 3, CHA: 2 },
+    apply: s => { s.faces.T += 10; s.volPool += 1; }
+  },
+  {
+    id: 'staffer', n: 'The Junior Staffer', tag: 'knows where the rooms are', starting: true,
+    d: 'Four sessions carrying somebody else\'s binder. You know the building, the calendar and the rule that applies. Nobody in it knows your name.',
+    attrs: { INK: 3, CRA: 2 },
+    apply: s => { s.faces.O += 8; }
+  },
+  {
+    id: 'fadedname', n: 'The Faded Name', tag: 'a surname and a little money', starting: true,
+    d: 'Your grandfather had the dealership and two terms in the House. People still know the name and nobody currently owes it anything.',
+    attrs: { DIP: 2, CHA: 1 },
+    apply: s => { s.faces.O += 6; s.faces.L += 4; }
+  },
   {
     id: 'veteran', n: 'The Veteran', tag: 'bio armor',
     d: 'Two tours and a flag on the porch. Bio is armor.',
@@ -293,6 +335,20 @@ export const REGIONS: RegionDef[] = [
   { id: 'gulf', n: 'Gulf Coast', d: 'Refineries, ports, unions.', hook: 'gulf', flavor: ['plant flare'], places: ['union hall'], boost: { O: 3, L: 3, F: 2 }, petitionMod: 0 },
   { id: 'west', n: 'West Texas oil & ranch', d: 'Permian money and nameless gates.', hook: 'permian', flavor: ['pumpjack'], places: ['ranch gate'], boost: { L: 3, G: 3, O: 2 }, petitionMod: -80 }
 ];
+
+/**
+ * The personas a new career may actually be filed as.
+ *
+ * Four, none of them seated. The rest of PERSONAS stays exactly where it is and
+ * keeps working — signature cards, saved identities and harness setups all
+ * resolve through getPersona() unchanged — they are simply not on the table
+ * when you file.
+ */
+export const STARTING_PERSONAS: PersonaDef[] = PERSONAS.filter(p => p.starting);
+
+export function isStartingPersona(id: string): boolean {
+  return STARTING_PERSONAS.some(p => p.id === id);
+}
 
 export function getPersona(id: string) { return PERSONAS.find(p => p.id === id); }
 export function getIssue(id: string) { return ISSUES.find(i => i.id === id); }
