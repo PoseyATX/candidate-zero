@@ -9,3 +9,6 @@ dist-engine
 
 # Scratch probes; promote anything worth keeping into scripts/
 .debug/
+
+# Screenshots from .claude/skills/run-app/driver.mjs
+.run-shots/
