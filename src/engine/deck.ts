@@ -51,8 +51,8 @@ export const STARTER_DECK_IDS: string[] = [
   // against both, not assumed safe; ensureBallotAccessInHand is the backstop.
 ];
 
-/** Catalog ids always owned at campaign start even if not in the physical pile. */
-export const STANDING_OWNED_IDS: string[] = ['PL01', 'PL02'];
+/** @deprecated Zero law: no free standing ownership. Kept empty for imports. */
+export const STANDING_OWNED_IDS: string[] = [];
 
 export function createDeckState(cardIds: string[] = STARTER_DECK_IDS): DeckState {
   return {

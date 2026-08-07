@@ -239,18 +239,16 @@ export function startRun(setup: SetupSelection, seed: number, lockIdentity = fal
     setIdentity(legacy, setup);
     saveLegacy(legacy);
   }
-  campaign = createCampaign({ seed, setup });
+  campaign = createCampaign({
+    seed,
+    setup,
+    starterKit: 'zero',
+    legacy: loadLegacy()
+  });
   // Week 1 must not animate as though five AP had just drained from nothing.
   resetHudMotion();
-  const kit = kitIdsForSetup(setup);
-  if (kit.length) {
-    injectIntoDrawPile(campaign.deck, campaign.state, kit);
-    campaign.state.log.push({
-      week: campaign.state.week,
-      kind: 'note',
-      text: `Opening kit enters the pile: ${kit.join(', ')}.`
-    });
-  }
+  // Zero law: no free "opening kit" dump. The deck is boots (or what you built).
+  // A single themed whisper can arrive after the world notices you — not at filing.
   applyLegacy(campaign.state, legacy);
   weekPlays = [];
   if (jumpToSession()) {

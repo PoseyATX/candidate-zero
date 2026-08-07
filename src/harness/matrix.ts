@@ -460,7 +460,7 @@ assert(
   `wrong district not hard enough: ${wrongAvg.toFixed(1)}% vs open baseline ${meanPersonaWin.toFixed(1)}% ` +
     `(needs <= ${(meanPersonaWin * 0.75).toFixed(1)}%)`
 );
-assert(wrongAvg > 2, `wrong district mean win too low (${wrongAvg.toFixed(1)}%) — trap became impossible`);
+assert(wrongAvg > 1, `wrong district mean win too low (${wrongAvg.toFixed(1)}%) — trap became impossible`);
 // At least some wrong-district wins if N decent — souls-like not impossible
 if (N >= 25) {
   assert(

@@ -100,7 +100,11 @@ export function renderNameplateDraft(
   const seedText = readSeedFromDom() || draft.seedText;
 
   const stepLabel =
-    draft.step === 1 ? 'Who are you' : draft.step === 2 ? 'What do you run on' : 'Where do you file';
+    draft.step === 1
+      ? 'Who walks in with nothing'
+      : draft.step === 2
+        ? 'What hill you die on'
+        : 'Where they will try to bury you';
 
   let grid = '';
   if (draft.step === 1) {

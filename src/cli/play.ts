@@ -303,7 +303,7 @@ async function main(): Promise<void> {
   printBanner();
   const seed = args.seed ?? (Date.now() % 1_000_000);
   const setup = setupFromArgs(args);
-  const campaign = createCampaign({ seed, setup });
+  const campaign = createCampaign({ seed, setup, starterKit: 'zero' });
   console.log("Seed:", seed);
   console.log("Setup:", setup);
   printLedger(campaign);

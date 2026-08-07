@@ -65,24 +65,16 @@ console.log('=== CANDIDATE ZERO — Notice + CHOICE ===\n');
 {
   useRng(createRng(21));
   setDefaultSeed(21);
-  const camp = createCampaign({ seed: 21 });
+  // Harness kit still has full strip; Zero gates CHOICE until growth unlocks.
+  const camp = createCampaign({ seed: 21, starterKit: 'harness' });
   startWeek(camp);
   const playable = listPlayableHand(camp);
   assert(
-    playable.some(p => p.index === CAMP_BLOCK_WALK && p.card.id === 'PL01'),
-    'standing Block Walk offered'
-  );
-  assert(
-    playable.some(p => p.index === CAMP_PHONE_BANK && p.card.id === 'PL02'),
-    'standing Phone Bank offered'
-  );
-  assert(
     playable.some(p => p.card.risk === 'CHOICE'),
-    'at least one CHOICE fork offered when gated'
+    'harness kit offers CHOICE when gated'
   );
-  // Claim Your Door should be available pre-ballot week 1.
   const door = playable.find(p => p.card.id === 'CH01');
-  assert(!!door, 'CH01 Claim Your Door on camp pre-ballot');
+  assert(!!door, 'CH01 Claim Your Door on camp pre-ballot (harness)');
   if (door) {
     const beforeSig = camp.state.signatures;
     const r = playFromHand(camp, door.index);
@@ -93,6 +85,13 @@ console.log('=== CANDIDATE ZERO — Notice + CHOICE ===\n');
     );
     assert(!!camp.state.sessionFlags?.claimedDoor, 'door claim flags once');
   }
+
+  const z = createCampaign({ seed: 22, starterKit: 'zero' });
+  startWeek(z);
+  assert(
+    !listPlayableHand(z).some(p => p.card.id.startsWith('CH')),
+    'Zero day-one has no CHOICE mall'
+  );
 }
 
 if (failed) {

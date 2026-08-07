@@ -198,28 +198,21 @@ function fixture(hand: string[], draw: string[], seed = 1): { s: GameState; d: D
     !d.draw.includes('PL01') && !d.hand.includes('PL01') && !d.discard.includes('PL01'),
     'starter physical pile has no Block Walk copies'
   );
-  const camp = createCampaign({ seed: 7 });
+  // Zero kit: boots are a card, not a free camp mall verb.
+  const camp = createCampaign({ seed: 7, starterKit: 'zero' });
   startWeek(camp);
   assert(
     (camp.state.deck ?? []).includes('PL01'),
-    'ownership still includes Block Walk for upgrades/paths'
-  );
-  assert(
-    !camp.deck.hand.includes('PL01'),
-    'opening hand is not forced to hold physical Block Walk'
+    'Zero ownership includes boots'
   );
   const playable = listPlayableHand(camp);
-  const walk = playable.find(p => p.card.id === 'PL01');
-  assert(!!walk, 'Block Walk is offered while playable');
   assert(
-    walk!.index === CAMP_BLOCK_WALK,
-    `Block Walk is a camp standing index (${walk!.index} vs ${CAMP_BLOCK_WALK})`
+    !playable.some(p => p.index === CAMP_BLOCK_WALK || p.index === CAMP_PHONE_BANK),
+    'boots/phone are not free standing camp mall'
   );
-  const phone = playable.find(p => p.card.id === 'PL02');
-  assert(!!phone && phone.index === CAMP_PHONE_BANK, 'Phone Bank is standing camp');
   assert(
-    (camp.state.deck ?? []).includes('PL02'),
-    'ownership includes Phone Bank'
+    playable.some(p => p.card.id === 'PL04' || p.card.id === 'PL05'),
+    'ballot doors still on camp'
   );
 }
 

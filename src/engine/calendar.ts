@@ -310,12 +310,11 @@ export function generalWinProbability(state: GameState): number {
   const groundBonus = groundConditionBonus(state);
   const isWrong =
     state.district?.align === 'wrong' || !!state.district?.trap;
-  const wrongTax = isWrong ? 0.32 : 0;
+  const wrongTax = isWrong ? 0.26 : 0;
   // Opposition turf organization depresses November slightly (GOTV still king).
   const rivalPressure = meanRivalRapport(state) * 0.0011;
-  // Standing spine farms GOTV; wrong-party districts weight GOTV at half so
-  // the trap is "easy primary, hard November" again (Phase 5 identity).
-  const gotvWeight = isWrong ? 0.09 : 0.18;
+  // Wrong-party: GOTV still matters but cannot erase partisan reality.
+  const gotvWeight = isWrong ? 0.11 : 0.18;
   const p =
     0.16 +
     state.nameID * 0.01 +
@@ -329,8 +328,8 @@ export function generalWinProbability(state: GameState): number {
     wrongTax -
     rivalPressure +
     groundBonus;
-  // Wrong-party caps below a coin flip even with a perfect GOTV machine.
-  return clamp(p, 0.06, isWrong ? 0.48 : 0.92);
+  // Wrong-party caps under a fair coin — souls-like, not impossible.
+  return clamp(p, 0.06, isWrong ? 0.52 : 0.92);
 }
 
 /**

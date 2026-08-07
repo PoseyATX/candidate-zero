@@ -1,0 +1,137 @@
+/**
+ * Candidate Zero — start at nothing.
+ *
+ * The name is the design: you are not a loaded campaign. You have a name you
+ * just filed, boots if you earned them, and the two legal doors onto the ballot.
+ * Everything else is built in public, across losses.
+ */
+
+import type { CampaignOutcome, GameState, LegacyCarry, LegacyState } from './types.js';
+
+/** One pair of boots. That is the whole opening kit. */
+export const ZERO_BOOTS = 'PL01';
+
+/**
+ * Cards that may appear on the camp strip in a Zero campaign before the world
+ * has reason to offer you more. Ballot doors only — power is not a menu.
+ */
+export const ZERO_CAMP_DOORS = new Set(['PL04', 'PL05']);
+
+export function isLossOutcome(kind: CampaignOutcome): boolean {
+  return (
+    kind === 'missed_filing' ||
+    kind === 'lost_primary' ||
+    kind === 'lost_general' ||
+    kind === 'session_primaried'
+  );
+}
+
+export function isWinOutcome(kind: CampaignOutcome): boolean {
+  return (
+    kind === 'won_general' ||
+    kind === 'session_law' ||
+    kind === 'session_survived'
+  );
+}
+
+/** Unique card ids the player has built into their career deck. */
+export function careerDeckOf(legacy: LegacyState | null | undefined): string[] {
+  const d = legacy?.carry?.careerDeck;
+  return Array.isArray(d) ? [...new Set(d.filter(id => typeof id === 'string' && id.length > 0))] : [];
+}
+
+/** Merge this run's ownership into the career deck (the legacy is the deck). */
+export function mergeCareerDeck(legacy: LegacyState, state: GameState): string[] {
+  const prev = careerDeckOf(legacy);
+  const fromRun = Array.isArray(state.deck) ? state.deck : [];
+  const next = [...new Set([...prev, ...fromRun, ...Object.keys(state.playedCardIds || {})])];
+  legacy.carry = { ...legacy.carry, careerDeck: next };
+  return next;
+}
+
+/**
+ * Felt scar from a loss — short, personal, Texas. Not a system dump.
+ * Shown on the terminal and banked so the Chronicle can list them.
+ */
+export function buildLossScar(state: GameState, kind: CampaignOutcome): string {
+  const who = state.persona?.replace(/^The\s+/i, '') || 'a nobody';
+  const place = state.district?.name || 'the district';
+  switch (kind) {
+    case 'missed_filing':
+      return `${who} never made the ballot in ${place}. The clerk closed the window. The name stayed a rumor.`;
+    case 'lost_primary':
+      return `${who} lost the primary in ${place}. The room chose someone else. The list of people who still take the call is shorter now.`;
+    case 'lost_general':
+      return `${who} hit the general wall in ${place}. November does not care how hard the primary was.`;
+    case 'session_primaried':
+      return `${who} lost the seat from the inside. The district sent a message. It was not subtle.`;
+    default:
+      return `${who} left ${place} with less than they arrived with.`;
+  }
+}
+
+export function bankScar(legacy: LegacyState, scar: string): void {
+  const scars = Array.isArray(legacy.carry.scars) ? [...legacy.carry.scars] : [];
+  scars.push(scar);
+  // Keep the last dozen — a life, not an encyclopedia.
+  legacy.carry = { ...legacy.carry, scars: scars.slice(-12) };
+  const last = legacy.runs[legacy.runs.length - 1];
+  if (last) last.scar = scar;
+}
+
+export function scarsOf(legacy: LegacyState | null | undefined): string[] {
+  const s = legacy?.carry?.scars;
+  return Array.isArray(s) ? s : [];
+}
+
+/** First run of a career (no prior epitaphs). */
+export function isFirstRun(legacy: LegacyState | null | undefined): boolean {
+  return !legacy || !legacy.runs || legacy.runs.length === 0;
+}
+
+/**
+ * Whether the camp strip may show growth verbs beyond ballot doors.
+ * First run, unnoticed: no. After the world notices you, or you have a past: yes.
+ * Reads sessionFlags set at createCampaign so listPlayableHand stays pure on state.
+ */
+export function campGrowthUnlocked(state: GameState, _legacy?: LegacyState | null): boolean {
+  if (state.sessionFlags?.noticed) return true;
+  if (state.eventsFired?.EV_YOU_GOT_NOTICED) return true;
+  if (Number(state.sessionFlags?.priorRuns || 0) > 0) return true;
+  if (Number(state.sessionFlags?.careerCards || 0) > 1) return true;
+  // Harness kit is not Zero — full strip allowed for instruments.
+  if (state.sessionFlags?.zeroMode !== 1) return true;
+  return false;
+}
+
+export function applyZeroStartingLedgers(state: GameState): void {
+  // Not broke forever — broke enough that the fee door is a decision.
+  if (state.money > 80) state.money = 80;
+  if (state.volPool > 0) state.volPool = 0;
+  if (state.nameID > 0) state.nameID = 0;
+  if (state.contacts > 0) state.contacts = 0;
+}
+
+export type StarterKit = 'zero' | 'harness';
+
+export function resolveStarterIds(
+  kit: StarterKit,
+  legacy: LegacyState | null | undefined,
+  harnessIds: string[]
+): { physical: string[]; owned: string[] } {
+  if (kit === 'harness') {
+    return { physical: [...harnessIds], owned: [...harnessIds] };
+  }
+  const career = careerDeckOf(legacy);
+  if (career.length > 0) {
+    // The deck you built is the legacy. Physical pile = what you carry.
+    return { physical: [...career], owned: [...career] };
+  }
+  // First run: boots only. Ballot doors live on camp, not in the pile.
+  return { physical: [ZERO_BOOTS], owned: [ZERO_BOOTS] };
+}
+
+/** Type patch helper — carry fields used by Zero. */
+export function ensureCarry(legacy: LegacyState): LegacyCarry {
+  return legacy.carry ?? (legacy.carry = {});
+}

@@ -48,16 +48,30 @@ export function renderTerminalOutcome(ctx: TerminalRenderCtx): void {
   const state = campaign.state;
   const titles: Record<CampaignOutcome, string> = {
     ongoing: '',
-    missed_filing: 'Never Made the Ballot',
-    lost_primary: 'Primary Lost',
-    won_general: 'The Seat Is Won',
-    lost_general: 'The General’s Wall',
-    session_law: 'Sine Die — Law',
-    session_survived: 'Sine Die — Seat Holds',
-    session_primaried: 'Sine Die — Primaried Out'
+    missed_filing: 'The Window Closed',
+    lost_primary: 'They Chose Someone Else',
+    won_general: 'You Are Not Zero Anymore',
+    lost_general: 'November Does Not Care',
+    session_law: 'Sine Die — Something You Built Survived',
+    session_survived: 'Sine Die — The Seat Holds',
+    session_primaried: 'They Primaried You Out'
   };
   const epithet = buildEpithet(state, kind, share);
   const growth = buildGrowthLine(state);
+  const lastScar =
+    ctx.legacy.runs[ctx.legacy.runs.length - 1]?.scar ||
+    (ctx.legacy.carry.scars && ctx.legacy.carry.scars[ctx.legacy.carry.scars.length - 1]) ||
+    '';
+  const scarHtml = lastScar
+    ? `<p class="loss-scar" role="status"><b>What this cost:</b> ${esc(lastScar)}</p>`
+    : '';
+  const deckN = Array.isArray(ctx.legacy.carry.careerDeck)
+    ? ctx.legacy.carry.careerDeck.length
+    : 0;
+  const deckHtml =
+    deckN > 0
+      ? `<p class="career-deck-note">Your career deck holds <b>${deckN}</b> card${deckN === 1 ? '' : 's'}. That is what survives the loss.</p>`
+      : '';
   let debtNote = '';
   if (kind === 'won_general' && (state.debt || state.pacBridgeDebt || state.obls.includes('OB1'))) {
     debtNote =
@@ -132,6 +146,8 @@ export function renderTerminalOutcome(ctx: TerminalRenderCtx): void {
   $('terminal-head').innerHTML = `
     <h2>${titles[kind]}</h2>
     <p class="epithet">${esc(epithet)}</p>
+    ${scarHtml}
+    ${deckHtml}
     ${billLine}
     ${debtNote}
     ${growth ? `<p class="growth">${esc(growth)}</p>` : ''}

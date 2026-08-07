@@ -72,11 +72,16 @@ export const moneyBallotStrategy: Chooser = (playable, state) => {
 
 /** Control: ignore ballot access. */
 export const grindFirstStrategy: Chooser = (playable, state) => {
+  // Never "accidentally" clear the ballot via camp doors / CHOICE claims —
+  // after Zero, standing walk is gone so a naive first-of-list would petition.
+  const noBallot = playable.filter(
+    p => p.card.id !== 'PL04' && p.card.id !== 'PL05' && p.card.id !== 'CH01'
+  );
   if (state.stage === 'general') {
     // Still ignores "proper" GOTV priority relative to doors — control texture
-    return pickByPriority(playable, ['PL01', 'PL02', 'PL19', 'PL10', 'PL06']);
+    return pickByPriority(noBallot, ['PL01', 'PL02', 'PL19', 'PL10', 'PL06']);
   }
-  return pickByPriority(playable, ['PL01', 'PL02', 'PL06', 'PL10', 'PL08', 'PL03', 'PL13']);
+  return pickByPriority(noBallot, ['PL01', 'PL02', 'PL06', 'PL10', 'PL08', 'PL03', 'PL13']);
 };
 
 export const hybridStrategy: Chooser = (playable, state) => {
