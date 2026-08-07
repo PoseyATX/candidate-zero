@@ -50,6 +50,15 @@ export const SIGNATURE_BY_PERSONA: Record<string, string> = {};
 function mk(def: SigDef): PlayCard {
   SIGNATURE_BY_PERSONA[def.persona] = def.id;
   const gate = (s: GameState) => s.personaId === def.persona;
+  // Strip fourth-wall meta that used to lead every signature ("nobody else's
+  // deck… shuffled from week one"). Keep the Texas Tuesday; badge is Signature.
+  const d = def.d
+    .replace(
+      /\s*Your persona's signature — nobody else's deck contains it, and it is shuffled in from week one\.\s*/gi,
+      ' '
+    )
+    .replace(/\s+/g, ' ')
+    .trim();
   return {
     id: def.id,
     n: def.n,
@@ -57,7 +66,7 @@ function mk(def: SigDef): PlayCard {
     risk: def.risk,
     ph: def.ph,
     tag: def.tag,
-    d: def.d,
+    d,
     attrs: def.attrs,
     kind: 'action',
     residency: 'main',
@@ -65,7 +74,20 @@ function mk(def: SigDef): PlayCard {
     req: gate,
     show: gate,
     odds: def.odds,
-    run: def.run
+    run: (s, o) => {
+      const text = def.run(s, o);
+      // Durable: a signature that lands writes a permanent flag + small face
+      // stamp so it is not "only numbers once". Tier 2+ still marks the attempt.
+      s.sessionFlags = s.sessionFlags || {};
+      s.sessionFlags[`sig_${def.id}`] = 1;
+      if (o.tier <= 1) {
+        s.sessionFlags[`sig_landed_${def.id}`] = 1;
+        s.faces.F = (s.faces.F || 0) + 1;
+        const mark = `SIG:${def.id}`;
+        if (!s.reps.includes(mark)) s.reps.push(mark);
+      }
+      return text;
+    }
   };
 }
 

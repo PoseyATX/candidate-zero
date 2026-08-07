@@ -7,7 +7,9 @@
 import { ALL_PLAYS, SHOP_PLAYS } from '../data/plays.js';
 import { ALLEY_PLAYS } from '../data/alley-plays.js';
 import { HOOK_PLAYS } from '../data/hook-plays.js';
+import { CHOICE_PLAYS } from '../data/choice-plays.js';
 import { SESSION_PLAYS } from '../data/session-plays.js';
+import { CH05_SeatOrStatute } from '../data/choice-plays.js';
 import {
   createDeckState,
   discardCard,
@@ -442,6 +444,7 @@ export function ensureGeneralTools(campaign: Campaign): void {
 export const CAMP_PETITION = -101;
 /** Standing spine: Block Walk always-on camp (SRD standing actions). */
 export const CAMP_BLOCK_WALK = -102;
+export const CAMP_PHONE_BANK = -103;
 export const CAMP_FILING_FEE = -105;
 /** Camp-style shop index base: -200 - i for the i-th available BUY* play. */
 export const CAMP_SHOP_BASE = -200;
@@ -449,6 +452,8 @@ export const CAMP_SHOP_BASE = -200;
 export const CAMP_SESSION_BASE = -300;
 /** Hook-cashing card synthetic index base: -700 - i. See engine/hooks.ts. */
 export const CAMP_HOOK_BASE = -700;
+/** Campaign CHOICE fork synthetic index base: -650 - i. See data/choice-plays.ts. */
+export const CAMP_CHOICE_BASE = -650;
 /** Campaign alleyway synthetic index base: -600 - i. See data/alley-plays.ts. */
 export const CAMP_ALLEY_BASE = -600;
 /** Waiting-season play synthetic index base: -500 - i. */
@@ -473,6 +478,10 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
         out.push({ index: CAMP_SESSION_BASE - i, card });
         i++;
       }
+    }
+    // Freshman fork — CHOICE, always listed when its week gate allows.
+    if (isPlayable(campaign.state, CH05_SeatOrStatute)) {
+      out.push({ index: CAMP_SESSION_BASE - i, card: CH05_SeatOrStatute });
     }
     return out;
   }
@@ -510,16 +519,16 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
       out.push({ index: CAMP_FILING_FEE, card: fee });
     }
   }
-  // Standing action: Block Walk. Always on the camp strip in primary/general
-  // when not already a physical hand card (region kits may still inject one).
+  // Standing spine: Block Walk + Phone Bank — always camp in primary/general
+  // when not already a physical hand card (region kits may still inject PL01).
   {
     const walk = campaign.catalog.get('PL01');
-    if (
-      walk &&
-      !inHandIds.has('PL01') &&
-      isPlayable(campaign.state, walk)
-    ) {
+    if (walk && !inHandIds.has('PL01') && isPlayable(campaign.state, walk)) {
       out.push({ index: CAMP_BLOCK_WALK, card: walk });
+    }
+    const phone = campaign.catalog.get('PL02');
+    if (phone && !inHandIds.has('PL02') && isPlayable(campaign.state, phone)) {
+      out.push({ index: CAMP_PHONE_BANK, card: phone });
     }
   }
   // Phase 2: asset shop — always-available BUY* plays (archive assetPlays).
@@ -554,6 +563,17 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
       }
     }
   }
+  // CHOICE forks — always-on when gated, never draw-luck. Agency over dice.
+  if (campaign.state.stage === 'primary' || campaign.state.stage === 'general') {
+    let ci = 0;
+    for (const card of CHOICE_PLAYS) {
+      if (card.id === 'CH05') continue; // session only
+      if (isPlayable(campaign.state, card)) {
+        out.push({ index: CAMP_CHOICE_BASE - ci, card });
+        ci++;
+      }
+    }
+  }
   // The alleyways, LAST in the menu on purpose.
   //
   // They were first, and every strategy that falls back to "the first playable
@@ -580,12 +600,20 @@ export function campIndexToCardId(
 ): string | null {
   if (handIndex === CAMP_PETITION) return 'PL04';
   if (handIndex === CAMP_BLOCK_WALK) return 'PL01';
+  if (handIndex === CAMP_PHONE_BANK) return 'PL02';
   if (handIndex === CAMP_FILING_FEE) return 'PL05';
-  // Index bands: hook ≤-700 · alley ≤-600 · waiting ≤-500 · starmap ≤-401 · session ≤-300 · shop ≤-200
+  // Index bands: hook ≤-700 · choice ≤-650 · alley ≤-600 · waiting ≤-500 · starmap ≤-401 · session ≤-300 · shop ≤-200
   if (handIndex <= CAMP_HOOK_BASE) {
     const hooks = HOOK_PLAYS.filter(c => isPlayable(campaign.state, c));
     const i = CAMP_HOOK_BASE - handIndex;
     return hooks[i]?.id ?? null;
+  }
+  if (handIndex <= CAMP_CHOICE_BASE) {
+    const choices = CHOICE_PLAYS.filter(
+      c => c.id !== 'CH05' && isPlayable(campaign.state, c)
+    );
+    const i = CAMP_CHOICE_BASE - handIndex;
+    return choices[i]?.id ?? null;
   }
   if (handIndex <= CAMP_ALLEY_BASE) {
     const alleys = ALLEY_PLAYS.filter(c => isPlayable(campaign.state, c));
@@ -606,7 +634,10 @@ export function campIndexToCardId(
     return openVerbs[i] ?? null;
   }
   if (handIndex <= CAMP_SESSION_BASE) {
-    const sessionCards = SESSION_PLAYS.filter(c => isPlayable(campaign.state, c));
+    const sessionCards = [
+      ...SESSION_PLAYS.filter(c => isPlayable(campaign.state, c)),
+      ...(isPlayable(campaign.state, CH05_SeatOrStatute) ? [CH05_SeatOrStatute] : [])
+    ];
     const i = CAMP_SESSION_BASE - handIndex;
     return sessionCards[i]?.id ?? null;
   }

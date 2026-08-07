@@ -727,14 +727,15 @@ export function renderPlayables(campaign: Campaign): void {
 
   const hasDoors = campEntries.some(e => BALLOT_DOOR_IDS.has(e.card.id));
   const campLabel = !state.ballot && hasDoors ? 'Ballot doors' : 'Camp actions';
-  const hasWalk = campEntries.some(e => e.card.id === 'PL01');
+  const hasSpine = campEntries.some(e => e.card.id === 'PL01' || e.card.id === 'PL02');
+  const hasChoice = campEntries.some(e => e.card.risk === 'CHOICE');
   const campSub =
     !state.ballot && hasDoors
-      ? hasWalk
-        ? 'Ballot doors + boots on the ground — always on, not a draw'
+      ? hasSpine
+        ? 'Ballot doors + spine (walk/phone) — always on, not a draw'
         : 'Petition labor or filing fee — make the ballot'
-      : hasWalk
-        ? 'Block Walk always on — the spine does not wait on the shuffle'
+      : hasSpine || hasChoice
+        ? 'Standing spine and CHOICE forks — always on when gated'
         : campEntries.length
           ? 'Always-on camp / starmap verbs'
           : undefined;

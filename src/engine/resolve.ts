@@ -21,6 +21,12 @@ export function resolve(
    *  Defaults to 0, so every existing caller resolves bit-identically. */
   bandBonus = 0
 ): RollResult {
+  // CHOICE: the player already picked the path. Dice do not invent a second
+  // outcome. Tier 1 is the "you did the thing" band; card run() owns the fork.
+  if (risk === 'CHOICE') {
+    return { tier: 1, roll: 0, p: 1, band: 0 };
+  }
+
   p = clamp(p, 0.02, 0.95);
 
   const critShare =

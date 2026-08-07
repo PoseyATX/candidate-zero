@@ -33,6 +33,7 @@ import {
   createCampaign,
   listPlayableHand,
   CAMP_BLOCK_WALK,
+  CAMP_PHONE_BANK,
   startWeek
 } from '../engine/loop.js';
 import type { DeckState, GameState } from '../engine/types.js';
@@ -213,6 +214,12 @@ function fixture(hand: string[], draw: string[], seed = 1): { s: GameState; d: D
   assert(
     walk!.index === CAMP_BLOCK_WALK,
     `Block Walk is a camp standing index (${walk!.index} vs ${CAMP_BLOCK_WALK})`
+  );
+  const phone = playable.find(p => p.card.id === 'PL02');
+  assert(!!phone && phone.index === CAMP_PHONE_BANK, 'Phone Bank is standing camp');
+  assert(
+    (camp.state.deck ?? []).includes('PL02'),
+    'ownership includes Phone Bank'
   );
 }
 
