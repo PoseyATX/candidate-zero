@@ -14,11 +14,13 @@ The product drifted into a loaded campaign menu (fat starter, always-on spine, f
 4. **No free weekly card in Zero mode.** `enforceWeeklyDraw` is harness-only. Growth is opportunity (phase drafts you may walk past, paths, events), not entitlement.
 5. **Phase opportunities are thematic + rarity-weighted**, exclude recently shown ids, and may be declined (`draftPass` / Walk past). Taking zero is legal.
 6. **Hand stays tight (5–7).** Cheap spam is a trap; trashing is an in-run decision, not a lazy out-of-game click.
-7. **Harnesses** use `starterKit: 'harness'` so regression math stays a separate instrument.
-8. **Do not regress splash / act ceremony chrome.** UI surface changes stay on play/draft/nameplate only.
+7. **Zero camp strip: ballot doors only** (pre-ballot). Never invent a "Camp actions" mall — no BUY shop strip, no starmap verb flood, no CHOICE/alley menu after filing. Empty camp section is correct. Earned hooks only when a real thread is live.
+8. **Harnesses** use `starterKit: 'harness'` so regression math stays a separate instrument.
+9. **Do not regress splash / act ceremony chrome.**
 
 ## Consequences
 - Week one is doors + legs + voice, not a toolbox.
-- Same 1–3 draft commons every run is a regression (recentOffers + thematic weight).
+- Filing does not unlock a free mall of 7 verbs.
+- Same 1–3 draft commons every run is a regression.
 - Harness win rates measure harness kit, not Zero kit.
 - Cookie-clicker power path is a regression against this decision.

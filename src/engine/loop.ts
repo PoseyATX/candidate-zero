@@ -576,11 +576,11 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
       inHandIds.add(id);
     }
   });
+
+  const zeroMode = campaign.state.sessionFlags?.zeroMode === 1;
+
+  // Ballot doors: the only standing camp verbs for a nobody. Not a mall.
   if (!campaign.state.ballot) {
-    // Only offer the camp-action fallback when the real card isn't already
-    // sitting in hand — otherwise Petition Drive / Filing Fee show up twice
-    // in the same menu (harmless but confusing: two entries, two mechanics
-    // for discarding the physical copy vs. leaving it inert).
     const petition = campaign.catalog.get('PL04');
     const fee = campaign.catalog.get('PL05');
     if (petition && !inHandIds.has('PL04') && isPlayable(campaign.state, petition)) {
@@ -590,10 +590,26 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
       out.push({ index: CAMP_FILING_FEE, card: fee });
     }
   }
-  // Zero law: Block Walk is a card you own (boots), not an always-on mall verb.
-  // Phone bank is earned into the deck — never free camp power on day one.
-  // Phase 2: asset shop — always-available BUY* plays (archive assetPlays).
-  // 0 AP; paid with $ or volunteers. Not drawn into hand.
+
+  // Zero player path: HAND + ballot doors only.
+  // No shop strip, no starmap verb flood, no CHOICE/alley mall after filing.
+  // Earned hooks (someone actually dangled a thread) may still surface —
+  // those are relationships, not a menu. Everything else stays out until we
+  // design real opportunities. Harness kit keeps the instrument surface below.
+  if (zeroMode) {
+    if (campaign.state.stage === 'primary' || campaign.state.stage === 'general') {
+      let hi = 0;
+      for (const card of HOOK_PLAYS) {
+        if (isPlayable(campaign.state, card)) {
+          out.push({ index: CAMP_HOOK_BASE - hi, card });
+          hi++;
+        }
+      }
+    }
+    return out;
+  }
+
+  // --- Harness / non-Zero instruments below (regression surface) ---
   let shopI = 0;
   for (const [id, card] of campaign.catalog) {
     if (!id.startsWith('BUY')) continue;
@@ -602,7 +618,6 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
       shopI++;
     }
   }
-  // Starmap pilots: all open Special movement verbs as camp actions.
   const openVerbs = listAvailableMovementVerbIds(campaign.state);
   let mvI = 0;
   for (const verbId of openVerbs) {
@@ -612,9 +627,6 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
       mvI++;
     }
   }
-  // Hooks you can cash, offered just above the alleyways: a thread somebody
-  // dangled is worth more of the player's attention than a place to kill time,
-  // and less than the actual work of the week.
   if (campaign.state.stage === 'primary' || campaign.state.stage === 'general') {
     let hi = 0;
     for (const card of HOOK_PLAYS) {
@@ -624,8 +636,6 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
       }
     }
   }
-  // CHOICE forks and alleyways: growth after the world has a reason to offer
-  // them (noticed / prior career). First-run Zero is doors + boots, not a mall.
   const growthOpen = campGrowthUnlocked(campaign.state, null);
   if (
     growthOpen &&
@@ -633,24 +643,12 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
   ) {
     let ci = 0;
     for (const card of CHOICE_PLAYS) {
-      if (card.id === 'CH05') continue; // session only
+      if (card.id === 'CH05') continue;
       if (isPlayable(campaign.state, card)) {
         out.push({ index: CAMP_CHOICE_BASE - ci, card });
         ci++;
       }
     }
-  }
-  // The alleyways, LAST in the menu on purpose.
-  //
-  // They were first, and every strategy that falls back to "the first playable
-  // thing" immediately started spending its week at the domino table: the
-  // money strategy's ballot rate fell 70% -> 59.8% and a ground condition
-  // meant to be met 12-65% of the time hit 86%. A place to waste an afternoon
-  // has to be somewhere you CHOOSE to go, not the top of the list.
-  if (
-    growthOpen &&
-    (campaign.state.stage === 'primary' || campaign.state.stage === 'general')
-  ) {
     let ai = 0;
     for (const card of ALLEY_PLAYS) {
       if (isPlayable(campaign.state, card)) {

@@ -79,6 +79,20 @@ console.log('=== CANDIDATE ZERO — Zero kit ===\n');
   assert(ids.includes('PL04') || ids.includes('PL05'), 'ballot door on camp');
   assert(!ids.some(id => id.startsWith('CH')), 'no CHOICE mall on day one');
   assert(!ids.some(id => id.startsWith('AL')), 'no alley mall on day one');
+  assert(!ids.some(id => id.startsWith('BUY')), 'no asset shop mall on day one');
+  assert(!ids.some(id => id.startsWith('MV')), 'no starmap verb mall on day one');
+
+  // After ballot: camp strip is empty of mall verbs — only hand + earned hooks.
+  c.state.ballot = true;
+  c.state.money = 5000;
+  c.state.nameID = 50;
+  c.state.sessionFlags = { ...c.state.sessionFlags, noticed: 1 };
+  const post = listPlayableHand(c).map(p => p.card.id);
+  assert(!post.some(id => id.startsWith('BUY')), 'no shop mall after filing');
+  assert(!post.some(id => id.startsWith('CH')), 'no CHOICE mall after filing');
+  assert(!post.some(id => id.startsWith('AL')), 'no alley mall after filing');
+  assert(!post.some(id => id.startsWith('MV')), 'no starmap mall after filing');
+  assert(!post.includes('PL04') && !post.includes('PL05'), 'doors leave after ballot');
 }
 
 {
