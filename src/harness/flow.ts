@@ -189,16 +189,17 @@ function fixture(hand: string[], draw: string[], seed = 1): { s: GameState; d: D
   );
 }
 
-// --- Standing Block Walk: always camp-available without draw luck (SRD) ---
+// --- Zero: boots are cards you own, not free standing camp verbs ---
+// Harness STARTER_DECK keeps PL01 density for instruments; player Zero
+// opens with one PL01 in the pile and no CAMP_BLOCK_WALK mall slot.
 {
   useRng(createRng(7));
   setDefaultSeed(7);
-  const d = createDeckState();
+  const harnessPile = createDeckState();
   assert(
-    !d.draw.includes('PL01') && !d.hand.includes('PL01') && !d.discard.includes('PL01'),
-    'starter physical pile has no Block Walk copies'
+    harnessPile.draw.filter(id => id === 'PL01').length >= 1,
+    'harness starter pile keeps boots density for instruments'
   );
-  // Zero kit: boots are a card, not a free camp mall verb.
   const camp = createCampaign({ seed: 7, starterKit: 'zero' });
   startWeek(camp);
   assert(
