@@ -175,6 +175,8 @@ function smokeGrantPaths(): string[] {
 function main(): void {
   const { refs, grants } = scan();
   const stubIds = new Set(INTENTIONAL_STUB_ALLIES.map(s => s.id));
+  /** Day-one Zero: preacher no longer free-grants the congregation. Earn it in-run. */
+  const stubBackers = new Set(['B02']);
   const dead: { kind: string; id: string }[] = [];
   const stubsHit: string[] = [];
 
@@ -183,6 +185,10 @@ function main(): void {
     for (const id of ids) {
       if (g.has(id)) continue;
       if (kind === 'ally' && stubIds.has(id)) {
+        stubsHit.push(id);
+        continue;
+      }
+      if (kind === 'backer' && stubBackers.has(id)) {
         stubsHit.push(id);
         continue;
       }
@@ -202,6 +208,7 @@ function main(): void {
       console.log(`  ${s.id}: ${s.reason}`);
     }
   }
+  console.log('  B02: Sunday Congregation — Zero day-one is not well-seated; no free backer on file.');
 
   const smokeErrs = smokeGrantPaths();
   if (smokeErrs.length) {
