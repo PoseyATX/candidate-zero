@@ -96,6 +96,10 @@ export interface PlayCard {
    *  (drawn once per run, kept out of normal draft/growth pools via show:()=>false).
    *  See engine/promo.ts. */
   promoRate?: number;
+  /** Named background figures (ally ids) this play puts the player in front of.
+   *  Each play banks a contact; enough contacts and the figure stops being
+   *  scenery and starts being an actor. See engine/promotion.ts. */
+  figures?: string[];
 }
 
 export interface RollResult {
@@ -251,6 +255,10 @@ export interface GameState {
   entityHistory?: string[];
   orbitWarmth?: Record<string, number>;
   pendingMovement?: import('./types-entities.js').MovementOpportunity;
+  /** figureId -> times the player has crossed their path. On the third the
+   *  figure is promoted into the actor system, silently. Optional so every save
+   *  written before it existed still loads. See engine/promotion.ts. */
+  contactLog?: Record<string, number>;
 }
 
 /**

@@ -571,6 +571,9 @@ export const SS27_RibbonCircuit: PlayCard = {
 export const SS28_CharityGala: PlayCard = {
   id: 'SS28', n: 'Interim Charity Gala', cost: { a: 2 }, risk: 'STD', ph: [1, 2, 3],
   tag: 'favor for favor', attrs: ['DIP'],
+  // Every lobbyist in town buys a table; one of them keeps sitting at yours.
+  // See engine/promotion.ts.
+  figures: ['AL13'],
   d:
     'A good cause, a ballroom, and every lobbyist in town buying a table. ' +
     'One of the few ways to bank an actual FAVOR token — the currency the Union Hall and the ' +

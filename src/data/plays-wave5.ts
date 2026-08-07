@@ -91,6 +91,8 @@ export const WAVE5_PLAYS: PlayCard[] = [
   {
     id: 'PL84', n: 'Coffee-Shop Sit-Down', cost: { a: 1 }, risk: 'SAFE', ph: [1, 2, 3],
     tag: 'the corner booth', attrs: ['CHA'], rarity: 'common', residency: 'main', control: 'player',
+    // The same four regulars in the same booth. See engine/promotion.ts.
+    figures: ['AL07'],
     d:
       'One table, four regulars, refills on the house. Retail politics at its most literal. ' +
       'One AP for contacts plus a point of momentum — the cheapest momentum in the deck, ' +
