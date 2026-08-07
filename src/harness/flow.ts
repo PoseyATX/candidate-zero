@@ -29,6 +29,12 @@ import {
 import { applyUpgrade } from '../engine/upgrades.js';
 import { heatOf } from '../engine/heat.js';
 import { createRng, setDefaultSeed, useRng } from '../engine/rng.js';
+import {
+  createCampaign,
+  listPlayableHand,
+  CAMP_BLOCK_WALK,
+  startWeek
+} from '../engine/loop.js';
 import type { DeckState, GameState } from '../engine/types.js';
 
 let failed = 0;
@@ -179,6 +185,34 @@ function fixture(hand: string[], draw: string[], seed = 1): { s: GameState; d: D
   assert(
     reasons.every(r => r.length > 0 && /^[A-Z]/.test(r) && !/[_]/.test(r)),
     `blocked reasons read as sentences (${JSON.stringify(reasons)})`
+  );
+}
+
+// --- Standing Block Walk: always camp-available without draw luck (SRD) ---
+{
+  useRng(createRng(7));
+  setDefaultSeed(7);
+  const d = createDeckState();
+  assert(
+    !d.draw.includes('PL01') && !d.hand.includes('PL01') && !d.discard.includes('PL01'),
+    'starter physical pile has no Block Walk copies'
+  );
+  const camp = createCampaign({ seed: 7 });
+  startWeek(camp);
+  assert(
+    (camp.state.deck ?? []).includes('PL01'),
+    'ownership still includes Block Walk for upgrades/paths'
+  );
+  assert(
+    !camp.deck.hand.includes('PL01'),
+    'opening hand is not forced to hold physical Block Walk'
+  );
+  const playable = listPlayableHand(camp);
+  const walk = playable.find(p => p.card.id === 'PL01');
+  assert(!!walk, 'Block Walk is offered while playable');
+  assert(
+    walk!.index === CAMP_BLOCK_WALK,
+    `Block Walk is a camp standing index (${walk!.index} vs ${CAMP_BLOCK_WALK})`
   );
 }
 

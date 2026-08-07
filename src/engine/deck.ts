@@ -12,7 +12,9 @@ import { upgradableCardIds, upgradeOptionId, parseUpgradeOption, applyUpgrade } 
 
 // Starter deck (early accessibility + dual ballot paths)
 export const STARTER_DECK_IDS: string[] = [
-  'PL01', 'PL01', 'PL01',
+  // Block Walk (PL01) is a standing camp action (SRD / .10x/decisions/standing-actions.md).
+  // It is owned for upgrades/paths but is not a physical draw-pile card — same
+  // class as ballot doors offered from camp when the sheets are not in hand.
   'PL02',
   'PL03',
   'PL04', 'PL04', 'PL04', 'PL04', 'PL04',
@@ -50,6 +52,9 @@ export const STARTER_DECK_IDS: string[] = [
   // harness:strategies week-8 baselines. The additions above were measured
   // against both, not assumed safe; ensureBallotAccessInHand is the backstop.
 ];
+
+/** Catalog ids always owned at campaign start even if not in the physical pile. */
+export const STANDING_OWNED_IDS: string[] = ['PL01'];
 
 export function createDeckState(cardIds: string[] = STARTER_DECK_IDS): DeckState {
   return {

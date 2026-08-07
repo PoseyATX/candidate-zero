@@ -15,6 +15,7 @@ import {
   drawCards,
   DEFAULT_HAND_SIZE,
   STARTER_DECK_IDS,
+  STANDING_OWNED_IDS,
   takeFromHand,
   enforceWeeklyDraw,
   buildPhaseDraft,
@@ -209,9 +210,9 @@ export function createCampaign(overrides: CreateCampaignOptions = {}): Campaign 
   applySetup(state, setup);
   state.lastPhase = getPhase(state);
 
-  // Seed starter deck inventory (ownership) from the same list that seeds the
-  // physical draw pile (createDeckState's default), so the two can't drift.
-  state.deck = [...new Set(STARTER_DECK_IDS)];
+  // Physical pile from STARTER_DECK_IDS; ownership also includes standing
+  // verbs (PL01) that live on the camp strip and are not draw-pile density.
+  state.deck = [...new Set([...STARTER_DECK_IDS, ...STANDING_OWNED_IDS])];
   const deckState = createDeckState();
   // Deal this persona their one signature card — exclusive (no other persona's
   // deck ever contains it) and reachable (shuffled into the draw pile).
@@ -439,6 +440,8 @@ export function ensureGeneralTools(campaign: Campaign): void {
 }
 
 export const CAMP_PETITION = -101;
+/** Standing spine: Block Walk always-on camp (SRD standing actions). */
+export const CAMP_BLOCK_WALK = -102;
 export const CAMP_FILING_FEE = -105;
 /** Camp-style shop index base: -200 - i for the i-th available BUY* play. */
 export const CAMP_SHOP_BASE = -200;
@@ -507,6 +510,18 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
       out.push({ index: CAMP_FILING_FEE, card: fee });
     }
   }
+  // Standing action: Block Walk. Always on the camp strip in primary/general
+  // when not already a physical hand card (region kits may still inject one).
+  {
+    const walk = campaign.catalog.get('PL01');
+    if (
+      walk &&
+      !inHandIds.has('PL01') &&
+      isPlayable(campaign.state, walk)
+    ) {
+      out.push({ index: CAMP_BLOCK_WALK, card: walk });
+    }
+  }
   // Phase 2: asset shop — always-available BUY* plays (archive assetPlays).
   // 0 AP; paid with $ or volunteers. Not drawn into hand.
   let shopI = 0;
@@ -564,6 +579,7 @@ export function campIndexToCardId(
   handIndex: number
 ): string | null {
   if (handIndex === CAMP_PETITION) return 'PL04';
+  if (handIndex === CAMP_BLOCK_WALK) return 'PL01';
   if (handIndex === CAMP_FILING_FEE) return 'PL05';
   // Index bands: hook ≤-700 · alley ≤-600 · waiting ≤-500 · starmap ≤-401 · session ≤-300 · shop ≤-200
   if (handIndex <= CAMP_HOOK_BASE) {

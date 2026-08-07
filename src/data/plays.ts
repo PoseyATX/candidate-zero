@@ -25,11 +25,11 @@ export const PL01_BlockWalk: PlayCard = {
   id: 'PL01', n: 'Block Walk', cost: { a: 2 }, risk: 'SAFE', refundOnBreak: true, ph: [1,2,3], field: true, tag: 'the spine',
   attrs: ['CHA'],
   d:
-    'Boots and a clipboard — the spine of the whole operation, and the one play that never turns on you. ' +
-    'Pick a ground and it converts that ground\'s pool into contacts, plus rapport and usually a volunteer; ' +
-    'in the general the same walk banks GOTV conversion instead of introductions. ' +
-    'Charm carries it, but the odds actually climb with volunteers, a sharp message, and the Van (A01). ' +
-    'A breakthrough refunds the AP — this is the card combo weeks are built on.',
+    'Boots and a clipboard — the spine of the operation, and it is always available: you do not wait for the ' +
+    'shuffle to go walk. Pick a ground. You take that ground\'s pool into contacts, bank rapport, and usually ' +
+    'pick up a volunteer; in the general the same walk banks turnout conversion instead of introductions. ' +
+    'Volunteers, a sharp message, and the Van (A01) make the doors open easier. A breakthrough refunds the ' +
+    'AP — the week you chain walks is the week the list starts to look like a district.',
   odds: (s) => clamp(0.62 + s.volPool*0.02 + (s.assets.includes('A01')?0.12:0) + (s.messageSharp?0.05:0), 0, 0.95),
   run: (s, o, g) => {
     if (!g) return 'No ground selected.'; s.walkCount++;
