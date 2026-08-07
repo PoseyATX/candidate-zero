@@ -77,6 +77,29 @@ function main(): void {
   advanceCampaignWeek(s3);
   assert(s3.money === before - 150, 'week advance should drag OB2');
 
+  // === ACCRETION: obligations do not expire on their own ===
+  //
+  // The whole late-game density of a run rests on this. A favour taken in week
+  // 2 is still a leash in week 14; nothing times out, decays, or quietly clears
+  // itself. The only way an obligation leaves the list is settlement — you pay
+  // it, somebody retires it for you, or a defeat strips it away. This is a
+  // regression lock, not a feature: if a later pass adds a timeout to make the
+  // mid-game breathe, this is the test that should stop it.
+  const s4 = createNewState({ seed: 14, money: 500000, ballot: true, ap: 0 });
+  s4.week = 1;
+  s4.stage = 'primary';
+  for (const id of ['OB1', 'OB3', 'OB4', 'OB5', 'OB6', 'OB7', 'OB8']) addObl(s4, id);
+  const held = [...s4.obls];
+  for (let i = 0; i < 40; i++) advanceCampaignWeek(s4);
+  for (const id of held) {
+    assert(
+      s4.obls.includes(id),
+      `${id} must still be held after 40 weeks — obligations never expire on their own`
+    );
+  }
+  assert(s4.obls.length >= held.length, 'nothing silently dropped off the list');
+  console.log(`OK — ${held.length} obligations survive 40 weeks untouched (no expiry, no decay).`);
+
   console.log('OK — OB1–OB8 registry, PAC/self-fund grants, weekly drag, G2→OB8.');
   process.exit(0);
 }
