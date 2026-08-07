@@ -92,37 +92,44 @@ export interface SetupSelection {
 // attr bumps come from `attrs` alone (applied once, centrally, in
 // applySetup) so the UI's pre-game blurb and the actual campaign grant can
 // never drift apart the way two hand-copied literals could.
+/**
+ * Day-one cast (teacher / veteran / preacher / smallbiz) is not well-seated:
+ * attrs + bio asset only. No free name, cash dump, volunteer stack, or backer.
+ * PA_* archetypes stay in the table for later unlocks / harness matrix — they
+ * still start "seated" because they are career payoffs, not Act I menu items.
+ */
 export const PERSONAS: PersonaDef[] = [
   {
     id: 'veteran', n: 'The Veteran', tag: 'bio armor',
-    d: 'Two tours and a flag on the porch. Bio is armor.',
+    d: 'Two tours and a flag on the porch. Bio is armor — not a list, not a PAC.',
     attrs: { CON: 3, CLO: 2, CHA: 1 },
-    apply: s => { s.nameID += 3; s.faces.T += 8; s.assets.push('BIO_VETERAN'); }
+    apply: s => {
+      s.assets.push('BIO_VETERAN');
+    }
   },
   {
     id: 'teacher', n: 'The Teacher', tag: 'the rooms',
-    d: 'Twenty years of parent-teacher nights. You know the rooms.',
+    d: 'Twenty years of parent-teacher nights. You know the rooms — you do not own them yet.',
     attrs: { CHA: 3, DIP: 2, CON: 1 },
-    apply: s => { s.contacts += 25; s.faces.G += 8; s.assets.push('BIO_TEACHER'); }
+    apply: s => {
+      s.assets.push('BIO_TEACHER');
+    }
   },
   {
     id: 'preacher', n: 'The Preacher', tag: 'pulpit precinct',
-    d: 'A pulpit is a precinct. Sundays are turnout.',
+    d: 'A pulpit is a precinct. Sundays are turnout — if you still have the room.',
     attrs: { CHA: 3, CLO: 2, DIP: 1 },
-    // archive PA_CON_CHA (line 357) pushed B02 Sunday Congregation — same intent
     apply: s => {
-      s.volPool += 2;
-      s.faces.F += 8;
-      s.faces.T += 6;
       s.assets.push('BIO_PREACHER');
-      if (!s.backers.includes('B02')) s.backers.push('B02');
     }
   },
   {
     id: 'smallbiz', n: 'The Feed-Store Owner', tag: 'credit and favors',
-    d: 'Everyone owes you credit or a favor.',
+    d: 'Everyone still knows the name on the awning. The ledger is thin until you work it.',
     attrs: { CRA: 3, DIP: 2, CLO: 1 },
-    apply: s => { s.money += 1500; s.faces.O += 8; s.assets.push('BIO_FEEDSTORE'); }
+    apply: s => {
+      s.assets.push('BIO_FEEDSTORE');
+    }
   },
   // Ported from archive/prototype-single-file.html's 21-persona archetype
   // roster (2026-07-17) — see docs/SRD-NOTES.md. PA_CON_CHA ("The Preacher")

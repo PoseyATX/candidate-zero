@@ -202,7 +202,8 @@ export interface GameState {
   districtStanding: number;
   bill: Bill | null;
   committee: Committee | null;
-  sessionFlags: Record<string, boolean | number>;
+  /** Session-scoped flags. Numbers/bools preferred; short strings for lists (e.g. recentOffers). */
+  sessionFlags: Record<string, boolean | number | string>;
   wave: number;
   skippedTownHall: boolean;
   townHallThisWeek: boolean;

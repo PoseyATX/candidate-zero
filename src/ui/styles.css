@@ -950,6 +950,12 @@ body.dossier-open {
   text-transform: uppercase;
   color: var(--gold);
 }
+/* Decline a phase opportunity — taking zero is legal. Not a splash change. */
+#draft .draft-walk-past {
+  margin-top: 0.5rem;
+  width: 100%;
+  font-size: 0.85rem;
+}
 #playables .play-section-sub {
   margin: 0 0 0.2rem;
   font-size: 0.78rem;

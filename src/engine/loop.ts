@@ -24,7 +24,8 @@ import {
   autoResolvePhaseDraft,
   resolvePhaseDraft,
   injectIntoDrawPile,
-  injectNearTop
+  injectNearTop,
+  declinePhaseDraft
 } from './deck.js';
 import { executePlay, isPlayable, type PlayOpts } from './play.js';
 import {
@@ -63,7 +64,7 @@ import {
 import {
   applyZeroStartingLedgers,
   campGrowthUnlocked,
-  isFirstRun,
+  careerDeckOf,
   resolveStarterIds,
   ZERO_BOOTS
 } from './zero.js';
@@ -238,7 +239,12 @@ export function createCampaign(overrides: CreateCampaignOptions = {}): Campaign 
   applySetup(state, setup);
   state.lastPhase = getPhase(state);
 
-  const { physical, owned } = resolveStarterIds(starterKit, legacy, STARTER_DECK_IDS);
+  const { physical, owned } = resolveStarterIds(
+    starterKit,
+    legacy,
+    STARTER_DECK_IDS,
+    setup.personaId
+  );
   state.deck = [...new Set(owned)];
   const deckState = createDeckState(physical);
 
@@ -249,31 +255,34 @@ export function createCampaign(overrides: CreateCampaignOptions = {}): Campaign 
 
   if (starterKit === 'zero') {
     applyZeroStartingLedgers(state);
-    // Signature is the persona's voice — earned after you have a past, not
-    // free power on the first filing.
-    if (!isFirstRun(legacy)) {
-      const sigId = SIGNATURE_BY_PERSONA[setup.personaId];
-      if (sigId) injectNearTop(deckState, state, [sigId]);
-    } else {
+    const career = legacy ? careerDeckOf(legacy) : [];
+    if (career.length === 0) {
       state.log.push({
         week: 1,
         kind: 'note',
         text:
-          'ZERO — You have boots and a filing window. No list. No machine. No blessing. ' +
+          'ZERO — Legs, a voice, a filing window. No list. No machine. No blessing. ' +
           'Everything else is built in public, or it is not built.'
       });
-      if (physical.includes(ZERO_BOOTS)) {
-        state.log.push({
-          week: 1,
-          kind: 'note',
-          text: 'What you own: one pair of boots. The rest of the deck is empty on purpose.'
-        });
-      }
+      const voice = SIGNATURE_BY_PERSONA[setup.personaId];
+      state.log.push({
+        week: 1,
+        kind: 'note',
+        text: voice
+          ? `What you own: boots (${ZERO_BOOTS}) and your voice (${voice}). The rest is empty on purpose.`
+          : `What you own: boots (${ZERO_BOOTS}). The rest of the deck is empty on purpose.`
+      });
+    } else {
+      state.log.push({
+        week: 1,
+        kind: 'note',
+        text: `You carry what you built — ${career.length} cards from the career. Nothing free this cycle.`
+      });
     }
   } else {
-    // Harness kit: persona signature near the top (existing contract).
+    // Harness kit: persona signature near the top if not already in the pile.
     const sigId = SIGNATURE_BY_PERSONA[setup.personaId];
-    if (sigId) injectNearTop(deckState, state, [sigId]);
+    if (sigId && !physical.includes(sigId)) injectNearTop(deckState, state, [sigId]);
   }
 
   // Persist seed on state for multi-cycle deterministic re-file.
@@ -433,6 +442,11 @@ export function maybeOfferPhaseDraft(campaign: Campaign, auto = true): string | 
 
 export function pickPhaseDraft(campaign: Campaign, index: number): ReturnType<typeof resolvePhaseDraft> {
   return resolvePhaseDraft(campaign.state, index, campaign.deck);
+}
+
+/** Walk past a phase opportunity without adding a card. */
+export function walkPastPhaseDraft(campaign: Campaign): ReturnType<typeof declinePhaseDraft> {
+  return declinePhaseDraft(campaign.state);
 }
 
 /**
@@ -763,11 +777,9 @@ export function startWeek(campaign: Campaign): string[] {
     return [];
   }
 
-  // Mandatory weekly growth: own new cards AND put them in the draw pile
+  // Harness kit: free weekly card drip for instruments. Zero: none — not a mall.
   const newCards = enforceWeeklyDraw(campaign.state);
   if (newCards.length > 0) {
-    // enforceWeeklyDraw already pushed ownership; inject physical copies
-    // (ownership may already include them — push to draw only)
     for (const id of newCards) {
       campaign.deck.draw.push(id);
     }

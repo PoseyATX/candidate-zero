@@ -35,6 +35,7 @@ import {
   startWeek,
   maybeOfferPhaseDraft,
   pickPhaseDraft,
+  walkPastPhaseDraft,
   campIndexToCardId,
   cycleFromHand,
   cycleReason,
@@ -97,6 +98,8 @@ export type Command =
   | { type: 'cycle'; handIndex: number }
   | { type: 'endWeek' }
   | { type: 'draft'; option: number }
+  /** Walk past a phase opportunity without taking a card. */
+  | { type: 'draftPass' }
   /** Host dismisses Outside weather chrome (see clearPendingOutside). */
   | { type: 'dismissOutside' };
 
@@ -492,6 +495,12 @@ export function apply(snap: EngineSnapshot, command: Command): ApplyResult {
     }
     case 'draft': {
       const r = pickPhaseDraft(campaign, command.option);
+      ok = r.ok;
+      reason = r.reason;
+      break;
+    }
+    case 'draftPass': {
+      const r = walkPastPhaseDraft(campaign);
       ok = r.ok;
       reason = r.reason;
       break;

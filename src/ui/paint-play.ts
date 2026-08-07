@@ -6,6 +6,7 @@
 import {
   listPlayableHand,
   pickPhaseDraft,
+  walkPastPhaseDraft,
   campIndexToCardId,
   cycleReason,
   cycleCautionReason,
@@ -593,7 +594,7 @@ export function renderDraft(campaign: Campaign): void {
   const draft = campaign.state.pendingDraft;
   box.classList.add('draft-active');
   box.innerHTML =
-    `<p class="hint play-section-label draft-heading">Phase ${draft.phase} draft — pick one for your pool</p>` +
+    `<p class="hint play-section-label draft-heading">Phase ${draft.phase} opportunity — take one, or walk past</p>` +
     `<div class="play-section-cards draft-cards">` +
     draft.options
       .map((id, i) => {
@@ -611,11 +612,16 @@ export function renderDraft(campaign: Campaign): void {
         </button>`;
       })
       .join('') +
-    `</div>`;
+    `</div>` +
+    `<button type="button" class="btn draft-walk-past" id="btn-draft-pass">Walk past — keep the deck lean</button>`;
   box.querySelectorAll<HTMLButtonElement>('[data-draft]').forEach(btn => {
     btn.addEventListener('click', () => {
       openDraftDetail(campaign, Number(btn.dataset.draft));
     });
+  });
+  box.querySelector('#btn-draft-pass')?.addEventListener('click', () => {
+    walkPastPhaseDraft(campaign);
+    afterPaintHook?.();
   });
   requestAnimationFrame(() => {
     box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });

@@ -12,7 +12,13 @@ import {
   REGIONS,
   type SetupSelection
 } from '../data/setup.js';
+import { DAY_ONE_PERSONA_IDS } from '../engine/zero.js';
 import { emblem } from './card-art.js';
+
+/** Act I cast only — well-seated PA_* personas unlock much later. */
+const NAMEPLATE_PERSONAS = PERSONAS.filter(p =>
+  (DAY_ONE_PERSONA_IDS as readonly string[]).includes(p.id)
+);
 
 export type DraftStep = 1 | 2 | 3;
 
@@ -108,7 +114,7 @@ export function renderNameplateDraft(
 
   let grid = '';
   if (draft.step === 1) {
-    grid = PERSONAS.map(p =>
+    grid = NAMEPLATE_PERSONAS.map(p =>
       identityCardHtml(
         'persona',
         p.id,

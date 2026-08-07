@@ -1,21 +1,46 @@
 /**
  * Candidate Zero — start at nothing.
  *
- * The name is the design: you are not a loaded campaign. You have a name you
- * just filed, boots if you earned them, and the two legal doors onto the ballot.
- * Everything else is built in public, across losses.
+ * The name is the design: you are not a loaded campaign. You have legs, a
+ * voice, and what your persona is — then you lose, and the deck you built is
+ * the only legacy that matters.
  */
 
+import { SIGNATURE_BY_PERSONA } from '../data/signature-plays.js';
 import type { CampaignOutcome, GameState, LegacyCarry, LegacyState } from './types.js';
 
-/** One pair of boots. That is the whole opening kit. */
+/** Legs — the only free verb every nobody starts with. */
 export const ZERO_BOOTS = 'PL01';
 
 /**
+ * Day-one identity cast. Not well-seated, not PA_* empire archetypes.
+ * Powerhouse / Operator / Local Legend etc. unlock much later.
+ */
+export const DAY_ONE_PERSONA_IDS = ['teacher', 'veteran', 'preacher', 'smallbiz'] as const;
+export type DayOnePersonaId = (typeof DAY_ONE_PERSONA_IDS)[number];
+
+export function isDayOnePersona(id: string | null | undefined): boolean {
+  return !!id && (DAY_ONE_PERSONA_IDS as readonly string[]).includes(id);
+}
+
+/**
  * Cards that may appear on the camp strip in a Zero campaign before the world
- * has reason to offer you more. Ballot doors only — power is not a menu.
+ * has reason to open more doors. Ballot doors only — power is not a menu.
  */
 export const ZERO_CAMP_DOORS = new Set(['PL04', 'PL05']);
+
+/**
+ * First-run physical pile: legs + voice (persona signature).
+ * Not a toolbox. Not free money. Not a list.
+ */
+export function personaBoots(personaId: string | null | undefined): string[] {
+  const ids = [ZERO_BOOTS];
+  if (personaId) {
+    const sig = SIGNATURE_BY_PERSONA[personaId];
+    if (sig) ids.push(sig);
+  }
+  return ids;
+}
 
 export function isLossOutcome(kind: CampaignOutcome): boolean {
   return (
@@ -92,13 +117,12 @@ export function isFirstRun(legacy: LegacyState | null | undefined): boolean {
 /**
  * Whether the camp strip may show growth verbs beyond ballot doors.
  * First run, unnoticed: no. After the world notices you, or you have a past: yes.
- * Reads sessionFlags set at createCampaign so listPlayableHand stays pure on state.
  */
 export function campGrowthUnlocked(state: GameState, _legacy?: LegacyState | null): boolean {
   if (state.sessionFlags?.noticed) return true;
   if (state.eventsFired?.EV_YOU_GOT_NOTICED) return true;
   if (Number(state.sessionFlags?.priorRuns || 0) > 0) return true;
-  if (Number(state.sessionFlags?.careerCards || 0) > 1) return true;
+  if (Number(state.sessionFlags?.careerCards || 0) > 2) return true;
   // Harness kit is not Zero — full strip allowed for instruments.
   if (state.sessionFlags?.zeroMode !== 1) return true;
   return false;
@@ -110,6 +134,15 @@ export function applyZeroStartingLedgers(state: GameState): void {
   if (state.volPool > 0) state.volPool = 0;
   if (state.nameID > 0) state.nameID = 0;
   if (state.contacts > 0) state.contacts = 0;
+  // Day-one is not well-seated: strip free backers / favor dumps personas may add.
+  if (isDayOnePersona(state.personaId) && isFirstRunFromFlags(state)) {
+    state.backers = [];
+    state.favors = 0;
+  }
+}
+
+function isFirstRunFromFlags(state: GameState): boolean {
+  return Number(state.sessionFlags?.priorRuns || 0) === 0;
 }
 
 export type StarterKit = 'zero' | 'harness';
@@ -117,18 +150,20 @@ export type StarterKit = 'zero' | 'harness';
 export function resolveStarterIds(
   kit: StarterKit,
   legacy: LegacyState | null | undefined,
-  harnessIds: string[]
+  harnessIds: string[],
+  personaId?: string | null
 ): { physical: string[]; owned: string[] } {
   if (kit === 'harness') {
     return { physical: [...harnessIds], owned: [...harnessIds] };
   }
   const career = careerDeckOf(legacy);
   if (career.length > 0) {
-    // The deck you built is the legacy. Physical pile = what you carry.
+    // What you built (and kept) is the legacy. Physical pile = what you carry.
     return { physical: [...career], owned: [...career] };
   }
-  // First run: boots only. Ballot doors live on camp, not in the pile.
-  return { physical: [ZERO_BOOTS], owned: [ZERO_BOOTS] };
+  // First run: legs + voice. Ballot doors live on camp, not in the pile.
+  const boots = personaBoots(personaId);
+  return { physical: [...boots], owned: [...boots] };
 }
 
 /** Type patch helper — carry fields used by Zero. */
