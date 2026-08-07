@@ -23,6 +23,23 @@ export interface PersonaDef {
   /** Can a career be filed as this persona? Only the starting four. Everyone
    *  else is better-seated and is reached through play, much later. */
   starting?: boolean;
+  /**
+   * The cold open — the specific Tuesday this person is walking in from.
+   *
+   * A persona picker that lists adjectives is a menu. A picker that opens on a
+   * closed hospital and a ninety-mile drive is a character. Only the startable
+   * four carry these, because they are the only ones a player ever meets cold.
+   */
+  open?: string;
+  /** What you actually have, said plainly. No adjectives. */
+  has?: string;
+  /** What you do not have, said just as plainly. This is the longer list. */
+  lacks?: string;
+  /** How this person hears whatever issue they pick. `{issue}` is substituted —
+   *  the same choice has to land differently depending on who is making it. */
+  lens?: string;
+  /** The intrinsic card that is going to cost you, named at the filing table. */
+  liability?: string;
 }
 
 function bumpAttrs(s: GameState, boost: AttrBoost): void {
@@ -114,24 +131,60 @@ export const PERSONAS: PersonaDef[] = [
   {
     id: 'blockwalker', n: 'The Blockwalker', tag: 'legs and a voice', starting: true,
     d: 'You have knocked this district for somebody else for six years. Nobody is going to fund you and everybody on Third Street knows your face.',
+    open:
+      'Six years of other people\'s yard signs. You have knocked every street in this precinct for men ' +
+      'whose names you had to learn off the literature. In March one of them lost by 214 votes and ' +
+      'thanked the county chairman from the podium without ever once looking at the back of the room. ' +
+      'You drove home and did the arithmetic on your own precinct and it kept coming out the same way.',
+    has: 'Legs. A face they recognise at the screen door. Six years of names nobody wrote down but you.',
+    lacks: 'Money. A title. One person at the courthouse who returns a call.',
+    lens: 'You have heard about {issue} on ninety porches this year. Nobody downtown has heard it from you.',
+    liability: 'Blister — the body is the whole campaign, which makes the body the whole vulnerability.',
     attrs: { CON: 3, CLO: 2 },
     apply: s => { s.faces.T += 6; s.faces.G += 4; }
   },
   {
     id: 'believer', n: 'The Believer', tag: 'a cause and no give',  starting: true,
     d: 'Something specific happened to somebody specific and you have not been able to let it go. You cannot trade, because trading is how it happened.',
+    open:
+      'The hospital closed on a Tuesday in February. Eleven days later you drove a neighbour ninety ' +
+      'miles toward Abilene in the front seat of a pickup and she did not make it past Baird. ' +
+      'You have said her name at four commissioners\' court meetings. The third time, a man you have ' +
+      'known since school asked you to be reasonable about it.',
+    has: 'A cause with a date on it. Nine people who believe you. No capacity whatsoever for doubt.',
+    lacks: 'Give. Discretion. Any ability to sit down and make a deal.',
+    lens: '{issue} is not a position you hold. It is the reason you are standing here.',
+    liability: 'Rigidity — the thing that makes people believe you is the thing that makes you impossible to deal with.',
     attrs: { CON: 3, CHA: 2 },
     apply: s => { s.faces.T += 10; s.volPool += 1; }
   },
   {
     id: 'staffer', n: 'The Junior Staffer', tag: 'knows where the rooms are', starting: true,
     d: 'Four sessions carrying somebody else\'s binder. You know the building, the calendar and the rule that applies. Nobody in it knows your name.',
+    open:
+      'Four sessions carrying a binder for a member who never learned your first name. You know which ' +
+      'elevator the members use, which clerk will take a late filing and which point of order kills ' +
+      'a bill on a Thursday afternoon. You have written applause lines and listened to them land ' +
+      'from the back wall. In May you watched a bill you drafted get signed under somebody else\'s name.',
+    has: 'The building. The calendar. The rule that applies, and the timing to raise it.',
+    lacks: 'Standing to be in any of those rooms as yourself. A constituency. A single person who thinks of you as a principal.',
+    lens: 'You know exactly which committee {issue} dies in. You have watched it happen twice from the back wall.',
+    liability: 'No Standing — you have been in every one of these rooms and never once as yourself.',
     attrs: { INK: 3, CRA: 2 },
     apply: s => { s.faces.O += 8; }
   },
   {
     id: 'fadedname', n: 'The Faded Name', tag: 'a surname and a little money', starting: true,
     d: 'Your grandfather had the dealership and two terms in the House. People still know the name and nobody currently owes it anything.',
+    open:
+      'Your grandfather had the Ford dealership and two terms in the House. There is a wing of the ' +
+      'hospital with your surname over the door and a portrait in the county museum that nobody has ' +
+      'dusted since the bicentennial. The land went three ways in 1994. You have never in your life ' +
+      'held a position the name did not get you, and everybody at the Rotary lunch knows it.',
+    has: 'A surname the old guard still half stands up for. What is left of the land money.',
+    lacks: 'Competence. Relevance. One living person who owes you anything at all.',
+    lens: 'Your grandfather had a position on {issue}. The room will assume you inherited it, and ask you about it.',
+    liability: 'Expectations — they assume you can do this, because of who you are, and they are wrong.',
     attrs: { DIP: 2, CHA: 1 },
     apply: s => { s.faces.O += 6; s.faces.L += 4; }
   },

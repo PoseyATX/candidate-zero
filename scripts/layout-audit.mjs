@@ -165,7 +165,7 @@ async function main() {
         await c.click();
         await page.waitForTimeout(60);
       };
-      await pick('persona', 'teacher');
+      await pick('persona', 'blockwalker');
       await pick('issue', 'taxes');
       await pick('district', 'open');
       await pick('region', 'east');

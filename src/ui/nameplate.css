@@ -170,3 +170,225 @@
     line-clamp: 3;
   }
 }
+
+/* ------------------------------------------------------------------ *
+ * The filing: cold opens, the ledger, and the form you sign.
+ * Same materials as the rest of the nameplate — parchment, Cinzel,
+ * gold rules. Nothing new is invented here, it is only given room.
+ * ------------------------------------------------------------------ */
+
+/* The name on the form. First thing a player touches. */
+.id-name-label {
+  display: block;
+  max-width: 22rem;
+  margin: 0 auto 0.9rem;
+  font-family: Cinzel, serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  text-align: center;
+}
+.id-name-label input {
+  display: block;
+  width: 100%;
+  margin-top: 0.3rem;
+  min-height: 44px;
+  padding: 0.4rem 0.6rem;
+  font-family: Cinzel, serif;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  text-align: center;
+  color: var(--parchment);
+  background: var(--walnut-2);
+  border: 1px solid var(--gold-dim);
+  border-radius: 2px;
+}
+.id-name-label input:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+}
+
+/* A persona is a paragraph, so it gets a column of its own on wide screens. */
+.id-persona .id-open {
+  font-size: 0.74rem;
+  line-height: 1.5;
+  color: #4a3b24;
+  margin-top: 0.15rem;
+}
+.id-ledger {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-top: 0.5rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid rgba(122, 101, 48, 0.45);
+}
+.id-ledger-row {
+  font-size: 0.7rem;
+  line-height: 1.35;
+  color: #4a3b24;
+}
+.id-ledger-row b {
+  font-family: Cinzel, serif;
+  /* Not the smallest text in the game: 0.62rem measured 9.9px at 320/390,
+     below every other small-cap label in the app. */
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #7d6530;
+  margin-right: 0.3rem;
+}
+.id-lacks {
+  color: #6b4a2a;
+}
+
+/* The persona reading your issue back to you. */
+.id-lens {
+  text-align: center;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  font-style: italic;
+  color: var(--parchment);
+  max-width: 34rem;
+  margin: 0 auto 0.85rem;
+}
+.id-lens-live {
+  border-top: 1px solid var(--gold-dim);
+  border-bottom: 1px solid var(--gold-dim);
+  padding: 0.5rem 0.75rem;
+}
+
+/* Step 4: the application itself. */
+.id-filing {
+  max-width: 34rem;
+  margin: 0 auto 0.9rem;
+  padding: 1rem 1.1rem 1.15rem;
+  background: linear-gradient(175deg, #efe3c6, #e2d2ae);
+  border: 1px solid #9a824f;
+  border-radius: 3px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.42);
+}
+.id-filing-eyebrow {
+  font-family: Cinzel, serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #7d6530;
+  text-align: center;
+  margin: 0 0 0.35rem;
+}
+.id-filing-name {
+  font-family: Cinzel, serif;
+  font-size: 1.5rem;
+  line-height: 1.1;
+  color: var(--ink);
+  text-align: center;
+  margin: 0 0 0.75rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 2px solid #9a824f;
+}
+.id-filing-rows {
+  margin: 0 0 0.7rem;
+  display: grid;
+  gap: 0.3rem;
+}
+.id-filing-rows > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.78rem;
+  border-bottom: 1px dotted rgba(122, 101, 48, 0.5);
+  padding-bottom: 0.22rem;
+}
+.id-filing-rows dt {
+  font-family: Cinzel, serif;
+  font-size: 0.64rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #7d6530;
+}
+.id-filing-rows dd {
+  margin: 0;
+  color: var(--ink);
+  text-align: right;
+}
+.id-filing .id-lens {
+  color: #4a3b24;
+  margin-bottom: 0.6rem;
+}
+
+/* The card that is going to cost you, named before you sign. */
+.id-warning {
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: #6b3a24;
+  background: rgba(150, 70, 40, 0.1);
+  border-left: 3px solid #96462a;
+  padding: 0.45rem 0.6rem;
+  margin: 0 0 0.7rem;
+}
+
+/* The ten cards. */
+.id-hand {
+  border-top: 1px solid rgba(122, 101, 48, 0.5);
+  padding-top: 0.65rem;
+}
+.id-hand .id-subhead {
+  color: #7d6530;
+  text-align: center;
+}
+.id-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+.id-chip {
+  font-size: 0.68rem;
+  line-height: 1;
+  padding: 0.32rem 0.45rem;
+  border: 1px solid #9a824f;
+  border-radius: 2px;
+  color: #4a3b24;
+  background: rgba(255, 255, 255, 0.28);
+}
+.id-chip-own {
+  border-color: #7d6530;
+  background: rgba(201, 162, 77, 0.28);
+  color: var(--ink);
+  font-weight: 700;
+}
+.id-chip-liability {
+  border-color: #96462a;
+  background: rgba(150, 70, 40, 0.16);
+  color: #6b3a24;
+  font-weight: 700;
+}
+.id-hand-note {
+  font-size: 0.7rem;
+  line-height: 1.4;
+  color: #5d452a;
+  text-align: center;
+  margin: 0;
+}
+
+@media (min-width: 720px) {
+  /* Cold opens need width; two across reads better than four cramped. */
+  .id-card-grid:has(.id-persona) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 480px) {
+  .id-card-grid:has(.id-persona) {
+    grid-template-columns: 1fr;
+  }
+  .id-persona .id-open {
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
+  }
+  .id-filing-name {
+    font-size: 1.2rem;
+  }
+}

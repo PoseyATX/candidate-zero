@@ -1,7 +1,8 @@
 /**
  * CANDIDATE ZERO — boot / DOM wire only.
  * Mutable campaign lives in session.ts; paint leaves are pure modules.
- * Nameplate is a 3-step card draft; identity locks until refile / burn.
+ * Nameplate is a 4-step filing (who / what / where / sign); identity locks
+ * until refile / burn.
  * Card geometry: styles.css + card-lock.css (hard 2:3).
  */
 
@@ -46,7 +47,11 @@ function paintDraft(): void {
       draft = next;
       paintDraft();
     },
-    (setup, seed) => {
+    (setup, seed, name) => {
+      // The name goes on the career before the run opens, so the epitaphs, the
+      // Chronicle and anything the opposition sees all say the same thing the
+      // clerk wrote down.
+      if (name) setPlayerName(name);
       startRun(setup, seed, true);
       paintTitleIdentity();
     }
