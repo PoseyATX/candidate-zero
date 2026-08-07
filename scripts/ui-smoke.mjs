@@ -116,7 +116,7 @@ async function main() {
       await card.click();
       await page.waitForTimeout(40);
     }
-    await pickPersona('teacher');
+    await pickPersona('blockwalker');
     await page.locator('#id-advanced-toggle').click();
     await page.locator('#seed-input').fill('4242');
     assert(await page.locator('#btn-start').isVisible(), 'Walk in and file is present');
@@ -622,7 +622,7 @@ async function main() {
       await page.evaluate(() => localStorage.clear());
       await page.goto(`${BASE}?promo=PR01`, { waitUntil: 'networkidle' });
       await page.locator('#btn-title-start').click();
-      await pickPersona('teacher');
+      await pickPersona('blockwalker');
       await page.locator('#id-advanced-toggle').click();
       await page.locator('#seed-input').fill('4242');
       await page.locator('#btn-start').click();
@@ -698,7 +698,7 @@ async function main() {
       await page.evaluate(() => localStorage.clear());
       await page.goto(`${BASE}?smoke=1`, { waitUntil: 'networkidle' });
       await page.locator('#btn-title-start').click();
-      await pickPersona('teacher');
+      await pickPersona('blockwalker');
       await page.locator('#id-advanced-toggle').click();
       await page.locator('#seed-input').fill('4242');
       await page.locator('#btn-start').click();

@@ -1,8 +1,8 @@
 {
   "version": "1.0.0",
   "counts": {
-    "cards": 134,
-    "personas": 24,
+    "cards": 155,
+    "personas": 28,
     "issues": 18,
     "districts": 4,
     "regions": 7,
@@ -43,6 +43,642 @@
     }
   ],
   "cards": [
+    {
+      "id": "ZN_KNOCK",
+      "name": "Knock",
+      "tagline": "door to door",
+      "description": "Block walking. Floor of the risk ladder. Low reward, almost nothing can go wrong, always playable. The safety valve stays open at every depth.",
+      "risk": "SAFE",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": true,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO",
+        "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "ZN_ASK",
+      "name": "Ask",
+      "tagline": "no reason to say yes",
+      "description": "Request something small from someone with no reason to say yes.",
+      "risk": "STD",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP",
+        "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "ZN_SPEAK",
+      "name": "Speak",
+      "tagline": "whoever is in front of you",
+      "description": "Address whoever is in front of you. Not a stage. A conversation.",
+      "risk": "STD",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA",
+        "CON"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "ZN_SHOW",
+      "name": "Show Up",
+      "tagline": "not invited",
+      "description": "Physical presence somewhere you were not invited.",
+      "risk": "STD",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 2,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO",
+        "CON"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "ZN_ENDURE",
+      "name": "Endure",
+      "tagline": "convert the hit",
+      "description": "Absorb a hit; convert damage into a smaller, later problem.",
+      "risk": "SAFE",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CON"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "ZB_LEGS",
+      "name": "Legs",
+      "tagline": "extra miles",
+      "description": "Extra low-value actions. You can always walk one more block.",
+      "risk": "SAFE",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": true,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 0,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "ZB_DOORSTEP",
+      "name": "Doorstep Read",
+      "tagline": "info from contact",
+      "description": "You learn who is home, who is angry, who will never open.",
+      "risk": "SAFE",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": true,
+      "phases": [
+        1,
+        2
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA",
+        "CRA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "ZB_NEIGHBOR",
+      "name": "Neighbor's Word",
+      "tagline": "one small credibility token",
+      "description": "Someone on the block will vouch — once, quietly.",
+      "risk": "STD",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP",
+        "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "ZB_BLISTER",
+      "name": "Blister",
+      "tagline": "body keeps score · liability",
+      "description": "Liability. While this is still in your kit, long field days cost more. You do not trash it from a menu — you heal it the hard way or it heals you into a smaller problem.",
+      "risk": "SAFE",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 0,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "ZL_CAUSE",
+      "name": "Cause",
+      "tagline": "recurring conviction",
+      "description": "The reason you filed. It does not pay rent. It pays spine.",
+      "risk": "SAFE",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CON"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "ZL_FAITHFUL",
+      "name": "The Faithful",
+      "tagline": "unreliable labor",
+      "description": "Volunteer labor that believes harder than it shows up.",
+      "risk": "VOL",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CLO",
+        "CON"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "ZL_PLAIN",
+      "name": "Plain Truth",
+      "tagline": "burns relationships",
+      "description": "High-impact honesty. People remember. Some stop taking the call.",
+      "risk": "VOL",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 2,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CON",
+        "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "ZL_RIGIDITY",
+      "name": "Rigidity",
+      "tagline": "cannot trade · liability",
+      "description": "Liability. While this sits in your kit you cannot take compromise plays cleanly. The machine smells it.",
+      "risk": "SAFE",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 0,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CON"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "ZS_PROCEDURE",
+      "name": "Procedure",
+      "tagline": "the rule that applies",
+      "description": "You know which form, which window, which clerk.",
+      "risk": "SAFE",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "INK"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "ZS_HALLWAY",
+      "name": "Back Hallway",
+      "tagline": "access without standing",
+      "description": "You know the route. You do not have the right to use it — yet you do.",
+      "risk": "STD",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CRA",
+        "INK"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "ZS_BOSS",
+      "name": "The Boss's Name",
+      "tagline": "borrowed authority",
+      "description": "Consumable borrowed weight. Spend it and it is gone from the pile.",
+      "risk": "VOL",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP",
+        "CRA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "ZS_NOSTANDING",
+      "name": "No Standing",
+      "tagline": "not yet a person · liability",
+      "description": "Liability. Plays that need personal credibility fail more while this is in your kit. You are staff until the district decides otherwise.",
+      "risk": "SAFE",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 0,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "INK"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "ZF_SURNAME",
+      "name": "The Surname",
+      "tagline": "opens one door once",
+      "description": "People notice when you use it. The second time it costs more.",
+      "risk": "STD",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP",
+        "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "ZF_OLDMONEY",
+      "name": "Old Money",
+      "tagline": "finite, non-renewing",
+      "description": "A little cash that does not grow back. Spend it knowing the well is shallow.",
+      "risk": "SAFE",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 0,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CRA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "ZF_REMEMBERS",
+      "name": "Someone Who Remembers",
+      "tagline": "dormant contact",
+      "description": "One person who still picks up when the old name rings.",
+      "risk": "STD",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2
+      ],
+      "cost": {
+        "ap": 1,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "DIP"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
+    {
+      "id": "ZF_EXPECTATIONS",
+      "name": "Expectations",
+      "tagline": "assumed competence · liability",
+      "description": "Liability. Others assume competence you lack. Misses land harder while this stays in the kit.",
+      "risk": "SAFE",
+      "kind": "action",
+      "rarity": "common",
+      "trap": false,
+      "field": false,
+      "phases": [
+        1,
+        2,
+        3
+      ],
+      "cost": {
+        "ap": 0,
+        "money": 0,
+        "vol": 0,
+        "momentum": 0,
+        "favor": 0
+      },
+      "attrs": [
+        "CHA"
+      ],
+      "residency": "main",
+      "control": "player",
+      "entityScope": [],
+      "deck": "main"
+    },
     {
       "id": "PL01",
       "name": "Block Walk",
@@ -4181,6 +4817,50 @@
     }
   ],
   "personas": [
+    {
+      "id": "blockwalker",
+      "name": "The Blockwalker",
+      "tagline": "populist",
+      "description": "Stamina, authentic voice, ground credibility. No money, no name, no institutional key.",
+      "attrs": {
+        "CLO": 4,
+        "CHA": 2,
+        "CON": 1
+      }
+    },
+    {
+      "id": "believer",
+      "name": "The Believer",
+      "tagline": "reformer",
+      "description": "Conviction, a cause, volunteers who believe. No flexibility, no quiet trades.",
+      "attrs": {
+        "CON": 4,
+        "CHA": 2,
+        "CLO": 1
+      }
+    },
+    {
+      "id": "staffer",
+      "name": "The Junior Staffer",
+      "tagline": "operator",
+      "description": "Procedural literacy. You know where the rooms are. You lack standing to enter them as yourself.",
+      "attrs": {
+        "INK": 4,
+        "CRA": 2,
+        "DIP": 1
+      }
+    },
+    {
+      "id": "faded",
+      "name": "The Faded Name",
+      "tagline": "patron",
+      "description": "A recognized surname and a little money. Competence and relevance are rumors.",
+      "attrs": {
+        "DIP": 3,
+        "CHA": 2,
+        "CRA": 2
+      }
+    },
     {
       "id": "veteran",
       "name": "The Veteran",

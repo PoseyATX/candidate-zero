@@ -27,6 +27,7 @@ import {
   injectNearTop,
   declinePhaseDraft
 } from './deck.js';
+import { resetTableSlots, handCap } from './slots.js';
 import { executePlay, isPlayable, type PlayOpts } from './play.js';
 import {
   cycleCard,
@@ -64,9 +65,7 @@ import {
 import {
   applyZeroStartingLedgers,
   campGrowthUnlocked,
-  careerDeckOf,
-  resolveStarterIds,
-  ZERO_BOOTS
+  resolveStarterIds
 } from './zero.js';
 import type {
   DeckState,
@@ -245,7 +244,8 @@ export function createCampaign(overrides: CreateCampaignOptions = {}): Campaign 
     STARTER_DECK_IDS,
     setup.personaId
   );
-  state.deck = [...new Set(owned)];
+  // Keep multi-copy piles (two Knocks). Unique-only ownership would delete density.
+  state.deck = starterKit === 'zero' ? [...owned] : [...new Set(owned)];
   const deckState = createDeckState(physical);
 
   state.sessionFlags = state.sessionFlags || {};
@@ -255,30 +255,18 @@ export function createCampaign(overrides: CreateCampaignOptions = {}): Campaign 
 
   if (starterKit === 'zero') {
     applyZeroStartingLedgers(state);
-    const career = legacy ? careerDeckOf(legacy) : [];
-    if (career.length === 0) {
-      state.log.push({
-        week: 1,
-        kind: 'note',
-        text:
-          'ZERO — Legs, a voice, a filing window. No list. No machine. No blessing. ' +
-          'Everything else is built in public, or it is not built.'
-      });
-      const voice = SIGNATURE_BY_PERSONA[setup.personaId];
-      state.log.push({
-        week: 1,
-        kind: 'note',
-        text: voice
-          ? `What you own: boots (${ZERO_BOOTS}) and your voice (${voice}). The rest is empty on purpose.`
-          : `What you own: boots (${ZERO_BOOTS}). The rest of the deck is empty on purpose.`
-      });
-    } else {
-      state.log.push({
-        week: 1,
-        kind: 'note',
-        text: `You carry what you built — ${career.length} cards from the career. Nothing free this cycle.`
-      });
-    }
+    state.log.push({
+      week: 1,
+      kind: 'note',
+      text:
+        'ZERO — Persona kit only. Knock is the floor. Liabilities travel with you. ' +
+        'No list. No machine. No blessing. Opportunities, not a mall.'
+    });
+    state.log.push({
+      week: 1,
+      kind: 'note',
+      text: `What you own: ${physical.length} cards — your body, your voice, your baggage.`
+    });
   } else {
     // Harness kit: persona signature near the top if not already in the pile.
     const sigId = SIGNATURE_BY_PERSONA[setup.personaId];
@@ -289,11 +277,14 @@ export function createCampaign(overrides: CreateCampaignOptions = {}): Campaign 
   if (stateOverrides.seed !== undefined) {
     state.seed = Number(stateOverrides.seed) >>> 0 || 1;
   }
+  if (starterKit === 'zero') {
+    resetTableSlots(state);
+  }
   return {
     state,
     deck: deckState,
     catalog: buildCatalog(),
-    handSize: DEFAULT_HAND_SIZE,
+    handSize: starterKit === 'zero' ? handCap(state) : DEFAULT_HAND_SIZE,
     filingDeadline: PRIMARY_WEEKS,
     setup
   };
@@ -427,6 +418,7 @@ export function maybeOfferPhaseDraft(campaign: Campaign, auto = true): string | 
   const draft = buildPhaseDraft(campaign.state, 3);
   draft.phase = phase;
   campaign.state.lastPhase = phase;
+  // Spec §4: if nothing thematically qualifies, present nothing. Not a bug.
   if (!draft.options.length) return null;
   campaign.state.pendingDraft = draft;
   campaign.state.log.push({
@@ -749,6 +741,10 @@ export function startWeek(campaign: Campaign): string[] {
   markWeekStart(campaign.state);
   // Cuts refresh with the week — the limit is what makes cycling a decision.
   resetDiscards(campaign.state);
+  if (campaign.state.sessionFlags?.zeroMode === 1) {
+    resetTableSlots(campaign.state);
+    campaign.handSize = handCap(campaign.state);
+  }
   // Someone with you may call in a favour. Only people actually seated can ask;
   // a stranger has no claim. The card lands in hand below.
   const asker = maybeOpenAsk(campaign.state, machineSeatedIds(campaign.state));

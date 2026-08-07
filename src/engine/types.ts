@@ -217,6 +217,12 @@ export interface GameState {
   attrs: Attrs;
   seed?: number;
   regionHook?: string;
+  /**
+   * Table play slots remaining this week (spec §3.3). Scarce resource.
+   * Never shown as a progress unlock — just how many plays fit the table.
+   */
+  tableSlots?: number;
+  tableSlotsMax?: number;
   slowDecay?: boolean;
   globalBand?: number;
   pieMalus?: number;
@@ -426,6 +432,9 @@ export interface LegacyCarry {
   careerDeck?: string[];
   /** Short felt scars from losses (last N kept). */
   scars?: string[];
+  /** §5 carry — ally ids / assets banked for density, not card re-deal. */
+  bankedAllyIds?: string[];
+  bankedAssets?: string[];
 }
 
 /** Filed identity — set once at nameplate; never re-prompted until Chronicle wipe. */

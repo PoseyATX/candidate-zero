@@ -93,12 +93,51 @@ export interface SetupSelection {
 // applySetup) so the UI's pre-game blurb and the actual campaign grant can
 // never drift apart the way two hand-copied literals could.
 /**
- * Day-one cast (teacher / veteran / preacher / smallbiz) is not well-seated:
- * attrs + bio asset only. No free name, cash dump, volunteer stack, or backer.
- * PA_* archetypes stay in the table for later unlocks / harness matrix — they
- * still start "seated" because they are career payoffs, not Act I menu items.
+ * Spec §3.1 — four day-one personas first. None well-seated.
+ * PA_* and legacy personas remain for harness matrix / deep unlocks — not Act I menu.
  */
 export const PERSONAS: PersonaDef[] = [
+  {
+    id: 'blockwalker',
+    n: 'The Blockwalker',
+    tag: 'populist',
+    d: 'Stamina, authentic voice, ground credibility. No money, no name, no institutional key.',
+    attrs: { CLO: 4, CHA: 2, CON: 1 },
+    apply: s => {
+      s.assets.push('BIO_BLOCKWALKER');
+    }
+  },
+  {
+    id: 'believer',
+    n: 'The Believer',
+    tag: 'reformer',
+    d: 'Conviction, a cause, volunteers who believe. No flexibility, no quiet trades.',
+    attrs: { CON: 4, CHA: 2, CLO: 1 },
+    apply: s => {
+      s.assets.push('BIO_BELIEVER');
+    }
+  },
+  {
+    id: 'staffer',
+    n: 'The Junior Staffer',
+    tag: 'operator',
+    d: 'Procedural literacy. You know where the rooms are. You lack standing to enter them as yourself.',
+    attrs: { INK: 4, CRA: 2, DIP: 1 },
+    apply: s => {
+      s.assets.push('BIO_STAFFER');
+    }
+  },
+  {
+    id: 'faded',
+    n: 'The Faded Name',
+    tag: 'patron',
+    d: 'A recognized surname and a little money. Competence and relevance are rumors.',
+    attrs: { DIP: 3, CHA: 2, CRA: 2 },
+    apply: s => {
+      s.assets.push('BIO_FADED');
+    }
+  },
+  // Legacy / deep-unlock personas (not day-one menu)
   {
     id: 'veteran', n: 'The Veteran', tag: 'bio armor',
     d: 'Two tours and a flag on the porch. Bio is armor — not a list, not a PAC.',
@@ -131,9 +170,6 @@ export const PERSONAS: PersonaDef[] = [
       s.assets.push('BIO_FEEDSTORE');
     }
   },
-  // Ported from archive/prototype-single-file.html's 21-persona archetype
-  // roster (2026-07-17) — see docs/SRD-NOTES.md. PA_CON_CHA ("The Preacher")
-  // skipped: name collision with the hand-authored 'preacher' persona above.
   {
     id: 'PA_CLO', n: 'The Powerhouse', tag: 'fills the room',
     d: 'A presence that fills a room and a turnout operation to match. You win by showing up bigger than anyone.',

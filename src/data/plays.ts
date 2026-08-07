@@ -13,6 +13,7 @@ import { WAVE5_PLAYS } from './plays-wave5.js';
 import { PROMO_PLAYS } from './promo-plays.js';
 import { MACHINE_DOOR_PLAYS } from './machine-doors.js';
 import { CHOICE_PLAYS } from './choice-plays.js';
+import { ZERO_KIT_PLAYS } from './zero-deck.js';
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
@@ -425,6 +426,7 @@ export const SHOP_PLAYS: PlayCard[] = tagMainPlayer(allShopPlayTemplates());
 
 /** Includes promo injectables (PR01) — show:false keeps them out of normal pools. */
 export const ALL_PLAYS: PlayCard[] = [
+  ...ZERO_KIT_PLAYS,
   ...CORE_PLAYS,
   ...CHOICE_PLAYS,
   ...WAVE4_PLAYS,

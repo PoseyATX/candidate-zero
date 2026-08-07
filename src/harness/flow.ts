@@ -189,9 +189,7 @@ function fixture(hand: string[], draw: string[], seed = 1): { s: GameState; d: D
   );
 }
 
-// --- Zero: boots are cards you own, not free standing camp verbs ---
-// Harness STARTER_DECK keeps PL01 density for instruments; player Zero
-// opens with one PL01 in the pile and no CAMP_BLOCK_WALK mall slot.
+// --- Zero: Knock is in the kit, not a free standing camp mall verb ---
 {
   useRng(createRng(7));
   setDefaultSeed(7);
@@ -200,11 +198,15 @@ function fixture(hand: string[], draw: string[], seed = 1): { s: GameState; d: D
     harnessPile.draw.filter(id => id === 'PL01').length >= 1,
     'harness starter pile keeps boots density for instruments'
   );
-  const camp = createCampaign({ seed: 7, starterKit: 'zero' });
+  const camp = createCampaign({
+    seed: 7,
+    starterKit: 'zero',
+    setup: { personaId: 'blockwalker', issueId: 'taxes', districtId: 'open', regionId: 'east' }
+  });
   startWeek(camp);
   assert(
-    (camp.state.deck ?? []).includes('PL01'),
-    'Zero ownership includes boots'
+    (camp.state.deck ?? []).includes('ZN_KNOCK'),
+    'Zero ownership includes Knock'
   );
   const playable = listPlayableHand(camp);
   assert(
@@ -212,8 +214,8 @@ function fixture(hand: string[], draw: string[], seed = 1): { s: GameState; d: D
     'boots/phone are not free standing camp mall'
   );
   assert(
-    playable.some(p => p.card.id === 'PL04' || p.card.id === 'PL05'),
-    'ballot doors still on camp'
+    playable.some(p => p.card.id === 'PL04' || p.card.id === 'PL05' || p.card.id === 'ZN_KNOCK'),
+    'ballot doors or knock still available'
   );
 }
 

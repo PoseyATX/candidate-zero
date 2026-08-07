@@ -9,6 +9,7 @@ import { PLAYS } from '../data/plays.js';
 import { random } from './rng.js';
 import { warm } from './reputation.js';
 import { upgradableCardIds, upgradeOptionId, parseUpgradeOption, applyUpgrade } from './upgrades.js';
+import { generateOpportunities } from './opportunity.js';
 
 /**
  * Full toolkit for **harness** instruments only (`starterKit: 'harness'`).
@@ -208,8 +209,11 @@ const rarityOf = (id: string): string => PLAYS.find(p => p.id === id)?.rarity ??
  * Caller may decline — taking zero is legal.
  */
 export function buildPhaseDraft(state: GameState, count = 3): { phase: number; options: string[] } {
+  // Zero: contextual opportunities only — empty is legal (spec §4).
+  if (state.sessionFlags?.zeroMode === 1) {
+    return generateOpportunities(state, count);
+  }
   const options: string[] = [];
-  // Depth: sometimes a slot is "practise what you already run" — still optional.
   const owned = upgradableCardIds(state, state.deck ?? []);
   if (owned.length && count > 1 && random() < 0.45) {
     options.push(upgradeOptionId(owned[Math.floor(random() * owned.length)]!));
