@@ -178,7 +178,11 @@ export function syncMovementFlags(state: GameState): void {
       state.log.push({
         week: state.week,
         kind: 'note',
-        text: `ORBIT OPEN — ${pilot.logLabel}. (${opt.description}) Movement verb available.`
+        // Not "ORBIT OPEN — ... Movement verb available." A banner announcing
+        // new scope is how a player learns to watch for banners instead of the
+        // district (§2.0 forbids exactly this). Same information, said as
+        // something that happened to somebody.
+        text: `Word gets back that ${pilot.logLabel} will take the meeting. ${opt.description}`
       });
     }
   }

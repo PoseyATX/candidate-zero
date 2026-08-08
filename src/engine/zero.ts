@@ -90,19 +90,45 @@ export function isFirstRun(legacy: LegacyState | null | undefined): boolean {
   return !legacy || !legacy.runs || legacy.runs.length === 0;
 }
 
+/** Room enough for every growth verb — the harness instruments and old saves. */
+export const CAMP_GROWTH_ALL = 99;
+
 /**
- * Whether the camp strip may show growth verbs beyond ballot doors.
- * First run, unnoticed: no. After the world notices you, or you have a past: yes.
- * Reads sessionFlags set at createCampaign so listPlayableHand stays pure on state.
+ * How many growth verbs the camp strip may show — a slope, not a switch.
+ *
+ * This used to be `campGrowthUnlocked`, a boolean: the CHOICE forks and the
+ * alleyways were all off, and then on the week the world noticed you they were
+ * all on at once. That is a system switching on at a threshold, which is the
+ * one shape the gradient is not allowed to have. A player could feel the click.
+ *
+ * Now the strip widens by one option at a time off what the run has actually
+ * accumulated — somebody in your corner, a debt, a district that knows your
+ * name, trouble following you around. Day one of a first career is still
+ * nothing but the ballot doors, because on day one none of those are true. The
+ * difference is that week six is two options and week eleven is five, and no
+ * week is the week it all arrives.
+ *
+ * Reads sessionFlags set at createCampaign so listPlayableHand stays pure.
  */
-export function campGrowthUnlocked(state: GameState, _legacy?: LegacyState | null): boolean {
-  if (state.sessionFlags?.noticed) return true;
-  if (state.eventsFired?.EV_YOU_GOT_NOTICED) return true;
-  if (Number(state.sessionFlags?.priorRuns || 0) > 0) return true;
-  if (Number(state.sessionFlags?.careerCards || 0) > 1) return true;
-  // Harness kit is not Zero — full strip allowed for instruments.
-  if (state.sessionFlags?.zeroMode !== 1) return true;
-  return false;
+export function campGrowthRoom(state: GameState): number {
+  // Harness kit is not Zero — full strip for instruments.
+  if (state.sessionFlags?.zeroMode !== 1) return CAMP_GROWTH_ALL;
+
+  let room = 0;
+  // A career that has already been somewhere opens wider than a first filing.
+  room += Math.min(3, Number(state.sessionFlags?.priorRuns || 0));
+  room += Math.min(2, Math.floor(Number(state.sessionFlags?.careerCards || 0) / 8));
+  // Being noticed is a real event and still counts — it is just no longer the
+  // switch that turns the whole strip on.
+  if (state.sessionFlags?.noticed || state.eventsFired?.EV_YOU_GOT_NOTICED) room += 2;
+  // And the ordinary accretion of a run: people, debts, reach, trouble.
+  if ((state.allies?.length ?? 0) >= 1) room += 1;
+  if ((state.allies?.length ?? 0) >= 3) room += 1;
+  if ((state.obls?.length ?? 0) >= 1) room += 1;
+  if ((state.contacts ?? 0) >= 250) room += 1;
+  if ((state.nameID ?? 0) >= 25) room += 1;
+  if ((state.hitPieces ?? 0) >= 1) room += 1;
+  return room;
 }
 
 export function applyZeroStartingLedgers(state: GameState): void {

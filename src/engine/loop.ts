@@ -67,7 +67,7 @@ import {
 } from '../data/setup.js';
 import {
   applyZeroStartingLedgers,
-  campGrowthUnlocked,
+  campGrowthRoom,
   isFirstRun,
   resolveStarterIds,
   ZERO_BOOTS
@@ -629,20 +629,17 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
       }
     }
   }
-  // CHOICE forks and alleyways: growth after the world has a reason to offer
-  // them (noticed / prior career). First-run Zero is doors + boots, not a mall.
-  const growthOpen = campGrowthUnlocked(campaign.state, null);
-  if (
-    growthOpen &&
-    (campaign.state.stage === 'primary' || campaign.state.stage === 'general')
-  ) {
+  // CHOICE forks and alleyways: the strip widens an option at a time as the run
+  // accumulates (engine/zero.ts campGrowthRoom). First-run Zero is doors and
+  // boots, not a mall — but it does not stay that way, and no single week is
+  // the week it all turns on.
+  const inCampaign =
+    campaign.state.stage === 'primary' || campaign.state.stage === 'general';
+  if (inCampaign) {
     let ci = 0;
-    for (const card of CHOICE_PLAYS) {
-      if (card.id === 'CH05') continue; // session only
-      if (isPlayable(campaign.state, card)) {
-        out.push({ index: CAMP_CHOICE_BASE - ci, card });
-        ci++;
-      }
+    for (const card of visibleChoicePlays(campaign.state)) {
+      out.push({ index: CAMP_CHOICE_BASE - ci, card });
+      ci++;
     }
   }
   // The alleyways, LAST in the menu on purpose.
@@ -652,19 +649,40 @@ export function listPlayableHand(campaign: Campaign): { index: number; card: Pla
   // money strategy's ballot rate fell 70% -> 59.8% and a ground condition
   // meant to be met 12-65% of the time hit 86%. A place to waste an afternoon
   // has to be somewhere you CHOOSE to go, not the top of the list.
-  if (
-    growthOpen &&
-    (campaign.state.stage === 'primary' || campaign.state.stage === 'general')
-  ) {
+  if (inCampaign) {
     let ai = 0;
-    for (const card of ALLEY_PLAYS) {
-      if (isPlayable(campaign.state, card)) {
-        out.push({ index: CAMP_ALLEY_BASE - ai, card });
-        ai++;
-      }
+    for (const card of visibleAlleyPlays(campaign.state)) {
+      out.push({ index: CAMP_ALLEY_BASE - ai, card });
+      ai++;
     }
   }
   return out;
+}
+
+/**
+ * The growth verbs the camp strip is showing right now.
+ *
+ * Listing and index-resolution MUST agree, or a tap lands on a different card
+ * than the one the player read. Both go through these two functions.
+ *
+ * The slice is the gradient: `campGrowthRoom` widens by one as the run
+ * accumulates, so the strip grows an option at a time instead of arriving all
+ * at once. CHOICE forks come before alleyways because a fork in the road is
+ * worth more of a player's attention than a place to kill an afternoon.
+ */
+function visibleChoicePlays(state: GameState): PlayCard[] {
+  const room = campGrowthRoom(state);
+  if (room <= 0) return [];
+  return CHOICE_PLAYS.filter(c => c.id !== 'CH05' && isPlayable(state, c)).slice(0, room);
+}
+
+function visibleAlleyPlays(state: GameState): PlayCard[] {
+  // Alleys open behind the forks: the number of choices already on the strip is
+  // the toll. A first-run player is never handed a domino table before they
+  // have been offered a real decision.
+  const room = campGrowthRoom(state) - visibleChoicePlays(state).length;
+  if (room <= 0) return [];
+  return ALLEY_PLAYS.filter(c => isPlayable(state, c)).slice(0, room);
 }
 
 /** Resolve a camp / shop / session synthetic index to a catalog card id, or null. */
@@ -683,14 +701,12 @@ export function campIndexToCardId(
     return hooks[i]?.id ?? null;
   }
   if (handIndex <= CAMP_CHOICE_BASE) {
-    const choices = CHOICE_PLAYS.filter(
-      c => c.id !== 'CH05' && isPlayable(campaign.state, c)
-    );
+    const choices = visibleChoicePlays(campaign.state);
     const i = CAMP_CHOICE_BASE - handIndex;
     return choices[i]?.id ?? null;
   }
   if (handIndex <= CAMP_ALLEY_BASE) {
-    const alleys = ALLEY_PLAYS.filter(c => isPlayable(campaign.state, c));
+    const alleys = visibleAlleyPlays(campaign.state);
     const i = CAMP_ALLEY_BASE - handIndex;
     return alleys[i]?.id ?? null;
   }

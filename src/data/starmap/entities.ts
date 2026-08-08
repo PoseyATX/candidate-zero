@@ -60,6 +60,12 @@ const TIER1: EntityDef[] = [
     allyId: 'AL09',
     tags: ['pilot']
   }),
+  // Split out of the Precinct Chair, who was doing two different jobs and had
+  // twice the ways out of anything leading into her (harness:density). The
+  // chair is the party half — county committee, clubs, endorsements. The judge
+  // is the box half: appointed to run the polling place, knows the precinct by
+  // face, and is where the field actually gets its map.
+  e('ENT_ELECTION_JUDGE', 'Election judge (runs the box)', 1, 'grassroots', 'Appointed, unpaid, and knows every regular voter on sight.', 'LOOP_TMPL_GRASSROOTS'),
   e('ENT_FIELD_ORGANIZER', 'Field organizer', 1, 'grassroots', 'Turf, turf wars, metrics.', 'LOOP_ENT_FIELD_ORGANIZER'),
   e('ENT_SMALL_DONOR', 'Small-dollar donor', 1, 'grassroots', 'List compound; fish-fry money.', 'LOOP_ENT_SMALL_DONOR'),
   e('ENT_PRECINCT_CHAIR', 'Precinct Chair', 1, 'grassroots', 'Key gatekeeper. Kitchen tables. Club numbers.', 'LOOP_ENT_PRECINCT_CHAIR', {

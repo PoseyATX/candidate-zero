@@ -25,7 +25,12 @@ const CORE: OrbitDef[] = [
   o('ORB_PRECINCT_COUNTY', 'ENT_PRECINCT_CHAIR', 'ENT_COUNTY_PARTY_EXEC', 'strong', 'County apparatus runs through precincts.'),
   o('ORB_COUNTY_PRECINCT', 'ENT_COUNTY_PARTY_EXEC', 'ENT_PRECINCT_CHAIR', 'strong', 'Exec committee counts chairs.'),
   o('ORB_PRECINCT_CLUB', 'ENT_PRECINCT_CHAIR', 'ENT_CLUB_LEADER', 'medium', 'Club presidents and chairs trade lists.'),
-  o('ORB_PRECINCT_CAPTAIN', 'ENT_PRECINCT_CHAIR', 'ENT_CANVASS_CAPTAIN', 'medium', 'Field needs the map the chair already has.'),
+  // The field's map comes from the person who runs the box, not from the party
+  // half of the job — see ENT_ELECTION_JUDGE. This edge used to hang off the
+  // chair and gave her four ways out where two led in.
+  o('ORB_COUNTY_JUDGE_APPT', 'ENT_COUNTY_PARTY_EXEC', 'ENT_ELECTION_JUDGE', 'medium', 'The committee certifies who runs each box, and remembers doing it.'),
+  o('ORB_JUDGE_CAPTAIN', 'ENT_ELECTION_JUDGE', 'ENT_CANVASS_CAPTAIN', 'medium', 'Field needs the map, and the map is whoever has worked that box for nine years.'),
+  o('ORB_JUDGE_PLAYER', 'ENT_ELECTION_JUDGE', 'ENT_HOUSE_CANDIDATE', 'medium', 'She will not endorse you. She will tell you which streets actually vote.'),
   o('ORB_CAPTAIN_PLAYER', 'ENT_CANVASS_CAPTAIN', 'ENT_HOUSE_CANDIDATE', 'strong', 'Field spine of the campaign.'),
   o('ORB_PLAYER_CAPTAIN', 'ENT_HOUSE_CANDIDATE', 'ENT_CANVASS_CAPTAIN', 'strong', 'Promote her or hire her.'),
   o('ORB_CLUB_PLAYER', 'ENT_CLUB_LEADER', 'ENT_HOUSE_CANDIDATE', 'medium', 'Straw math and roster access.'),
@@ -140,7 +145,33 @@ const PROC: OrbitDef[] = [
   o('ORB_SCANDAL_PLAYER', 'ENT_SCANDAL_FIGURE', 'ENT_HOUSE_CANDIDATE', 'medium', 'Name attached to a problem.')
 ];
 
-const MANUAL = [...CORE, ...CROSS, ...PROC];
+/**
+ * Ways OUT of nodes that only had ways in.
+ *
+ * `ensureNoOrphans` below counts total degree, so a node with inbound edges and
+ * no outbound ones looked connected and was actually a hole: you could reach
+ * the Calendar Committee, the caucus chair or the Governor and then the map had
+ * nowhere left to send you. `harness:density` fails on exactly this now.
+ *
+ * Written as real orbits rather than ambient filler, because the honest edge
+ * out of the Calendar Committee is the Speaker who appointed them.
+ */
+const EXITS: OrbitDef[] = [
+  o('ORB_CALENDAR_SPEAKER', 'ENT_CALENDAR_MEMBER', 'ENT_SPEAKER', 'strong',
+    'The calendar is the Speaker\'s, and everybody on that committee knows whose it is.'),
+  o('ORB_CALENDAR_MEMBER_REP', 'ENT_CALENDAR_MEMBER', 'ENT_STATE_REP', 'medium',
+    'A hundred and fifty members want a slot and there are four days left.'),
+  o('ORB_CAUCUS_REP', 'ENT_CAUCUS_CHAIR', 'ENT_STATE_REP', 'strong',
+    'Discipline runs downhill: the caucus decides what the members are allowed to have said.'),
+  o('ORB_CAUCUS_PARTY', 'ENT_CAUCUS_CHAIR', 'ENT_STATE_PARTY_CHAIR', 'medium',
+    'Caucus and party trade lists and blame in roughly equal measure.'),
+  o('ORB_GOV_LTGOV', 'ENT_GOVERNOR', 'ENT_LT_GOV', 'strong',
+    'Two ends of the same building, and the distance between them is the session.'),
+  o('ORB_GOV_SPEAKER', 'ENT_GOVERNOR', 'ENT_SPEAKER', 'strong',
+    'The veto pen only matters to somebody who has to schedule around it.')
+];
+
+const MANUAL = [...CORE, ...CROSS, ...PROC, ...EXITS];
 
 /**
  * Ensure every entity has ≥1 edge: attach weak ambient edge to player or

@@ -114,7 +114,7 @@ for (const p of PLAYABLE_PILOTS) {
   ];
   syncMovementFlags(s);
   assert(checkMovementOptions(s).some(o => o.verbPlayId === 'MV01'), 'MV01 open');
-  assert(s.log.some(l => l.text.includes('ORBIT OPEN') && l.text.includes('Precinct')), 'MV01 announce');
+  assert(s.log.some(l => l.text.includes('will take the meeting') && l.text.includes('Precinct')), 'MV01 noticed (in-world, not a scope banner)');
   assert(isMovementVerbAvailable(s, 'MV01'), 'MV01 available');
   const beforeEnd = s.endorsePts;
   playVerb(s, MV01_PrecinctNetwork);
