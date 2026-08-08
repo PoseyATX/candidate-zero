@@ -160,11 +160,13 @@ async function main() {
       await page.waitForTimeout(200);
       await check('setup');
       const pick = async (kind, id) => {
-        const c = page.locator(`.id-card[data-kind="${kind}"][data-id="${id}"]`);
+        const c = page.locator(`.say[data-kind="${kind}"][data-id="${id}"]`);
         await c.waitFor({ state: 'visible', timeout: 10_000 });
         await c.click();
         await page.waitForTimeout(60);
       };
+      await page.fill('#candidate-name', 'Ruth Ann Vela');
+      await pick('beat', 'name');
       await pick('persona', 'blockwalker');
       // Origin: the trade, the first room, the skeleton (data/origin.ts).
       await pick('origin', 'route');

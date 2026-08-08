@@ -1,29 +1,31 @@
 /**
- * Filing an identity — four steps, and every one of them is a scene.
+ * Filing your candidacy — a scene at a counter, not a character-select screen.
  *
- * This was a three-step card draft, which is to say three grids of nouns and a
- * button. It told a player nothing about what they were about to be. You picked
- * "Teacher · taxes · open · east" and the game began, and the first thing you
- * felt was the week-one HUD.
+ * This has been rebuilt twice and was wrong both times, in the same way. First
+ * it was a grid of cards. Then it was a grid of cards with cold-open paragraphs
+ * on them. Then it was three more grids with stat lines on the faces. Every
+ * version was the same object underneath — a menu — and no amount of better
+ * copy on a tile turns a menu into an experience.
  *
- * What it is now:
+ * What it is now: you are at the county clerk's counter at 4:41 on the last day
+ * of filing, and Wanda Kettle is asking you the questions on the form. One at a
+ * time. You answer in your own voice, she writes it down, and she says
+ * something back, because she has watched four hundred people do this and has
+ * an opinion about all of them.
  *
- *   1. WHO — the cold open. Each persona is a specific Tuesday: a hospital that
- *      closed, 214 votes, a portrait nobody has dusted. You also put your own
- *      name on the form here, because a candidate with your name on it is the
- *      cheapest and largest immersion lever in the whole game.
- *   2. WHAT — the issue, read back to you through the persona you just chose.
- *      The same issue lands differently on a blockwalker and an heir, and the
- *      screen says so, so "choices bind" is felt at the moment of choosing
- *      rather than asserted in a covenant document.
- *   3. WHERE — district and region, with the cost of each stated plainly.
- *   4. THE FILING — the form as a document: your name, the office, and the ten
- *      cards you are walking in with, liability included and named. Seeing that
- *      you own exactly ten small things is the hook. Then you sign it.
+ * The rules this enforces, which are the actual difference:
  *
- * The seed field stays on every step and `#btn-start` is still the verb that
- * begins the run, so the smoke path and anything else keyed to those ids keeps
- * working.
+ *   · ONE question on screen. Never a wall of twelve options.
+ *   · Answers are sentences you SAY, in first person, in quotes. No stat blocks
+ *     on the face of a line of dialogue — the numbers are real and they are on
+ *     the completed form at the end, which is where numbers belong.
+ *   · She reacts to every single answer, specifically.
+ *   · The application fills in beneath the conversation, in ink, as you talk.
+ *     The document IS the interface.
+ *
+ * The `.id-card[data-kind][data-id]` hooks are kept on the answer lines so the
+ * smoke and layout audits still drive the flow, and `#candidate-name`,
+ * `#seed-input` and `#btn-start` keep their ids and their meaning.
  */
 
 import {
@@ -36,40 +38,51 @@ import {
   type SetupSelection
 } from '../data/setup.js';
 import { ORIGIN_QUESTIONS, resolveOrigins } from '../data/origin.js';
+import { CLERK, CLERK_ASKS, CLERK_REPLIES } from '../data/clerk.js';
 import { PERSONA_INTRINSIC, ZERO_LIABILITY_IDS, zeroStarterDeck } from '../data/plays-zero.js';
 import { PLAYS } from '../data/plays.js';
-import { emblem } from './card-art.js';
 
-export type DraftStep = 1 | 2 | 3 | 4 | 5;
+/** The beats of the conversation, in the order she asks them. */
+export const BEATS = [
+  'name',
+  'persona',
+  'trade',
+  'first',
+  'skeleton',
+  'issue',
+  'place',
+  'sign'
+] as const;
+export type DraftBeat = (typeof BEATS)[number];
 
 export interface NameplateDraftState {
-  step: DraftStep;
+  beat: DraftBeat;
   personaId: string | null;
   /** questionId → answerId. The trade, the first room, the skeleton. */
   originIds: Record<string, string>;
   issueId: string | null;
   districtId: string | null;
   regionId: string | null;
-  /** What the clerk writes on the form. Sticky across re-renders. */
+  /** The last thing you said, so she can answer it on the next screen. */
+  lastAnswerId: string | null;
   nameText: string;
-  /** Sticky seed string across re-renders (empty = random on file). */
   seedText: string;
 }
 
 export function emptyDraft(): NameplateDraftState {
   return {
-    step: 1,
+    beat: 'name',
     personaId: null,
     originIds: {},
     issueId: null,
     districtId: null,
     regionId: null,
+    lastAnswerId: null,
     nameText: '',
     seedText: ''
   };
 }
 
-/** The answer ids a draft carries, in question order. */
 function originList(draft: NameplateDraftState): string[] {
   return ORIGIN_QUESTIONS.map(q => draft.originIds[q.id]).filter(
     (id): id is string => !!id
@@ -91,77 +104,17 @@ function esc(s: string): string {
 }
 
 function readSeedFromDom(): string {
-  const input = document.getElementById('seed-input') as HTMLInputElement | null;
-  return input?.value ?? '';
+  return (document.getElementById('seed-input') as HTMLInputElement | null)?.value ?? '';
 }
-
 function readNameFromDom(): string {
-  const input = document.getElementById('candidate-name') as HTMLInputElement | null;
-  return input?.value ?? '';
+  return (document.getElementById('candidate-name') as HTMLInputElement | null)?.value ?? '';
 }
 
-function identityCardHtml(
-  kind: string,
-  id: string,
-  title: string,
-  tag: string,
-  body: string,
-  selected: boolean
-): string {
-  // Star for every identity card — no incomplete emblem map.
-  return `
-    <button type="button" class="id-card ${selected ? 'selected' : ''}" data-kind="${kind}" data-id="${esc(id)}"
-      aria-pressed="${selected ? 'true' : 'false'}">
-      <span class="id-card-emblem">${emblem('star')}</span>
-      <span class="id-card-name">${esc(title)}</span>
-      <span class="id-card-tag">${esc(tag)}</span>
-      <span class="id-card-body">${esc(body)}</span>
-    </button>`;
+function resolveSeed(seedText: string): number {
+  const n = Number(seedText);
+  if (seedText.trim() !== '' && Number.isFinite(n) && n >= 0) return Math.floor(n);
+  return Date.now() % 1_000_000;
 }
-
-/**
- * A persona is not a tile. It is an opening paragraph with a ledger under it —
- * what you have, then the longer list of what you do not.
- */
-function personaCardHtml(
-  id: string,
-  name: string,
-  tag: string,
-  open: string,
-  has: string,
-  lacks: string,
-  selected: boolean
-): string {
-  return `
-    <button type="button" class="id-card id-persona ${selected ? 'selected' : ''}"
-      data-kind="persona" data-id="${esc(id)}" aria-pressed="${selected ? 'true' : 'false'}">
-      <span class="id-card-emblem">${emblem('star')}</span>
-      <span class="id-card-name">${esc(name)}</span>
-      <span class="id-card-tag">${esc(tag)}</span>
-      <span class="id-open">${esc(open)}</span>
-      <span class="id-ledger">
-        <span class="id-ledger-row"><b>Has</b> ${esc(has)}</span>
-        <span class="id-ledger-row id-lacks"><b>Lacks</b> ${esc(lacks)}</span>
-      </span>
-    </button>`;
-}
-
-/**
- * What each root attribute actually does, in the engine's own numbers.
- *
- * engine/play.ts: every point above ten is +2.5 percentage points on any card
- * tagged with that attribute; every point below ten is the same penalty. The
- * player is told this at the moment they are deciding it, which is the only
- * moment it is any use to them.
- */
-const ATTR_DOES: Record<string, string> = {
-  CLO: 'Field work — doors, petitions, turnout',
-  CON: 'Conviction — message, forums, holding a line',
-  CRA: 'Craft — money, mail, oppo, machinery',
-  INK: 'The written word — filings, letters, the rulebook',
-  DIP: 'Rooms — chairs, endorsements, favours',
-  CHA: 'Retail — phones, fish fries, winning a room'
-};
 
 const ATTR_NAME: Record<string, string> = {
   CLO: 'Close',
@@ -172,7 +125,67 @@ const ATTR_NAME: Record<string, string> = {
   CHA: 'Charm'
 };
 
-/** The six, with what the biography did to them and what that is worth. */
+const ATTR_DOES: Record<string, string> = {
+  CLO: 'Field work — doors, petitions, turnout',
+  CON: 'Conviction — message, forums, holding a line',
+  CRA: 'Craft — money, mail, oppo, machinery',
+  INK: 'The written word — filings, letters, the rulebook',
+  DIP: 'Rooms — chairs, endorsements, favours',
+  CHA: 'Retail — phones, fish fries, winning a room'
+};
+
+/**
+ * One thing you can say.
+ *
+ * Deliberately carries no numbers on its face. What it costs you and buys you
+ * is on the finished form; putting it here turns the conversation back into the
+ * spreadsheet this rebuild exists to get rid of.
+ */
+function line(kind: string, id: string, said: string, under: string, selected: boolean): string {
+  return `
+    <button type="button" class="say ${selected ? 'selected' : ''}" data-kind="${kind}" data-id="${esc(id)}"
+      aria-pressed="${selected ? 'true' : 'false'}">
+      <span class="say-quote">${esc(said)}</span>
+      ${under ? `<span class="say-under">${esc(under)}</span>` : ''}
+    </button>`;
+}
+
+const cardName = (id: string): string => PLAYS.find(p => p.id === id)?.n ?? id;
+
+/** The application, filling in line by line as she writes. */
+function formHtml(draft: NameplateDraftState, complete: boolean): string {
+  const persona = PERSONAS.find(x => x.id === draft.personaId);
+  const answers = resolveOrigins(originList(draft));
+  const issue = ISSUES.find(x => x.id === draft.issueId);
+  const district = DISTRICTS.find(x => x.id === draft.districtId);
+  const region = REGIONS.find(x => x.id === draft.regionId);
+  const name = draft.nameText.trim();
+
+  const row = (label: string, value: string | undefined): string =>
+    `<div class="form-row ${value ? 'inked' : ''}">
+       <dt>${esc(label)}</dt>
+       <dd>${value ? esc(value) : '<span class="form-blank"></span>'}</dd>
+     </div>`;
+
+  const rows = [
+    row('Name on the ballot', name || undefined),
+    row('Occupation', persona?.n),
+    row('Previously', answers[0]?.n),
+    row('First public remarks', answers[1]?.n),
+    row('Disclosed', answers[2]?.n),
+    row('Running on', issue?.n),
+    row('District', district?.n),
+    row('Region', region?.n)
+  ].join('');
+
+  return `
+    <section class="filing-form ${complete ? 'complete' : ''}" aria-label="Application for a place on the ballot">
+      <p class="form-eyebrow">Application for a Place on the Ballot</p>
+      <dl class="form-rows">${rows}</dl>
+    </section>`;
+}
+
+/** The six roots, on the finished form, where numbers belong. */
 function attrTableHtml(sel: Partial<SetupSelection>): string {
   const attrs = previewAttrs(sel);
   const rows = Object.entries(attrs)
@@ -196,40 +209,14 @@ function attrTableHtml(sel: Partial<SetupSelection>): string {
     .join('');
   return `
     <div class="id-attrs">
-      <h3 class="id-subhead">What that makes you</h3>
+      <h3 class="id-subhead">What all that makes you</h3>
       <div class="id-attr-table">${rows}</div>
       <p class="id-hand-note">Ten is the neutral line. Every point either side is two and a half
         points of probability on any card tagged with it, for the whole run.</p>
     </div>`;
 }
 
-const ALIGN_COST: Record<string, string> = {
-  safe: 'Nobody serious will spend money beating you here. Nobody serious will spend money helping you either.',
-  competitive: 'Both sides will spend. You will be a line item in somebody\'s model by August.',
-  wrong: 'You are running where your own name is a liability before you open your mouth.'
-};
-
-function stepPips(step: DraftStep): string {
-  return [1, 2, 3, 4, 5]
-    .map(
-      n =>
-        `<span class="id-pip ${n === step ? 'active' : n < step ? 'done' : ''}" aria-hidden="true">${n}</span>`
-    )
-    .join('');
-}
-
-function resolveSeed(seedText: string): number {
-  const n = Number(seedText);
-  if (seedText.trim() !== '' && Number.isFinite(n) && n >= 0) return Math.floor(n);
-  return Date.now() % 1_000_000;
-}
-
-const cardName = (id: string): string => PLAYS.find(p => p.id === id)?.n ?? id;
-
-/**
- * The ten cards, laid out before you sign. Duplicates shown as ×2 — the fact
- * that half your deck is two Knocks and a liability is the point of the screen.
- */
+/** The ten cards you walk out with. */
 function openingHandHtml(personaId: string): string {
   const ten = zeroStarterDeck(personaId);
   if (!ten.length) return '';
@@ -248,11 +235,21 @@ function openingHandHtml(personaId: string): string {
     .join('');
   return `
     <div class="id-hand">
-      <h3 class="id-subhead">What you are walking in with</h3>
+      <h3 class="id-subhead">What you are walking out with</h3>
       <div class="id-chips">${chips}</div>
       <p class="id-hand-note">Ten cards. Six that every candidate in Texas has ever had, four that are
         the specific fact of you — and one of those four is going to cost you.</p>
     </div>`;
+}
+
+function beatIndex(beat: DraftBeat): number {
+  return BEATS.indexOf(beat);
+}
+
+/** A quiet progress rule, not a scoreboard — how far down the form she is. */
+function progressHtml(beat: DraftBeat): string {
+  const pct = Math.round((beatIndex(beat) / (BEATS.length - 1)) * 100);
+  return `<div class="counter-progress" role="presentation"><span style="width:${pct}%"></span></div>`;
 }
 
 export function renderNameplateDraft(
@@ -261,100 +258,11 @@ export function renderNameplateDraft(
   onFile: (setup: SetupSelection, seed: number, name: string) => void
 ): void {
   const host = $('nameplate-draft');
-  // Prefer live DOM values if present (player typed between paints).
   const seedText = readSeedFromDom() || draft.seedText;
   const nameText = readNameFromDom() || draft.nameText;
 
   const persona = PERSONAS.find(x => x.id === draft.personaId);
   const issue = ISSUES.find(x => x.id === draft.issueId);
-  const district = DISTRICTS.find(x => x.id === draft.districtId);
-  const region = REGIONS.find(x => x.id === draft.regionId);
-
-  const stepLabel =
-    draft.step === 1
-      ? 'Who walks in with nothing'
-      : draft.step === 2
-        ? 'Where you came from'
-        : draft.step === 3
-          ? 'What hill you die on'
-          : draft.step === 4
-            ? 'Where they will try to bury you'
-            : 'The clerk needs a signature';
-
-  const stepHint =
-    draft.step === 1
-      ? 'Four people file today. None of them should. Tap one.'
-      : draft.step === 2
-        ? 'Three questions. There are no good answers, only yours — and every one of them changes what you are good at.'
-        : draft.step === 3
-          ? 'One thing you will still be saying in November. Tap it.'
-          : draft.step === 4
-            ? 'Pick the seat, then the country it sits in.'
-            : 'Read it back. This is what you are, until you lose.';
-
-  let grid = '';
-  if (draft.step === 1) {
-    // The filing table only ever holds the startable four.
-    grid = STARTING_PERSONAS.map(p =>
-      personaCardHtml(
-        p.id,
-        p.n.replace(/^The /, ''),
-        p.tag,
-        p.open ?? p.d,
-        p.has ?? '',
-        p.lacks ?? '',
-        draft.personaId === p.id
-      )
-    ).join('');
-  } else if (draft.step === 2) {
-    // Three questions, each a row. The answers are scenes, and each one moves
-    // the root attributes — the biography IS the build. See data/origin.ts.
-    grid = ORIGIN_QUESTIONS.map(q => {
-      const cards = q.answers
-        .map(a =>
-          identityCardHtml(
-            'origin',
-            a.id,
-            a.n,
-            Object.entries(a.attrs)
-              .map(([k, v]) => `${ATTR_NAME[k] ?? k} ${(v ?? 0) > 0 ? '+' : '−'}${Math.abs(v ?? 0)}`)
-              .join(' · '),
-            a.d,
-            draft.originIds[q.id] === a.id
-          )
-        )
-        .join('');
-      return (
-        `<div class="id-place-block" data-question="${esc(q.id)}">` +
-        `<h3 class="id-subhead">${esc(q.q)}</h3>` +
-        `<p class="hint id-q-hint">${esc(q.hint)}</p>` +
-        `<div class="id-card-grid">${cards}</div>` +
-        `</div>`
-      );
-    }).join('');
-  } else if (draft.step === 3) {
-    grid = ISSUES.map(i =>
-      identityCardHtml('issue', i.id, i.n, i.tag, i.d, draft.issueId === i.id)
-    ).join('');
-  } else if (draft.step === 4) {
-    const districts = DISTRICTS.map(d =>
-      identityCardHtml(
-        'district',
-        d.id,
-        d.n,
-        d.align,
-        `${d.d} ${ALIGN_COST[d.align] ?? ''}`,
-        draft.districtId === d.id
-      )
-    ).join('');
-    const regions = REGIONS.map(r =>
-      identityCardHtml('region', r.id, r.n, r.hook, r.d, draft.regionId === r.id)
-    ).join('');
-    grid =
-      `<div class="id-place-block"><h3 class="id-subhead">District</h3><div class="id-card-grid">${districts}</div></div>` +
-      `<div class="id-place-block"><h3 class="id-subhead">Region</h3><div class="id-card-grid">${regions}</div></div>`;
-  }
-
   const origins = originList(draft);
   const originsDone = origins.length === ORIGIN_QUESTIONS.length;
   const canFile =
@@ -363,90 +271,92 @@ export function renderNameplateDraft(
     !!draft.issueId &&
     !!draft.districtId &&
     !!draft.regionId;
+
   const sel: Partial<SetupSelection> = {
     personaId: draft.personaId ?? undefined,
     regionId: draft.regionId ?? undefined,
     originIds: origins
   };
 
-  // The persona reads the issue back in its own voice. Same issue, four
-  // different sentences — the bind, said out loud at the moment it happens.
-  const lens =
-    persona?.lens && issue ? persona.lens.replace('{issue}', issue.n.toLowerCase()) : '';
-
-  const filedName = nameText.trim() || 'the candidate';
-
-  let body = '';
-  if (draft.step === 5 && canFile && persona) {
-    const answers = resolveOrigins(origins);
-    const skeleton = answers[answers.length - 1];
-    // The filing itself: a document, not a summary line.
-    body = `
-      <div class="id-filing">
-        <p class="id-filing-eyebrow">Application for a Place on the Ballot</p>
-        <p class="id-filing-name">${esc(filedName)}</p>
-        <dl class="id-filing-rows">
-          <div><dt>Filing as</dt><dd>${esc(persona.n)}</dd></div>
-          <div><dt>Trade</dt><dd>${esc(answers[0]?.n ?? '')}</dd></div>
-          <div><dt>First room</dt><dd>${esc(answers[1]?.n ?? '')}</dd></div>
-          <div><dt>Running on</dt><dd>${esc(issue?.n ?? '')}</dd></div>
-          <div><dt>District</dt><dd>${esc(district?.n ?? '')}</dd></div>
-          <div><dt>Country</dt><dd>${esc(region?.n ?? '')}</dd></div>
-        </dl>
-        ${lens ? `<p class="id-lens">${esc(lens)}</p>` : ''}
-        ${
-          skeleton
-            ? `<p class="id-warning">${esc(skeleton.n)} — ${esc(skeleton.d)}</p>`
-            : ''
-        }
-        ${persona.liability ? `<p class="id-warning">${esc(persona.liability)}</p>` : ''}
-        ${attrTableHtml(sel)}
-        ${openingHandHtml(persona.id)}
-      </div>`;
-  } else {
-    body = `${draft.step === 2 || draft.step === 4 ? grid : `<div class="id-card-grid">${grid}</div>`}`;
+  // What she said about the last thing you told her. The issue beat has no
+  // canned reply — it uses the persona's own lens, so the same issue lands
+  // differently depending on who is saying it.
+  let reply = draft.lastAnswerId ? (CLERK_REPLIES[draft.lastAnswerId] ?? '') : '';
+  if (draft.beat === 'place' && persona?.lens && issue) {
+    reply = `She writes it down. ${persona.lens.replace('{issue}', issue.n.toLowerCase())}`;
   }
 
-  const summary = [
-    nameText.trim() || null,
-    persona?.n.replace(/^The /, ''),
-    ...resolveOrigins(origins).map(a => a.n),
-    issue?.n,
-    district?.n,
-    region?.n
-  ]
-    .filter(Boolean)
-    .join(' · ');
+  let ask = CLERK_ASKS[draft.beat] ?? '';
+  let choices = '';
+
+  if (draft.beat === 'name') {
+    choices = `
+      <label class="counter-name" for="candidate-name">
+        <input id="candidate-name" type="text" maxlength="32" autocomplete="off"
+          placeholder="Type it the way it goes on the ballot" value="${esc(nameText)}" />
+      </label>
+      <button type="button" class="say say-commit" data-kind="beat" data-id="name">
+        <span class="say-quote">Slide the form back to her.</span>
+      </button>`;
+  } else if (draft.beat === 'persona') {
+    choices = STARTING_PERSONAS.map(p =>
+      line('persona', p.id, p.said ?? p.d, p.tag, draft.personaId === p.id)
+    ).join('');
+  } else if (draft.beat === 'trade' || draft.beat === 'first' || draft.beat === 'skeleton') {
+    const q = ORIGIN_QUESTIONS.find(x => x.id === draft.beat);
+    choices = (q?.answers ?? [])
+      .map(a => line('origin', a.id, a.said ?? a.d, a.n, draft.originIds[q!.id] === a.id))
+      .join('');
+  } else if (draft.beat === 'issue') {
+    choices = ISSUES.map(i =>
+      line('issue', i.id, `"${i.n}."`, i.d, draft.issueId === i.id)
+    ).join('');
+  } else if (draft.beat === 'place') {
+    const districts = DISTRICTS.map(d =>
+      line('district', d.id, `"${d.n}."`, d.d, draft.districtId === d.id)
+    ).join('');
+    const regions = REGIONS.map(r =>
+      line('region', r.id, `"${r.n}."`, r.d, draft.regionId === r.id)
+    ).join('');
+    choices =
+      `<p class="counter-sub">The seat.</p>${districts}` +
+      `<p class="counter-sub">And the country it sits in.</p>${regions}`;
+  }
+
+  const isSign = draft.beat === 'sign';
+  if (isSign) ask = CLERK_ASKS.sign ?? '';
 
   host.innerHTML = `
-    <div class="id-pips" role="group" aria-label="Filing step ${draft.step} of 5">${stepPips(draft.step)}</div>
-    <p class="id-step-label">${stepLabel}</p>
-    <p class="hint id-step-hint">${esc(stepHint)}</p>
+    ${progressHtml(draft.beat)}
     ${
-      draft.step === 1
-        ? `<label class="id-name-label" for="candidate-name">The name on the form
-             <input id="candidate-name" type="text" maxlength="32" autocomplete="off"
-               placeholder="Your name" value="${esc(nameText)}" />
-           </label>`
+      draft.beat === 'name'
+        ? `<p class="counter-scene">${esc(CLERK.scene)}</p>`
         : ''
     }
-    ${draft.step === 3 && lens ? `<p class="id-lens id-lens-live">${esc(lens)}</p>` : ''}
+    <div class="counter">
+      <p class="clerk-who">${esc(CLERK.name)} · ${esc(CLERK.title)}</p>
+      ${reply ? `<p class="clerk-reply">${esc(reply)}</p>` : ''}
+      ${ask ? `<p class="clerk-ask">${esc(ask)}</p>` : ''}
+      ${isSign ? `<p class="clerk-reply">${esc(CLERK.sign)}</p>` : ''}
+      <div class="say-list">${choices}</div>
+    </div>
+    ${formHtml(draft, isSign)}
     ${
-      draft.step === 2 && origins.length > 0
-        ? `<div class="id-running">${attrTableHtml(sel)}</div>`
+      isSign && canFile && persona
+        ? `<div class="filing-close">
+             ${persona.liability ? `<p class="id-warning">${esc(persona.liability)}</p>` : ''}
+             ${attrTableHtml(sel)}
+             ${openingHandHtml(persona.id)}
+           </div>`
         : ''
     }
-    ${body}
-    <p class="id-summary" aria-live="polite">${
-      summary ? esc(summary) : 'Pick who you are, what you run on, and where you file.'
-    }</p>
     <div class="id-draft-actions">
-      ${draft.step > 1 ? `<button type="button" class="btn" id="id-back">Back</button>` : ''}
+      ${beatIndex(draft.beat) > 0 ? `<button type="button" class="btn" id="id-back">Back</button>` : ''}
       <label class="id-seed-label">Seed
         <input id="seed-input" type="number" min="0" step="1" placeholder="random" value="${esc(seedText)}" />
       </label>
       ${
-        draft.step === 5
+        isSign
           ? `<button type="button" class="btn btn-gold" id="btn-start" ${canFile ? '' : 'disabled'}
                title="${canFile ? 'Sign the application and begin the primary' : 'Finish the form first'}">
                Sign it
@@ -462,15 +372,28 @@ export function renderNameplateDraft(
       draft.seedText = seedInput.value;
     });
   }
-
   const nameInput = document.getElementById('candidate-name') as HTMLInputElement | null;
   if (nameInput) {
     nameInput.addEventListener('input', () => {
       draft.nameText = nameInput.value;
     });
+    try {
+      nameInput.focus({ preventScroll: true });
+    } catch {
+      /* focus is a nicety, never a failure */
+    }
   }
 
-  host.querySelectorAll('.id-card').forEach(btn => {
+  const advance = (d: NameplateDraftState): DraftBeat => {
+    // Place needs both halves before she is satisfied.
+    if (d.beat === 'place') {
+      return d.districtId && d.regionId ? 'sign' : 'place';
+    }
+    const i = beatIndex(d.beat);
+    return BEATS[Math.min(i + 1, BEATS.length - 1)]!;
+  };
+
+  host.querySelectorAll('.say').forEach(btn => {
     btn.addEventListener('click', () => {
       const kind = (btn as HTMLElement).dataset.kind;
       const id = (btn as HTMLElement).dataset.id;
@@ -480,31 +403,26 @@ export function renderNameplateDraft(
         nameText: readNameFromDom() || draft.nameText,
         seedText: readSeedFromDom() || draft.seedText
       };
-      if (kind === 'persona') {
+      if (kind === 'beat') {
+        next.lastAnswerId = null;
+      } else if (kind === 'persona') {
         next.personaId = id;
-        // Pick is the action, not a two-tap dance.
-        next.step = 2;
+        next.lastAnswerId = id;
       } else if (kind === 'origin') {
-        // Answers stay on their own question, so re-answering replaces rather
-        // than stacks. The step only advances once all three are in.
         const q = ORIGIN_QUESTIONS.find(x => x.answers.some(a => a.id === id));
-        if (q) {
-          next.originIds = { ...draft.originIds, [q.id]: id };
-          if (ORIGIN_QUESTIONS.every(x => next.originIds[x.id])) next.step = 3;
-        }
+        if (!q) return;
+        next.originIds = { ...draft.originIds, [q.id]: id };
+        next.lastAnswerId = id;
       } else if (kind === 'issue') {
         next.issueId = id;
-        next.step = 4;
+        next.lastAnswerId = null; // her reply here is the persona's own lens
       } else if (kind === 'district') {
         next.districtId = id;
+        next.lastAnswerId = DISTRICTS.find(d => d.id === id)?.align ?? null;
       } else if (kind === 'region') {
         next.regionId = id;
       }
-      // Place is complete only when both halves are in; then the form is ready
-      // to be read back and signed.
-      if ((kind === 'district' || kind === 'region') && next.districtId && next.regionId) {
-        next.step = 5;
-      }
+      next.beat = advance(next);
       onChange(next);
     });
   });
@@ -512,11 +430,13 @@ export function renderNameplateDraft(
   const back = document.getElementById('id-back');
   if (back) {
     back.addEventListener('click', () => {
+      const i = beatIndex(draft.beat);
       onChange({
         ...draft,
         nameText: readNameFromDom() || draft.nameText,
         seedText: readSeedFromDom() || draft.seedText,
-        step: Math.max(1, draft.step - 1) as DraftStep
+        lastAnswerId: null,
+        beat: BEATS[Math.max(0, i - 1)]!
       });
     });
   }

@@ -31,8 +31,10 @@ export interface OriginAnswer {
   id: string;
   /** Short label on the card. */
   n: string;
-  /** The scene. This is the part the player actually reads. */
+  /** The scene. Shown on the finished form, not on the face of the answer. */
   d: string;
+  /** What you SAY at the counter. First person, plain, out loud. */
+  said?: string;
   attrs: AttrBoost;
   /** Anything beyond attributes — a skeleton puts real exposure on the board. */
   apply?: (s: GameState) => void;
@@ -55,24 +57,28 @@ export const ORIGIN_QUESTIONS: OriginQuestion[] = [
     answers: [
       {
         id: 'route',
+        said: '"I ran a route. Forty stops, eleven years."',
         n: 'Running a route',
         d: 'Forty stops between Lampasas and the county line, five days a week, for eleven years. You know every dog on that road and which screen doors stick.',
         attrs: { CLO: 3, DIP: -1 }
       },
       {
         id: 'counter',
+        said: '"Parts counter. Two hundred people a week."',
         n: 'Behind a counter',
         d: 'Parts department. Two hundred people a week, and you remembered what most of them drove and which ones were good for it.',
         attrs: { CHA: 3, INK: -1 }
       },
       {
         id: 'office',
+        said: '"Appraisal district. I read the code so people did not have to."',
         n: 'In a county office',
         d: 'Appraisal district. You have explained the homestead exemption to people who were crying, and you have read the section of the code that governs it more than once.',
         attrs: { INK: 3, CHA: -1 }
       },
       {
         id: 'crew',
+        said: '"Whatever the crew was doing. Rig, framing, harvest."',
         n: 'On a crew',
         d: 'Rig floor, framing, or harvest — the work where somebody is always about to get hurt, and it is usually whoever is talking.',
         attrs: { CON: 3, DIP: -1 }
@@ -86,24 +92,28 @@ export const ORIGIN_QUESTIONS: OriginQuestion[] = [
     answers: [
       {
         id: 'angry',
+        said: '"Commissioners\u2019 court. I was angry and I used every second of it."',
         n: 'You were angry',
         d: 'Commissioners’ court, three minutes on the clock, and you used every second. Your voice went at the end and not one person in that room looked away.',
         attrs: { CON: 2, CRA: -1 }
       },
       {
         id: 'cards',
+        said: '"I brought index cards, and I read them in order."',
         n: 'You brought cards',
         d: 'Index cards, in order, and you did not look up until the last one. It was not warm. It was also not wrong, and the reporter quoted it correctly.',
         attrs: { INK: 2, CHA: -1 }
       },
       {
         id: 'laugh',
+        said: '"I made them laugh. I am not certain they heard the rest."',
         n: 'You made them laugh',
         d: 'You opened with the thing about the parking lot and had the whole room inside a minute. You have never been sure they heard the rest of it.',
         attrs: { CHA: 2, CON: -1 }
       },
       {
         id: 'handed',
+        said: '"I wrote it and handed it to somebody they would actually listen to."',
         n: 'You got somebody else to do it',
         d: 'You wrote it, and you handed it to the woman they were actually going to listen to, and it passed eleven to nothing.',
         attrs: { DIP: 2, CLO: -1 }
@@ -117,6 +127,7 @@ export const ORIGIN_QUESTIONS: OriginQuestion[] = [
     answers: [
       {
         id: 'bankruptcy',
+        said: '"There is a bankruptcy. Eleven. It took the house."',
         n: 'A bankruptcy',
         d: 'The store went under in ’11 and took the house with it. Public record, nine years old, and it will be on a mailer with your wife’s name spelled wrong.',
         attrs: { CRA: 2, CON: -1 },
@@ -128,6 +139,7 @@ export const ORIGIN_QUESTIONS: OriginQuestion[] = [
       },
       {
         id: 'dwi',
+        said: '"One night, a long time ago. Nobody was hurt."',
         n: 'A bad night, a long time ago',
         d: 'One road, one deputy, nobody hurt. A photograph that has outlived nearly everyone who was there that night.',
         attrs: { CON: 2, DIP: -1 },
@@ -139,6 +151,7 @@ export const ORIGIN_QUESTIONS: OriginQuestion[] = [
       },
       {
         id: 'payroll',
+        said: '"My brother-in-law runs a road crew for the precinct."',
         n: 'A relative on the county payroll',
         d: 'Your brother-in-law has run a road crew for the precinct for nine years. He is good at it. That is not going to be the part anybody prints.',
         attrs: { DIP: 2, CON: -1 },
@@ -150,6 +163,7 @@ export const ORIGIN_QUESTIONS: OriginQuestion[] = [
       },
       {
         id: 'crossover',
+        said: '"I voted in the other primary. Twice."',
         n: 'You voted in the other primary',
         d: 'Twice. There were reasons both times and neither reason fits on a push card. In this state that is a fact with a serial number on it.',
         attrs: { CRA: 2, CON: -1 },

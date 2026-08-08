@@ -107,11 +107,14 @@ async function main() {
     // 2. Complete the 3-step nameplate draft (Teacher · taxes · open · east) + seed.
     // Identity draft replaced the old form; seed + Begin primary live on step 3.
     async function pickId(kind, id) {
-      const card = page.locator(`.id-card[data-kind="${kind}"][data-id="${id}"]`);
+      const card = page.locator(`.say[data-kind="${kind}"][data-id="${id}"]`);
       await card.waitFor({ state: 'visible', timeout: 10_000 });
       await card.click();
       await page.waitForTimeout(40);
     }
+    // The counter opens on her asking for the name. Answer, slide it back.
+    await page.fill('#candidate-name', 'Ruth Ann Vela');
+    await pickId('beat', 'name');
     await pickId('persona', 'blockwalker');
       // Origin: the trade, the first room, the skeleton (data/origin.ts).
       await pickId('origin', 'route');
@@ -641,7 +644,10 @@ async function main() {
       await page.evaluate(() => localStorage.clear());
       await page.goto(`${BASE}?promo=PR01`, { waitUntil: 'networkidle' });
       await page.locator('#btn-title-start').click();
-      await pickId('persona', 'blockwalker');
+      // The counter opens on her asking for the name. Answer, slide it back.
+    await page.fill('#candidate-name', 'Ruth Ann Vela');
+    await pickId('beat', 'name');
+    await pickId('persona', 'blockwalker');
       // Origin: the trade, the first room, the skeleton (data/origin.ts).
       await pickId('origin', 'route');
       await pickId('origin', 'angry');
@@ -723,7 +729,10 @@ async function main() {
       await page.evaluate(() => localStorage.clear());
       await page.goto(`${BASE}?smoke=1`, { waitUntil: 'networkidle' });
       await page.locator('#btn-title-start').click();
-      await pickId('persona', 'blockwalker');
+      // The counter opens on her asking for the name. Answer, slide it back.
+    await page.fill('#candidate-name', 'Ruth Ann Vela');
+    await pickId('beat', 'name');
+    await pickId('persona', 'blockwalker');
       // Origin: the trade, the first room, the skeleton (data/origin.ts).
       await pickId('origin', 'route');
       await pickId('origin', 'angry');

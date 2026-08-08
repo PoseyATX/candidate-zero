@@ -25,6 +25,8 @@ import {
   zeroStarterDeck
 } from '../data/plays-zero.js';
 import { PLAYS } from '../data/plays.js';
+import { ORIGIN_QUESTIONS } from '../data/origin.js';
+import { CLERK_ASKS, CLERK_REPLIES } from '../data/clerk.js';
 import type { GameState, PlayCard } from '../engine/types.js';
 
 function assert(cond: boolean, msg: string): void {
@@ -297,6 +299,33 @@ console.log('=== CANDIDATE ZERO — the start ===\n');
     'no trash/remove verb is ever offered as an action'
   );
   console.log('PASS: a liability leaves only by being played, and there is no trash button.');
+}
+
+// --- 11. The counter: she answers everything you say ---------------------
+{
+  // Silence is the failure state of a conversation. Every line a player can
+  // speak must get something back, or the scene collapses into a form again.
+  const spoken: string[] = [
+    ...STARTING_PERSONAS.map(p => p.id),
+    ...ORIGIN_QUESTIONS.flatMap(q => q.answers.map(a => a.id)),
+    ...['safe', 'competitive', 'wrong']
+  ];
+  const mute = spoken.filter(id => !CLERK_REPLIES[id]);
+  assert(mute.length === 0, `she has a reply to every answer (mute: ${mute.join(', ') || 'none'})`);
+
+  // And every line is actually sayable in the first person, not a description
+  // of the player in the third.
+  const unsaid = [
+    ...STARTING_PERSONAS.filter(p => !p.said).map(p => p.id),
+    ...ORIGIN_QUESTIONS.flatMap(q => q.answers.filter(a => !a.said).map(a => a.id))
+  ];
+  assert(unsaid.length === 0, `every answer is a line you speak (missing: ${unsaid.join(', ') || 'none'})`);
+
+  for (const q of ORIGIN_QUESTIONS) {
+    assert(!!CLERK_ASKS[q.id], `she has a question for ${q.id}`);
+  }
+  assert(!!CLERK_ASKS.name && !!CLERK_ASKS.persona, 'and for the name and the occupation');
+  console.log(`PASS: ${spoken.length} answers, ${spoken.length} replies — nobody is talked past.`);
 }
 
 console.log('\n=== zero-start OK ===');

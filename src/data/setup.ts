@@ -41,6 +41,9 @@ export interface PersonaDef {
   lens?: string;
   /** The intrinsic card that is going to cost you, named at the filing table. */
   liability?: string;
+  /** What you actually SAY when the clerk asks what you do. First person, out
+   *  loud, no adjectives about yourself. See data/clerk.ts. */
+  said?: string;
 }
 
 function bumpAttrs(s: GameState, boost: AttrBoost): void {
@@ -134,7 +137,8 @@ export const PERSONAS: PersonaDef[] = [
   // simply do not appear on the filing table.
   // ---------------------------------------------------------------------
   {
-    id: 'blockwalker', n: 'The Blockwalker', tag: 'legs and a voice', starting: true,
+    id: 'blockwalker', n: 'The Blockwalker', said: '"I knock doors. Six years of it, mostly for other people."',
+    tag: 'legs and a voice', starting: true,
     d: 'You have knocked this district for somebody else for six years. Nobody is going to fund you and everybody on Third Street knows your face.',
     open:
       'Six years of other people\'s yard signs. You have knocked every street in this precinct for men ' +
@@ -149,7 +153,8 @@ export const PERSONAS: PersonaDef[] = [
     apply: s => { s.faces.T += 6; s.faces.G += 4; }
   },
   {
-    id: 'believer', n: 'The Believer', tag: 'a cause and no give',  starting: true,
+    id: 'believer', n: 'The Believer', said: '"Right now I drive people to Abilene who cannot get there by themselves."',
+    tag: 'a cause and no give',  starting: true,
     d: 'Something specific happened to somebody specific and you have not been able to let it go. You cannot trade, because trading is how it happened.',
     open:
       'The hospital closed on a Tuesday in February. Eleven days later you drove a neighbour ninety ' +
@@ -164,7 +169,8 @@ export const PERSONAS: PersonaDef[] = [
     apply: s => { s.faces.T += 10; s.volPool += 1; }
   },
   {
-    id: 'staffer', n: 'The Junior Staffer', tag: 'knows where the rooms are', starting: true,
+    id: 'staffer', n: 'The Junior Staffer', said: '"I carry a binder for a member. Four sessions."',
+    tag: 'knows where the rooms are', starting: true,
     d: 'Four sessions carrying somebody else\'s binder. You know the building, the calendar and the rule that applies. Nobody in it knows your name.',
     open:
       'Four sessions carrying a binder for a member who never learned your first name. You know which ' +
@@ -179,7 +185,8 @@ export const PERSONAS: PersonaDef[] = [
     apply: s => { s.faces.O += 8; }
   },
   {
-    id: 'fadedname', n: 'The Faded Name', tag: 'a surname and a little money', starting: true,
+    id: 'fadedname', n: 'The Faded Name', said: '"Nothing, currently. My family had the dealership."',
+    tag: 'a surname and a little money', starting: true,
     d: 'Your grandfather had the dealership and two terms in the House. People still know the name and nobody currently owes it anything.',
     open:
       'Your grandfather had the Ford dealership and two terms in the House. There is a wing of the ' +
