@@ -31,6 +31,7 @@ import { executePlay, isPlayable, type PlayOpts } from './play.js';
 import { liabilityBlockReason, syncHand } from './liabilities.js';
 import { buildOpportunities } from './opportunity.js';
 import { resetSlots, slotBlockReason, slotsLeft, useSlot } from './slots.js';
+import { decayFatigue } from './fatigue.js';
 import { ZERO_CONSUMABLE_IDS, ZERO_LIABILITY_IDS } from '../data/plays-zero.js';
 import {
   cycleCard,
@@ -774,6 +775,8 @@ export function startWeek(campaign: Campaign): string[] {
   resetDiscards(campaign.state);
   // Three spaces on the table again. See engine/slots.ts.
   resetSlots(campaign.state);
+  // The room forgets a little of whatever you overplayed last week.
+  decayFatigue(campaign.state);
   // The hand you can hold widens with the network you have built, quietly.
   campaign.handSize = handSizeFor(campaign.state);
   // Someone with you may call in a favour. Only people actually seated can ask;

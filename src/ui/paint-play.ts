@@ -42,6 +42,7 @@ import {
   isUpgraded
 } from '../engine/upgrades.js';
 import { quotePress, pressLabel } from '../engine/heat.js';
+import { fatigueNote, fatiguePenalty } from '../engine/fatigue.js';
 import { discardsLeft } from '../engine/flow.js';
 
 /** Full attribute names — never dump CLO/CON on a roomy brief. */
@@ -152,7 +153,8 @@ function groundOdds(s: GameState, card: PlayCard, g: Ground): number {
   const prior = s.groundPlays?.[g.id] ?? 0;
   const bonus = card.field && prior > 0 ? getGroundPenalty(s, g, prior).oddsBonus : 0;
   const rivalPen = card.field ? rivalOddsPenalty(g) : 0;
-  return Math.max(0.02, Math.min(0.95, base + attr + bonus - rivalPen));
+  const stale = fatiguePenalty(s, card);
+  return Math.max(0.02, Math.min(0.95, base + attr + bonus - rivalPen - stale));
 }
 let detailIndex: number | null = null;
 let detailCampaign: Campaign | null = null;
@@ -410,6 +412,9 @@ function fillDossier(
       );
     }
     if (attrWords) rows.push(factRow('Attributes that help', attrEscape(attrWords)));
+    // A penalty the player cannot see is just the game lying about the odds.
+    const stale = fatigueNote(state, card);
+    if (stale) rows.push(factRow('How often you have run it', attrEscape(stale), 'dossier-fact-warn'));
     rows.push(
       factRow(
         'Where you play it',

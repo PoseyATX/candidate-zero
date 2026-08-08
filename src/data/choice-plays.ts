@@ -260,29 +260,46 @@ export const CH05_SeatOrStatute: PlayCard = {
   show: s =>
     s.stage === 'session' &&
     Number(s.sessionFlags?.seatOrStatuteWeek || 0) !== s.week,
-  run: s => {
-    s.sessionFlags = s.sessionFlags || {};
-    s.sessionFlags.seatOrStatuteWeek = s.week;
-    const seatCrisis =
-      s.districtStanding < 55 || Number(s.sessionFlags.challengerHeat || 0) > 0;
-    if (seatCrisis) {
-      s.districtStanding = clamp(s.districtStanding + 8, 0, 100);
-      const ch = Number(s.sessionFlags.challengerHeat || 0);
-      if (ch > 0) s.sessionFlags.challengerHeat = Math.max(0, ch - 1);
-      s.sessionFlags.caseworkThisWeek = true;
-      return (
-        'You choose the seat. Casework until the lights go out. Standing recovers; the challenger feels the cold. ' +
-        'The bill sits on the desk overnight — it will still be there Monday.'
-      );
+  // The one a member actually faces every week, and the one that was most
+  // wrong: it took the seat whenever standing was under 55 or a challenger was
+  // warm — i.e. it made the safe call for you precisely when the call was hard.
+  // Choosing the statute while your district is slipping is the whole tragedy
+  // of the job and the card would not let anybody do it.
+  branches: [
+    {
+      id: 'seat',
+      n: 'Work the seat',
+      d: '+8 district standing, challenger heat cools. The bill sits on the desk until Monday.',
+      run: s => {
+        s.sessionFlags = s.sessionFlags || {};
+        s.sessionFlags.seatOrStatuteWeek = s.week;
+        s.districtStanding = clamp(s.districtStanding + 8, 0, 100);
+        const ch = Number(s.sessionFlags.challengerHeat || 0);
+        if (ch > 0) s.sessionFlags.challengerHeat = Math.max(0, ch - 1);
+        s.sessionFlags.caseworkThisWeek = true;
+        return (
+          'You choose the seat. Casework until the lights go out. Standing recovers; the challenger feels the cold. ' +
+          'The bill sits on the desk overnight — it will still be there Monday.'
+        );
+      }
+    },
+    {
+      id: 'statute',
+      n: 'Work the statute',
+      d: '+2 capital and the bill cools two. Home loses two points of standing while you legislate.',
+      run: s => {
+        s.sessionFlags = s.sessionFlags || {};
+        s.sessionFlags.seatOrStatuteWeek = s.week;
+        s.capital += 2;
+        if (s.bill) s.bill.heat = Math.max(0, (s.bill.heat || 0) - 2);
+        s.districtStanding = clamp(s.districtStanding - 2, 0, 100);
+        return (
+          'You choose the statute. Two units of capital and the bill cools a notch. ' +
+          'Home loses two points of standing — they will hear about the Friday you were not there.'
+        );
+      }
     }
-    s.capital += 2;
-    if (s.bill) s.bill.heat = Math.max(0, (s.bill.heat || 0) - 2);
-    s.districtStanding = clamp(s.districtStanding - 2, 0, 100);
-    return (
-      'You choose the statute. Two units of capital and the bill cools a notch. ' +
-      'Home loses two points of standing — they will hear about the Friday you were not there.'
-    );
-  }
+  ]
 };
 
 function tag(c: PlayCard): PlayCard {

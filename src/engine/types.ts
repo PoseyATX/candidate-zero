@@ -288,6 +288,9 @@ export interface GameState {
   /** Spaces taken on the table this week. Reset at week start. The table is the
    *  scarce resource, not the cost. See engine/slots.ts. */
   slotsUsed?: number;
+  /** cardId -> how tired the room is of that play. Grows per play, decays 40%
+   *  a week. Optional so old saves load fresh. See engine/fatigue.ts. */
+  cardFatigue?: Record<string, number>;
 }
 
 /**

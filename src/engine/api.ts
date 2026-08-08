@@ -64,12 +64,15 @@ import {
 } from '../data/setup.js';
 import type { DeckState, GameState, PlayCard } from './types.js';
 import { buildGoalStripInput, formatGoalStrip, type GoalCopyKey } from '../ui/goal-strip.js';
-import { isGroundLocked, groundLockReason } from './play.js';
+import { isGroundLocked, groundLockReason, cardAttrMod } from './play.js';
+import { getGroundPenalty, rivalOddsPenalty } from './calendar.js';
+import { upgradeOddsBonus } from './upgrades.js';
 import { parseUpgradeOption } from './upgrades.js';
 import { SHED_PREFIX } from './opportunity.js';
 import { oblName } from '../data/obligations.js';
 import { heatOf, canPress, quotePress, MAX_HEAT } from './heat.js';
 import { discardsLeft, MAX_DISCARDS } from './flow.js';
+import { fatigueNote, fatiguePenalty } from './fatigue.js';
 
 /** 1.3.0 — added the `cycle` command (pitch a hand card, draw a replacement),
  *  `discards` on the view, and `cycleBlocked` on each action. See engine/flow.ts.
@@ -151,6 +154,9 @@ export interface ActionOption {
    * before it is picked. See engine/play.ts.
    */
   branches: { id: string; name: string; desc: string }[];
+  /** '' when fresh, else why this play is worth less right now because you have
+   *  been leaning on it. Decays weekly on its own. See engine/fatigue.ts. */
+  fatigueNote: string;
 }
 
 /**
@@ -337,11 +343,33 @@ function costLabel(card: PlayCard): string {
   return parts.join(' · ') || 'free';
 }
 
+/**
+ * The odds a host should print, matching what executePlay will actually roll.
+ *
+ * This returned the bare `card.odds(...)` under a field documented as "effective
+ * success probability given current state" — so attributes, the ground you have
+ * already worked twice, opposition presence and card upgrades were all missing
+ * from every number a host displayed. A player reading 45% was rolling against
+ * something else entirely.
+ *
+ * Mirrors engine/play.ts. Press is excluded on purpose: it is a wager the
+ * player has not made yet, and `pressOdds` reports it separately.
+ */
 function effectiveOdds(state: GameState, card: PlayCard): number | null {
   if (!card.odds) return null;
   const g = state.groundsArr.find(x => x.pool > 0) ?? state.groundsArr[0];
   const base = card.odds(state, g);
-  return Math.max(0.02, Math.min(0.95, base));
+  const attr = cardAttrMod(state, card);
+  const prior = state.groundPlays?.[g?.id ?? ''] ?? 0;
+  const groundBonus =
+    card.field && g && prior > 0 ? getGroundPenalty(state, g, prior).oddsBonus : 0;
+  const rivalPen = card.field && g ? rivalOddsPenalty(g) : 0;
+  const up = upgradeOddsBonus(state, card);
+  const stale = fatiguePenalty(state, card);
+  return Math.max(
+    0.02,
+    Math.min(0.95, base + attr + groundBonus - rivalPen + up - stale)
+  );
 }
 
 // ---- public API ----
@@ -404,6 +432,7 @@ export function legalActions(snap: EngineSnapshot): ActionOption[] {
     // A fork the player takes. Empty for ordinary cards; when present the play
     // command MUST name one of these ids. See engine/play.ts.
     branches: (card.branches ?? []).map(b => ({ id: b.id, name: b.n, desc: b.d })),
+    fatigueNote: fatigueNote(campaign.state, card),
     approxOdds: effectiveOdds(campaign.state, card),
     pressOdds: quotePress(campaign.state, card).odds,
     pressBand: quotePress(campaign.state, card).band

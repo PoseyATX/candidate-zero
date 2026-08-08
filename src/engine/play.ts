@@ -16,6 +16,7 @@ import { bankHeat, canPress, quotePress, pressLabel } from './heat.js';
 import { maybeTriggerNotice } from './notice.js';
 import { noteCardContacts } from './promotion.js';
 import { liabilityBlockReason } from './liabilities.js';
+import { fatiguePenalty, noteFatigue } from './fatigue.js';
 import type { AttrId, GameState, Ground, PlayCard, PlayOutcome, RollResult } from './types.js';
 
 /** Turf AP a field card can draw on; non-field cards can never touch it. */
@@ -204,6 +205,9 @@ export function executePlay(
   // Upgrades shift the odds going INTO resolve; they never touch the roll,
   // the bands, or the tier mapping (Covenant 4).
   const upBonus = upgradeOddsBonus(state, card);
+  // The room is tired of a move it has seen too often lately. Decays weekly on
+  // its own — see engine/fatigue.ts.
+  const stale = fatiguePenalty(state, card);
 
   // Press: the player cashes a landed streak for better odds on this one play,
   // and pays for them with a wider disaster band. Read the wager before the
@@ -215,8 +219,12 @@ export function executePlay(
 
   p = Math.max(
     0.02,
-    Math.min(0.95, p + attrMod + groundOddsBonus - rivalPen + upBonus + pressOdds)
+    Math.min(0.95, p + attrMod + groundOddsBonus - rivalPen + upBonus + pressOdds - stale)
   );
+
+  // Banked after the odds are read, so the play you just made is what makes the
+  // NEXT one harder rather than this one.
+  noteFatigue(state, card);
 
   state.sessionFlags = state.sessionFlags || {};
   const charges = Number(state.sessionFlags.prettyFaceCharges || 0);

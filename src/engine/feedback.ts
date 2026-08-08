@@ -75,6 +75,16 @@ export interface FeedbackState {
     volPool: number;
     gotv: number;
     ballot: boolean;
+    /** Session currencies. The campaign ledger does not move under the dome, so
+     *  without these EVERY session week reported "No ledger move — the calendar
+     *  still turned": fourteen consecutive weeks of "nothing happened" while a
+     *  bill went from unfiled to signed law. Optional so a save written before
+     *  they existed still summarises. */
+    capital?: number;
+    districtStanding?: number;
+    favors?: number;
+    billStage?: number;
+    billAyes?: number;
   };
   lastPlay?: PlayFeedback;
   lastWeek?: WeekSummary;
@@ -104,7 +114,12 @@ export function markWeekStart(state: GameState): void {
     nameID: state.nameID,
     volPool: state.volPool,
     gotv: totalGotv(state),
-    ballot: state.ballot
+    ballot: state.ballot,
+    capital: state.capital,
+    districtStanding: state.districtStanding,
+    favors: state.favors,
+    billStage: state.bill?.pipelineStage ?? 0,
+    billAyes: state.bill?.tally?.aye ?? 0
   };
 }
 
@@ -366,7 +381,21 @@ export function buildWeekSummary(state: GameState, playLogs: { tier?: number }[]
     signatures: start ? state.signatures - start.signatures : 0,
     nameID: start ? state.nameID - start.nameID : 0,
     volPool: start ? state.volPool - start.volPool : 0,
-    gotv: start ? totalGotv(state) - start.gotv : 0
+    gotv: start ? totalGotv(state) - start.gotv : 0,
+    // Under the dome the campaign ledger is frozen and these are the only
+    // numbers that move. Reporting only the campaign ones told a member who
+    // had just moved a bill two stages that nothing had happened.
+    capital: start ? state.capital - (start.capital ?? state.capital) : 0,
+    standing: start
+      ? state.districtStanding - (start.districtStanding ?? state.districtStanding)
+      : 0,
+    favors: start ? state.favors - (start.favors ?? state.favors) : 0,
+    billStage: start
+      ? (state.bill?.pipelineStage ?? 0) - (start.billStage ?? state.bill?.pipelineStage ?? 0)
+      : 0,
+    billAyes: start
+      ? (state.bill?.tally?.aye ?? 0) - (start.billAyes ?? state.bill?.tally?.aye ?? 0)
+      : 0
   };
 
   const milestones: string[] = [];
@@ -388,6 +417,12 @@ export function buildWeekSummary(state: GameState, playLogs: { tier?: number }[]
   if (deltas.signatures) parts.push(`${deltas.signatures >= 0 ? '+' : ''}${deltas.signatures} sigs`);
   if (deltas.nameID) parts.push(`${deltas.nameID >= 0 ? '+' : ''}${deltas.nameID} name`);
   if (deltas.gotv) parts.push(`+${deltas.gotv.toFixed(2)} GOTV`);
+  // Session currencies, so a week under the dome reports what it actually did.
+  if (deltas.billStage) parts.push(`bill +${deltas.billStage} stage${Math.abs(deltas.billStage) > 1 ? 's' : ''}`);
+  if (deltas.billAyes) parts.push(`${deltas.billAyes >= 0 ? '+' : ''}${deltas.billAyes} ayes`);
+  if (deltas.capital) parts.push(`${deltas.capital >= 0 ? '+' : ''}${deltas.capital} capital`);
+  if (deltas.standing) parts.push(`${deltas.standing >= 0 ? '+' : ''}${deltas.standing} standing`);
+  if (deltas.favors) parts.push(`${deltas.favors >= 0 ? '+' : ''}${deltas.favors} favor${Math.abs(deltas.favors) > 1 ? 's' : ''}`);
   const juice =
     parts.length > 0
       ? `${headline} ${parts.join(' · ')}.`

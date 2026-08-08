@@ -3592,3 +3592,12 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   line-height: 1.35;
   color: var(--parchment-dim);
 }
+
+/* A play the room has heard too often lately. Marked, not buried — a penalty
+ * the player cannot see is the game lying about its own odds. */
+.dossier-fact-warn dd {
+  color: #e39b7c;
+}
+.dossier-fact-warn dt {
+  color: #c9835f;
+}
