@@ -8,6 +8,7 @@ import { random } from '../engine/rng.js';
 import { addAlly, addRep } from '../engine/reputation.js';
 import { BALLOT_SIGNATURES } from '../engine/state.js';
 import { setArchetype, archetypeForDistrict } from '../engine/opponent.js';
+import { originAttrDelta, resolveOrigins } from './origin.js';
 
 export type FaceBoost = Partial<Faces>;
 export type AttrBoost = Partial<Attrs>;
@@ -106,6 +107,10 @@ export interface SetupSelection {
   issueId: string;
   districtId: string;
   regionId: string;
+  /** Answer ids from data/origin.ts — the trade, the first time, the skeleton.
+   *  Optional so every save and harness fixture written before origins existed
+   *  still loads and behaves exactly as it did. */
+  originIds?: string[];
 }
 
 // Note: `apply` only sets persona-specific starting resources/flavor. Root
@@ -403,6 +408,43 @@ export function isStartingPersona(id: string): boolean {
   return STARTING_PERSONAS.some(p => p.id === id);
 }
 
+/** Region temperament, as data rather than a chain of ifs the UI cannot read. */
+const REGION_ATTRS: Record<string, AttrBoost> = {
+  metro: { CRA: 1, CHA: 1 },
+  gulf: { CLO: 1, DIP: 1 },
+  east: { CON: 1, CHA: 1 },
+  panhandle: { CON: 1, CHA: 1 },
+  permian: { CRA: 1, CLO: 1 },
+  valley: { DIP: 1, CLO: 1 },
+  hill: { INK: 1, CON: 1 }
+};
+
+/**
+ * What this filing would actually make you, before you sign it.
+ *
+ * Pure: takes ids, touches no GameState. The filing screen shows the resulting
+ * root attributes so a player can see that eleven years on a delivery route is
+ * the reason doors work for them — the arithmetic that was always running and
+ * was never once shown at the moment it was being decided.
+ *
+ * Must stay in step with applySetup: persona + origin + region, all through
+ * the same three sources.
+ */
+export function previewAttrs(sel: Partial<SetupSelection>): Attrs {
+  const base: Attrs = { CLO: 10, CON: 10, CRA: 10, INK: 10, DIP: 10, CHA: 10 };
+  const add = (boost: AttrBoost | undefined): void => {
+    if (!boost) return;
+    for (const [k, v] of Object.entries(boost)) {
+      if (typeof v === 'number') base[k as AttrId] += v;
+    }
+  };
+  add(getPersona(sel.personaId ?? '')?.attrs);
+  add(originAttrDelta(sel.originIds));
+  const region = getRegion(sel.regionId ?? '');
+  if (region) add(REGION_ATTRS[region.hook]);
+  return base;
+}
+
 export function getPersona(id: string) { return PERSONAS.find(p => p.id === id); }
 export function getIssue(id: string) { return ISSUES.find(i => i.id === id); }
 export function getDistrict(id: string) { return DISTRICTS.find(d => d.id === id); }
@@ -442,12 +484,18 @@ export function applySetup(state: GameState, sel: SetupSelection): GameState {
     if (typeof v === 'number') state.faces[key] = (state.faces[key] || 0) + v;
   }
   // Region also nudges attrs lightly (geography as temperament)
-  if (region.hook === 'metro') bumpAttrs(state, { CRA: 1, CHA: 1 });
-  if (region.hook === 'gulf') bumpAttrs(state, { CLO: 1, DIP: 1 });
-  if (region.hook === 'east' || region.hook === 'panhandle') bumpAttrs(state, { CON: 1, CHA: 1 });
-  if (region.hook === 'permian') bumpAttrs(state, { CRA: 1, CLO: 1 });
-  if (region.hook === 'valley') bumpAttrs(state, { DIP: 1, CLO: 1 });
-  if (region.hook === 'hill') bumpAttrs(state, { INK: 1, CON: 1 });
+  // Same table the filing screen previews from, so what the player was shown
+  // and what they got can never drift.
+  bumpAttrs(state, REGION_ATTRS[region.hook] ?? {});
+
+  // Where you came from — the trade, the first room, and the thing in your past
+  // somebody is going to find. This is the part that makes two Blockwalkers
+  // different people. See data/origin.ts.
+  for (const answer of resolveOrigins(sel.originIds)) {
+    bumpAttrs(state, answer.attrs);
+    answer.apply?.(state);
+    state.assets.push('ORIGIN_' + answer.id.toUpperCase());
+  }
 
   state.assets.push('REGION_' + region.id.toUpperCase());
   state.sigNeed = Math.max(200, BALLOT_SIGNATURES + region.petitionMod);

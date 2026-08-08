@@ -77,7 +77,9 @@ console.log('=== CANDIDATE ZERO — Notice + CHOICE ===\n');
   assert(!!door, 'CH01 Claim Your Door on camp pre-ballot (harness)');
   if (door) {
     const beforeSig = camp.state.signatures;
-    const r = playFromHand(camp, door.index);
+    // A fork needs an arm named — the engine refuses to pick one. CH01 is the
+    // labor-vs-money door; take the petition side deterministically.
+    const r = playFromHand(camp, door.index, undefined, { branch: 'labor' });
     assert(r.ok, 'CH01 plays without a roll path failure');
     assert(
       camp.state.signatures > beforeSig || camp.state.money > 200,

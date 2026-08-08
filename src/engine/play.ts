@@ -124,6 +124,9 @@ export function cardAttrMod(state: GameState, card: PlayCard): number {
 export interface PlayOpts {
   /** Spend banked heat on this play: better odds, wider band. See engine/heat.ts. */
   press?: boolean;
+  /** Which arm of a forked card the player took. Required by cards that have
+   *  `branches` — the engine will not choose one for them. */
+  branch?: string;
 }
 
 export function executePlay(
@@ -144,6 +147,16 @@ export function executePlay(
   const blocked = liabilityBlockReason(state, card);
   if (blocked) {
     return { ok: false, reason: blocked, cardId: card.id, cardName: card.n };
+  }
+  // A fork does not resolve until the player says which way. The engine used to
+  // decide this off hidden state while the card copy claimed it was a choice.
+  if (card.branches?.length && !card.branches.some(b => b.id === opts.branch)) {
+    return {
+      ok: false,
+      reason: `Choose: ${card.branches.map(b => b.n).join(' / ')}`,
+      cardId: card.id,
+      cardName: card.n
+    };
   }
 
   const g = ground ?? (card.field ? pickDefaultGround(state) : undefined);
@@ -260,7 +273,13 @@ export function executePlay(
   if (pressed) state.heat = 0;
   bankHeat(state, roll.tier);
 
-  const text = card.run ? card.run(state, roll, g) : `${card.n} resolves.`;
+  // A forked card resolves down the arm the player named, and only that one.
+  const branch = card.branches?.find(b => b.id === opts.branch);
+  const text = branch
+    ? branch.run(state, roll, g)
+    : card.run
+      ? card.run(state, roll, g)
+      : `${card.n} resolves.`;
 
   if (roll.tier === 3) {
     state.disasterLog.push(state.week);

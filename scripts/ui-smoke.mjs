@@ -113,6 +113,10 @@ async function main() {
       await page.waitForTimeout(40);
     }
     await pickId('persona', 'blockwalker');
+      // Origin: the trade, the first room, the skeleton (data/origin.ts).
+      await pickId('origin', 'route');
+      await pickId('origin', 'angry');
+      await pickId('origin', 'bankruptcy');
     await pickId('issue', 'taxes');
     await pickId('district', 'open');
     await pickId('region', 'east');
@@ -187,6 +191,18 @@ async function main() {
     );
     // Card detail sheet on first tap
     const firstCard = page.locator('#playables .play-card').first();
+
+    // A forked CHOICE card will not play until an arm is chosen — the engine
+    // refuses, and the Play button says so. A player taps one; so does this.
+    async function chooseForkIfAny() {
+      const fork = page.locator('#detail-fork');
+      if (!(await fork.isVisible().catch(() => false))) return;
+      const opt = fork.locator('.fork-option').first();
+      if (await opt.count()) {
+        await opt.click().catch(() => {});
+        await page.waitForTimeout(40);
+      }
+    }
     await firstCard.click();
     await page.waitForTimeout(40);
     assert(
@@ -208,6 +224,7 @@ async function main() {
       for (let i = 0; i < (await hand2.count()) && !fieldPlayed; i++) {
         await hand2.nth(i).click({ timeout: 4000 }).catch(() => {});
         await page.waitForTimeout(140);
+        await chooseForkIfAny();
         const pd = page.locator('#btn-play-detail');
         if (!(await pd.isVisible().catch(() => false))) {
           await page.locator('#detail-close').click().catch(() => {});
@@ -251,6 +268,7 @@ async function main() {
       for (let i = 0; i < (await hand.count()) && !played; i++) {
         await hand.nth(i).click();
         await page.waitForTimeout(150);
+        await chooseForkIfAny();
         const pd = page.locator('#btn-play-detail');
         if (await pd.isVisible().catch(() => false)) {
           await pd.click();
@@ -456,6 +474,9 @@ async function main() {
       }
       // Card detail: PLAY commits (field → ground picker next)
       if (await detailOpen()) {
+        // A forked CHOICE card keeps Play disabled until an arm is chosen.
+        // Without this the driver re-opens the same card forever.
+        await chooseForkIfAny();
         const playDet = page.locator('#btn-play-detail');
         if (await playDet.isEnabled().catch(() => false)) {
           await playDet.click();
@@ -621,6 +642,10 @@ async function main() {
       await page.goto(`${BASE}?promo=PR01`, { waitUntil: 'networkidle' });
       await page.locator('#btn-title-start').click();
       await pickId('persona', 'blockwalker');
+      // Origin: the trade, the first room, the skeleton (data/origin.ts).
+      await pickId('origin', 'route');
+      await pickId('origin', 'angry');
+      await pickId('origin', 'bankruptcy');
       await pickId('issue', 'taxes');
       await pickId('district', 'open');
       await pickId('region', 'east');
@@ -699,6 +724,10 @@ async function main() {
       await page.goto(`${BASE}?smoke=1`, { waitUntil: 'networkidle' });
       await page.locator('#btn-title-start').click();
       await pickId('persona', 'blockwalker');
+      // Origin: the trade, the first room, the skeleton (data/origin.ts).
+      await pickId('origin', 'route');
+      await pickId('origin', 'angry');
+      await pickId('origin', 'bankruptcy');
       await pickId('issue', 'taxes');
       await pickId('district', 'open');
       await pickId('region', 'east');

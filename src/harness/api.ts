@@ -66,6 +66,9 @@ function nextCommand(snap: EngineSnapshot): Command | null {
   if (v.actions.length) {
     const a = v.actions[0]!;
     const cmd: Command = { type: 'play', handIndex: a.handIndex };
+    // A fork will not resolve until an arm is named. Deterministic policy:
+    // always take the first. See engine/play.ts.
+    if (a.branches.length) cmd.branch = a.branches[0]!.id;
     if (a.field && v.grounds.length) {
       // Only open grounds are valid field targets (GroundView.locked).
       const open = v.grounds.filter(g => !g.locked);

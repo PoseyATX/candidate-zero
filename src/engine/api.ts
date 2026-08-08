@@ -77,11 +77,15 @@ import { discardsLeft, MAX_DISCARDS } from './flow.js';
  *  command gained an optional `press` flag. See engine/heat.ts.
  *  1.1.0 — pendingDraft options gained `upgrade`; cardId is now always a real
  *  catalog id (previously it could carry the engine's "UP:" option encoding). */
-/*  1.5.0 — pendingDraft options gained `kind` ('card' | 'upgrade' | 'shed').
+/*  1.6.0 — actions gained `branches` and the play command gained `branch`. A
+ *  CHOICE card with branches will not resolve until the host names an arm; the
+ *  engine used to pick one off hidden state while the card copy claimed the
+ *  player was choosing. See engine/play.ts.
+ *  1.5.0 — pendingDraft options gained `kind` ('card' | 'upgrade' | 'shed').
  *  Opportunities are broader than cards now: an offer may be a chance to shed
  *  an obligation somebody agrees to carry. `upgrade` is unchanged for older
  *  hosts. See engine/opportunity.ts. */
-export const ENGINE_API_VERSION = '1.5.0';
+export const ENGINE_API_VERSION = '1.6.0';
 
 /** Fully reproducible, JSON-serializable game state. */
 export interface EngineSnapshot {
@@ -97,7 +101,15 @@ export interface EngineSnapshot {
 export type Command =
   /** `press` spends banked heat on this play: better odds, wider disaster band
    *  (engine/heat.ts). Ignored when no heat is banked. */
-  | { type: 'play'; handIndex: number; groundId?: string; press?: boolean }
+  | {
+      type: 'play';
+      handIndex: number;
+      groundId?: string;
+      press?: boolean;
+      /** Which arm of a forked CHOICE card. Required when the action carries
+       *  `branches` — the engine will not pick one for the player. */
+      branch?: string;
+    }
   /** Pitch a hand card and draw a replacement (engine/flow.ts). Limited per
    *  week; costs no AP. `ok:false` with a reason when the cut is not allowed. */
   | { type: 'cycle'; handIndex: number }
@@ -130,6 +142,15 @@ export interface ActionOption {
   /** Disaster band it would cost. Always 0 for SAFE — Covenant 5 holds even
    *  when the player is buying risk deliberately. */
   pressBand: number;
+  /**
+   * A fork the PLAYER takes. Empty for ordinary cards.
+   *
+   * When this is non-empty the play command MUST name one of these ids or the
+   * play is refused: the engine does not choose an arm on the player's behalf.
+   * Each arm carries its own copy so a host can show what it costs and buys
+   * before it is picked. See engine/play.ts.
+   */
+  branches: { id: string; name: string; desc: string }[];
 }
 
 /**
@@ -380,6 +401,9 @@ export function legalActions(snap: EngineSnapshot): ActionOption[] {
     costLabel: costLabel(card),
     cycleBlocked: cycleReason(campaign, index),
     cycleCaution: cycleCautionReason(campaign, index),
+    // A fork the player takes. Empty for ordinary cards; when present the play
+    // command MUST name one of these ids. See engine/play.ts.
+    branches: (card.branches ?? []).map(b => ({ id: b.id, name: b.n, desc: b.d })),
     approxOdds: effectiveOdds(campaign.state, card),
     pressOdds: quotePress(campaign.state, card).odds,
     pressBand: quotePress(campaign.state, card).band
@@ -514,7 +538,8 @@ export function apply(snap: EngineSnapshot, command: Command): ApplyResult {
         : undefined;
       const wasBallot = s.ballot;
       const outcome = playFromHand(campaign, command.handIndex, ground, {
-        press: command.press
+        press: command.press,
+        branch: command.branch
       });
       ok = outcome.ok;
       reason = outcome.reason;

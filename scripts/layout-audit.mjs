@@ -166,6 +166,10 @@ async function main() {
         await page.waitForTimeout(60);
       };
       await pick('persona', 'blockwalker');
+      // Origin: the trade, the first room, the skeleton (data/origin.ts).
+      await pick('origin', 'route');
+      await pick('origin', 'angry');
+      await pick('origin', 'bankruptcy');
       await pick('issue', 'taxes');
       await pick('district', 'open');
       await pick('region', 'east');

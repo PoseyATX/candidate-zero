@@ -173,10 +173,15 @@ export function commitCycle(index: number): void {
   paint();
 }
 
-export function commitPlay(index: number, ground?: Ground, press?: boolean): void {
+export function commitPlay(
+  index: number,
+  ground?: Ground,
+  press?: boolean,
+  branch?: string
+): void {
   if (!campaign) return;
   const wasBallot = campaign.state.ballot;
-  const outcome = playFromHand(campaign, index, ground, { press });
+  const outcome = playFromHand(campaign, index, ground, { press, branch });
   if (!outcome.ok) {
     campaign.state.log.push({
       week: campaign.state.week,

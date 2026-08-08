@@ -55,7 +55,22 @@ function audit(card: PlayCard): Row {
   if (card.cost.a === undefined && card.cost.$ === undefined && !card.cost.vp) {
     // free is ok for some; Filing Fee is $ only — fine
   }
-  if (!card.run) issues.push('missing run');
+  // A forked card resolves through its branches rather than a single run — the
+  // whole point is that the engine has no path of its own to take. Either shape
+  // is legal; neither is a card that does nothing.
+  if (card.branches?.length) {
+    if (card.branches.length < 2) issues.push('fork with fewer than two arms');
+    for (const b of card.branches) {
+      if (!b.id) issues.push('branch missing id');
+      if (!b.n) issues.push(`branch ${b.id} missing name`);
+      if (!b.d) issues.push(`branch ${b.id} missing description`);
+      if (typeof b.run !== 'function') issues.push(`branch ${b.id} missing run`);
+    }
+    const bids = card.branches.map(b => b.id);
+    if (new Set(bids).size !== bids.length) issues.push('duplicate branch ids');
+  } else if (!card.run) {
+    issues.push('missing run');
+  }
   // SAFE and CHOICE: no odds required. CHOICE skips the dice (resolve.ts).
   if (card.risk !== 'SAFE' && card.risk !== 'CHOICE' && !card.odds) {
     issues.push('missing odds');

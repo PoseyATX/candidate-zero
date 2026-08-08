@@ -3541,3 +3541,54 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   border-radius: 3px;
 }
 .h2h-name input:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* ------------------------------------------------------------------ *
+ * The fork: a CHOICE card's two arms, each naming what it buys.
+ * Lives in the dossier above Play, because the decision comes first.
+ * ------------------------------------------------------------------ */
+.dossier-fork {
+  display: grid;
+  gap: 0.4rem;
+  margin-bottom: 0.55rem;
+}
+.fork-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  min-height: 44px;
+  padding: 0.5rem 0.65rem;
+  color: var(--parchment);
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--gold-dim);
+  border-radius: 3px;
+  transition: border-color 0.14s ease, background 0.14s ease;
+}
+.fork-option:hover {
+  border-color: var(--gold);
+}
+.fork-option:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+.fork-option.on {
+  border-color: var(--gold);
+  background: rgba(201, 162, 77, 0.18);
+  box-shadow: inset 0 0 0 1px var(--gold);
+}
+.fork-name {
+  font-family: Cinzel, serif;
+  font-size: 0.86rem;
+  letter-spacing: 0.04em;
+  color: var(--gold);
+}
+.fork-option.on .fork-name {
+  color: var(--parchment);
+}
+.fork-what {
+  font-size: 0.76rem;
+  line-height: 1.35;
+  color: var(--parchment-dim);
+}

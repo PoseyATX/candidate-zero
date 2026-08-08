@@ -128,7 +128,13 @@ function $(id: string): HTMLElement {
   return el;
 }
 
-export type PlayCommit = (index: number, ground?: Ground, press?: boolean) => void;
+export type PlayCommit = (
+  index: number,
+  ground?: Ground,
+  press?: boolean,
+  /** Which arm of a forked CHOICE card the player took. See engine/play.ts. */
+  branch?: string
+) => void;
 export type CycleCommit = (index: number) => void;
 export type AfterPaint = () => void;
 
@@ -137,6 +143,8 @@ let pendingGroundCard: PlayCard | null = null;
 /** The press wager armed in the dossier, held across the ground picker so a
  *  field play does not silently drop it between "Play" and "choose a ground". */
 let pendingGroundPress = false;
+/** Fork armed in the dossier, carried across the ground picker. */
+let pendingGroundBranch: string | undefined;
 
 function groundOdds(s: GameState, card: PlayCard, g: Ground): number {
   const base = card.odds ? card.odds(s, g) : 0.5;
@@ -148,6 +156,8 @@ function groundOdds(s: GameState, card: PlayCard, g: Ground): number {
 }
 let detailIndex: number | null = null;
 let detailCampaign: Campaign | null = null;
+/** Which arm of a forked CHOICE card is selected in the open dossier. */
+let detailBranch: string | null = null;
 /** When set, the detail sheet is a phase-draft pick (not a hand play). */
 let detailDraftOption: number | null = null;
 /** Whether the open dossier has the press wager armed. Reset on every open. */
@@ -429,6 +439,44 @@ function fillDossier(
     }
   }
 
+  // The fork. A CHOICE card with branches cannot be played until the player
+  // says which way — engine/play.ts refuses it otherwise. Each arm names what
+  // it costs and buys, so the decision is made with the facts on screen rather
+  // than off state the player cannot see.
+  const forkEl = root.querySelector('#detail-fork') as HTMLElement | null;
+  detailBranch = null;
+  if (forkEl) {
+    const branches = card.branches ?? [];
+    forkEl.hidden = branches.length === 0 || locked;
+    forkEl.innerHTML = '';
+    if (!forkEl.hidden) {
+      for (const b of branches) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'fork-option';
+        btn.setAttribute('aria-pressed', 'false');
+        btn.innerHTML =
+          `<span class="fork-name">${attrEscape(b.n)}</span>` +
+          `<span class="fork-what">${attrEscape(b.d)}</span>`;
+        btn.onclick = () => {
+          detailBranch = b.id;
+          for (const other of Array.from(forkEl.querySelectorAll('.fork-option'))) {
+            other.setAttribute('aria-pressed', 'false');
+            other.classList.remove('on');
+          }
+          btn.setAttribute('aria-pressed', 'true');
+          btn.classList.add('on');
+          if (playBtn) {
+            playBtn.disabled = false;
+            playBtn.setAttribute('aria-disabled', 'false');
+            playBtn.textContent = b.n;
+          }
+        };
+        forkEl.appendChild(btn);
+      }
+    }
+  }
+
   // Press: the one decision that happens *with* the dice rather than before
   // them. Only offered on a real, playable, odds-bearing play.
   const pressBtn = root.querySelector('#btn-press') as HTMLButtonElement | null;
@@ -500,11 +548,18 @@ function fillDossier(
   if (backBtn) backBtn.onclick = () => closeCardDetail();
 
   if (playBtn) {
-    playBtn.disabled = locked;
-    playBtn.setAttribute('aria-disabled', locked ? 'true' : 'false');
-    playBtn.textContent = locked ? whyLocked || 'Unavailable' : opts.confirmLabel;
+    // A fork with nothing chosen is not playable yet, and says so rather than
+    // silently doing one of the two things.
+    const forkPending = !!card.branches?.length && detailBranch === null;
+    playBtn.disabled = locked || forkPending;
+    playBtn.setAttribute('aria-disabled', locked || forkPending ? 'true' : 'false');
+    playBtn.textContent = locked
+      ? whyLocked || 'Unavailable'
+      : forkPending
+        ? 'Choose which way first'
+        : opts.confirmLabel;
     playBtn.onclick = () => {
-      if (locked) return;
+      if (locked || (!!card.branches?.length && detailBranch === null)) return;
       opts.onConfirm();
     };
     try {
@@ -544,11 +599,12 @@ export function openCardDetail(campaign: Campaign, index: number): void {
       const idx = detailIndex;
       const camp = detailCampaign;
       const c = cardForIndex(camp, idx);
-      // Read the wager before closing — closeCardDetail resets it.
+      // Read the wager and the fork before closing — closeCardDetail resets both.
       const press = detailPress;
+      const branch = detailBranch ?? undefined;
       closeCardDetail();
-      if (c?.field) openGroundPicker(camp, idx, c, press);
-      else commitHook?.(idx, undefined, press);
+      if (c?.field) openGroundPicker(camp, idx, c, press, branch);
+      else commitHook?.(idx, undefined, press, branch);
     }
   });
 }
@@ -843,11 +899,13 @@ export function openGroundPicker(
   campaign: Campaign,
   index: number,
   card: PlayCard,
-  press = false
+  press = false,
+  branch?: string
 ): void {
   pendingGroundIndex = index;
   pendingGroundCard = card;
   pendingGroundPress = press;
+  pendingGroundBranch = branch;
   $('gp-title').textContent = `${card.n} — where do you work it?`;
   renderGroundPicker(campaign);
   $('ground-picker').classList.remove('hidden');
@@ -857,6 +915,7 @@ export function closeGroundPicker(): void {
   pendingGroundIndex = null;
   pendingGroundCard = null;
   pendingGroundPress = false;
+  pendingGroundBranch = undefined;
   $('ground-picker').classList.add('hidden');
 }
 
@@ -931,8 +990,9 @@ export function renderGroundPicker(campaign: Campaign): void {
         const index = pendingGroundIndex;
         // Read before closing — closeGroundPicker clears the armed wager.
         const press = pendingGroundPress;
+        const branch = pendingGroundBranch;
         closeGroundPicker();
-        commitHook?.(index, ground, press);
+        commitHook?.(index, ground, press, branch);
       });
     });
 }

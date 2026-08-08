@@ -599,9 +599,9 @@
     },
     {
       "id": "CH02",
-      "name": "Sharpen or Soften",
+      "name": "The Line on the Mailer",
       "tagline": "the line you live with",
-      "description": "Write the line that will be on the mailer. This does not roll. Sharpen: message stays hard for the rest of the run, and the base shows up — but moderates flinch. Soften: +2 endorsement points from people who want a deal, and the firebrands cool on you. You can only set this once. The district hears either way.",
+      "description": "The printer needs the copy by Thursday and it is going to sixty thousand doors with your face on it. This does not roll — you write the line, and you live with it the rest of the run. Hard copy brings your own people out and makes the country-club wing flinch. Careful copy brings two chairs who want a deal and cools the true believers on you. One mailer. The district hears whichever one you sent.",
       "risk": "CHOICE",
       "kind": "action",
       "rarity": "common",

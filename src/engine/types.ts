@@ -64,6 +64,16 @@ export type CardResidency = 'main' | 'special' | 'outside';
 
 export type CardControl = 'player' | 'world';
 
+/** One arm of a player-taken fork. See PlayCard.branches. */
+export interface CardBranch {
+  id: string;
+  /** The verb, concrete. "Take the envelope", not "Option A". */
+  n: string;
+  /** What this arm costs and buys, said plainly before it is picked. */
+  d: string;
+  run: (state: GameState, result: RollResult, ground?: Ground) => string;
+}
+
 export interface PlayCard {
   id: string;
   n: string;
@@ -96,6 +106,19 @@ export interface PlayCard {
    *  (drawn once per run, kept out of normal draft/growth pools via show:()=>false).
    *  See engine/promo.ts. */
   promoRate?: number;
+  /**
+   * A real fork the PLAYER takes, not one the engine takes for them.
+   *
+   * CHOICE cards used to read "Take it: … / Leave it: …" and then decide off
+   * hidden state — CH03 took the envelope if you were under $600, CH02 sharpened
+   * if the firebrand face happened to outweigh the general one. The card
+   * promised agency and delivered a coin flip on numbers the player could not
+   * see, which is the worst version of both.
+   *
+   * When `branches` is present the play cannot resolve without one being named:
+   * see engine/play.ts. Each branch carries its own copy and its own effect.
+   */
+  branches?: CardBranch[];
   /** Named background figures (ally ids) this play puts the player in front of.
    *  Each play banks a contact; enough contacts and the figure stops being
    *  scenery and starts being an actor. See engine/promotion.ts. */

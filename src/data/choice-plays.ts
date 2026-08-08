@@ -31,67 +31,100 @@ export const CH01_ClaimYourDoor: PlayCard = {
     !s.ballot &&
     s.stage === 'primary' &&
     !s.sessionFlags?.claimedDoor,
-  // No odds — CHOICE skips the dice in resolve.
-  run: s => {
-    s.sessionFlags = s.sessionFlags || {};
-    s.sessionFlags.claimedDoor = 1;
-    // Bias by current resources: broke → labor; cash-heavy → money.
-    if (s.money < 800) {
-      s.signatures += 40;
-      s.volPool += 1;
-      s.sessionFlags.doorLabor = 1;
-      return (
-        'You claim the zero-dollar door in public. Two sheets of petitions and a volunteer ' +
-        'who will not leave early. The money people take notes — they prefer candidates who pay.'
-      );
+  // No odds — CHOICE skips the dice in resolve. The fork is the PLAYER'S: this
+  // used to branch on `s.money < 800` while the copy said "you tell the room
+  // which door you are taking".
+  branches: [
+    {
+      id: 'labor',
+      n: 'Claim the petition door',
+      d: '+40 signatures and a volunteer who will not leave early. The money people take notes.',
+      run: s => {
+        s.sessionFlags = s.sessionFlags || {};
+        s.sessionFlags.claimedDoor = 1;
+        s.signatures += 40;
+        s.volPool += 1;
+        s.sessionFlags.doorLabor = 1;
+        return (
+          'You claim the zero-dollar door in public. Two sheets of petitions and a volunteer ' +
+          'who will not leave early. The money people take notes — they prefer candidates who pay.'
+        );
+      }
+    },
+    {
+      id: 'money',
+      n: 'Claim the paid door',
+      d: '+$300 and a point of name ID. The labor kids watch to see if you ever walk another Saturday.',
+      run: s => {
+        s.sessionFlags = s.sessionFlags || {};
+        s.sessionFlags.claimedDoor = 1;
+        s.money += 300;
+        s.nameID += 1;
+        s.sessionFlags.doorMoney = 1;
+        return (
+          'You claim the paid door in public. Three hundred lands in the account like a dare, ' +
+          'and the labor kids watch to see if you ever walk another Saturday.'
+        );
+      }
     }
-    s.money += 300;
-    s.nameID += 1;
-    s.sessionFlags.doorMoney = 1;
-    return (
-      'You claim the paid door in public. Three hundred lands in the account like a dare, ' +
-      'and the labor kids watch to see if you ever walk another Saturday.'
-    );
-  }
+  ]
 };
 
-/** Burn a week of soft targets for a sharp message — or keep the soft edge. */
-export const CH02_SharpenOrSoften: PlayCard = {
+/**
+ * The line that goes on the mailer, and which half of the district it is for.
+ *
+ * Was "Sharpen or Soften", which is two verbs and no picture — a player reading
+ * it had no idea what a mailer, a wing or a group text had to do with any of
+ * it, and the card then chose for them anyway off whichever face happened to be
+ * larger. Now it is a sentence about a piece of mail, and the player writes it.
+ */
+export const CH02_TheLineOnTheMailer: PlayCard = {
   id: 'CH02',
-  n: 'Sharpen or Soften',
+  n: 'The Line on the Mailer',
   cost: { a: 2 },
   risk: 'CHOICE',
   ph: [1, 2, 3],
   tag: 'the line you live with',
   attrs: ['CON', 'DIP'],
   d:
-    'Write the line that will be on the mailer. This does not roll. ' +
-    'Sharpen: message stays hard for the rest of the run, and the base shows up — but moderates flinch. ' +
-    'Soften: +2 endorsement points from people who want a deal, and the firebrands cool on you. ' +
-    'You can only set this once. The district hears either way.',
+    'The printer needs the copy by Thursday and it is going to sixty thousand doors with your ' +
+    'face on it. This does not roll — you write the line, and you live with it the rest of the run. ' +
+    'Hard copy brings your own people out and makes the country-club wing flinch. ' +
+    'Careful copy brings two chairs who want a deal and cools the true believers on you. ' +
+    'One mailer. The district hears whichever one you sent.',
   show: s =>
     (s.stage === 'primary' || s.stage === 'general') &&
     !s.sessionFlags?.lineSet,
-  run: s => {
-    s.sessionFlags = s.sessionFlags || {};
-    s.sessionFlags.lineSet = 1;
-    if ((s.faces?.F || 0) >= (s.faces?.G || 0)) {
-      s.messageSharp = true;
-      s.momentum += 2;
-      s.faces.F = (s.faces.F || 0) + 3;
-      s.faces.G = Math.max(0, (s.faces.G || 0) - 2);
-      return (
-        'You sharpen. The line will travel. Firebrands lean in; the country-club wing goes quiet on the group text.'
-      );
+  branches: [
+    {
+      id: 'hard',
+      n: 'Write it hard',
+      d: 'Message stays sharp all run, +2 momentum, your base turns out — moderates flinch.',
+      run: s => {
+        s.sessionFlags = s.sessionFlags || {};
+        s.sessionFlags.lineSet = 1;
+        s.messageSharp = true;
+        s.momentum += 2;
+        s.faces.F = (s.faces.F || 0) + 3;
+        s.faces.G = Math.max(0, (s.faces.G || 0) - 2);
+        return 'You write it hard. The line will travel. Firebrands lean in; the country-club wing goes quiet on the group text.';
+      }
+    },
+    {
+      id: 'careful',
+      n: 'Write it careful',
+      d: '+2 endorsement points from people who want a deal. The firebrands stop quoting you.',
+      run: s => {
+        s.sessionFlags = s.sessionFlags || {};
+        s.sessionFlags.lineSet = 1;
+        s.endorsePts += 2;
+        s.faces.G = (s.faces.G || 0) + 3;
+        s.faces.F = Math.max(0, (s.faces.F || 0) - 2);
+        s.messageSharp = false;
+        return 'You write it careful. Two chairs who wanted a deal send word. The true believers keep the program but stop quoting you.';
+      }
     }
-    s.endorsePts += 2;
-    s.faces.G = (s.faces.G || 0) + 3;
-    s.faces.F = Math.max(0, (s.faces.F || 0) - 2);
-    s.messageSharp = false;
-    return (
-      'You soften. Two chairs who wanted a deal send word. The true believers keep the program but stop quoting you.'
-    );
-  }
+  ]
 };
 
 /** Take dirty early money — or walk. */
@@ -112,28 +145,44 @@ export const CH03_TheEnvelope: PlayCard = {
     (s.stage === 'primary' || s.stage === 'general') &&
     !s.sessionFlags?.envelopeResolved &&
     s.week >= 2,
-  run: s => {
-    s.sessionFlags = s.sessionFlags || {};
-    s.sessionFlags.envelopeResolved = 1;
-    const broke = s.money < 600 || s.debt > 0;
-    if (broke) {
-      s.money += 1200;
-      if (!s.obls.includes('OB1')) s.obls.push('OB1');
-      s.exposure = (s.exposure || 0) + 2;
-      s.faces.L = Math.max(0, (s.faces.L || 0) - 4);
-      return (
-        'You take the envelope. Twelve hundred solves next week. The string is already around your wrist — ' +
-        'you will feel it when you seek a referral under the dome.'
-      );
+  // Was decided by `s.money < 600 || s.debt > 0` — the card said "take it or
+  // leave it" and then took it for you whenever you were broke, which is the
+  // exact moment a player most wants the decision to be theirs.
+  branches: [
+    {
+      id: 'take',
+      n: 'Take it',
+      d: '+$1,200 now. The PAC string (OB1) goes on, exposure rises, and Session collects.',
+      run: s => {
+        s.sessionFlags = s.sessionFlags || {};
+        s.sessionFlags.envelopeResolved = 1;
+        s.money += 1200;
+        if (!s.obls.includes('OB1')) s.obls.push('OB1');
+        s.exposure = (s.exposure || 0) + 2;
+        s.faces.L = Math.max(0, (s.faces.L || 0) - 4);
+        return (
+          'You take the envelope. Twelve hundred solves next week. The string is already around your wrist — ' +
+          'you will feel it when you seek a referral under the dome.'
+        );
+      }
+    },
+    {
+      id: 'leave',
+      n: 'Leave it on the table',
+      d: '+1 favor and the Old Bull warms to you. You stay broke, and you stay clean.',
+      run: s => {
+        s.sessionFlags = s.sessionFlags || {};
+        s.sessionFlags.envelopeResolved = 1;
+        s.favors += 1;
+        s.faces.G = (s.faces.G || 0) + 2;
+        addAlly(s, 'AL12', 1);
+        return (
+          'You leave it. The Old Bull hears before Friday. One favor, a warmer seat at his table, ' +
+          'and the man with the envelope finds someone hungrier.'
+        );
+      }
     }
-    s.favors += 1;
-    s.faces.G = (s.faces.G || 0) + 2;
-    addAlly(s, 'AL12', 1);
-    return (
-      'You leave it. The Old Bull hears before Friday. One favor, a warmer seat at his table, ' +
-      'and the man with the envelope finds someone hungrier.'
-    );
-  }
+  ]
 };
 
 /** Spend political capital to freeze a ground or cede it. */
@@ -154,29 +203,44 @@ export const CH04_HoldOrCede: PlayCard = {
     (s.stage === 'primary' || s.stage === 'general') &&
     s.momentum >= 1 &&
     !!s.lastGround,
-  run: s => {
-    const g = s.groundsArr.find(x => x.id === s.lastGround);
-    if (!g) return 'No ground in mind. The map is blank for a week.';
-    s.sessionFlags = s.sessionFlags || {};
-    // Prefer hold if we already lead; cede if rival owns it.
-    const hold = (g.rapport || 0) >= (g.rivalRap || 0);
-    if (hold) {
-      bankRapport(g, 8, s);
-      g.rivalRap = Math.max(0, (g.rivalRap || 0) - 6);
-      s.nameID += 1;
-      return (
-        `You hold ${g.n}. Organizers flood the block. Rapport banks hard and their presence thins. ` +
-        `The photo is you with the county, not them.`
-      );
+  // Was `(g.rapport||0) >= (g.rivalRap||0)` — it held wherever you were already
+  // ahead, which is the safe play and never the interesting one. Ceding ground
+  // you lead in to bank the bodies elsewhere is a real decision and the card
+  // was not letting anybody make it.
+  branches: [
+    {
+      id: 'hold',
+      n: 'Hold it',
+      d: 'Organizers flood the block you last walked: big rapport, their presence thins, +1 name ID.',
+      run: s => {
+        const g = s.groundsArr.find(x => x.id === s.lastGround);
+        if (!g) return 'No ground in mind. The map is blank for a week.';
+        bankRapport(g, 8, s);
+        g.rivalRap = Math.max(0, (g.rivalRap || 0) - 6);
+        s.nameID += 1;
+        return (
+          `You hold ${g.n}. Organizers flood the block. Rapport banks hard and their presence thins. ` +
+          `The photo is you with the county, not them.`
+        );
+      }
+    },
+    {
+      id: 'cede',
+      n: 'Cede it',
+      d: 'Pull out and redeploy: +2 volunteers, +10 contacts, and their signs go up where yours were.',
+      run: s => {
+        const g = s.groundsArr.find(x => x.id === s.lastGround);
+        if (!g) return 'No ground in mind. The map is blank for a week.';
+        g.rivalRap = Math.min(100, (g.rivalRap || 0) + 4);
+        s.volPool += 2;
+        s.contacts += 10;
+        return (
+          `You cede ${g.n}. Their signs go up and yours come down. Two volunteers and ten contacts ` +
+          `redeploy to places that still answer the door.`
+        );
+      }
     }
-    g.rivalRap = Math.min(100, (g.rivalRap || 0) + 4);
-    s.volPool += 2;
-    s.contacts += 10;
-    return (
-      `You cede ${g.n}. Their signs go up and yours come down. Two volunteers and ten contacts ` +
-      `redeploy to places that still answer the door.`
-    );
-  }
+  ]
 };
 
 /** Session CHOICE: protect the seat or push the bill. */
@@ -232,7 +296,7 @@ function tag(c: PlayCard): PlayCard {
 
 export const CHOICE_PLAYS: PlayCard[] = [
   CH01_ClaimYourDoor,
-  CH02_SharpenOrSoften,
+  CH02_TheLineOnTheMailer,
   CH03_TheEnvelope,
   CH04_HoldOrCede,
   CH05_SeatOrStatute
