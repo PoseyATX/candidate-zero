@@ -40,10 +40,6 @@ export const CLERK = {
     'to the glass with the hands set at 6:00 and CLOSED written under it in marker. ' +
     'It is 4:41. The woman behind the counter has been deputy clerk here for nineteen ' +
     'years and has watched about four hundred people stand where you are standing.',
-  /** What she says while the ink dries and you take the pen. */
-  sign:
-    'She turns the form around and sets the pen on top of it, and does not let go ' +
-    'of it right away.'
 } as const;
 
 /** Her line for each beat of the form, in her voice. */
@@ -56,7 +52,7 @@ export const CLERK_ASKS: Record<string, string> = {
     '"Last one, and I ask everybody. Is there anything in your past the other side is going to find?"',
   issue: '"What are you running on? One thing. They only print one."',
   place: '"Which seat, and which part of the country is it in?"',
-  sign: '"Then that is the form. You want to read it before you sign it. Most people do not."'
+  sign: '"Then that is the form. Read it before you sign it — most people do not. And read the line at the bottom about what has to come with it."'
 };
 
 /**
@@ -116,3 +112,37 @@ export const CLERK_REPLIES: Record<string, string> = {
 
 /** Everything she could say back, for coverage checks. */
 export const CLERK_REPLY_IDS = Object.keys(CLERK_REPLIES);
+
+/**
+ * What she says after you sign.
+ *
+ * THE CONTINUITY POINT, and it is the one that was broken: signing the
+ * application does NOT put you on the ballot. Act I of the game is the
+ * eight-week race to pay for it — Petitions (PL04) and the Filing Fee (PL05)
+ * are the two doors, and createNewState opens every run with `ballot: false`.
+ * An intro that ended with the form stamped and filed made the whole first act
+ * a contradiction: the player had already done the thing they then spent two
+ * months doing.
+ *
+ * It is also just how it works. In Texas an application for a place on the
+ * ballot is only accepted when it is ACCOMPANIED by the filing fee or by a
+ * petition in lieu of it, so a signed application on its own is a piece of
+ * paper in your pocket and a deadline. She hands it back rather than putting it
+ * in the tray, and that is the hand-off into Act I.
+ *
+ * Built from the engine's numbers rather than written as a string, because an
+ * intro that quotes the fee from memory is the same defect one level up: the
+ * first time PL05 or BALLOT_SIGNATURES is tuned, the clerk starts lying.
+ */
+export function signLine(fee: number, signatures: number, weeks: number): string {
+  const money = `$${fee.toLocaleString('en-US')}`;
+  return (
+    `She witnesses the signature, then writes ${money} at the bottom of the page and ` +
+    `circles it twice. "That, or ${signatures} valid signatures. Real ones — I check ` +
+    `them against the roll and I strike the ones that are not." She slides the form ` +
+    `back across to you rather than putting it in the tray. "Signing it does not file ` +
+    `it. Nothing files it but the fee or the names, and both have to be on this ` +
+    `counter before the window shuts. Until then you have got a signed piece of paper ` +
+    `and ${weeks} weeks."`
+  );
+}

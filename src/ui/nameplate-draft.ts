@@ -38,7 +38,9 @@ import {
   type SetupSelection
 } from '../data/setup.js';
 import { ORIGIN_QUESTIONS, resolveOrigins } from '../data/origin.js';
-import { CLERK, CLERK_ASKS, CLERK_REPLIES } from '../data/clerk.js';
+import { CLERK, CLERK_ASKS, CLERK_REPLIES, signLine } from '../data/clerk.js';
+import { BALLOT_SIGNATURES } from '../engine/state.js';
+import { PRIMARY_WEEKS } from '../engine/calendar.js';
 import { PERSONA_INTRINSIC, ZERO_LIABILITY_IDS, zeroStarterDeck } from '../data/plays-zero.js';
 import { PLAYS } from '../data/plays.js';
 
@@ -152,6 +154,9 @@ function line(kind: string, id: string, said: string, under: string, selected: b
 
 const cardName = (id: string): string => PLAYS.find(p => p.id === id)?.n ?? id;
 
+/** The filing fee, read off the card that charges it — never a second literal. */
+const FILING_FEE = PLAYS.find(p => p.id === 'PL05')?.cost.$ ?? 0;
+
 /** The application, filling in line by line as she writes. */
 function formHtml(draft: NameplateDraftState, complete: boolean): string {
   const persona = PERSONAS.find(x => x.id === draft.personaId);
@@ -178,10 +183,22 @@ function formHtml(draft: NameplateDraftState, complete: boolean): string {
     row('Region', region?.n)
   ].join('');
 
+  // The line that keeps the intro and Act I telling the same story: an
+  // application is not accepted until the fee or the petition comes with it, so
+  // the form leaves this counter signed and UNFILED. Act I is paying for it.
+  const owed = complete
+    ? `<p class="form-owed">
+         <span class="form-owed-k">Must accompany this application</span>
+         <span class="form-owed-v">$${FILING_FEE.toLocaleString('en-US')} filing fee <em>or</em> ${BALLOT_SIGNATURES} valid signatures</span>
+         <span class="form-owed-stamp">NOT YET FILED</span>
+       </p>`
+    : '';
+
   return `
     <section class="filing-form ${complete ? 'complete' : ''}" aria-label="Application for a place on the ballot">
       <p class="form-eyebrow">Application for a Place on the Ballot</p>
       <dl class="form-rows">${rows}</dl>
+      ${owed}
     </section>`;
 }
 
@@ -337,7 +354,7 @@ export function renderNameplateDraft(
       <p class="clerk-who">${esc(CLERK.name)} · ${esc(CLERK.title)}</p>
       ${reply ? `<p class="clerk-reply">${esc(reply)}</p>` : ''}
       ${ask ? `<p class="clerk-ask">${esc(ask)}</p>` : ''}
-      ${isSign ? `<p class="clerk-reply">${esc(CLERK.sign)}</p>` : ''}
+      ${isSign ? `<p class="clerk-reply">${esc(signLine(FILING_FEE, BALLOT_SIGNATURES, PRIMARY_WEEKS))}</p>` : ''}
       <div class="say-list">${choices}</div>
     </div>
     ${formHtml(draft, isSign)}
@@ -358,7 +375,7 @@ export function renderNameplateDraft(
       ${
         isSign
           ? `<button type="button" class="btn btn-gold" id="btn-start" ${canFile ? '' : 'disabled'}
-               title="${canFile ? 'Sign the application and begin the primary' : 'Finish the form first'}">
+               title="${canFile ? 'Sign the application. The fee or the signatures still have to follow it.' : 'Finish the form first'}">
                Sign it
              </button>`
           : ''

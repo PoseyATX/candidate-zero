@@ -26,7 +26,9 @@ import {
 } from '../data/plays-zero.js';
 import { PLAYS } from '../data/plays.js';
 import { ORIGIN_QUESTIONS } from '../data/origin.js';
-import { CLERK_ASKS, CLERK_REPLIES } from '../data/clerk.js';
+import { CLERK_ASKS, CLERK_REPLIES, signLine } from '../data/clerk.js';
+import { BALLOT_SIGNATURES } from '../engine/state.js';
+import { PRIMARY_WEEKS } from '../engine/calendar.js';
 import type { GameState, PlayCard } from '../engine/types.js';
 
 function assert(cond: boolean, msg: string): void {
@@ -326,6 +328,39 @@ console.log('=== CANDIDATE ZERO — the start ===\n');
   }
   assert(!!CLERK_ASKS.name && !!CLERK_ASKS.persona, 'and for the name and the occupation');
   console.log(`PASS: ${spoken.length} answers, ${spoken.length} replies — nobody is talked past.`);
+}
+
+// --- 12. The intro and Act I tell the same story ------------------------
+{
+  // The continuity break this locks: the counter scene ends with you SIGNING
+  // the application, and for one build it read as though the form had been
+  // filed — which made the entire eight-week ballot-access race a
+  // contradiction, because the player had already done the thing they then
+  // spent two months doing.
+  for (const p of STARTING_PERSONAS) {
+    const c = zeroCampaign(p.id);
+    assert(!c.state.ballot, `${p.id} starts OFF the ballot — the form is signed, not filed`);
+    assert(c.state.sigNeed === BALLOT_SIGNATURES, `${p.id} still owes the signature threshold`);
+    assert(c.state.signatures === 0, `${p.id} starts with no signatures gathered`);
+  }
+
+  // She must actually say it, and say it with the engine's numbers rather than
+  // remembered ones.
+  const fee = PLAYS.find(x => x.id === 'PL05')?.cost.$ ?? 0;
+  const said = signLine(fee, BALLOT_SIGNATURES, PRIMARY_WEEKS);
+  assert(/does not file it/i.test(said), 'the clerk says signing does not file it');
+  assert(said.includes(String(BALLOT_SIGNATURES)), `she quotes the real threshold (${BALLOT_SIGNATURES})`);
+  assert(said.includes(fee.toLocaleString('en-US')), `she quotes the real fee ($${fee})`);
+  assert(said.includes(String(PRIMARY_WEEKS)), `she quotes the real deadline (${PRIMARY_WEEKS} weeks)`);
+
+  // And the two doors she names are the two doors the game actually offers.
+  const petition = PLAYS.find(x => x.id === 'PL04');
+  const feeCard = PLAYS.find(x => x.id === 'PL05');
+  assert(!!petition && !!feeCard, 'both ballot doors exist as cards');
+  assert(feeCard!.cost.$ === fee, 'the fee she writes down is the fee the card charges');
+  console.log(
+    `PASS: signed, not filed — $${fee.toLocaleString('en-US')} or ${BALLOT_SIGNATURES} names, ${PRIMARY_WEEKS} weeks, and Act I is exactly that race.`
+  );
 }
 
 console.log('\n=== zero-start OK ===');
