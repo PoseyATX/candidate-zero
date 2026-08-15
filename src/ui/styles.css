@@ -2792,6 +2792,62 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   min-height: 0;
 }
 
+/* ---- Ground marks -----------------------------------------------------
+   Eight grounds are eight PLACES, and the picker rendered them as eight
+   interchangeable text tiles. The mark rides the name line, so it costs no
+   height in an already-tall tile. */
+.gp-mark {
+  display: inline-flex;
+  width: 1.05rem;
+  height: 1.05rem;
+  vertical-align: -0.15em;
+  margin-right: 0.34rem;
+  color: var(--gold);
+}
+.gp-mark svg { width: 100%; height: 100%; display: block; }
+.gp-locked .gp-mark { opacity: 0.45; }
+
+/* ---- Terminal choices -------------------------------------------------
+   BUG: these reuse .play-card but not .row-body, so the title hit the old
+   portrait-era `.play-card .name` rule — flex: 0 0 auto plus a 2-line clamp
+   inside an overflow:hidden row. In a row layout the name could neither
+   shrink nor wrap, so "The Perennial Candidate" rendered as "The Perennial
+   Candidat", clipped mid-word on the screen that ends a run. Column layout,
+   and let the name wrap. */
+#terminal-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: 0.6rem;
+  align-items: stretch;
+}
+#terminal-choices .choice-card {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+  min-height: 8.4rem;
+  padding: 0.55rem 0.5rem;
+}
+#terminal-choices .choice-card .card-art {
+  order: 0;
+  flex: 0 0 auto;
+  height: 3.2rem;
+  margin: 0;
+}
+#terminal-choices .choice-card .card-art .card-emblem { color: #6b4f22; }
+#terminal-choices .choice-card .card-art svg { width: 2.1rem; height: 2.1rem; }
+#terminal-choices .choice-card .name {
+  order: 1;
+  flex: 1 1 auto;
+  /* the clamp is what clipped it */
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  max-height: none;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  text-align: left;
+  padding: 0;
+}
+
 /* The practised mark rides the name. */
 .play-card .row-body .up-mark { margin-right: 0.25rem; }
 

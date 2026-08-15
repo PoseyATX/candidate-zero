@@ -30,7 +30,7 @@ import {
   attrEscape,
   isFullBleedArt
 } from './card-face.js';
-import { emblemFor, KIND_META } from './card-art.js';
+import { emblemFor, groundEmblem, KIND_META } from './card-art.js';
 import { ACT_SHELLS, actFromStage } from './act-shell.js';
 import type { AttrId, RiskClass } from '../engine/types.js';
 import { GROUND_NEIGHBORS } from '../engine/state.js';
@@ -883,7 +883,7 @@ export function renderGroundPicker(campaign: Campaign): void {
       return `
         <button type="button" class="gp-ground${g.id === last ? ' gp-last' : ''}${locked ? ' gp-locked' : ''}" data-ground="${g.id}"
           ${locked ? `aria-disabled="true" data-locked="1" title="${attrEscape(lockWhy)}"` : ''}>
-          <span class="gp-name">${g.n}${g.id === last ? ' <span class="gp-tag">last</span>' : ''}${locked ? ' <span class="gp-tag gp-tag-lock">closed</span>' : ''}</span>
+          <span class="gp-name"><span class="gp-mark" aria-hidden="true">${groundEmblem(g.id)}</span>${g.n}${g.id === last ? ' <span class="gp-tag">last</span>' : ''}${locked ? ' <span class="gp-tag gp-tag-lock">closed</span>' : ''}</span>
           ${locked ? '' : oddsHtml}
           <span class="gp-meters">
             <span class="gp-meter" title="Your rapport on this ground — banks when you work here">

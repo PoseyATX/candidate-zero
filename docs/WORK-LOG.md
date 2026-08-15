@@ -6,7 +6,7 @@
 **Live alpha:** https://poseyatx.github.io/candidate-zero/  
 **Repo:** https://github.com/PoseyATX/candidate-zero  
 
-**Last updated:** 2026-08-15 (**identity chrome + axe gate unblocked**)  
+**Last updated:** 2026-08-15 (**ground picker marks + terminal clipping fix**)  
 
 Related docs:
 
@@ -23,6 +23,38 @@ Related docs:
 | [`UI-IA.md`](./UI-IA.md) | Information architecture — Phase 6 |
 | [`CARD-RESIDENCY.md`](./CARD-RESIDENCY.md) | Main / Special / Outside deck architecture law |
 | Issues #4–#20 | Phase tickets + meta + Stupid Ideas park |
+
+---
+
+## 2026-08-15 — Remaining surfaces: ground picker, terminal, log, tutorial
+
+**Terminal was clipping its own choices — a real bug, not a taste call.** The
+choice cards reuse `.play-card` but not `.row-body`, so their title fell through
+to the portrait-era `.play-card .name` rule: `flex: 0 0 auto` plus a 2-line clamp
+inside an `overflow: hidden` row. In a row the name could neither shrink nor
+wrap, so **"The Perennial Candidate" rendered as "The Perennial Candidat"** —
+clipped mid-word on the screen that ends a run. `#terminal-choices` had no CSS of
+its own at all. Now a column card grid; measured `clipped: false` on all four
+titles, and a fourth choice ("The Staffer") that had been pushed out of view is
+visible again.
+
+**Ground picker.** Eight grounds are eight *places* and rendered as eight
+interchangeable text tiles. `GROUND_EMBLEM` maps GR01–GR08 to marks that ride the
+name line, so they cost no height in an already-tall tile: courthouse→gavel,
+FM roads→road, subdivisions→house (one new glyph), church corridor→church,
+plant gate→hardhat, VFW→medal, lake country→wave, southside→crowd.
+
+**Log tab — deliberately left alone.** It is a dated transcript with week
+markers and it reads cleanly at 390px. Adding chrome to a log makes it harder to
+scan, not easier. No change is the right change here.
+
+**Tutorial — left alone.** Structurally sound: gold section heads, short
+paragraphs, the four acts as a list. It is long, but that is a copy question for
+the owner, not a layout defect I should invent an opinion about.
+
+**Gates (one pass):** `smoke:ui` green · `a11y` PASS (0/0/0/0) · `a11y:layout`
+PASS · `typecheck` · `check:version` · `check:log-markers` · `check:card-art` ·
+`harness:card-art` · `harness:content` · `harness:dead-refs`.
 
 ---
 

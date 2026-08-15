@@ -204,7 +204,10 @@ const EMBLEMS: Record<string, string> = {
     '<path d="M2.6 18.6c2 0 2-1.8 4-1.8s2 1.8 4 1.8 2-1.8 4-1.8 2 1.8 4 1.8"/>',
   rig:
     '<path d="M6.4 20.6L12 3.4l5.6 17.2"/><path d="M8.6 13.4h6.8M7.6 17h8.8"/>' +
-    '<path d="M4 20.6h16"/>'
+    '<path d="M4 20.6h16"/>',
+  house:
+    '<path d="M3.4 11L12 4l8.6 7"/><path d="M5.6 9.6v10.8h12.8V9.6"/>' +
+    '<path d="M10 20.4v-5.2h4v5.2"/><path d="M16 6.2V4h2.4v4.2"/>'
 };
 
 /** Per-card emblem assignments — iconic where the card is iconic. */
@@ -368,6 +371,28 @@ export function identityEmblemKey(kind: string, id: string): string {
 /** Emblem SVG markup for a nameplate identity card. */
 export function identityEmblem(kind: string, id: string): string {
   return emblem(identityEmblemKey(kind, id));
+}
+
+/**
+ * Grounds are places, and the picker showed eight interchangeable text tiles.
+ * A ground you cannot recognise at a glance is a row in a spreadsheet, which
+ * is the same complaint docs/DESIGN-DIRECTIONS.md §3 makes about the model
+ * underneath it. Keyed by the ids in engine/state.ts.
+ */
+const GROUND_EMBLEM: Record<string, string> = {
+  GR01: 'gavel', // Courthouse Square
+  GR02: 'road', // The FM Roads
+  GR03: 'house', // The New Subdivisions
+  GR04: 'church', // Church Corridor
+  GR05: 'hardhat', // The Plant Gate
+  GR06: 'medal', // VFW & Legion Halls
+  GR07: 'wave', // Lake Country
+  GR08: 'crowd' // Southside Blocks
+};
+
+/** Emblem SVG markup for a ground id. Unmapped → star. */
+export function groundEmblem(groundId: string): string {
+  return emblem(GROUND_EMBLEM[groundId] ?? 'star');
 }
 
 /** Emblem SVG markup for a card id, with kit-prefix then star fallback. */
