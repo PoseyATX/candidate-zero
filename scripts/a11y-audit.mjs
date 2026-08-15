@@ -218,8 +218,23 @@ function main() {
       }
 
       // --- Terminal (inspect→PLAY; never spam 0-AP shop) ---
-      for (let iter = 0; iter < 500; iter++) {
+      // Wall-clock guard: the iteration cap alone cannot bound runtime, because
+      // a wedged state makes every safeClick burn its full 2s timeout. This
+      // loop silently ate ~20 minutes and the whole audit never reported.
+      const termDeadline = Date.now() + 180_000;
+      let termIter = 0;
+      for (; termIter < 500 && Date.now() < termDeadline; termIter++) {
         if (await page.locator('#terminal').isVisible()) break;
+        // THE result dialog has to be dismissed here too. It is a full-screen
+        // aria-modal takeover raised by *every* card play, and it eats every
+        // click beneath it. It was missing from this list, so the first play
+        // left it up, every subsequent safeClick timed out, and the loop spun
+        // all 500 iterations without ever advancing the game.
+        if (await page.locator('#result-host:not(.hidden)').count()) {
+          await safeClick(page.locator('#result-go'));
+          await page.waitForTimeout(60);
+          continue;
+        }
         for (const id of ['#act-splash', '#outside-weather']) {
           const m = page.locator(id);
           if ((await m.count()) && (await m.isVisible())) {
@@ -254,6 +269,12 @@ function main() {
       }
       if (await page.locator('#terminal').isVisible()) {
         byState['terminal'] = await runAxe(page);
+      } else {
+        // Say so rather than reporting a clean run that skipped a screen.
+        console.log(
+          `\n! terminal state NOT audited — drive loop gave up after ${termIter} iteration(s)` +
+            `${Date.now() >= termDeadline ? ' (180s budget exhausted)' : ''}.`
+        );
       }
     } finally {
       if (browser) await browser.close();
