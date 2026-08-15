@@ -184,7 +184,18 @@ measured `document.scrollingElement`, got the fixed viewport height back, and re
 about a screen that scrolled ~1.8×. The player was right and the instrument was pointed at the wrong
 element. Every scroll number below measures `.mtab-panel`.
 
-## 12. Card faces are text rows now — FIXED
+## 12. Card faces are text rows now — FIXED, then PARTLY REVERSED (2026-08-15)
+
+> **Correction.** The scroll fix below is sound and its numbers hold. The
+> conclusion drawn from it — that the list should stop being cards — went too
+> far, and it quietly overrode the owner's stated direction ("cards should be
+> 2:3 aspect ratio with more detail, shadowing, aesthetics, polish",
+> `BALANCE-NOTES.md`). `#playables` is a responsive card grid again as of
+> 2026-08-15: **1025px** at 390×844, i.e. *less* scroll than the 1103px 2:3
+> lock this section replaced, with 0 truncated titles at 320/390/1280. The
+> fix was to stop forcing a rigid aspect ratio, not to stop drawing cards.
+> Note also §13 below: the "Charter the…" truncation cited as a reason to
+> abandon card faces was a draft-container bug, and was fixed there.
 
 `.play-card` was `aspect-ratio: 2/3; max-width: 172px` — a ~250px portrait card whose emblem owned
 78% of the height, with the name clamped to two lines. Five of those is ~750px in a ~620px panel.

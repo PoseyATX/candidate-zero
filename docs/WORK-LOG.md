@@ -6,7 +6,7 @@
 **Live alpha:** https://poseyatx.github.io/candidate-zero/  
 **Repo:** https://github.com/PoseyATX/candidate-zero  
 
-**Last updated:** 2026-08-15 (**card faces: emblem medallion + on-face odds**)  
+**Last updated:** 2026-08-15 (**play surface is a card grid again**)  
 
 Related docs:
 
@@ -23,6 +23,51 @@ Related docs:
 | [`UI-IA.md`](./UI-IA.md) | Information architecture — Phase 6 |
 | [`CARD-RESIDENCY.md`](./CARD-RESIDENCY.md) | Main / Special / Outside deck architecture law |
 | Issues #4–#20 | Phase tickets + meta + Stupid Ideas park |
+
+---
+
+## 2026-08-15 — The hand is cards again
+
+**Instruction that had been overridden.** `BALANCE-NOTES.md` records the owner
+asking for "2:3 aspect ratio with more detail, shadowing, aesthetics, polish".
+A 2:3 lock shipped, scrolled badly (1103px in a 621px panel), and
+`PLAYTEST-2026-07.md` §12 replaced it with a full-width text row. That fixed the
+scroll by discarding the card, and `card-lock.css` then argued the row should be
+permanent. A deckbuilder whose hand renders as a spreadsheet is the single
+biggest reason this did not look like a game.
+
+**Re-measured before changing anything** (390×844, via the run-app driver
+injecting candidate CSS at runtime — no commit needed to compare):
+
+| Layout | Scroll | Card | Truncated titles |
+|---|---|---|---|
+| old 2:3 lock | 1103px | 172×258 | — |
+| text rows | 689px | 366×64 | 0 |
+| **this grid** | **1025px** | 164px tall | **0** |
+
+Two findings that decided it:
+
+1. **The grid is cheaper than the layout that was rejected** — 1025px vs 1103px
+   — while restoring the face that was asked for.
+2. **The "titles crushed to *Charter the…*" objection was never card layout.**
+   §13 of that same playtest traces it to `#draft.card-grid` rendering the draft
+   container at half width. It was fixed there. It was then cited for years as a
+   reason cards could not come back.
+
+**What actually failed before** was the *rigid aspect ratio* forcing geometry
+onto the title, not card layout as such. The grid sets `min-height` and lets
+content grow; `card-lock.css` keeps the warning against reintroducing
+`aspect-ratio`/`!important` geometry.
+
+`minmax(8.5rem, 1fr)` is load-bearing: at 9.5rem a 320px viewport silently drops
+to one column and scrolls **1593px**, worse than the rows it replaced. Verified
+2 columns at 320 and 390, 5 at 1280.
+
+**Gates:** `smoke:ui` green, `a11y:layout` PASS (reflow clean at 320px, targets
+≥24×24), `typecheck` clean.
+
+**Docs corrected rather than worked around:** `PLAYTEST-2026-07.md` §12 now
+carries the reversal, and `card-lock.css`'s header no longer argues for rows.
 
 ---
 

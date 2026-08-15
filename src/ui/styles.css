@@ -2648,6 +2648,94 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
   background: linear-gradient(90deg, #8a6a30, #6b4f22);
 }
 
+/* ========================================================================
+   PLAY SURFACE: CARDS, NOT ROWS
+
+   The owner's actual instruction was cards: "2:3 aspect ratio with more
+   detail, shadowing, aesthetics, polish" (docs/BALANCE-NOTES.md). A 2:3 lock
+   shipped, scrolled badly, and was replaced by a full-width text row — which
+   fixed the scroll by discarding the card. Re-measured at 390x844:
+
+     old 2:3 lock  1103px scroll · 172x258 card   (docs/PLAYTEST-2026-07 §12)
+     text rows      689px scroll · 366x64  card
+     this grid     1025px scroll · 164px tall · 0 truncated titles
+
+   So this grid scrolls LESS than the portrait lock that was rejected, while
+   restoring the card face that was asked for. The "titles crushed to
+   'Charter the…'" objection was never about card layout at all: §13 of that
+   same playtest traces it to `#draft.card-grid` rendering the draft
+   container at half width, and it was fixed there.
+
+   Rows already overflowed a 621px panel, so the honest trade is "some
+   scroll" vs "more scroll", not "none" vs "some".
+
+   Deckbuilders are played by reading cards. A hand that renders as a
+   spreadsheet is the single biggest reason this does not look like a game.
+   Scoped to #playables so the draft (#draft, deliberately single-column)
+   and the nameplate grid are untouched.
+   ======================================================================== */
+#playables .play-section-cards {
+  display: grid;
+  /* auto-fill, so a wide viewport gets more columns instead of stretched cards.
+     8.5rem is load-bearing, not a taste call: two columns plus the gap must
+     still fit inside a 320px viewport's content box (~296px), or the smallest
+     supported screen silently drops to ONE column and scrolls further than the
+     text rows it replaced. 9.5rem did exactly that — 1593px at 320px wide. */
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: 0.6rem;
+  align-items: stretch;
+}
+#playables .play-section-cards .play-card {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.25rem;
+  padding: 0.5rem 0.45rem;
+  min-height: 9.6rem;
+}
+#playables .play-section-cards .play-card .cost-anchor {
+  order: 0;
+  align-self: flex-start;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0.2rem;
+  min-width: 0;
+  padding: 0 0.1rem;
+  border-right: 0;
+}
+/* The medallion becomes the art plate: a framed band, not a coin. */
+#playables .play-section-cards .play-card .row-emblem {
+  order: 1;
+  width: 100%;
+  height: 3.1rem;
+  border-radius: 2px;
+  align-self: stretch;
+}
+#playables .play-section-cards .play-card .row-emblem svg {
+  width: 2.1rem;
+  height: 2.1rem;
+}
+#playables .play-section-cards .play-card .row-body {
+  order: 2;
+  flex: 1 1 auto;
+}
+#playables .play-section-cards .play-card .row-right {
+  order: 3;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+#playables .play-section-cards .play-card .row-odds {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.3rem;
+}
+/* The sponsor card's art IS the card — it stays a full-width banner. */
+#playables .play-section-cards .play-card.full-art {
+  grid-column: 1 / -1;
+  min-height: 0;
+}
+
 /* The practised mark rides the name. */
 .play-card .row-body .up-mark { margin-right: 0.25rem; }
 

@@ -1,16 +1,28 @@
 /**
  * CARD ROW LOCK — loaded after styles.css.
  *
- * This file used to hard-lock every .play-card to a 2:3 portrait grid
- * (art / name / cost) with !important, so that "art plate size never changes
- * with title length". That constraint died with the art: alpha players reported
- * heavy scrolling and draft names crushed to "Charter the…", and the fix was to
- * drop the emblem from the list and make the face a full-width text row.
+ * HISTORY, CORRECTED 2026-08-15. This file used to hard-lock every .play-card
+ * to a 2:3 portrait grid with !important so the art plate never resized with
+ * the title. Alpha players rejected it for heavy scrolling and names crushed to
+ * "Charter the…", and the fix was to drop the emblem and make the face a
+ * full-width text row.
  *
- * A portrait lock here would silently undo that, so the standard-card rules are
- * gone rather than commented out. What remains is what still earns its keep:
- * the promo shell, and the full-bleed sponsor art (PR01), which is the one card
- * whose art IS the face and must survive.
+ * The row was an over-correction, and this comment used to argue for keeping it
+ * forever. Re-measured at 390x844 (see the PLAY SURFACE block in styles.css):
+ * the card grid costs 1025px of scroll against the rejected 2:3 lock's 1103px,
+ * so it is cheaper than the thing that was rejected — and the owner asked for
+ * 2:3 cards with "detail, shadowing, aesthetics, polish" in the first place
+ * (docs/BALANCE-NOTES.md). The "Charter the…" truncation was never card
+ * layout: §13 of docs/PLAYTEST-2026-07.md traces it to #draft.card-grid
+ * rendering the draft container at half width. #playables is a card grid again.
+ *
+ * What is still true, and why no lock returns here: the failure mode was a
+ * *rigid aspect ratio* forcing geometry on the title. The grid in styles.css
+ * sets a min-height and lets content grow. Do not reintroduce aspect-ratio or
+ * !important geometry on .play-card.
+ *
+ * What remains below is what still earns its keep: the promo shell, and the
+ * full-bleed sponsor art (PR01), the one card whose art IS the face.
  */
 
 /* PR01 promo — pastel pink shell when full-art is off. No "ultra promo" badge. */
