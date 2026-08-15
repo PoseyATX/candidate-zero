@@ -2575,6 +2575,79 @@ h2, h3, .setup-title, .over-outcome, .act-banner-title, .splash-title,
 .risk-chip-vol { color: #8a2f26; }
 .risk-chip-choice { color: #4a5f7a; }
 
+/* ---- Row emblem medallion ----------------------------------------------
+   The engraved mark, back on the face. Fixed square (never grows with the
+   title, which is what killed the portrait art plate) and shorter than the
+   two-line row it sits in, so it adds recognisability at zero scroll cost.
+   Struck-metal treatment matches the cost and kind seals. */
+.play-card .row-emblem {
+  flex: 0 0 auto;
+  width: 2.15rem;
+  height: 2.15rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #6b4f22;
+  border: 1px solid rgba(122, 90, 44, 0.55);
+  background:
+    radial-gradient(circle at 38% 32%, rgba(255, 250, 236, 0.95) 45%, rgba(226, 210, 172, 0.9));
+  box-shadow:
+    inset 0 0 0 2px rgba(238, 226, 198, 0.75),
+    inset 0 -2px 4px rgba(122, 90, 44, 0.18);
+}
+.play-card .row-emblem svg {
+  width: 66%;
+  height: 66%;
+  display: block;
+}
+/* Camp/ballot-door cards carry the gold frame; tie the medallion to it. */
+.play-card.camp .row-emblem { color: #7a5416; border-color: rgba(154, 120, 40, 0.7); }
+
+/* ---- Right rail: risk chip over odds ---------------------------------- */
+.play-card .row-right {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.22rem;
+}
+
+/* Odds on the face. Deliberately NOT colored good-to-bad: a green bar would
+   print a verdict on the card, which is the rule docs/CARD-TAXONOMY.md exists
+   to protect. The number is the fact; the player decides if it is good. */
+.play-card .row-odds {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.14rem;
+}
+.play-card .odds-num {
+  font-family: Cinzel, serif;
+  /* 12px exactly — keeps the figure out of the layout audit's sub-12px
+     advisory list, which most of the surrounding chrome is still in. */
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  /* 7.6:1 on the parchment — a figure that measured 1.02:1 once shipped
+     invisible here for weeks (docs/DEFERRED.md B1). */
+  color: #4a3a1e;
+}
+.play-card .odds-meter {
+  width: 2.6rem;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(122, 90, 44, 0.22);
+  box-shadow: inset 0 0 0 1px rgba(122, 90, 44, 0.3);
+  overflow: hidden;
+}
+.play-card .odds-meter i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #8a6a30, #6b4f22);
+}
+
 /* The practised mark rides the name. */
 .play-card .row-body .up-mark { margin-right: 0.25rem; }
 

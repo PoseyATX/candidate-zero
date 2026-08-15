@@ -12,7 +12,7 @@ import {
   REGIONS,
   type SetupSelection
 } from '../data/setup.js';
-import { emblem } from './card-art.js';
+import { identityEmblem } from './card-art.js';
 
 export type DraftStep = 1 | 2 | 3;
 
@@ -64,11 +64,13 @@ function identityCardHtml(
   body: string,
   selected: boolean
 ): string {
-  // Star for every identity card — no incomplete emblem map.
+  // Per-identity mark: the map in card-art.ts covers every shipped persona,
+  // issue, district and region, so the six cards you compare on a step no
+  // longer carry the same glyph. Unmapped ids still fall back to star.
   return `
     <button type="button" class="id-card ${selected ? 'selected' : ''}" data-kind="${kind}" data-id="${esc(id)}"
       aria-pressed="${selected ? 'true' : 'false'}">
-      <span class="id-card-emblem">${emblem('star')}</span>
+      <span class="id-card-emblem">${identityEmblem(kind, id)}</span>
       <span class="id-card-name">${esc(title)}</span>
       <span class="id-card-tag">${esc(tag)}</span>
       <span class="id-card-body">${esc(body)}</span>

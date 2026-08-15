@@ -6,7 +6,7 @@
 **Live alpha:** https://poseyatx.github.io/candidate-zero/  
 **Repo:** https://github.com/PoseyATX/candidate-zero  
 
-**Last updated:** 2026-07-23 (**PR-1b/1c extract + PR-2 goal strip**)  
+**Last updated:** 2026-08-15 (**card faces: emblem medallion + on-face odds**)  
 
 Related docs:
 
@@ -25,6 +25,46 @@ Related docs:
 | Issues #4–#20 | Phase tickets + meta + Stupid Ideas park |
 
 ---
+
+## 2026-08-15 — Card faces: the emblem + odds the code already computed
+
+**Problem.** `computeCardFaceView` built `emblemHtml`, `kindSealHtml`, `oddsLabel`
+and `attrLine` for every card; `cardInner` rendered none of them. The play surface
+was a text row — cost, name, tagline, risk chip — and the odds were reachable only
+by opening each card's detail sheet. Separately, 40% of plays and **all 53**
+nameplate identity cards drew the same fallback star, so a hand of five different
+plays showed five identical marks. This is the D1/B1 pattern again: built,
+invisible, therefore non-existent.
+
+**Not** a return of the portrait art plate. `card-lock.css` records why that died
+(heavy scrolling, titles crushed to "Charter the…"), and that reasoning still
+holds. The emblem is back as a fixed 2.15rem inline medallion: it cannot grow
+with the title and adds no row height.
+
+| Change | Where |
+|---|---|
+| Emblem medallion + odds figure/meter on the row face | `card-face.ts` `cardInner`, `styles.css` |
+| 33 new engraved glyphs (van, church, domino, wheat, rig, scales…) | `card-art.ts` `EMBLEMS` |
+| Per-card emblems for the field wave, alley plays, machine doors | `card-art.ts` `CARD_EMBLEM` |
+| Kit prefixes `HK`/`PO`/`MB`/`MD_` | `card-art.ts` `emblemKeyFor` |
+| `IDENTITY_EMBLEM` — complete map, all 53 identity cards | `card-art.ts`, `nameplate-draft.ts` |
+
+**Measured.** Star fallback across `ALL_PLAYS` 40% → 2%. Odds figure contrast
+measured in the running app at **7.63:1** on parchment (`#4a3a1e`), not asserted
+from a palette — B1 shipped a 1.02:1 figure that was invisible for weeks. Set at
+12px so it clears the layout audit's sub-12px advisory.
+
+**Deliberately not done.** Odds are *not* colored good-to-bad. A green-to-red bar
+prints a verdict on the card, which is exactly the rule `CARD-TAXONOMY.md` exists
+to protect: tint by what a card *is*, never by whether it is good for you.
+
+**Gates:** `smoke:ui` green, `a11y:layout` PASS, `harness:card-art`,
+`check:card-art`, `check:log-markers`, `check:version`, `harness:content`,
+`harness:dead-refs`, `typecheck` all green.
+
+**Open, pre-existing:** `npm run a11y` (axe audit) hangs with no output and is
+killed by timeout. Reproduced on a clean stash of `main`, so it predates this
+work — but it means axe has not actually run in some time.
 
 ## 2026-07-23 — Product recovery (inspect loop)
 

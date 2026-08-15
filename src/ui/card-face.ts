@@ -284,15 +284,36 @@ export function cardInner(
     opts.locked && opts.lockReason
       ? `<span class="row-lock">${attrEscape(opts.lockReason)}</span>`
       : '';
+  // The emblem was dropped when the face became a row, because the portrait
+  // art plate forced heavy scrolling and crushed titles (see card-lock.css).
+  // A fixed-width inline medallion brings the mark back without either cost:
+  // it does not grow with the title and does not add a row of height.
+  const emblem = v.emblemHtml
+    ? `<span class="row-emblem" aria-hidden="true">${v.emblemHtml}</span>`
+    : '';
+  // Odds belong on the face. They were computed for every card and shown only
+  // inside the detail sheet, so choosing between two cards meant opening both.
+  const pct = v.oddsPct !== undefined ? Math.round(v.oddsPct * 100) : undefined;
+  const odds =
+    pct === undefined
+      ? ''
+      : `<span class="row-odds" title="Estimated chance this succeeds right now">` +
+        `<span class="odds-num">${pct}%</span>` +
+        `<span class="odds-meter" aria-hidden="true"><i style="width:${pct}%"></i></span>` +
+        `</span>`;
   return `
     ${costAnchorHtml(card, state)}
+    ${emblem}
     <span class="row-body">
       <span class="name">${up}${attrEscape(v.name)}</span>
       ${sig}
       ${lock || tag}
       ${opts.upgradeBanner ? `<span class="up-banner">${attrEscape(opts.upgradeBanner)}</span>` : ''}
     </span>
-    <span class="row-risk risk-chip-${card.risk.toLowerCase()}">${attrEscape(risk)}</span>
+    <span class="row-right">
+      <span class="row-risk risk-chip-${card.risk.toLowerCase()}">${attrEscape(risk)}</span>
+      ${odds}
+    </span>
   `;
 }
 
