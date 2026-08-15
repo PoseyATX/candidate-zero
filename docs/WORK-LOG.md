@@ -6,7 +6,7 @@
 **Live alpha:** https://poseyatx.github.io/candidate-zero/  
 **Repo:** https://github.com/PoseyATX/candidate-zero  
 
-**Last updated:** 2026-08-15 (**play surface is a card grid again**)  
+**Last updated:** 2026-08-15 (**identity chrome + axe gate unblocked**)  
 
 Related docs:
 
@@ -23,6 +23,37 @@ Related docs:
 | [`UI-IA.md`](./UI-IA.md) | Information architecture — Phase 6 |
 | [`CARD-RESIDENCY.md`](./CARD-RESIDENCY.md) | Main / Special / Outside deck architecture law |
 | Issues #4–#20 | Phase tickets + meta + Stupid Ideas park |
+
+---
+
+## 2026-08-15 — Identity is character chrome; the axe gate runs again
+
+**`npm run a11y` had been hanging, and nobody knew.** It produced no output and
+had to be killed. Not axe — axe runs in ~10s and all eight states were captured
+within 64s. The hang was the loop that drives the game to a terminal screen: it
+dismissed `#act-splash` and `#outside-weather` but **not** `#result-host`, the
+full-screen dialog every card play raises. First play left it up, every
+`safeClick` beneath burned its 2s timeout, and the loop spun all 500 iterations.
+Fixed, plus a 180s wall-clock guard — an iteration cap cannot bound runtime when
+each iteration can burn 2s — and it now says so out loud instead of reporting a
+clean run that silently skipped a screen.
+
+**The audit now PASSES: 0 critical / serious / moderate / minor across nine
+states.** `terminal` had never once been audited; the loop never reached it.
+
+**Identity band.** `UI-IA.md` owner notes: *"Identity + Attributes should be more
+prominent"*, *"Who you are is not a stat"*. It shipped as the plainest text on
+the dossier — two unadorned lines above the stat bands. It now carries the
+persona crest and the issue mark on its own line, reusing the identity emblems
+added earlier so the draft and the dossier agree on what your issue looks like.
+The HUD chip carries the same persona mark, laid out as a grid so the mark sits
+beside both lines rather than stacking above them.
+
+Kept deliberately small: DEFERRED A11 records a dossier emblem plate that pushed
+the description below the fold. A 3rem crest does not — the FORCE band is still
+above the fold at 390x844.
+
+**Gates:** `a11y` PASS, `a11y:layout` PASS, `smoke:ui` green, `typecheck` clean.
 
 ---
 

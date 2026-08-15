@@ -22,6 +22,7 @@ import { heatOf, MAX_HEAT } from '../engine/heat.js';
 import { discardsLeft, MAX_DISCARDS } from '../engine/flow.js';
 import { rosterForDisplay, getMachine, tierOf, tierLabel, memberName } from '../engine/machine.js';
 import { doorCardId, closedDoors, MACHINE_DOOR_PLAYS } from '../data/machine-doors.js';
+import { identityEmblem } from './card-art.js';
 import { getRival, rivalRecord, archetypeTitle, MAX_RIVAL_STRENGTH } from '../engine/rival.js';
 import {
   rivalIsHuman,
@@ -308,6 +309,7 @@ export function renderHud(campaign: Campaign): void {
   const issueBit = s.issue ? ` · ${s.issue}` : '';
   $('hud').innerHTML = `
     <span class="hud-item hud-who" title="${personaFull}${issueBit}">
+      <span class="hud-who-mark" aria-hidden="true">${identityEmblem('persona', s.personaId ?? '')}</span>
       <span class="hud-who-name">${who}</span>
       ${s.issue ? `<span class="hud-who-issue">${s.issue}</span>` : ''}
     </span>
@@ -625,8 +627,16 @@ export function renderLedger(campaign: Campaign, legacy?: LegacyState): void {
   $('ledger').innerHTML = `
     <div class="ledger-dossier">
       <div class="ledger-band ledger-identity">
-        <div class="ledger-who">${s.persona ?? '—'}</div>
-        <div class="ledger-issue">${s.issue ?? '—'}</div>
+        <div class="ledger-idhead">
+          <span class="ledger-crest" aria-hidden="true">${identityEmblem('persona', s.personaId ?? '')}</span>
+          <div class="ledger-idnames">
+            <div class="ledger-who">${s.persona ?? '—'}</div>
+            <div class="ledger-issue">
+              <span class="ledger-issue-mark" aria-hidden="true">${identityEmblem('issue', s.issueId ?? '')}</span>
+              ${s.issue ?? '—'}
+            </div>
+          </div>
+        </div>
         <div class="attr-chips" aria-label="Attributes">${attrChipsHtml(s.attrs)}</div>
       </div>
       ${forceBand}
