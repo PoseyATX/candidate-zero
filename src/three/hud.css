@@ -1,0 +1,365 @@
+/* CANDIDATE ZERO — 2D chrome over the 3D table.
+   The game is on the felt. This layer is the paperwork around it: the ledger,
+   the calendar, the docket, the record. It never blocks the table except when
+   it is genuinely a modal moment. */
+
+:root {
+  --ink: #e8dcc4;
+  --ink-dim: #a5967c;
+  --brass: #c9a227;
+  --stock: #1a140e;
+  --panel: rgba(20, 15, 10, 0.82);
+  --edge: rgba(190, 158, 92, 0.28);
+  --safe: #6f8a5a;
+  --std: #c9a227;
+  --vol: #c25a3c;
+  --choice: #6b8ba8;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #0a0806;
+  color: var(--ink);
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+#stage { position: fixed; inset: 0; }
+#stage canvas { width: 100%; height: 100%; }
+
+#hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0)
+    env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+}
+#hud button, #hud a, #hud .pointer { pointer-events: auto; }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: 10px;
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+
+/* ---- top rail ---------------------------------------------------------- */
+.rail {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+}
+
+.stamp { padding: 10px 14px; min-width: 0; }
+.stamp .eyebrow {
+  margin: 0;
+  font: 600 10px/1.4 Inter, sans-serif;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+.stamp h2 {
+  margin: 2px 0 0;
+  font: 700 20px/1.15 Cinzel, Georgia, serif;
+  color: var(--ink);
+}
+.stamp .sub { margin: 3px 0 0; font-size: 12px; color: var(--ink-dim); }
+
+.ledger {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+  max-width: 62vw;
+}
+.chip {
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  padding: 6px 10px;
+  min-width: 62px;
+  text-align: center;
+}
+.chip .k {
+  display: block;
+  font: 600 9px/1.3 Inter, sans-serif;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.chip .v { display: block; font: 800 17px/1.15 Inter, sans-serif; color: var(--ink); }
+.chip.warn .v { color: var(--vol); }
+.chip.good .v { color: var(--safe); }
+
+/* ---- goal strip -------------------------------------------------------- */
+.goal {
+  margin: 0 12px;
+  padding: 9px 14px;
+  display: flex;
+  gap: 14px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  align-self: flex-start;
+  max-width: min(640px, calc(100vw - 24px));
+}
+.goal .primary { font: 700 14px/1.3 Inter, sans-serif; }
+.goal .progress { font: 700 13px/1.3 Inter, sans-serif; color: var(--brass); }
+.goal .next { font-size: 12px; color: var(--ink-dim); }
+
+.spacer { flex: 1; min-height: 0; }
+
+/* ---- side column ------------------------------------------------------- */
+.side {
+  position: absolute;
+  right: 12px;
+  top: 132px;
+  width: 258px;
+  max-height: calc(100vh - 280px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.side section { padding: 10px 12px; overflow: hidden; }
+.side h3 {
+  margin: 0 0 7px;
+  font: 600 10px/1.3 Inter, sans-serif;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+.docket-row {
+  border-left: 2px solid var(--brass);
+  padding: 3px 0 3px 8px;
+  margin-bottom: 7px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+.docket-row .w { color: var(--ink-dim); font-size: 11px; }
+.docket-row.blocked { border-left-color: var(--vol); opacity: 0.72; }
+
+#log-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 172px;
+  overflow-y: auto;
+  pointer-events: auto;
+  scrollbar-width: thin;
+}
+#log-list li {
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(190, 158, 92, 0.1);
+  color: var(--ink-dim);
+}
+#log-list li b { color: var(--ink); font-weight: 700; }
+#log-list li.t3 b { color: var(--safe); }
+#log-list li.t0 b { color: var(--vol); }
+
+/* ---- bottom rail ------------------------------------------------------- */
+.bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 12px;
+}
+
+.btn {
+  font: 700 13px/1 Inter, sans-serif;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  background: rgba(30, 23, 15, 0.9);
+  border: 1px solid var(--edge);
+  border-radius: 9px;
+  padding: 12px 18px;
+  min-height: 44px;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+}
+.btn:hover:not(:disabled) { background: rgba(52, 40, 24, 0.95); border-color: var(--brass); }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.btn-gold {
+  background: linear-gradient(180deg, #c9a227, #8a6a16);
+  color: #17110a;
+  border-color: #e0c070;
+}
+.btn-gold:hover:not(:disabled) { background: linear-gradient(180deg, #e0c070, #a07f1c); }
+.btn-big { font-size: 15px; padding: 15px 28px; min-height: 52px; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.counters { display: flex; gap: 8px; align-items: flex-end; }
+
+/* ---- inspector (the card you are holding) ------------------------------ */
+/* The panel itself must NOT take the pointer. It appears under the cursor the
+   moment you hover a card on the left of the fan; if it swallows the move the
+   canvas gets a pointerleave, the hover clears, the panel vanishes — and it
+   flickers on and off as you hold still. Only its controls are interactive. */
+/* Anchored ABOVE the hand, not over it. Its commit controls have to take the
+   pointer to be clickable, and while the panel sat at the bottom-left those
+   buttons landed straight on top of the fanned cards: hovering a card on the
+   left raised a panel whose button then stole the pointer, the canvas took a
+   pointerleave, the hover cleared and the panel vanished — a flicker that made
+   the left of the hand effectively unusable. The panel body still takes no
+   pointer at all; only its controls do. */
+#inspector {
+  position: absolute;
+  left: 12px;
+  top: 196px;
+  width: 300px;
+  max-height: calc(100vh - 330px);
+  overflow-y: auto;
+  padding: 13px 15px;
+  pointer-events: none;
+}
+#inspector button { pointer-events: auto; }
+#inspector.hidden { display: none; }
+#inspector h4 { margin: 0; font: 700 17px/1.2 Cinzel, Georgia, serif; }
+#inspector .meta {
+  margin: 5px 0 8px;
+  font: 600 10px/1.3 Inter, sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+#inspector .desc { margin: 0 0 10px; font-size: 13px; line-height: 1.45; color: var(--ink-dim); }
+#inspector .note {
+  margin: 0 0 9px;
+  font-size: 12px;
+  color: var(--vol);
+  line-height: 1.4;
+}
+#inspector .odds { font: 800 26px/1 Inter, sans-serif; color: var(--brass); }
+#inspector .odds small { font: 600 11px/1 Inter, sans-serif; color: var(--ink-dim); }
+
+/* ---- modal ------------------------------------------------------------- */
+#modal {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(6, 4, 3, 0.78);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  pointer-events: auto;
+  padding: 20px;
+  z-index: 40;
+}
+#modal.hidden { display: none; }
+.sheet {
+  max-width: 560px;
+  width: 100%;
+  max-height: 84vh;
+  overflow-y: auto;
+  padding: 26px 28px;
+  background: linear-gradient(160deg, #221a12, #14100b);
+  border: 1px solid var(--edge);
+  border-radius: 14px;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.7);
+}
+.sheet .eyebrow {
+  margin: 0 0 6px;
+  font: 600 10px/1.3 Inter, sans-serif;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+.sheet h2 { margin: 0 0 12px; font: 700 27px/1.15 Cinzel, Georgia, serif; }
+.sheet p { margin: 0 0 14px; font-size: 14px; line-height: 1.6; color: var(--ink-dim); }
+.sheet p.lede { color: var(--ink); font-size: 15px; }
+
+.opts { display: grid; gap: 9px; margin: 0 0 16px; }
+.opt {
+  text-align: left;
+  padding: 13px 15px;
+  border-radius: 9px;
+  border: 1px solid var(--edge);
+  background: rgba(40, 31, 20, 0.7);
+  cursor: pointer;
+  color: var(--ink);
+  min-height: 44px;
+}
+.opt:hover { border-color: var(--brass); background: rgba(58, 45, 28, 0.85); }
+.opt:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.opt .n { display: block; font: 700 15px/1.25 Cinzel, Georgia, serif; }
+.opt .d { display: block; margin-top: 4px; font-size: 12.5px; line-height: 1.45; color: var(--ink-dim); }
+.opt[aria-pressed='true'] { border-color: var(--brass); background: rgba(80, 62, 30, 0.85); }
+
+/* ---- toast ------------------------------------------------------------- */
+#toast {
+  position: fixed;
+  left: 50%;
+  top: 76px;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  pointer-events: none;
+}
+.toast-item {
+  padding: 10px 18px;
+  border-radius: 9px;
+  background: rgba(20, 15, 10, 0.94);
+  border: 1px solid var(--edge);
+  font: 600 13px/1.35 Inter, sans-serif;
+  max-width: min(460px, 88vw);
+  text-align: center;
+  animation: toast-in 0.24s ease both;
+}
+.toast-item.t3 { border-color: var(--safe); color: #d5e5c5; }
+.toast-item.t0 { border-color: var(--vol); color: #f0c6b8; }
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: none; }
+}
+
+.hidden { display: none !important; }
+
+/* ---- phone ------------------------------------------------------------- */
+@media (max-width: 860px) {
+  .side { display: none; }
+  .ledger { max-width: 100vw; }
+  .chip { min-width: 54px; padding: 5px 8px; }
+  .chip .v { font-size: 15px; }
+  /* On a phone there is no hover to flicker, and the thumb is at the bottom:
+     the sheet belongs where it can be reached. */
+  #inspector {
+    left: 8px;
+    right: 8px;
+    top: auto;
+    bottom: 76px;
+    width: auto;
+    max-height: 46vh;
+  }
+  .stamp h2 { font-size: 16px; }
+  .goal { margin: 0 8px; padding: 8px 11px; }
+  .goal .next { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-item { animation: none; }
+  .btn { transition: none; }
+}
+
+/* commit affordances inside the inspector — the card itself moves when you
+   reach for it, so the button that actually plays it must not. */
+#inspector .btn-play { width: 100%; margin-top: 4px; }
+#inspector .btn-cut { width: 100%; margin-top: 7px; font-size: 12px; padding: 9px 12px; min-height: 40px; }
+#inspector .btn-row { margin-top: 4px; }
+#inspector .btn-row .btn { flex: 1 1 44%; font-size: 12px; padding: 10px 8px; }

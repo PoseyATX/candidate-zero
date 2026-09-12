@@ -34,7 +34,7 @@ namespace CandidateZero.HostData
         public List<GroundView> grounds;
         public List<ActionView> actions;
         public GoalView goal;
-        /// <summary>`cardId` is always a real catalog id. `upgrade` marks an offer to improve a card the player already runs rather than to add a new one — hosts must not have to know the engine's option encoding to render truthful copy.</summary>
+        /// <summary>`cardId` is always a real catalog id — or, for `kind: 'shed'`, a real obligation id. `kind` says what is actually being offered, because an opportunity is not always a card: it may be a chance to sharpen something you already run, or somebody agreeing to take a debt off you. `upgrade` is kept as the older boolean so existing hosts keep working. A host must never have to know the engine's option encoding to render truthful copy.</summary>
         public PendingDraftView pendingDraft;
         /// <summary>World weather chrome — host shows, then dismissOutside. Never a hand card.</summary>
         public PendingOutsideView pendingOutside;
@@ -157,6 +157,17 @@ namespace CandidateZero.HostData
         public float pressOdds;
         /// <summary>Disaster band it would cost. Always 0 for SAFE — Covenant 5 holds even when the player is buying risk deliberately.</summary>
         public float pressBand;
+        /// <summary>A fork the PLAYER takes. Empty for ordinary cards. When this is non-empty the play command MUST name one of these ids or the play is refused: the engine does not choose an arm on the player's behalf. Each arm carries its own copy so a host can show what it costs and buys before it is picked. See engine/play.ts.</summary>
+        public List<BranchesView> branches;
+        /// <summary>'' when fresh, else why this play is worth less right now because you have been leaning on it. Decays weekly on its own. See engine/fatigue.ts.</summary>
+        public string fatigueNote;
+    }
+
+    public sealed class BranchesView
+    {
+        public string id;
+        public string name;
+        public string desc;
     }
 
     public sealed class GoalView
@@ -182,6 +193,7 @@ namespace CandidateZero.HostData
         public string name;
         public string risk;
         public bool upgrade;
+        public string kind;
     }
 
     public sealed class PendingOutsideView
@@ -288,6 +300,8 @@ namespace CandidateZero.HostData
         public string issueId;
         public string districtId;
         public string regionId;
+        /// <summary>Answer ids from data/origin.ts — the trade, the first time, the skeleton. Optional so every save and harness fixture written before origins existed still loads and behaves exactly as it did.</summary>
+        public List<string> originIds;
 
         /// <summary>Serialize for newGame(seed, setup).</summary>
         public string ToJsonObject() => JsonConvert.SerializeObject(this);

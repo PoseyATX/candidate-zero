@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#14100c" />
+    <title>Candidate Zero — Alpha</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700;800&family=Merriweather:wght@400;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="app">
+      <header id="topbar" class="top">
+        <div>
+          <p class="eyebrow">A Texas Political Epic</p>
+          <h1>Candidate Zero <span class="alpha-tag" id="masthead-version" title="Pre-release. Version is injected from package.json — never hand-typed."></span></h1>
+        </div>
+        <div class="top-actions">
+          <button type="button" id="btn-howto" class="btn">How to Play</button>
+          <button type="button" id="btn-new" class="btn">New run</button>
+        </div>
+      </header>
+
+      <section id="title" class="title-screen hidden">
+        <p class="eyebrow">A Texas Political Epic</p>
+        <div class="title-rule"></div>
+        <h1 class="title-name">Candidate<br />Zero</h1>
+        <div class="title-rule"></div>
+        <div id="title-emblem" class="title-emblem" aria-hidden="true"></div>
+        <p class="title-tag">
+          You are nobody. No list. No machine. No legacy.<br />
+          A Texas primary will take everything you build — and then take you.<br />
+          <em>Start at zero. Keep the deck. Keep going.</em>
+        </p>
+        <div id="title-identity" class="title-identity hidden" aria-live="polite"></div>
+        <div class="title-actions">
+          <button type="button" id="btn-title-start" class="btn btn-gold btn-big">File for Office</button>
+          <button type="button" id="btn-title-refile" class="btn btn-big hidden">File as someone else</button>
+          <button type="button" id="btn-title-howto" class="btn btn-big">How to Play</button>
+        </div>
+        <p class="alpha-note build-tag">
+          <span id="title-version"></span>
+          <br />
+          <a class="kofi" href="https://ko-fi.com/poseyatx" target="_blank" rel="noopener noreferrer" title="Buy me a Ko-fi">buy me a ko-fi</a>
+        </p>
+      </section>
+
+      <section id="tutorial" class="tutorial hidden">
+        <div class="panel">
+          <h2>How to Play</h2>
+          <p class="hint">A roguelike of Texas retail politics. Easy to learn; the county takes years.</p>
+          <h3>The Shape of It</h3>
+          <p>You are nobody, running for the Texas House. Eight weeks to the primary,
+          six more to the general if you survive it. Before any of that counts, you must
+          <b>make the ballot</b> by the end of week 8 — or the primary goes on without you.</p>
+          <h3>Four Acts</h3>
+          <ul class="tut-list">
+            <li><b>Act I — Primary</b> — campaign hand, ballot doors, shop. Ballot or die.</li>
+            <li><b>Act II — General</b> — GOTV and contrast. Six weeks to November.</li>
+            <li><b>Act III — Session</b> — legislative motions after a general win.</li>
+            <li><b>Act IV — Waiting</b> — after a loss, interim weeks. You re-file as the same person.</li>
+          </ul>
+          <h3>Identity</h3>
+          <p>First filing: pick <b>who you are</b>, <b>what you run on</b>, and <b>where you file</b>.
+          Those picks stick. Later filings keep the same identity.</p>
+          <h3>The Goal Strip</h3>
+          <p>Under the act banner: <b>what matters</b> · <b>how far you are</b> · <b>what to do next</b>.</p>
+          <h3>Your Week</h3>
+          <p>Each week you get <b>5 action points</b> plus a separate <b>turf budget</b> (the dashed pips), and a hand of cards. Play until you're out of actions, then <b>End Week</b>.</p>
+          <p>Cards cost different amounts — a yard sign is cheap, a fish fry is a real day's work. <b>Field plays spend your turf budget first</b>, then campaign AP, so working the ground doesn't eat the week you need to make the ballot.</p>
+          <p>You also get <b>two cuts</b> a week to throw away cards you can't use, and a
+          <b>heat</b> meter that builds as plays land. Both live in the strip at the top of the
+          screen, and both reset when the week turns.</p>
+          <h3>Reading a Card</h3>
+          <ul class="tut-list">
+            <li>The face shows <b>title</b>, <b>art</b>, and <b>cost</b> only.</li>
+            <li><b>First tap</b> opens a full brief — story, risk, and odds in plain English; <b>Play</b> commits.</li>
+            <li>Field plays pick a ground. Higher rival opposition makes that ground harder — the brief shows the tax.</li>
+            <li><b>Dimmed cards</b> can't be played yet — the brief says why.</li>
+          </ul>
+          <h3>Risk</h3>
+          <ul class="tut-list">
+            <li><span class="dot dot-safe"></span><b>Safe</b> — never a disaster.</li>
+            <li><span class="dot dot-std"></span><b>Standard</b> — honest variance.</li>
+            <li><span class="dot dot-vol"></span><b>Volatile</b> — swings both ways.</li>
+          </ul>
+          <h3>Cutting a Card</h3>
+          <p>You get <b>two cuts a week</b> (the diamond pips up top). Open a card you can't use and
+          take <b>Cut it — draw another</b>: it goes back into the deck and you draw a replacement.
+          Cuts cost no action points, and they don't carry over — an unused cut is a wasted one.</p>
+          <p>One exception: before you're on the ballot, the game won't let you cut away your last
+          way onto it.</p>
+          <h3>Heat, and Pressing It</h3>
+          <p>Every play that lands builds <b>heat</b>. Any play that fails wipes it. Heat does
+          nothing on its own — it only matters when you spend it.</p>
+          <p>On a card's brief, <b>Press</b> spends your whole streak on that one play: better odds,
+          and a wider chance of disaster to pay for them. The payoff climbs steeply, so a streak of
+          four is worth far more than four streaks of one — but you're wagering a streak you might
+          rather keep. Safe cards are the exception: pressing one buys the odds and still can't
+          produce a disaster.</p>
+          <p>The dice are never rigged for you or against you. Pressing moves the odds <i>before</i>
+          the roll; it never touches the roll itself, and losing never earns you a discount.</p>
+          <h3>Practising a Card</h3>
+          <p>Between acts you're offered a draft. Sometimes a slot offers to <b>practise</b> a card
+          you already run instead of handing you a new one — better odds on it, or one less action
+          point, for the rest of the run. A practised card carries a ✦ on its face.</p>
+          <p>That's the real question the draft asks: a wider deck, or a sharper one.</p>
+          <h3>Holding the Seat</h3>
+          <p>If you win, Session is a different game. Passing your bill is the prize, but the seat
+          itself is kept at home: <b>do casework every week</b>. Skip it and your district standing
+          bleeds, a challenger circles, and you can lose the seat you just won even while your bill
+          is doing fine.</p>
+          <p>The odds printed on a card are not the same thing as the value of playing it. Session
+          is where that difference bites hardest.</p>
+          <h3>The Two Doors to the Ballot</h3>
+          <p><b>Labor:</b> petition signatures. <b>Money:</b> the filing fee. Most runs die at this door.</p>
+          <h3>Losing Well</h3>
+          <p>A run ending is not a reset. On a loss you take an interim path, bank contacts and name, then re-file as the same person.</p>
+          <div class="row-actions">
+            <button type="button" id="btn-tut-back" class="btn btn-gold">Back</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="setup" class="setup panel nameplate-panel hidden">
+        <div id="nameplate-draft" class="nameplate-draft" aria-live="polite"></div>
+        <div class="setup-actions" style="margin-top:0.75rem">
+          <button type="button" id="btn-setup-howto" class="btn">How to Play</button>
+        </div>
+        <div id="chronicle" class="chronicle hidden"></div>
+      </section>
+
+      <section id="game" class="game hidden">
+        <div id="hud" class="hud" aria-live="polite"></div>
+        <div id="act-banner" class="act-banner" aria-live="polite" hidden>
+          <span class="act-banner-num"></span>
+          <span class="act-banner-title"></span>
+          <span class="act-banner-sub"></span>
+        </div>
+        <div id="ground-picker" class="ground-picker hidden" role="dialog" aria-modal="true" aria-label="Choose a ground">
+          <div class="gp-panel">
+            <div class="gp-head">
+              <h3 id="gp-title">Where do you work it?</h3>
+              <button type="button" id="gp-cancel" class="btn" aria-label="Cancel">Cancel</button>
+            </div>
+            <p class="hint" id="gp-sub">
+              <b>You</b> = your rapport on that ground.
+              <b>Rival</b> = opposition presence — higher rival lowers field odds.
+              Same ground twice in a week yields half rapport.
+            </p>
+            <div id="gp-list" class="gp-list"></div>
+          </div>
+        </div>
+        <div id="card-detail" class="card-detail hidden" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+          <div class="dossier" id="detail-panel">
+            <button type="button" class="dossier-close" id="detail-close" aria-label="Close brief">Close</button>
+            <div class="dossier-scroll" tabindex="0" role="region" aria-label="Card brief details">
+              <div class="dossier-art" id="detail-art" aria-hidden="true"></div>
+              <p class="dossier-eyebrow" id="detail-eyebrow">Campaign brief</p>
+              <h2 id="detail-title" class="dossier-title"></h2>
+              <p class="dossier-tagline" id="detail-tagline"></p>
+              <p class="dossier-prose" id="detail-desc"></p>
+              <div class="dossier-odds" id="detail-odds" hidden></div>
+              <dl class="dossier-facts" id="detail-stats"></dl>
+              <p class="dossier-lock" id="detail-lock" hidden></p>
+            </div>
+            <div class="dossier-actions">
+              <div class="dossier-fork" id="detail-fork" role="group" aria-label="Which way you take this" hidden></div>
+              <button type="button" class="press-toggle" id="btn-press" aria-pressed="false"
+                aria-label="Press your banked heat on this play" hidden>
+                <span class="press-flame" aria-hidden="true">✦</span>
+                <span class="press-copy" id="press-copy"></span>
+              </button>
+              <button type="button" class="btn btn-gold btn-large" id="btn-play-detail">Play this card</button>
+              <button type="button" class="btn btn-large btn-cut" id="btn-cut-detail" hidden>Cut it — draw another</button>
+              <button type="button" class="btn btn-large" id="btn-detail-back">Put it back</button>
+            </div>
+          </div>
+        </div>
+        <div class="mtabs">
+          <section id="tab-play" class="mtab-panel active" data-tab="play">
+            <div class="panel panel-actions">
+              <h2 id="actions-heading">Actions</h2>
+              <div id="goal-strip" class="goal-strip" aria-live="polite">
+                <div class="goal-row goal-primary">
+                  <span class="goal-label">Goal</span>
+                  <span class="goal-primary-text"></span>
+                </div>
+                <div class="goal-row goal-progress">
+                  <span class="goal-label">Now</span>
+                  <span class="goal-progress-text"></span>
+                </div>
+                <div class="goal-row goal-next">
+                  <span class="goal-label">Next</span>
+                  <span class="goal-next-text"></span>
+                </div>
+              </div>
+              <div id="draft" class="card-grid"></div>
+              <div id="playables" class="card-grid"></div>
+            </div>
+          </section>
+          <section id="tab-dossier" class="mtab-panel" data-tab="dossier">
+            <section id="ledger" class="ledger" aria-label="Campaign dossier"></section>
+          </section>
+          <section id="tab-log" class="mtab-panel" data-tab="log">
+            <div class="panel panel-log">
+              <h2 id="log-heading">Log</h2>
+              <div id="log" class="log" role="log"></div>
+            </div>
+          </section>
+        </div>
+        <div id="play-footer" class="play-footer">
+          <button type="button" id="btn-end" class="btn btn-gold">End week</button>
+        </div>
+        <nav class="mbottom-nav" aria-label="Sections">
+          <button type="button" class="mnav-btn active" data-gototab="play">Play</button>
+          <button type="button" class="mnav-btn" data-gototab="dossier">Dossier</button>
+          <button type="button" class="mnav-btn" data-gototab="log">Log</button>
+        </nav>
+      </section>
+      <!-- Full-screen play/week result. The moment a card resolves is the
+           dopamine beat of the whole game; it gets the whole screen. -->
+      <div id="result-host" class="result-host hidden" role="dialog" aria-modal="true"
+        aria-labelledby="result-stamp" aria-describedby="result-juice"></div>
+      <section id="terminal" class="game hidden">
+        <div id="terminal-head" class="panel"></div>
+        <div id="terminal-choices" class="card-grid"></div>
+      </section>
+      <footer id="foot" class="foot">
+        <span>Candidate Zero · alpha build</span>
+        <a class="kofi" href="https://ko-fi.com/poseyatx" target="_blank" rel="noopener noreferrer" title="Buy me a Ko-fi">buy me a ko-fi</a>
+      </footer>
+    </div>
+    <script type="module" src="/src/ui/main.ts"></script>
+  </body>
+</html>

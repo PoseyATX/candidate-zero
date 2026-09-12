@@ -317,3 +317,40 @@ a real bug immediately — magnitude was on the profile stream but `ground_game`
 was still drawing from the global one, so two clients would have agreed on how hard the
 opponent worked and disagreed about *where*. That is the exact class of bug that makes async
 PvP quietly unplayable, and it would not have shown up in any single-player test.
+
+---
+
+## 2026-09-12 — the 3D salvage
+
+The owner's judgement on what had been built, kept verbatim because paraphrase softens it:
+
+> *"this was supposed to be a massive scale Texas legislative roguelike card game… I wanted
+> three.js, and you created cookie clicker on typescript."*
+
+He was right about the surface and the measurement backs him: at the start of this session
+the repo held 11,239 lines of harness and 8,885 lines of docs against a presentation layer
+that drew the game as a list of buttons. The engine, meanwhile, was sound — 5/5 seeds
+terminal, replay and save/load exact. So the salvage kept every rule and replaced the
+surface: `src/three/` is a WebGL table bound to the frozen host API, and not one line of
+`src/engine`, `src/data` or `src/harness` was changed to make it work. See
+[`THREE-CLIENT.md`](./THREE-CLIENT.md).
+
+**What is open after it, honestly:**
+
+| # | Item | Status |
+|---|---|---|
+| D1 | **The Session has no room.** The bill pipeline, docket provisions and sine die verdict are live in the engine and appear on the table only as text in a side panel. The chamber is the back half of the game and the player never sees it. | OPEN |
+| D2 | **Outside events are a sheet of text.** The world speaks — a judge dies, the grid freezes — and it arrives as a modal paragraph rather than as something that happens on the table. | OPEN |
+| D3 | **No card art, no sound.** Faces are typographic and the room is silent. | OPEN |
+| D4 | **No camera control.** You cannot lean in, orbit, or look down the table. | OPEN |
+| D5 | **Draft offers rise from the felt but are chosen in a list beside them.** The pick should be made by picking the card up. | OPEN |
+| D6 | **Shop, obligations and allies are ordinary cards.** They are people and places and should look like it. | OPEN |
+| D7 | **The legacy DOM a11y audit is no longer a blocking gate.** It drives a filing scene that was rewritten as narrative beats, so it now degrades to the states it can still reach. The shipped client is gated instead (`npm run a11y`). Either finish repairing the legacy walk or retire the legacy build deliberately — it should not sit half-guarded. | OPEN |
+| D8 | **`gen:unity:check` was red on this branch before this session** — `branches` and `fatigueNote` reached `engine/api.ts` without the C# being regenerated. Fixed here by regenerating, but nothing stops it recurring between sessions. | DONE (cause not fixed) |
+
+**Fixed on the way through, each found only by driving the real scene:** a cancelled tween
+never settled its promise (any interrupted animation froze the turn); hovering a card lifted
+it out from under the pointer (the hand was unclickable); the inspector rebuilt itself on
+every pointer move and destroyed the commit button mid-click; the week header mixed
+stage-week against the 14-week calendar and read as a much longer clock than the player has;
+the End-week button could disable itself into a soft-lock.

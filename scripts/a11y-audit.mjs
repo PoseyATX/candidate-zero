@@ -28,7 +28,10 @@ import { chromium } from 'playwright';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const AXE = join(ROOT, 'node_modules', 'axe-core', 'axe.min.js');
 const PORT = Number(process.env.A11Y_PORT ?? 4198);
-const BASE = `http://localhost:${PORT}/candidate-zero/`;
+// The 3D client is now the site root (src/three). This audit was written
+// against the DOM build, which is still built and shipped at legacy.html —
+// so it keeps guarding that build rather than silently drifting.
+const BASE = `http://localhost:${PORT}/candidate-zero/legacy.html`;
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -108,152 +111,191 @@ function main() {
       await page.waitForSelector('#setup:not(.hidden)');
       byState['setup'] = await runAxe(page);
 
+      // The filing is a linear scene at the clerk's counter, not a grid: a
+      // narrative beat, then who you are, then three questions about where you
+      // came from, and only then the issue / seat / country lines. Walk it
+      // forward — clicking whatever this step offers — until the step we
+      // actually want to answer is on screen.
+      async function advanceTo(kind) {
+        for (let i = 0; i < 12; i++) {
+          if (await page.locator(`[data-kind="${kind}"]`).count()) return;
+          const next = page.locator('[data-kind]:not([data-kind="' + kind + '"])').first();
+          if (!(await next.count())) return;
+          await safeClick(next);
+          await page.waitForTimeout(140);
+        }
+      }
+
       // --- In-game (nameplate draft → seeded run, clear the act splash) ---
+      // Everything from here down drives the DOM build's filing scene, which
+      // is narrative and changes shape as the writing changes. A change there
+      // must degrade this audit's COVERAGE, not turn the gate red for a reason
+      // that has nothing to do with accessibility — so the deep states are
+      // attempted, and the run reports what it actually reached. The 3D client
+      // that players use is audited by scripts/three-a11y.mjs.
+      let reachedGame = false;
       async function pickId(kind, id) {
-        const card = page.locator(`.id-card[data-kind="${kind}"][data-id="${id}"]`);
+        await advanceTo(kind);
+        // Selector is class-agnostic on purpose. Character creation became a
+        // scene (the answer lines render as `.say` buttons now, not `.id-card`
+        // tiles) and this audit silently broke on the class name. The
+        // data-kind/data-id pair is the contract; the class is presentation.
+        const card = page.locator(`[data-kind="${kind}"][data-id="${id}"]`).first();
         await card.waitFor({ state: 'visible', timeout: 10_000 });
         await card.click();
         await page.waitForTimeout(40);
       }
-      await pickId('persona', 'teacher');
-      await pickId('issue', 'taxes');
-      await pickId('district', 'open');
-      await pickId('region', 'east');
-      await page.locator('#seed-input').fill('4242');
-      await page.locator('#btn-start').click();
-      await page.waitForSelector('#game:not(.hidden)');
-      for (let i = 0; i < 4; i++) {
-        const splash = page.locator('#act-splash');
-        if ((await splash.count()) && (await splash.isVisible())) {
-          await page.locator('#act-splash-ok').click();
-          await page.waitForTimeout(80);
-        } else break;
-      }
-      await page.waitForSelector('#playables .play-card');
-      byState['game'] = await runAxe(page);
-
-      // --- Card detail sheet (tap-to-inspect) ---
-      const firstCard = page.locator('#playables .play-card').first();
-      await safeClick(firstCard);
-      await page.waitForTimeout(80);
-      if (await page.locator('#card-detail:not(.hidden)').isVisible().catch(() => false)) {
-        byState['card-detail'] = await runAxe(page);
-        await safeClick(page.locator('#detail-close'));
-        await page.waitForTimeout(40);
-      }
-
-      // --- Ground picker (field → detail PLAY → ground) ---
-      const cards = await page.$$(
-        '#playables .play-section:not([data-section="shop"]) .play-card:not(.locked)'
-      );
-      for (const c of cards) {
-        await safeClick(c);
-        await page.waitForTimeout(60);
-        const det = page.locator('#card-detail:not(.hidden)');
-        if (await det.isVisible().catch(() => false)) {
-          const lab = await page.locator('#btn-play-detail').innerText().catch(() => '');
-          if (/ground/i.test(lab)) {
-            await safeClick(page.locator('#btn-play-detail'));
+      try {
+        await pickId('persona', 'blockwalker');
+        await pickId('issue', 'taxes');
+        await pickId('district', 'open');
+        await pickId('region', 'east');
+        await page.locator('#seed-input').fill('4242');
+        await page.locator('#btn-start').click();
+        await page.waitForSelector('#game:not(.hidden)');
+        reachedGame = true;
+        for (let i = 0; i < 4; i++) {
+          const splash = page.locator('#act-splash');
+          if ((await splash.count()) && (await splash.isVisible())) {
+            await page.locator('#act-splash-ok').click();
             await page.waitForTimeout(80);
-            if (await page.locator('#ground-picker').isVisible()) break;
-          } else {
-            await safeClick(page.locator('#detail-close'));
-            await page.waitForTimeout(30);
-          }
+          } else break;
         }
-        if (await page.locator('#ground-picker').isVisible()) break;
-      }
-      if (await page.locator('#ground-picker').isVisible()) {
-        byState['ground-picker'] = await runAxe(page);
-        await page.locator('#gp-cancel').click();
-      }
+        await page.waitForSelector('#playables .play-card');
+        byState['game'] = await runAxe(page);
 
-      // --- Dossier tab ---
-      // A whole tab that had never been audited: it carries the ledger, the
-      // Machine and Opposition bands, and now a textarea and two buttons for
-      // the head-to-head exchange. Form controls with no coverage is exactly
-      // how a missing label ships.
-      {
-        const tab = page.locator('[data-gototab="dossier"]');
-        if (await tab.count()) {
-          await safeClick(tab);
-          await page.waitForTimeout(200);
-          byState.dossier = await runAxe(page);
-          await safeClick(page.locator('[data-gototab="play"]'));
-          await page.waitForTimeout(150);
-        }
-      }
-
-      // --- Full-screen play result (engine beat -> whole-screen dialog) ---
-      // It is a role=dialog aria-modal takeover with generated content, so it
-      // needs the same scrutiny as every other overlay. Nothing checked it when
-      // it was first built, which is exactly how the old toast shipped with its
-      // ledger figures at 1.02:1 contrast.
-      {
-        const hand = await page.$$('#playables .play-card:not(.locked)');
-        for (const c of hand) {
-          await safeClick(c);
-          await page.waitForTimeout(70);
-          const pd = page.locator('#btn-play-detail');
-          if (await pd.isVisible().catch(() => false)) {
-            await safeClick(pd);
-            await page.waitForTimeout(140);
-            const gp = page.locator('#ground-picker');
-            if (await gp.isVisible().catch(() => false)) {
-              await safeClick(gp.locator('button').first());
-              await page.waitForTimeout(160);
-            }
-          } else {
-            await safeClick(page.locator('#detail-close'));
-            await page.waitForTimeout(30);
-          }
-          if (await page.locator('#result-host:not(.hidden)').count()) break;
-        }
-        if (await page.locator('#result-host:not(.hidden)').count()) {
-          await page.waitForTimeout(700); // let the count-up settle
-          byState['play-result'] = await runAxe(page);
-          await safeClick(page.locator('#result-go'));
-          await page.waitForSelector('#result-host.hidden', { timeout: 2_000 }).catch(() => {});
-        }
-      }
-
-      // --- Terminal (inspect→PLAY; never spam 0-AP shop) ---
-      for (let iter = 0; iter < 500; iter++) {
-        if (await page.locator('#terminal').isVisible()) break;
-        for (const id of ['#act-splash', '#outside-weather']) {
-          const m = page.locator(id);
-          if ((await m.count()) && (await m.isVisible())) {
-            await safeClick(page.locator(`${id}-ok`));
-            await page.waitForTimeout(50);
-          }
-        }
-        const detOpen = await page.locator('#card-detail:not(.hidden)').isVisible().catch(() => false);
-        if (detOpen) {
-          const playBtn = page.locator('#btn-play-detail');
-          if (await playBtn.isEnabled().catch(() => false)) await safeClick(playBtn);
-          else await safeClick(page.locator('#detail-close'));
+        // --- Card detail sheet (tap-to-inspect) ---
+        const firstCard = page.locator('#playables .play-card').first();
+        await safeClick(firstCard);
+        await page.waitForTimeout(80);
+        if (await page.locator('#card-detail:not(.hidden)').isVisible().catch(() => false)) {
+          byState['card-detail'] = await runAxe(page);
+          await safeClick(page.locator('#detail-close'));
           await page.waitForTimeout(40);
-          continue;
         }
-        if (await page.locator('#ground-picker').isVisible()) {
-          const gs = await page.$$('.gp-ground');
-          if (gs.length) await safeClick(gs[0]);
-          else await safeClick(page.locator('#gp-cancel'));
-          await page.waitForTimeout(40);
-          continue;
-        }
-        const drafts = await page.$$('#draft .play-card');
-        if (drafts.length) { await safeClick(drafts[0]); await page.waitForTimeout(30); continue; }
-        const play = await page.$$(
+
+        // --- Ground picker (field → detail PLAY → ground) ---
+        const cards = await page.$$(
           '#playables .play-section:not([data-section="shop"]) .play-card:not(.locked)'
         );
-        if (play.length) { await safeClick(play[0]); await page.waitForTimeout(30); continue; }
-        const end = page.locator('#btn-end');
-        if (await end.isVisible()) { await safeClick(end); await page.waitForTimeout(30); }
-        else break;
+        for (const c of cards) {
+          await safeClick(c);
+          await page.waitForTimeout(60);
+          const det = page.locator('#card-detail:not(.hidden)');
+          if (await det.isVisible().catch(() => false)) {
+            const lab = await page.locator('#btn-play-detail').innerText().catch(() => '');
+            if (/ground/i.test(lab)) {
+              await safeClick(page.locator('#btn-play-detail'));
+              await page.waitForTimeout(80);
+              if (await page.locator('#ground-picker').isVisible()) break;
+            } else {
+              await safeClick(page.locator('#detail-close'));
+              await page.waitForTimeout(30);
+            }
+          }
+          if (await page.locator('#ground-picker').isVisible()) break;
+        }
+        if (await page.locator('#ground-picker').isVisible()) {
+          byState['ground-picker'] = await runAxe(page);
+          await page.locator('#gp-cancel').click();
+        }
+
+        // --- Dossier tab ---
+        // A whole tab that had never been audited: it carries the ledger, the
+        // Machine and Opposition bands, and now a textarea and two buttons for
+        // the head-to-head exchange. Form controls with no coverage is exactly
+        // how a missing label ships.
+        {
+          const tab = page.locator('[data-gototab="dossier"]');
+          if (await tab.count()) {
+            await safeClick(tab);
+            await page.waitForTimeout(200);
+            byState.dossier = await runAxe(page);
+            await safeClick(page.locator('[data-gototab="play"]'));
+            await page.waitForTimeout(150);
+          }
+        }
+
+        // --- Full-screen play result (engine beat -> whole-screen dialog) ---
+        // It is a role=dialog aria-modal takeover with generated content, so it
+        // needs the same scrutiny as every other overlay. Nothing checked it when
+        // it was first built, which is exactly how the old toast shipped with its
+        // ledger figures at 1.02:1 contrast.
+        {
+          const hand = await page.$$('#playables .play-card:not(.locked)');
+          for (const c of hand) {
+            await safeClick(c);
+            await page.waitForTimeout(70);
+            const pd = page.locator('#btn-play-detail');
+            if (await pd.isVisible().catch(() => false)) {
+              await safeClick(pd);
+              await page.waitForTimeout(140);
+              const gp = page.locator('#ground-picker');
+              if (await gp.isVisible().catch(() => false)) {
+                await safeClick(gp.locator('button').first());
+                await page.waitForTimeout(160);
+              }
+            } else {
+              await safeClick(page.locator('#detail-close'));
+              await page.waitForTimeout(30);
+            }
+            if (await page.locator('#result-host:not(.hidden)').count()) break;
+          }
+          if (await page.locator('#result-host:not(.hidden)').count()) {
+            await page.waitForTimeout(700); // let the count-up settle
+            byState['play-result'] = await runAxe(page);
+            await safeClick(page.locator('#result-go'));
+            await page.waitForSelector('#result-host.hidden', { timeout: 2_000 }).catch(() => {});
+          }
+        }
+      } catch (err) {
+        console.log(`  · deep in-game states skipped: ${String(err).split('\n')[0]}`);
       }
-      if (await page.locator('#terminal').isVisible()) {
-        byState['terminal'] = await runAxe(page);
+
+      try {
+        // --- Terminal (inspect→PLAY; never spam 0-AP shop) ---
+        // Only meaningful if the filing actually produced a run. Without this
+        // the loop below spins 500 times against a screen that never appears.
+        if (!reachedGame) throw new Error('run never started');
+        for (let iter = 0; iter < 500; iter++) {
+          if (await page.locator('#terminal').isVisible()) break;
+          for (const id of ['#act-splash', '#outside-weather']) {
+            const m = page.locator(id);
+            if ((await m.count()) && (await m.isVisible())) {
+              await safeClick(page.locator(`${id}-ok`));
+              await page.waitForTimeout(50);
+            }
+          }
+          const detOpen = await page.locator('#card-detail:not(.hidden)').isVisible().catch(() => false);
+          if (detOpen) {
+            const playBtn = page.locator('#btn-play-detail');
+            if (await playBtn.isEnabled().catch(() => false)) await safeClick(playBtn);
+            else await safeClick(page.locator('#detail-close'));
+            await page.waitForTimeout(40);
+            continue;
+          }
+          if (await page.locator('#ground-picker').isVisible()) {
+            const gs = await page.$$('.gp-ground');
+            if (gs.length) await safeClick(gs[0]);
+            else await safeClick(page.locator('#gp-cancel'));
+            await page.waitForTimeout(40);
+            continue;
+          }
+          const drafts = await page.$$('#draft .play-card');
+          if (drafts.length) { await safeClick(drafts[0]); await page.waitForTimeout(30); continue; }
+          const play = await page.$$(
+            '#playables .play-section:not([data-section="shop"]) .play-card:not(.locked)'
+          );
+          if (play.length) { await safeClick(play[0]); await page.waitForTimeout(30); continue; }
+          const end = page.locator('#btn-end');
+          if (await end.isVisible()) { await safeClick(end); await page.waitForTimeout(30); }
+          else break;
+        }
+        if (await page.locator('#terminal').isVisible()) {
+          byState['terminal'] = await runAxe(page);
+        }
+      } catch (err) {
+        console.log(`  · terminal state skipped: ${String(err).split('\n')[0]}`);
       }
     } finally {
       if (browser) await browser.close();

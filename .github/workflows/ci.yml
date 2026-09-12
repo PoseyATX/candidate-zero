@@ -64,11 +64,14 @@ jobs:
       - name: Install Playwright browser (for UI smoke)
         run: npx playwright install --with-deps chromium
 
-      - name: UI smoke test (drives the real built app; catches dead buttons, stuck modals, console errors)
-        run: npm run smoke:ui
+      - name: 3D client smoke test (deals a hand on the table, picks a card by raycast, plays it, turns the week)
+        run: npm run smoke:three
 
-      - name: Accessibility audit (axe-core WCAG 2 A/AA; fails on any critical/serious)
+      - name: Accessibility audit — 3D client (axe-core WCAG 2 A/AA + 320px reflow; fails on any critical/serious)
         run: npm run a11y
+
+      - name: UI smoke test (legacy DOM build at legacy.html)
+        run: npm run smoke:ui
 
       - name: Layout & touch audit (WCAG 1.4.10 reflow at 320px + 2.5.8 target size; axe checks neither)
         run: npm run a11y:layout

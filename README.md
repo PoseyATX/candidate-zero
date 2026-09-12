@@ -45,10 +45,29 @@ engine in C#).
 src/
   data/       # Cards, personas, regions, issues (single source of truth)
   engine/     # Pure functions only — resolution, state transitions, play loop
-  ui/         # Thin Vite presentation shell (no rules)
+  three/      # The game: a WebGL table (three.js) bound to engine/api.ts
+  ui/         # The older DOM shell, still built and shipped at /legacy.html
   cli/        # Interactive + auto play shells
   harness/    # Balance and regression tests
 ```
+
+### The table
+
+`src/three/` is the client players meet: a committee room after hours, cards
+with real stock and thickness fanned at the near edge, the precincts as brass
+plaques you put a card on. It binds to the frozen host API in
+[`src/engine/api.ts`](src/engine/api.ts) — `newGame` / `view` / `legalActions`
+/ `apply` — and holds **no rules of its own**. Every number it draws came out
+of `view()`; every consequence came out of `apply()`. That is the same
+boundary the Unity host binds under, which is the point: the engine does not
+know or care that this host is the one with a camera in it.
+
+The 2D chrome over the canvas (ledger, goal strip, docket, the record, the
+card inspector) is DOM on purpose — a ledger is text, and text belongs in
+text where it can be read out, translated, and zoomed.
+
+The earlier DOM build is not deleted. It still builds and ships at
+`/legacy.html`, and `npm run smoke:ui` still drives it.
 
 ## Design Authority
 

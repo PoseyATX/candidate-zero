@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 /**
  * The version is read from package.json and injected, never hand-typed into
@@ -17,5 +18,15 @@ export default defineConfig({
   root: '.',
   publicDir: 'public',
   server: { port: 5173, open: false },
-  build: { outDir: 'dist', sourcemap: true }
+  build: {
+    outDir: 'dist',
+    sourcemap: true,
+    rollupOptions: {
+      // legacy.html is the pre-3D DOM build, kept reachable rather than deleted.
+      input: {
+        main: fileURLToPath(new URL('./index.html', import.meta.url)),
+        legacy: fileURLToPath(new URL('./legacy.html', import.meta.url))
+      }
+    }
+  }
 });

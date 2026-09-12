@@ -32,7 +32,10 @@ import { chromium } from 'playwright';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.env.LAYOUT_PORT ?? 4197);
-const BASE = `http://localhost:${PORT}/candidate-zero/`;
+// The 3D client is now the site root (src/three). This audit was written
+// against the DOM build, which is still built and shipped at legacy.html —
+// so it keeps guarding that build rather than silently drifting.
+const BASE = `http://localhost:${PORT}/candidate-zero/legacy.html`;
 /** Narrowest viewport WCAG 1.4.10 requires reflow at. */
 const REFLOW_WIDTH = 320;
 const AA_TARGET = 24;

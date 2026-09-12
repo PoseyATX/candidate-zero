@@ -23,7 +23,7 @@
  *   · The application fills in beneath the conversation, in ink, as you talk.
  *     The document IS the interface.
  *
- * The `.id-card[data-kind][data-id]` hooks are kept on the answer lines so the
+ * The `[data-kind][data-id]` hooks are kept on the answer lines so the
  * smoke and layout audits still drive the flow, and `#candidate-name`,
  * `#seed-input` and `#btn-start` keep their ids and their meaning.
  */
