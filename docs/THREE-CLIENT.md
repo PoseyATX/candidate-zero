@@ -70,8 +70,9 @@ instant the engine rules; cards fly off on their own clock.
   by raycast, selects it, commits it, turns the week, reloads and resumes.
 - `npm run a11y` — axe-core WCAG 2 A/AA over title / filing / run / inspector,
   plus 320px reflow and target size.
+- `npm run a11y:legacy` — the same audit over the DOM build, fourteen states.
 
-Both run in CI.
+All three run in CI and block.
 
 ## What is NOT done
 
@@ -90,7 +91,6 @@ Stated plainly, because a foundation described as finished is a lie:
   places or people you can look at.
 - **Draft offers rise from the table but the choice is still made in the sheet**
   next to them, not by picking the card itself up.
-- **Legacy DOM build still ships** at `/legacy.html`. Its accessibility audit
-  (`npm run a11y:legacy`) drives a filing scene that has since been rewritten
-  as narrative beats; it degrades to the states it can still reach rather than
-  failing the build, and is not a blocking gate.
+- **Legacy DOM build still ships** at `/legacy.html`, fully gated: `smoke:ui`
+  drives it, and `a11y:legacy` audits every beat of its filing scene, the
+  in-game states, and a full run through to the terminal screen.

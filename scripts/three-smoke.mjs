@@ -75,7 +75,12 @@ async function main() {
     page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
     page.on('console', (m) => {
       const t = m.text();
-      if (m.type() === 'error' && !t.includes('ERR_CONNECTION') && !t.includes('favicon')) {
+      // A web-font CDN that is unreachable (or intercepted by a proxy whose CA
+      // the browser does not trust) is the network's failure, not the game's:
+      // boot caps its font wait and the faces have a fallback stack. Matched
+      // by URL so no other failed load can hide behind it.
+      const fromFontCdn = /fonts\.(googleapis|gstatic)\.com/.test(m.location()?.url ?? '');
+      if (m.type() === 'error' && !fromFontCdn && !t.includes('ERR_CONNECTION') && !t.includes('favicon')) {
         errors.push(`console.error: ${t}`);
       }
     });

@@ -73,5 +73,8 @@ jobs:
       - name: UI smoke test (legacy DOM build at legacy.html)
         run: npm run smoke:ui
 
+      - name: Accessibility audit — legacy DOM build (every filing beat, in-game, through to the terminal screen)
+        run: npm run a11y:legacy
+
       - name: Layout & touch audit (WCAG 1.4.10 reflow at 320px + 2.5.8 target size; axe checks neither)
         run: npm run a11y:layout

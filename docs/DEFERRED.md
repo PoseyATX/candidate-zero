@@ -345,7 +345,7 @@ surface: `src/three/` is a WebGL table bound to the frozen host API, and not one
 | D4 | **No camera control.** You cannot lean in, orbit, or look down the table. | OPEN |
 | D5 | **Draft offers rise from the felt but are chosen in a list beside them.** The pick should be made by picking the card up. | OPEN |
 | D6 | **Shop, obligations and allies are ordinary cards.** They are people and places and should look like it. | OPEN |
-| D7 | **The legacy DOM a11y audit is no longer a blocking gate.** It drives a filing scene that was rewritten as narrative beats, so it now degrades to the states it can still reach. The shipped client is gated instead (`npm run a11y`). Either finish repairing the legacy walk or retire the legacy build deliberately — it should not sit half-guarded. | OPEN |
+| D7 | **The legacy DOM a11y audit was no longer a blocking gate.** It never typed a candidate name, so the clerk refused the form; and its run-to-the-end loop predated the play-result catcher and forked CHOICE cards, so it spun 500 iterations against an overlay it could not see past. Rewritten on smoke:ui's driver discipline: it now audits every filing beat (persona, origin, issue, place, sign), the in-game states, and a full run to the terminal screen — fourteen states, fails loudly if the run never ends, blocking in CI again. | DONE |
 | D8 | **`gen:unity:check` was red on this branch before this session** — `branches` and `fatigueNote` reached `engine/api.ts` without the C# being regenerated. Fixed here by regenerating, but nothing stops it recurring between sessions. | DONE (cause not fixed) |
 
 **Fixed on the way through, each found only by driving the real scene:** a cancelled tween

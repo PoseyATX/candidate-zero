@@ -86,7 +86,11 @@ async function main() {
     const consoleErrors = [];
     page.on('pageerror', (e) => consoleErrors.push(`pageerror: ${e.message}`));
     page.on('console', (m) => {
-      if (m.type() === 'error' && !m.text().includes('ERR_CONNECTION') && !m.text().includes('favicon')) {
+      // A web-font CDN that is unreachable (or intercepted by a proxy whose CA
+      // the browser does not trust) is the network's failure, not the game's:
+      // the page has a fallback stack. Matched by URL so nothing else hides.
+      const fromFontCdn = /fonts\.(googleapis|gstatic)\.com/.test(m.location()?.url ?? '');
+      if (m.type() === 'error' && !fromFontCdn && !m.text().includes('ERR_CONNECTION') && !m.text().includes('favicon')) {
         consoleErrors.push(`console.error: ${m.text()}`);
       }
     });
